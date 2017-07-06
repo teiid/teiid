@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.translator.file;
@@ -26,13 +22,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
@@ -132,6 +132,16 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
 			}
 			result.add(value);
 			result.add(file.getName());
+			if (command.getMetadataObject().getResultSet().getColumns().size() > 2) {
+    			result.add(new Timestamp(file.lastModified()));
+                try {
+                    Map<String, Object> attributes = Files.readAttributes(file.toPath(), "size,creationTime"); //$NON-NLS-1$
+                    result.add(new Timestamp(((FileTime)attributes.get("creationTime")).toMillis())); //$NON-NLS-1$
+                    result.add(attributes.get("size")); //$NON-NLS-1$
+                } catch (IOException e) {
+                    throw new TranslatorException(e);
+                }
+			}
 			return result;
 		}
 
@@ -230,6 +240,12 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
             }
             result.add(value);
             result.add(file.getName());
+            if (command.getMetadataObject().getResultSet().getColumns().size() > 2) {
+                Timestamp lastModified = new Timestamp(file.getLastModified());
+                result.add(lastModified);
+                result.add(lastModified);
+                result.add(file.getSize());
+            }
             return result;
         }
 
@@ -396,6 +412,9 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
 		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.CLOB, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
+		metadataFactory.addProcedureResultSetColumn("lastModified", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("created", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("size", TypeFacility.RUNTIME_NAMES.LONG, p); //$NON-NLS-1$
 		
 		Procedure p1 = metadataFactory.addProcedure(GETFILES);
 		p1.setAnnotation("Returns files that match the given path and pattern as BLOBs"); //$NON-NLS-1$
@@ -403,6 +422,9 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
 		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.BLOB, p1); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p1); //$NON-NLS-1$
+		metadataFactory.addProcedureResultSetColumn("lastModified", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p1); //$NON-NLS-1$
+		metadataFactory.addProcedureResultSetColumn("created", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p1); //$NON-NLS-1$
+		metadataFactory.addProcedureResultSetColumn("size", TypeFacility.RUNTIME_NAMES.LONG, p1); //$NON-NLS-1$
 		
 		Procedure p2 = metadataFactory.addProcedure(SAVEFILE);
 		p2.setAnnotation("Saves the given value to the given path.  Any existing file will be overriden."); //$NON-NLS-1$

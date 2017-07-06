@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.jdbc;
@@ -270,7 +266,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
           .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
           .append(" AND UCASE(ProcedureName)").append(LIKE_ESCAPE) //$NON-NLS-1$
           .append(" AND UCASE(p.Name)").append(LIKE_ESCAPE) //$NON-NLS-1$
-          .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME, COLUMN_TYPE, POSITION").toString(); //$NON-NLS-1$
+          .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME, case TYPE when 'ReturnValue' then 0 when 'ResultSet' then 2 else 1 end, POSITION").toString(); //$NON-NLS-1$
 
     private final static String QUERY_PROCEDURE_COLUMNS_OLD =
       new StringBuffer("SELECT VDBName PROCEDURE_CAT, SchemaName AS PROCEDURE_SCHEM") //$NON-NLS-1$
@@ -289,7 +285,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
         .append(" AND UCASE(ProcedureName)").append(LIKE_ESCAPE) //$NON-NLS-1$
         .append(" AND UCASE(p.Name)").append(LIKE_ESCAPE) //$NON-NLS-1$
-        .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME, COLUMN_TYPE, POSITION").toString(); //$NON-NLS-1$
+        .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME, case TYPE when 'ReturnValue' then 0 when 'ResultSet' then 2 else 1 end, POSITION").toString(); //$NON-NLS-1$
 
     private static final String QUERY_SCHEMAS =
       new StringBuffer("SELECT Name AS TABLE_SCHEM, VDBName AS TABLE_CATALOG") //$NON-NLS-1$

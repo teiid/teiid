@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.translator.infinispan.hotrod;
 
@@ -25,14 +21,11 @@ import java.util.ResourceBundle;
 
 import org.teiid.core.BundleUtil;
 
-public class InfinispanPlugin { 
+public class InfinispanPlugin {
 
     public static final String PLUGIN_ID = InfinispanPlugin.class.getPackage().getName();
-
-    /**
-     * Provides access to the plugin's log and to it's resources.
-     */
-    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID, PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
+            PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
 
 	public static enum Event implements BundleUtil.Event{
 		TEIID25000,
@@ -47,28 +40,7 @@ public class InfinispanPlugin {
 		TEIID25009,
 		TEIID25010,
 		TEIID25011,
-	
-		TEIID25020,
-		TEIID25021,
-		TEIID25022,
-		TEIID25023,
-		TEIID25025,
-		TEIID25026,
-		TEIID25028,
-		TEIID25029,
-		TEIID25030,		
-		TEIID25031,
-		TEIID25032,
-		
-		TEIID25040,		
-
-		TEIID25050,		
-		TEIID25051,		
-		TEIID25052,		
-		TEIID25054,
-		
-		TEIID25060,
-		TEIID25061,
-		TEIID25062
+		TEIID25012,
+		TEIID25013
 	}
 }

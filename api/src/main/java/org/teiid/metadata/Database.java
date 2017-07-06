@@ -1,29 +1,26 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.metadata;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -31,13 +28,14 @@ import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.BaseColumn.NullType;
 
-public class Database extends NamespaceContainer {
+public class Database extends AbstractMetadataRecord {
     private static final long serialVersionUID = 7595765832848232840L;
     public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER, DATAWRAPPER, PARAMETER, ROLE, GRANT, LANGUAGE};
     protected MetadataStore store = new MetadataStore();
     protected NavigableMap<String, DataWrapper> wrappers = new TreeMap<String, DataWrapper>(String.CASE_INSENSITIVE_ORDER);
     protected NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);    
     private String version;
+    private NamespaceContainer namespaceContainer = new NamespaceContainer();
     
     public Database(String dbName) {
         super.setName(dbName);
@@ -143,7 +141,7 @@ public class Database extends NamespaceContainer {
     }
     
     public String resolveNamespaceInPropertyKey(String key) {
-        return NamespaceContainer.resolvePropertyKey(this, key);
+        return NamespaceContainer.resolvePropertyKey(namespaceContainer, key);
     }
 
     @Override
@@ -274,4 +272,13 @@ public class Database extends NamespaceContainer {
         store.addDatatype(name, dataType);
         return dataType;
     }
+
+    public void addNamespace(String prefix, String uri) {
+        this.namespaceContainer.addNamespace(prefix, uri);
+    }
+
+    public Map<String, String> getNamespaces() {
+        return this.namespaceContainer.getNamespaces();
+    }
+    
 }

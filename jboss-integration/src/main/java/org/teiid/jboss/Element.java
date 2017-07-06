@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.jboss;
@@ -40,8 +36,6 @@ enum Element {
 	MAX_ACTIVE_PLANS_ELEMENT("max-active-plans", "max-active-plans"),
 	USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT("thread-count-for-source-concurrency", "thread-count-for-source-concurrency"),
 	TIME_SLICE_IN_MILLI_ELEMENT("time-slice-in-milliseconds", "time-slice-in-milliseconds"),
-	@Deprecated
-	TIME_SLICE_IN_MILL_ELEMENT("time-slice-in-millseconds", "time-slice-in-millseconds"),
 	MAX_ROWS_FETCH_SIZE_ELEMENT("max-row-fetch-size", "max-row-fetch-size"),
 	LOB_CHUNK_SIZE_IN_KB_ELEMENT("lob-chunk-size-in-kb", "lob-chunk-size-in-kb"),
 	QUERY_THRESHOLD_IN_SECS_ELEMENT("query-threshold-in-seconds", "query-threshold-in-seconds"),
@@ -60,8 +54,6 @@ enum Element {
 	BUFFER_SERVICE_ELEMENT("buffer-service"),
 	USE_DISK_ATTRIBUTE("use-disk", "buffer-service-use-disk"),
 	PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-service-processor-batch-size"),
-	@Deprecated
-	CONNECTOR_BATCH_SIZE_ATTRIBUTE("connector-batch-size", "buffer-service-connector-batch-size"),
 	MAX_PROCESSING_KB_ATTRIBUTE("max-processing-kb", "buffer-service-max-processing-kb"),
 	MAX_RESERVED_KB_ATTRIBUTE("max-reserve-kb", "buffer-service-max-reserve-kb"),
 	MAX_FILE_SIZE_ATTRIBUTE("max-file-size", "buffer-service-max-file-size"),

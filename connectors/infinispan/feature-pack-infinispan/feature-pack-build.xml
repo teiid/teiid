@@ -2,7 +2,7 @@
     <dependencies>
         <artifact name="org.wildfly:wildfly-feature-pack"/>
         <artifact name="org.jboss.teiid:teiid-client-feature-pack"/>
-        <artifact name="org.jboss.teiid:teiid-wildfly-integration-feature-pack"/>
+        <artifact name="org.jboss.teiid.connectors:feature-pack-odata"/>
     </dependencies>
     <config>
     </config>

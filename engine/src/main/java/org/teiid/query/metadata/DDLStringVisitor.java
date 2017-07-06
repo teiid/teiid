@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.query.metadata;
 
@@ -55,7 +51,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class DDLStringVisitor {
 	private static final String TAB = "\t"; //$NON-NLS-1$
 	private static final String NEWLINE = "\n";//$NON-NLS-1$
-    public static final String GENERATED = "TEIID_GENERATED";
+    public static final String GENERATED = "TEIID_GENERATED"; //$NON-NLS-1$
 	private static final HashSet<String> LENGTH_DATATYPES = new HashSet<String>(
 			Arrays.asList(
 					DataTypeManager.DefaultDataTypes.CHAR,
@@ -156,73 +152,86 @@ public class DDLStringVisitor {
         	append(NEWLINE);
         	append("--############ Translators ############");
         	append(NEWLINE);        	
-        }
-        
-        for (DataWrapper dw : database.getDataWrappers()) {
-            visit(dw);
-            append(NEWLINE);
-            append(NEWLINE);
+            for (DataWrapper dw : database.getDataWrappers()) {
+                visit(dw);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
         }
 
         if (!database.getServers().isEmpty()){
         	append(NEWLINE);
         	append("--############ Servers ############");
         	append(NEWLINE);        	
+            for (Server server : database.getServers()) {
+                visit(server);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
         }
         
-        for (Server server : database.getServers()) {
-            visit(server);
+        if (!database.getSchemas().isEmpty()) {
             append(NEWLINE);
-            append(NEWLINE);
-        }
-
-        for (Schema schema : database.getSchemas()) {
-        	append(NEWLINE);
-        	append("--############ Schema:").append(schema.getName()).append(" ############");
-        	append(NEWLINE);
-            append(CREATE);
-            if (!schema.isPhysical()) {
-                append(SPACE).append(VIRTUAL);
-            }
-            append(SPACE).append(SCHEMA).append(SPACE).append(SQLStringVisitor.escapeSinglePart(schema.getName()));
-            if (!schema.getServers().isEmpty()) {
-                append(SPACE).append(SERVER);
-                boolean first = true;
-                for (Server s:schema.getServers()) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        append(COMMA);
-                    }
-                    append(SPACE).append(SQLStringVisitor.escapeSinglePart(s.getName()));
+            append("--############ Schemas ############");
+            append(NEWLINE); 
+    
+            for (Schema schema : database.getSchemas()) {
+                append(CREATE);
+                if (!schema.isPhysical()) {
+                    append(SPACE).append(VIRTUAL);
                 }
+                append(SPACE).append(SCHEMA).append(SPACE).append(SQLStringVisitor.escapeSinglePart(schema.getName()));
+                if (!schema.getServers().isEmpty()) {
+                    append(SPACE).append(SERVER);
+                    boolean first = true;
+                    for (Server s:schema.getServers()) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            append(COMMA);
+                        }
+                        append(SPACE).append(SQLStringVisitor.escapeSinglePart(s.getName()));
+                    }
+                }
+                
+                appendOptions(schema);
+                append(SEMICOLON);
+                append(NEWLINE);
+                append(NEWLINE);
+                createdSchmea(schema);
             }
-            
-            appendOptions(schema);
-            append(SEMICOLON);
+        }
+        
+        if (!database.getRoles().isEmpty()){
+            append(NEWLINE);
+            append("--############ Roles ############");
+            append(NEWLINE);            
+            for (Role role:database.getRoles()) {
+                visit(role);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
+        }
+        
+        for (Schema schema : database.getSchemas()) {
+            append(NEWLINE);
+            append("--############ Schema:").append(schema.getName()).append(" ############");
             append(NEWLINE);
             append(SET).append(SPACE).append(SCHEMA).append(SPACE);
             append(SQLStringVisitor.escapeSinglePart(schema.getName())).append(SEMICOLON);
             append(NEWLINE);
             append(NEWLINE);
-            
             visit(schema);  
         }
         
         if (!database.getRoles().isEmpty()){
         	append(NEWLINE);
-        	append("--############ Roles & Grants ############");
+        	append("--############ Grants ############");
         	append(NEWLINE);        	
-        }
-        
-        for (Role role:database.getRoles()) {
-            visit(role);
-            append(NEWLINE);
-        }
-        
-        for (Grant grant:database.getGrants()) {
-            visit(grant);
-            append(NEWLINE);
+            for (Grant grant:database.getGrants()) {
+                visit(grant);
+                append(NEWLINE);
+            }
         }
         
         append(NEWLINE);
@@ -234,6 +243,10 @@ public class DDLStringVisitor {
         append(NEWLINE);
     }
     
+    protected void createdSchmea(Schema schema) {
+        
+    }
+
     private void visit(Datatype dt) {
         append(CREATE).append(SPACE).append(DOMAIN).append(SPACE);
         append(SQLStringVisitor.escapeSinglePart(dt.getName())).append(SPACE).append(AS).append(SPACE);
@@ -366,53 +379,39 @@ public class DDLStringVisitor {
     protected void visit(Schema schema) {
 		boolean first = true; 
 		
-		if (this.includeTables) {
-			for (Table t: schema.getTables().values()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(NEWLINE);
-					append(NEWLINE);
-				}			
-                String generated = t.getProperty(GENERATED, false);
-                if (generated == null || !Boolean.valueOf(generated)) {
-                    visit(t);
+		for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
+            String generated = record.getProperty(GENERATED, false);
+            if (generated != null && Boolean.valueOf(generated)) {
+                continue;
+            }
+
+            if (record instanceof Table) {
+                if (!this.includeTables) {
+                    continue;
                 }
-			}
-		}
-		
-		if (this.includeProcedures) {
-			for (Procedure p:schema.getProcedures().values()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(NEWLINE);
-					append(NEWLINE);
-				}				
-				
-                String generated = p.getProperty(GENERATED, false);
-                if (generated == null || !Boolean.valueOf(generated)) {
-                    visit(p);
+            } else if (record instanceof Procedure) {
+                if (!this.includeProcedures) {
+                    continue;
                 }
-			}
-		}
-		
-		if (this.includeFunctions) {
-			for (FunctionMethod f:schema.getFunctions().values()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(NEWLINE);
-					append(NEWLINE);
-				}				
-                String generated = f.getProperty(GENERATED, false);
-                if (generated == null || !Boolean.valueOf(generated)) {
-                    visit(f);
+            } else if (record instanceof FunctionMethod) {
+                if (!this.includeFunctions) {
+                    continue;
                 }
-			}
+            }
+            if (first) {
+                first = false;
+            }
+            else {
+                append(NEWLINE);
+                append(NEWLINE);
+            }
+            if (record instanceof Table) {
+                visit((Table)record);
+            } else if (record instanceof Procedure) {
+                visit((Procedure)record);
+            } else if (record instanceof FunctionMethod) {
+                visit((FunctionMethod)record);
+            }
 		}
 	}
 

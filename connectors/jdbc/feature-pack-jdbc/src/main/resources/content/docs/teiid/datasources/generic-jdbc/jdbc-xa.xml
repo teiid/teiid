@@ -1,0 +1,49 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <xa-datasource jndi-name="java:/jdbcDS" pool-name="jdbcDS" enabled="true" use-java-context="true" use-ccm="true">
+        
+            <!-- typicaly properies -->     
+            <xa-datasource-property name="PortNumber">1527</xa-datasource-property>
+            <xa-datasource-property name="DatabaseName">{db-name}</xa-datasource-property>
+            <xa-datasource-property name="ServerName">{host}</xa-datasource-property>        
+            
+            <driver>driver name</driver>
+            
+            <!-- 
+            <new-connection-sql>select 1/new-connection-sql>
+            <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+             -->
+                     
+            <xa-pool>
+                <min-pool-size>10</min-pool-size>
+                <max-pool-size>20</max-pool-size>
+                <is-same-rm-override>true</is-same-rm-override>
+                <prefill>false</prefill>
+                <use-strict-min>false</use-strict-min>
+                <flush-strategy>FailingConnectionOnly</flush-strategy>
+                <no-tx-separate-pools/>
+            </xa-pool>
+
+            <security>
+                <user-name>{user}</user-name>
+                <password>{password}</password>
+                <!-- 
+                <security-domain>mysecurity-realm</security-domain>
+                -->
+            </security>
+             
+            <!-- 
+            <validation>
+                <check-valid-connection-sql>select 1</check-valid-connection-sql>
+            </validation>
+             -->
+        </xa-datasource>                
+        <drivers>
+            <driver name="driver name" module="module name">
+                <driver-class>Driver class name</driver-class>
+                <xa-datasource-class>XADataSource class name</xa-datasource-class>
+            </driver>    
+        </drivers>
+    </datasources>
+</subsystem>

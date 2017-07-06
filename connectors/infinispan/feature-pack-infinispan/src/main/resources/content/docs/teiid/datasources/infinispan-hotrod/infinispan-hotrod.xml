@@ -1,0 +1,14 @@
+<resource-adapter id="infinispanDS">
+    <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.hotrod"/>
+    <transaction-support>NoTransaction</transaction-support>
+    <connection-definitions>
+        <connection-definition class-name="org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory" 
+                jndi-name="java:/ispnDS" 
+                enabled="true" 
+                use-java-context="true" 
+                pool-name="teiid-ispn-ds">
+                
+              <config-property name="RemoteServerList">localhost:11222</config-property>                              
+        </connection-definition>
+    </connection-definitions>
+</resource-adapter>  

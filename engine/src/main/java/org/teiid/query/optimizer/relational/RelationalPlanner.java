@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.optimizer.relational;
@@ -46,11 +42,11 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
+import org.teiid.query.metadata.MaterializationMetadataRepository.ErrorAction;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.metadata.MaterializationMetadataRepository.ErrorAction;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TriggerActionPlanner;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -221,7 +217,7 @@ public class RelationalPlanner {
 		} 
 
         // Connect ProcessorPlan to SubqueryContainer (if any) of SELECT or PROJECT nodes
-		connectSubqueryContainers(plan, this.withPlanningState.pushdownWith); //TODO: merge with node creation
+		connectSubqueryContainers(plan); //TODO: merge with node creation
 		
         // Set top column information on top node
         List<Expression> topCols = Util.deepClone(command.getProjectedSymbols(), Expression.class);
@@ -275,6 +271,17 @@ public class RelationalPlanner {
         if (!fullPushdown && !this.withPlanningState.withList.isEmpty()) {
         	//generally any with item associated with a pushdown will not be needed as we're converting to a source query
         	result.setWith(new ArrayList<WithQueryCommand>(this.withPlanningState.withList.values()));
+        	
+        	//assign any with clauses in this subplan
+            for (WithQueryCommand wqc : this.withPlanningState.withList.values()) {
+                if (wqc.isRecursive()) {
+        	        SetQuery sq = (SetQuery)wqc.getCommand();
+        	        assignWithClause(((RelationalPlan)sq.getLeftQuery().getProcessorPlan()).getRootNode(), this.withPlanningState.pushdownWith, false);
+        	        assignWithClause(((RelationalPlan)sq.getRightQuery().getProcessorPlan()).getRootNode(), this.withPlanningState.pushdownWith, false);
+        	    } else {
+        	        assignWithClause(((RelationalPlan)wqc.getCommand().getProcessorPlan()).getRootNode(), this.withPlanningState.pushdownWith, false);
+        	    }
+        	}
         }
         result.setOutputElements(topCols);
         this.sourceHint = previous;
@@ -305,13 +312,9 @@ public class RelationalPlanner {
 			Command cmd = commands.remove(commands.size() - 1);
 			commands.addAll(CommandCollectorVisitor.getCommands(cmd, true));
 			try {
-				//skip xml commands as they cannot be planned here and cannot directly reference with tables,
-				//but their subqueries still can
-				if (!(cmd instanceof Query) || !((Query)cmd).getIsXML()) {
-					PlanNode temp = planner.generatePlan((Command) cmd.clone());
-					stack.push(new RuleAssignOutputElements(false));
-					planner.executeRules(stack, temp);
-				}
+				PlanNode temp = planner.generatePlan((Command) cmd.clone());
+				stack.push(new RuleAssignOutputElements(false));
+				planner.executeRules(stack, temp);
 			} catch (TeiidProcessingException e) {
 				throw new QueryPlannerException(e);
 			}
@@ -319,13 +322,6 @@ public class RelationalPlanner {
 		//plan and minimize projection
 		for (WithQueryCommand with : this.withPlanningState.withList.values()) {
 			QueryCommand subCommand = with.getCommand();
-			
-			//there are no columns to remove for xml
-			if (subCommand instanceof Query && ((Query)subCommand).getIsXML()) {
-				ProcessorPlan subPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
-				subCommand.setProcessorPlan(subPlan);
-				continue;
-			}
 			
 			TempMetadataID tid = (TempMetadataID) with.getGroupSymbol().getMetadataID();
 			if (tid.getTableData().getModel() != TempMetadataAdapter.TEMP_MODEL) {
@@ -693,17 +689,17 @@ public class RelationalPlanner {
     	this.context = context;
 	}
 
-    private void connectSubqueryContainers(PlanNode plan, LinkedHashMap<String, WithQueryCommand> pushdownWith) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    private void connectSubqueryContainers(PlanNode plan) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP | NodeConstants.Types.SORT)) {
             Set<GroupSymbol> groupSymbols = getGroupSymbols(node);
             List<SubqueryContainer<?>> subqueryContainers = node.getSubqueryContainers();
-            planSubqueries(pushdownWith, groupSymbols, node, subqueryContainers, false);
+            planSubqueries(groupSymbols, node, subqueryContainers, false);
             node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
         }
     }
 
 	public void planSubqueries(
-			LinkedHashMap<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groupSymbols,
+			Set<GroupSymbol> groupSymbols,
 			PlanNode node, List<SubqueryContainer<?>> subqueryContainers, boolean isStackEntry)
 			throws QueryMetadataException, TeiidComponentException,
 			QueryPlannerException {
@@ -921,6 +917,9 @@ public class RelationalPlanner {
         if (hints.hasJoin) {
         	rules.push(RuleConstants.CHOOSE_DEPENDENT);
         }
+        if (hints.hasCriteria) {
+            rules.push(RuleConstants.PUSH_LARGE_IN);
+        }
         if(hints.hasAggregates) {
             rules.push(new RulePushAggregates(idGenerator));
             if (hints.hasJoin) {
@@ -965,10 +964,10 @@ public class RelationalPlanner {
         } else if(hints.hasCriteria) {
         	rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
         }
-        if (hints.hasJoin && hints.hasOptionalJoin) {
+        if (hints.hasJoin) {
             rules.push(RuleConstants.REMOVE_OPTIONAL_JOINS);
         }
-        if (hints.hasVirtualGroups || (hints.hasJoin && hints.hasOptionalJoin)) {
+        if (hints.hasVirtualGroups || hints.hasJoin) {
         	//do initial filtering to make merging and optional join logic easier
             rules.push(new RuleAssignOutputElements(false));
         }
@@ -1501,10 +1500,6 @@ public class RelationalPlanner {
             if (jp.isPreserve()) {
             	node.setProperty(Info.PRESERVE, Boolean.TRUE);
             }
-            if (jp.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
-            	hints.hasOptionalJoin = true;
-            }
-         
             // Attach join node to parent
             parent.addLastChild(node);
 
@@ -1614,7 +1609,6 @@ public class RelationalPlanner {
         
         if (clause.isOptional()) {
             node.setProperty(NodeConstants.Info.IS_OPTIONAL, Boolean.TRUE);
-            hints.hasOptionalJoin = true;
         }
         
         if (clause.getMakeDep() != null) {
@@ -1706,10 +1700,6 @@ public class RelationalPlanner {
 		}
 		try {
 			node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
-	
-			if (merge && nestedCommand instanceof Query && QueryResolver.isXMLQuery((Query)nestedCommand, metadata)) {
-				merge = false;
-			}
 	
 			if (merge) {
 				mergeTempMetadata(nestedCommand, parentCommand);

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.adminapi;
@@ -39,8 +35,6 @@ public interface Admin {
 	
 	public enum TranlatorPropertyType{IMPORT, OVERRIDE, EXTENSION_METADATA, ALL};
 
-	public enum ExportFormat {XML, DDL};
-	
     /**
      * Removes a {@link Translator} and Data source from a {@link VDB}'s Model
      *
@@ -518,19 +512,6 @@ public interface Admin {
      */
     String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException;
 
-    /**
-     * Retrieve the schema of the given VDB (if model name is null), or DDL for a specific schema (when model is not null).
-     *
-     * @param vdbName  - required
-     * @param vdbVersion - required
-     * @param modelName - optionally can be null, to export whole VDB
-     * @param EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
-     * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
-     * @param format - when exporting whole VDB, it can be either XML or DDL format
-     */
-    String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes,
-            String typeNamePattern, ExportFormat format) throws AdminException;
-    
     /**
      * Get the Query Plan for the given session with provided execution id.
      * @param sessionId

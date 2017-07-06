@@ -1,35 +1,31 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.resource.adapter.google.gdata;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.teiid.logging.LogManager;
-import org.teiid.resource.adapter.google.GDataAPI;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
 import org.teiid.translator.google.api.UpdateSet;
@@ -39,6 +35,7 @@ import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.SpreadsheetQuery;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
 import com.google.gdata.data.BaseFeed;
+import com.google.gdata.data.IEntry;
 import com.google.gdata.data.spreadsheet.ListEntry;
 import com.google.gdata.data.spreadsheet.ListFeed;
 import com.google.gdata.data.spreadsheet.SpreadsheetEntry;
@@ -53,7 +50,7 @@ import com.google.gdata.util.ServiceException;
  * @author fnguyen
  *
  */
-public class GDataClientLoginAPI implements GDataAPI {
+public class GDataClientLoginAPI {
 	private static final int RETRY_DELAY = 3000;
 	private SpreadsheetService service;
 	private FeedURLFactory factory;
@@ -69,22 +66,29 @@ public class GDataClientLoginAPI implements GDataAPI {
 		this.factory = FeedURLFactory.getDefault();
 	}
 
-	public SpreadsheetEntry getSpreadsheetEntryByTitle(String sheetTitle) {
-		SpreadsheetQuery squery = new SpreadsheetQuery(factory.getSpreadsheetsFeedUrl());
+	public SpreadsheetEntry getSpreadsheetEntry(String sheetName, boolean key) {
+	    if (key) {
+	        try {
+                return getSpreadsheetEntry(new URL(factory.getSpreadsheetsFeedUrl(), "full/"+sheetName), SpreadsheetEntry.class);
+            } catch (MalformedURLException e) {
+                throw new SpreadsheetOperationException(e);
+            }
+	    }
+	    SpreadsheetQuery squery = new SpreadsheetQuery(factory.getSpreadsheetsFeedUrl());
 		squery.setTitleExact(true);
-		squery.setTitleQuery(sheetTitle);
+		squery.setTitleQuery(sheetName);
 		SpreadsheetFeed feed = (SpreadsheetFeed) getSpreadsheetFeedQuery(squery, SpreadsheetFeed.class);
 		List<SpreadsheetEntry> entry = feed.getEntries();
 		if (entry.size() == 0)
-			throw new SpreadsheetOperationException("Couldn't find spreadsheet:" + sheetTitle);
+			throw new SpreadsheetOperationException("Couldn't find spreadsheet:" + sheetName);
+		
+		if (entry.size() > 1) {
+		    throw new SpreadsheetOperationException("Multiple worksheets with the given title:" + sheetName + ".  Consider using a sheet key instead.");
+		}
 
 		return entry.get(0);
 	}
 	
-
-	public String getSpreadsheetKeyByTitle(String sheetName) {
-		return getSpreadsheetEntryByTitle(sheetName).getKey();
-	}
 
 	private BaseFeed<?, ?> getSpreadsheetFeedQuery(SpreadsheetQuery squery, Class<? extends BaseFeed<?, ?>> feedClass) {
 		try { 
@@ -103,6 +107,24 @@ public class GDataClientLoginAPI implements GDataAPI {
 			}
 		}
 	}
+	
+    private <E extends IEntry> E getSpreadsheetEntry(URL entryUrl, Class<E> entryClass) {
+        try { 
+            return service.getEntry(entryUrl, entryClass);
+        } catch (Exception ex) {
+            try {
+                Thread.sleep(RETRY_DELAY);
+            } catch (InterruptedException e) {
+            }
+            // Try to relogin
+            reauthenticate();
+            try {
+                return service.getEntry(entryUrl, entryClass);
+            } catch (Exception ex2) {
+                throw new SpreadsheetOperationException("Error getting spreadsheet feed. Possibly bad authentication or connection problems. " + ex2);
+            }
+        }
+    }
 
 	private void reauthenticate() {
 		headerFactory.login();

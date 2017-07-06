@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.runtime;
@@ -40,6 +36,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
+import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -48,22 +45,18 @@ import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.Database;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.VDBResource;
+import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
 import org.teiid.query.function.SystemFunctionManager;
-import org.teiid.query.metadata.ChainingMetadataRepository;
-import org.teiid.query.metadata.DDLFileMetadataRepository;
-import org.teiid.query.metadata.DDLMetadataRepository;
-import org.teiid.query.metadata.DatabaseStore;
-import org.teiid.query.metadata.DirectQueryMetadataRepository;
-import org.teiid.query.metadata.MaterializationMetadataRepository;
-import org.teiid.query.metadata.NativeMetadataRepository;
-import org.teiid.query.metadata.SystemMetadata;
-import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.metadata.*;
+import org.teiid.query.metadata.DatabaseStore.Mode;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -206,6 +199,7 @@ public abstract class AbstractVDBDeployer {
 	        dbStore.startEditing(true);
 	        dbStore.databaseCreated(new Database("x", "1")); //$NON-NLS-1$ //$NON-NLS-2$
 	        dbStore.databaseSwitched("x", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+	        dbStore.setMode(Mode.DOMAIN);
 	        QueryParser.getQueryParser().parseDDL(dbStore, new StringReader(value));
 	        dbStore.stopEditing();
 	        store.addDataTypes(dbStore.getDatabase("x", "1").getMetadataStore().getDatatypes()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -219,18 +213,9 @@ public abstract class AbstractVDBDeployer {
 			}
 		}
 		if (loadCount.get() == 0) {
+		    processVDBDDL(vdb, store, cmr, vdbResources);
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 			return;
-		}
-		
-		String prop = vdb.getPropertyValue("cache-metadata"); //$NON-NLS-1$
-		if (prop != null) {
-			LogManager.logDetail(LogConstants.CTX_RUNTIME, "using VDB metadata caching value", prop); //$NON-NLS-1$
-		} else if (vdb.isXmlDeployment()) {
-			prop = vdb.getPropertyValue("UseConnectorMetadata"); //$NON-NLS-1$ 
-			if (prop != null) {
-				LogManager.logDetail(LogConstants.CTX_RUNTIME, "using VDB metadata caching value", prop, "Note that UseConnectorMetadata is deprecated.  Use cache-metadata instead."); //$NON-NLS-1$ //$NON-NLS-2$
-			}
 		}
 		
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
@@ -255,7 +240,7 @@ public abstract class AbstractVDBDeployer {
 	protected void metadataLoaded(final VDBMetaData vdb,
 			final ModelMetaData model,
 			final MetadataStore vdbMetadataStore,
-			final AtomicInteger loadCount, MetadataFactory factory, boolean success) {
+			final AtomicInteger loadCount, MetadataFactory factory, boolean success, ConnectorManagerRepository cmr, VDBResources vdbResources) {
 		if (success) {
 			// merge into VDB metadata
 			factory.mergeInto(vdbMetadataStore);
@@ -270,9 +255,121 @@ public abstract class AbstractVDBDeployer {
 		}
 		
 		if (loadCount.decrementAndGet() == 0 || vdb.getStatus() == Status.FAILED) {
+		    if (vdb.getStatus() != Status.FAILED) {
+		        processVDBDDL(vdb, vdbMetadataStore, cmr, vdbResources);
+		    }
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 		}
 	}
+
+    private void processVDBDDL(final VDBMetaData vdb,
+            final MetadataStore vdbMetadataStore, final ConnectorManagerRepository cmr, final VDBResources vdbResources) {
+        if (vdb.getStatus() == Status.FAILED) {
+            return;
+        }
+        String ddl = vdb.getPropertyValue(VDBMetaData.TEIID_DDL);
+        if (ddl != null) {
+            final Database database = DatabaseUtil.convert(vdb, vdbMetadataStore);
+            CompositeMetadataStore compositeStore = new CompositeMetadataStore(vdbMetadataStore);
+            final TransformationMetadata metadata = new TransformationMetadata(vdb, compositeStore, null,
+                    getVDBRepository().getSystemFunctionManager().getSystemFunctions(), null);
+            
+            DeploymentBasedDatabaseStore deploymentStore = new DeploymentBasedDatabaseStore(getVDBRepository()) {
+                
+                @Override
+                protected TransformationMetadata getTransformationMetadata() {
+                    return metadata;
+                }
+                
+                @Override
+                public void importSchema(String schemaName, String serverType,
+                        String serverName, String foreignSchemaName,
+                        List<String> includeTables, List<String> excludeTables,
+                        Map<String, String> properties) {
+                    ModelMetaData model = vdb.getModel(schemaName);
+                    MetadataFactory factory = DatabaseStore.createMF(this, getSchema(schemaName), true);
+                    factory.getModelProperties().putAll(model.getPropertiesMap());
+                    factory.getModelProperties().putAll(properties);
+                    if (!includeTables.isEmpty()) {
+                        factory.getModelProperties().put("importer.includeTables", StringUtil.join(includeTables, ",")); //$NON-NLS-1$
+                    }
+                    if (!excludeTables.isEmpty()) {
+                        factory.getModelProperties().put("importer.excludeTables", StringUtil.join(excludeTables, ",")); //$NON-NLS-1$
+                    }
+                    factory.setParser(new QueryParser());
+                    if (vdbResources != null) {
+                        factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
+                    }
+                    MetadataRepository baseRepo = model.getAttachment(MetadataRepository.class);
+                    
+                    MetadataRepository metadataRepository;
+                    try {
+                        metadataRepository = getMetadataRepository(serverType);
+                        if (metadataRepository == null) {
+                            throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40094, model.getName(), vdb.getName(), vdb.getVersion(), serverType));
+                        }
+                    } catch (VirtualDatabaseException e1) {
+                        throw new MetadataException(e1);
+                    }
+                    
+                    metadataRepository = new ChainingMetadataRepository(Arrays.asList(new MetadataRepositoryWrapper(metadataRepository, null), baseRepo));
+                    
+                    ExecutionFactory ef = null;
+                    Object cf = null;
+                    
+                    Exception te = null;
+                    for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
+                        if (te != null) {
+                            LogManager.logDetail(LogConstants.CTX_RUNTIME, te, "Failed to get metadata, trying next source."); //$NON-NLS-1$
+                            te = null;
+                        }
+                        try {
+                            if (cm != null) {
+                                ef = cm.getExecutionFactory();
+                                cf = cm.getConnectionFactory();
+                            }
+                        } catch (TranslatorException e) {
+                            LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
+                        }
+                    
+                        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
+                            LogManager.logTrace(LogConstants.CTX_RUNTIME, "CREATE SCHEMA", factory.getSchema().getName(), ";\n", DDLStringVisitor.getDDLString(factory.getSchema(), null, null)); //$NON-NLS-1$ //$NON-NLS-2$
+                        }
+                        
+                        try {
+                            metadataRepository.loadMetadata(factory, ef, cf);
+                            break;
+                        } catch (Exception e) {
+                            te = e;
+                            factory = DatabaseStore.createMF(this, getSchema(schemaName), true);
+                            factory.getModelProperties().putAll(model.getPropertiesMap());
+                            factory.getModelProperties().putAll(properties);
+                            factory.setParser(new QueryParser());
+                            if (vdbResources != null) {
+                                factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
+                            }
+                        }
+                    }
+                    if (te != null) {
+                        if (te instanceof RuntimeException) {
+                            throw (RuntimeException)te;
+                        }
+                        throw new MetadataException(te);
+                    }
+                }
+            };
+            deploymentStore.startEditing(false);
+            deploymentStore.databaseCreated(database);
+            deploymentStore.databaseSwitched(database.getName(), database.getVersion());
+            deploymentStore.setMode(Mode.SCHEMA);
+            try {
+                QueryParser.getQueryParser().parseDDL(deploymentStore, new StringReader(ddl));
+            } finally {
+                deploymentStore.stopEditing();
+            }
+            DatabaseUtil.copyDatabaseGrantsAndRoles(database, vdb);
+        }
+    }
 	
 	protected MetadataFactory createMetadataFactory(VDBMetaData vdb, MetadataStore store,
 			ModelMetaData model, Map<String, ? extends VDBResource> vdbResources) {

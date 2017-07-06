@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.sql.visitor;
@@ -38,6 +34,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
@@ -1555,6 +1552,23 @@ public class TestSQLStringVisitor {
 
         helpTest(obj, "(SELECT e1 FROM m.g1)");             //$NON-NLS-1$
     }
+    
+    @Test public void testScalarSubqueryWithHint() {
+        Select s1 = new Select();
+        s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
+        From f1 = new From();
+        f1.addGroup(new GroupSymbol("m.g1"));        //$NON-NLS-1$
+        Query q1 = new Query();
+        q1.setSelect(s1);
+        q1.setFrom(f1);
+
+        ScalarSubquery obj = new ScalarSubquery(q1);
+        SubqueryHint subqueryHint = new SubqueryHint();
+        subqueryHint.setMergeJoin(true);
+        obj.setSubqueryHint(subqueryHint);
+
+        helpTest(obj, " /*+ MJ */ (SELECT e1 FROM m.g1)");             //$NON-NLS-1$
+    }
 
     @Test public void testNewSubqueryObjects(){
 
@@ -1752,6 +1766,20 @@ public class TestSQLStringVisitor {
     	String sql = "select 'a\\u0000\u0001b''c''d\u0002e\u0003f''' from TEXTTABLE(x COLUMNS y string ESCAPE '\u0000' HEADER) AS A";
     	
     	helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT 'a\\u0000\\u0001b''c''d\\u0002e\\u0003f''' FROM TEXTTABLE(x COLUMNS y string ESCAPE '\\u0000' HEADER) AS A"); //$NON-NLS-1$
+    }
+    
+    @Test public void testNestedComparison() {
+        CompareCriteria cc = new CompareCriteria(
+                new ElementSymbol("m.g.c1"), //$NON-NLS-1$
+                CompareCriteria.EQ,
+                new Constant("abc") ); //$NON-NLS-1$
+        
+        CompareCriteria cc1 = new CompareCriteria(
+                cc, //$NON-NLS-1$
+                CompareCriteria.EQ,
+                new Constant(false) ); //$NON-NLS-1$
+        
+        helpTest(cc1, "(m.g.c1 = 'abc') = FALSE"); //$NON-NLS-1$
     }
     
 }

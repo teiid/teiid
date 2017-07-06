@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.processor;
@@ -228,8 +224,8 @@ public class TestVirtualDepJoin {
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
          
         // Check plan contents
-        int selectCount = !setPushdown ? 2 : 0;
-        int accessCount = setPushdown ? 2 : 4;
+        int selectCount = !setPushdown ? 3 : 0;
+        int accessCount = setPushdown ? 1 : 4;
         int depAccessCount = 4 - accessCount;
         TestOptimizer.checkNodeTypes(plan, new int[] {
             accessCount,      // Access
@@ -637,8 +633,8 @@ public class TestVirtualDepJoin {
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
  
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            1,      // DependentAccess
+            2,      // Access
+            0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
@@ -653,7 +649,7 @@ public class TestVirtualDepJoin {
             0       // UnionAll
         });   
         
-        TestOptimizer.checkDependentJoinCount(plan, 1);        
+        TestOptimizer.checkDependentJoinCount(plan, 0);        
         // Run query 
         TestProcessor.helpProcess(plan, context, dataManager, expected);         
     }    

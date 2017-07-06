@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.resource.adapter.solr;
 
@@ -25,9 +21,12 @@ import java.io.IOException;
 
 import javax.resource.ResourceException;
 
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient.Builder;
+import org.apache.solr.client.solrj.impl.SolrHttpRequestRetryHandler;
 import org.apache.solr.client.solrj.request.LukeRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.LukeResponse;
@@ -39,7 +38,7 @@ import org.teiid.translator.solr.SolrConnection;
 
 public class SolrConnectionImpl extends BasicConnection implements SolrConnection {
 
-	private HttpSolrServer server;
+	private HttpSolrClient server;
 	private String coreName;
 
 	public SolrConnectionImpl(SolrManagedConnectionFactory config) {
@@ -48,7 +47,7 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
 			url = config.getUrl()+"/"; //$NON-NLS-1$
 		}
 		url = url + config.getCoreName();
-		this.server = new HttpSolrServer(url);
+		this.server = new Builder().build();
 
 		if (config.getSoTimeout() != null) {
 			this.server.setSoTimeout(config.getSoTimeout());
@@ -63,16 +62,20 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
 			this.server.setAllowCompression(config.getAllowCompression());
 		}
 		if (config.getMaxRetries() != null) {
-			this.server.setMaxRetries(config.getMaxRetries());
+		    ((DefaultHttpClient)this.server.getHttpClient()).setHttpRequestRetryHandler(new SolrHttpRequestRetryHandler(config.getMaxRetries()));
 		}
-		
 		this.coreName = config.getCoreName();
 	}
 
 	@Override
 	public void close() throws ResourceException {
-		if (this.server != null)
-			this.server.shutdown();
+		if (this.server != null) {
+			try {
+				this.server.close();
+			} catch (IOException e) {
+				throw new ResourceException(e);
+			}
+		}
 	}
 
 	@Override
@@ -92,6 +95,8 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
 		try {
 			return server.query(params);
 		} catch (SolrServerException e) {
+			throw new TranslatorException(e);
+		} catch (IOException e) {
 			throw new TranslatorException(e);
 		}
 	}

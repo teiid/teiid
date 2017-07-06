@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.translator.jdbc.oracle;
@@ -52,6 +48,7 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.translator.ExecutionContext;
@@ -70,9 +67,11 @@ import org.teiid.util.Version;
 public class OracleExecutionFactory extends JDBCExecutionFactory {
 	
 	private static final String TRUNC = "TRUNC"; //$NON-NLS-1$
+	private static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
     public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
+	public static final Version ELEVEN_2 = Version.getVersion("11.2"); //$NON-NLS-1$
 	public static final Version TWELVE = Version.getVersion("12"); //$NON-NLS-1$
 	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
@@ -299,10 +298,22 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("SDO_ANYINTERACT")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new AliasModifier("SDO_OVERLAPBDYINTERSECT")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new AliasModifier("SDO_OVERLAPBDYDISJOINT")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new AliasModifier("SDO_TOUCHES")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new AliasModifier("SDO_TOUCH")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new AliasModifier("SDO_EQUALS")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Override
+    public void initCapabilities(Connection connection)
+            throws TranslatorException {
+        super.initCapabilities(connection);
+        if (getVersion().compareTo(ELEVEN_2) >= 0) {
+            AggregateAttributes aa = new AggregateAttributes();
+            aa.setAllowsOrderBy(true);
+            addPushDownFunction(ORACLE, LISTAGG, STRING, STRING, STRING).setAggregateAttributes(aa); 
+            addPushDownFunction(ORACLE, LISTAGG, STRING, STRING).setAggregateAttributes(aa);
+        }
     }
     
     public void handleInsertSequences(Insert insert) throws TranslatorException {
@@ -1135,5 +1146,21 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsSelectExpressionArrayType() {
         return false;
+    }
+    
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+        if (obj instanceof AggregateFunction) {
+            AggregateFunction af = (AggregateFunction)obj;
+            if (af.getName().equalsIgnoreCase("LISTAGG")) {
+                OrderBy order = af.getOrderBy();
+                af.setOrderBy(null);
+                if (order == null) {
+                    return null;
+                }
+                return Arrays.asList(af, " WITHIN GROUP (", order, ")");
+            }
+        }
+        return super.translate(obj, context);
     }
 }

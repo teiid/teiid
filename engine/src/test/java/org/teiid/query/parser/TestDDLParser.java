@@ -1,24 +1,20 @@
 package org.teiid.query.parser;
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 import static org.junit.Assert.*;
 
@@ -28,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -38,9 +35,13 @@ import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.DatabaseStore;
+import org.teiid.query.metadata.DatabaseStore.Mode;
+import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.validator.ValidatorReport;
 
 //import static org.junit.Assert.*;
@@ -473,13 +474,13 @@ public class TestDDLParser {
 		assertEquals(FunctionMethod.PushDown.MUST_PUSHDOWN, fm.getPushdown());
 	}	
 	
-	@Test(expected=DuplicateRecordException.class)
+	@Test(expected=org.teiid.metadata.ParseException.class)
 	public void testDuplicateFunctions() throws Exception {
 		String ddl = "CREATE FUNCTION SourceFunc() RETURNS integer; CREATE FUNCTION SourceFunc() RETURNS string";
 		helpParse(ddl, "model");
 	}
 	
-	@Test(expected=DuplicateRecordException.class)
+	@Test(expected=org.teiid.metadata.ParseException.class)
 	public void testDuplicateFunctions1() throws Exception {
 		String ddl = "CREATE FUNCTION SourceFunc() RETURNS string OPTIONS (UUID 'a'); CREATE FUNCTION SourceFunc1() RETURNS string OPTIONS (UUID 'a')";
 		helpParse(ddl, "model");
@@ -783,8 +784,12 @@ public class TestDDLParser {
 		QueryParser.getQueryParser().parseDDL(mf, ddl);
 		return mf;
 	}
-	
+
     public static Database helpParse(String ddl) {
+        return helpParse(ddl, Mode.ANY);
+    }
+    
+    public static Database helpParse(String ddl, DatabaseStore.Mode mode) {
         final Map<String, Datatype> dataTypes = getDataTypes();
         DatabaseStore store = new DatabaseStore() {
             @Override
@@ -795,8 +800,19 @@ public class TestDDLParser {
 			public SystemFunctionManager getSystemFunctionManager() {
 				return new SystemFunctionManager();
 			}
+			@Override
+			protected TransformationMetadata getTransformationMetadata() {
+			    Database database = getCurrentDatabase();
+		        
+		        CompositeMetadataStore store = new CompositeMetadataStore(database.getMetadataStore());
+		        //grants are already stored on the VDBMetaData
+		        store.getGrants().clear();
+		        return new TransformationMetadata(DatabaseUtil.convert(database), store, null,
+		                getSystemFunctionManager().getSystemFunctions(), null);
+			}
         }; 
         store.startEditing(true);
+        store.setMode(mode);
         QueryParser.getQueryParser().parseDDL(store, new StringReader(ddl));
         store.stopEditing();
         if (store.getDatabases().isEmpty()) {
@@ -1144,7 +1160,7 @@ public class TestDDLParser {
         assertEquals("v2", db.getProperty("k2", false));
     }
     
-    @Test 
+    @Ignore 
     public void testCreateDropDatabase() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "DROP DATABASE FOO;";
@@ -1228,7 +1244,7 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
-                + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
+                + "GRANT SELECT,INSERT,DELETE ON TABLE test.G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;";
         
         Database db = helpParse(ddl);
@@ -1307,7 +1323,7 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
-                + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
+                + "GRANT SELECT,INSERT,DELETE ON TABLE test.G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
                 + "REVOKE SELECT ON TABLE test.G1 FROM superuser;";
         
@@ -1627,5 +1643,21 @@ public class TestDDLParser {
         
         Database db = helpParse(ddl);
         assertEquals(1000, db.getMetadataStore().getDatatypes().get("my_string").getLength());
+    }
+    
+    @Test(expected=MetadataException.class) public void testDDLNotAllowed() throws Exception {
+        String ddl = "CREATE DATABASE FOO;";
+        
+        helpParse(ddl, "model");
+    }
+    
+    @Test(expected=MetadataException.class)
+    public void testDDLOutOfSequence() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE SCHEMA S1; SET SCHEMA S1;"
+                 + "CREATE VIEW X (y string) as select 'a';"
+                 + "CREATE SCHEMA S2;";
+        
+        helpParse(ddl, Mode.DATABASE_STRUCTURE);
     }
 }

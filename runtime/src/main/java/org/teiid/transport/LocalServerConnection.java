@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.transport;
@@ -35,6 +31,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
@@ -44,6 +41,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -73,6 +71,8 @@ public class LocalServerConnection implements ServerConnection {
     private boolean passthrough;
     private boolean derived;
     private static String serverVersion = new Handshake().getVersion();
+    private AutoConnectListener autoConnectListener = null;
+    private volatile boolean reconnect;
     
     private Method cancelMethod;
     
@@ -120,6 +120,11 @@ public class LocalServerConnection implements ServerConnection {
 			throw new TeiidRuntimeException(e);
 		} catch (NoSuchMethodException e) {
 			throw new TeiidRuntimeException(e);
+		}
+		boolean autoFailOver = Boolean.parseBoolean(connectionProperties.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER));
+		if (autoFailOver) {
+		    this.autoConnectListener = new AutoConnectListener();
+		    addListener(this.autoConnectListener);
 		}
 	}
 
@@ -185,15 +190,20 @@ public class LocalServerConnection implements ServerConnection {
 					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40074)));
 				}
 				try {
+				    if (derived) {
+				        workContext.setDerived(true);
+				    }
 					// check to make sure the current security context same as logged one
-					if (passthrough && !logon 
-							&& !arg1.equals(cancelMethod) // -- it's ok to use another thread to cancel
-							&& !workContext.getSession().isClosed()
-							//if configured without a security domain the context will be null
-							&& workContext.getSession().getSecurityDomain() != null
-							&& !sameSubject(workContext)) {
+					if (!logon && (reconnect 
+					        || (passthrough
+					                && !arg1.equals(cancelMethod) // -- it's ok to use another thread to cancel
+					                && !workContext.getSession().isClosed()
+                                    //if configured without a security domain the context will be null
+					                && workContext.getSession().getSecurityDomain() != null
+					                && !sameSubject(workContext)))) {
 						//TODO: this is an implicit changeUser - we may want to make this explicit, but that would require pools to explicitly use changeUser
 						LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40115, workContext.getSession().getSessionId()));
+						reconnect = false;
 						authenticate();
 					}
 					
@@ -207,6 +217,8 @@ public class LocalServerConnection implements ServerConnection {
 					throw e.getTargetException();
 				} catch (Throwable e) {
 					throw ExceptionUtil.convertException(arg1, e);
+				} finally {
+				    workContext.setDerived(false);
 				}
 			}
 		}));
@@ -243,6 +255,9 @@ public class LocalServerConnection implements ServerConnection {
 	}
 
 	public void close() {
+	    if (this.autoConnectListener != null) {
+	        removeListener(this.autoConnectListener);
+	    }
 		shutdown(true);
 	}
 	
@@ -317,5 +332,16 @@ public class LocalServerConnection implements ServerConnection {
 	@Override
 	public String getServerVersion() {
 		return serverVersion;
+	}
+	
+	private class AutoConnectListener implements VDBLifeCycleListener {
+        @Override
+        public void finishedDeployment(String name, CompositeVDB cvdb) {
+            VDBMetaData vdb = cvdb.getVDB();
+            if (workContext.getSession().getVdb().getName().equals(vdb.getName())
+                    && workContext.getSession().getVdb().getVersion().equals(vdb.getVersion())) {
+                reconnect = true;   
+            }
+        }
 	}
 }

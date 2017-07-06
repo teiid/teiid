@@ -1,42 +1,31 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.sql.lang;
 
-import java.util.List;
+import junit.framework.TestCase;
 
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.Into;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-
-import junit.framework.TestCase;
 
 
 
@@ -66,13 +55,11 @@ public class TestQuery extends TestCase {
         return q2;    
     }
     
-    /** SELECT xml FROM xmltest.doc1 */
     public static final Query sample2() { 
         Query q1 = new Query();
         Select select = new Select();
         select.addSymbol(new ElementSymbol("xml"));        //$NON-NLS-1$
         q1.setSelect(select);        
-        q1.setIsXML(true);
         
         From from = new From();
         from.addGroup(new GroupSymbol("xmltest.doc1")); //$NON-NLS-1$
@@ -99,14 +86,6 @@ public class TestQuery extends TestCase {
     public void testNonEquivalence(){
         Object s1 = sample1();
         Object s2 = sample2();
-        int equals = -1;
-        UnitTestUtil.helpTestEquivalence(equals, s1, s2);
-    }
-    
-    public void testNonEquivalence2(){
-        Query s1 = sample1();
-        Query s2 = sample1();
-        s2.setIsXML(true);
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
     }
@@ -151,16 +130,6 @@ public class TestQuery extends TestCase {
         query.setFrom(from);
         assertTrue(query.areResultsCachable());        
     }
-    
-    public void testClone2() {    
-        Query q = sample2();
-        List projectedSymbols = q.getProjectedSymbols();
-        assertTrue(projectedSymbols == q.getProjectedSymbols());
-        Query qclone = (Query)q.clone();
-        int equals = 0;
-        UnitTestUtil.helpTestEquivalence(equals, q, qclone);
-        assertEquals(projectedSymbols, qclone.getProjectedSymbols());
-    }  
     
     public void testClone3() {
     	Query q = sample2();

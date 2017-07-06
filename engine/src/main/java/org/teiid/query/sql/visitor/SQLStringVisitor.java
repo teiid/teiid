@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.sql.visitor;
@@ -186,12 +182,24 @@ public class SQLStringVisitor extends LanguageVisitor {
     @Override
     public void visit( CompareCriteria obj ) {
         Expression leftExpression = obj.getLeftExpression();
-        visitNode(leftExpression);
+        if (leftExpression instanceof CompareCriteria) {
+            append(Tokens.LPAREN);
+            visitNode(leftExpression);
+            append(Tokens.RPAREN);
+        } else {
+            visitNode(leftExpression);
+        }
         append(SPACE);
         append(obj.getOperatorAsString());
         append(SPACE);
         Expression rightExpression = obj.getRightExpression();
-        visitNode(rightExpression);
+        if (rightExpression instanceof CompareCriteria) {
+            append(Tokens.LPAREN);
+            visitNode(rightExpression);
+            append(Tokens.RPAREN);
+        } else {
+            visitNode(rightExpression);            
+        }
     }
 
     @Override
@@ -1890,7 +1898,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     @Override
     public void visit( ScalarSubquery obj ) {
     	if (obj.getSubqueryHint().isDepJoin() || obj.getSubqueryHint().isMergeJoin() || obj.getSubqueryHint().isNoUnnest()) {
-	    	if (this.parts.charAt(this.parts.length()-1) == ' ') {
+	    	if (this.parts.length() > 0 && this.parts.charAt(this.parts.length()-1) == ' ') {
 	    		this.parts.setLength(this.parts.length() -1);
 	    	}
 	    	addSubqueryHint(obj.getSubqueryHint());

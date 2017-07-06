@@ -8,15 +8,15 @@ create server z type 'custom' version 'one' foreign data wrapper y options(key '
 
 create schema PM1 server z;
 
-set schema PM1;
+create role admin with jaas role superuser;
 
 import foreign schema anyschema FROM SERVER z into PM1;
 
 import foreign schema anyschema FROM REPOSITORY myrepo into PM1 OPTIONS(myrepokey 'value');
 
-create foreign table mytable ("my-column" string) OPTIONS(UPDATABLE true);
+set schema PM1;
 
-create role admin with jaas role superuser;
+create foreign table mytable ("my-column" string) OPTIONS(UPDATABLE true);
 
 grant select,update ON TABLE "PM1.mytable" TO admin; 
 

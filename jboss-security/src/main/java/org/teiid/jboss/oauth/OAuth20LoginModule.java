@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2006, Red Hat Middleware LLC, and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.jboss.oauth;
 
@@ -47,6 +43,7 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
     private String clientSecret;
     private String refreshToken;
     private String accessTokenURI;
+    private String accessToken;
     protected OAuthCredential credential;
     protected Subject callerSubject;
     protected Principal callerPrincipal;
@@ -60,6 +57,7 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
        
        this.refreshToken = (String) options.get("refresh-token"); //$NON-NLS-1$
        this.accessTokenURI = (String) options.get("access-token-uri"); //$NON-NLS-1$
+        this.accessToken = (String) options.get("access-token"); //$NON-NLS-1$
     }
     
     @Override
@@ -69,7 +67,8 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
         
         if (getCredential() == null) {
             if (getClientId() == null || getClientSecret() == null || 
-                    getAccessTokenURI() == null || getRefreshToken() == null) {
+                    (getAccessTokenURI() == null && getAccessToken() == null)
+                    || (getRefreshToken() == null && getAccessToken() == null)) {
                 super.loginOk = false;
                 return false;
             }
@@ -80,6 +79,7 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
             cred.setClientSecret(getClientSecret());
             cred.setRefreshToken(getRefreshToken());
             cred.setAccessTokenURI(getAccessTokenURI());
+            cred.setAccessTokenString(getAccessToken());
             setCredential(cred);
         }
         
@@ -186,5 +186,13 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
 
     public void setAccessTokenURI(String accessTokenURI) {
         this.accessTokenURI = accessTokenURI;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 }

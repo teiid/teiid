@@ -4,7 +4,7 @@
     <parent>
         <artifactId>infinispan</artifactId>
         <groupId>org.jboss.teiid.connectors</groupId>
-        <version>9.3.0.Alpha1-SNAPSHOT</version>
+        <version>10.0.0.Alpha2-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-infinispan</artifactId>
     <name>Infinispan Feature Pack</name>
@@ -28,36 +28,25 @@
             <version>${project.version}</version>
             <type>zip</type>
         </dependency>
+         
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-wildfly-integration-feature-pack</artifactId>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>feature-pack-odata</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
-        </dependency>        
+        </dependency>
+
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>translator-object</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>translator-infinispan-libmode</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+            <artifactId>infinispan-api</artifactId>
+        </dependency>                
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-infinispan-hotrod</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>connector-infinispan-libmode</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-infinispan-hotrod</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

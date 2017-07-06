@@ -31,24 +31,19 @@ public class MetadataLoadingTest extends IntegrationTest {
 		gdata = new GDataClientLoginAPI();
 		gdata.setHeaderFactory(auth);
 		visualizationAPI = new GoogleDataProtocolAPI();
-		visualizationAPI.setSpreadSheetBrowser(gdata);
 		visualizationAPI.setHeaderFactory(auth);
 	}
 	
-	@Test
-	public void findSpreadsheet(){
-		Assert.assertEquals("Spreadsheet not found", "tWNeVMVpBRQYOSY1Pgav15Q",gdata.getSpreadsheetKeyByTitle("spreadsheet1"));
-	}
 	@Test 
 	public void testMetadata(){
 
 		SpreadsheetMetadataExtractor extractor = new SpreadsheetMetadataExtractor();
 		extractor.setGdataAPI(gdata);
 		extractor.setVisualizationAPI(visualizationAPI);
-		SpreadsheetInfo metadata= extractor.extractMetadata("integration_tests");
+		SpreadsheetInfo metadata= extractor.extractMetadata("integration_tests", false);
 		Assert.assertEquals(0,metadata.getWorksheetByName("Sheet1").getColumnCount());
 		Assert.assertEquals(2,metadata.getWorksheetByName("Sheet2").getColumnCount());
-		metadata= extractor.extractMetadata("people");
+		metadata= extractor.extractMetadata("people", false);
 		Assert.assertEquals(5,metadata.getWorksheetByName("list").getColumnCount());
 		Assert.assertEquals(4,metadata.getWorksheetByName("phones").getColumnCount());
 		

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.olingo;
 
@@ -128,8 +124,14 @@ public class TestODataSQLBuilder {
             "   id integer PRIMARY KEY, " +
             "   customerid integer, " +
             "   place varchar(10), "+
-            "   FOREIGN KEY (customerid) REFERENCES Customers(id)"+
-            ");";
+            "   FOREIGN KEY (customerid) REFERENCES Customers(id));" +
+            "CREATE FOREIGN TABLE EmployeeEntity (\n" + 
+            "  EmployeeID integer primary key,\n" + 
+            "  Delegate integer," +
+            "  DeputyDelegate integer," +
+            " CONSTRAINT delegates FOREIGN KEY (Delegate) REFERENCES EmployeeEntity(EmployeeID)," +
+            " CONSTRAINT deputyDelegates FOREIGN KEY (DeputyDelegate) REFERENCES EmployeeEntity(EmployeeID)"
+            + ");\n";
     
     static class QueryState extends BaseState {
         List<SQLParameter> parameters;
@@ -828,6 +830,15 @@ public class TestODataSQLBuilder {
 
         helpTest("/odata4/vdb/PM1/G1(0)/G4_FKX", "SELECT g1.e1, g1.e2 FROM PM1.G1 AS g0 "
                 + "INNER JOIN PM1.G4 AS g1 ON g0.e2 = g1.e2 WHERE g0.e2 = 0 ORDER BY g1.e1");
+    }
+    
+    @Test
+    public void testSelfNavigation() throws Exception {
+        helpTest("/odata4/vdb/PM1/EmployeeEntity(3)/deputyDelegates", "SELECT g1.EmployeeID, g1.Delegate, g1.DeputyDelegate "
+                + "FROM PM1.EmployeeEntity AS g0 INNER JOIN PM1.EmployeeEntity AS g1 ON g1.EmployeeID = g0.DeputyDelegate WHERE g0.EmployeeID = 3 ORDER BY g1.EmployeeID");
+
+        helpTest("/odata4/vdb/PM1/EmployeeEntity(3)/delegates", "SELECT g1.EmployeeID, g1.Delegate, g1.DeputyDelegate "
+                + "FROM PM1.EmployeeEntity AS g0 INNER JOIN PM1.EmployeeEntity AS g1 ON g1.EmployeeID = g0.Delegate WHERE g0.EmployeeID = 3 ORDER BY g1.EmployeeID");
     }
     
     @Test

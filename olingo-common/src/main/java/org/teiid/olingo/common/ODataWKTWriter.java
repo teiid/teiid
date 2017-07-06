@@ -4,31 +4,22 @@
  * geo-spatial data set to a known topological specification.
  *
  * Copyright (C) 2001 Vivid Solutions
+ * 
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, contact:
- *
- *     Vivid Solutions
- *     Suite #1A
- *     2328 Government Street
- *     Victoria BC  V8T 5G5
- *     Canada
- *
- *     (250)385-6040
- *     www.vividsolutions.com
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.olingo.common;
 
@@ -41,15 +32,12 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmDouble;
 import org.teiid.core.TeiidRuntimeException;
 
 import com.vividsolutions.jts.geom.*;
-import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.util.Assert;
 
 /**
  * Writes the Well-Known Text representation of a {@link Geometry}.
  * The Well-Known Text format is defined in the
  * OGC <A HREF="http://www.opengis.org/techno/specs.htm">
- * <i>Simple Features Specification for SQL</i></A>.
- * See {@link WKTReader} for a formal specification of the format syntax.
  * <p>
  * The <code>WKTWriter</code> outputs coordinates rounded to the precision
  * model. Only the maximum number of decimal places 
@@ -63,13 +51,15 @@ import com.vividsolutions.jts.util.Assert;
  * to output LinearRings.
  *
  * Forked from JTS to conform to OData BNF
+ * 
+ * Relicensed to ASL as the work is reasonably distinct from the original
+ * and implements a trivial mapping to OData WKT
  *
  */
 class ODataWKTWriter
 {
 
   private int outputDimension = 2;
-  private boolean isFormatted = false;
 
   /**
    * Creates a new WKTWriter with default settings
@@ -105,7 +95,7 @@ class ODataWKTWriter
   {
     Writer sw = new StringWriter();
     try {
-      writeFormatted(geometry, isFormatted, sw);
+      write(geometry, sw);
     }
     catch (IOException ex) {
       Assert.shouldNeverReachHere();
@@ -121,82 +111,27 @@ class ODataWKTWriter
   public void write(Geometry geometry, Writer writer)
     throws IOException
   {
-    writeFormatted(geometry, false, writer);
-  }
-
-  /**
-   *  Same as <code>write</code>, but with newlines and spaces to make the
-   *  well-known text more readable.
-   *
-   *@param  geometry  a <code>Geometry</code> to process
-   *@return           a <Geometry Tagged Text> string (see the OpenGIS Simple
-   *      Features Specification), with newlines and spaces
-   */
-  public String writeFormatted(Geometry geometry)
-  {
-    Writer sw = new StringWriter();
-    try {
-      writeFormatted(geometry, true, sw);
-    }
-    catch (IOException ex) {
-      Assert.shouldNeverReachHere();
-    }
-    return sw.toString();
-  }
-  /**
-   *  Same as <code>write</code>, but with newlines and spaces to make the
-   *  well-known text more readable.
-   *
-   *@param  geometry  a <code>Geometry</code> to process
-   */
-  public void writeFormatted(Geometry geometry, Writer writer)
-    throws IOException
-  {
-    writeFormatted(geometry, true, writer);
-  }
-  /**
-   *  Converts a <code>Geometry</code> to its Well-known Text representation.
-   *
-   *@param  geometry  a <code>Geometry</code> to process
-   */
-  private void writeFormatted(Geometry geometry, boolean useFormatting, Writer writer)
-    throws IOException
-  {
-    appendGeometryTaggedText(geometry, 0, writer);
-  }
-
-
-  /**
-   *  Converts a <code>Geometry</code> to &lt;Geometry Tagged Text&gt; format,
-   *  then appends it to the writer.
-   *
-   *@param  geometry  the <code>Geometry</code> to process
-   *@param  writer    the output writer to append to
-   */
-  private void appendGeometryTaggedText(Geometry geometry, int level, Writer writer)
-    throws IOException
-  {
     if (geometry instanceof Point) {
       Point point = (Point) geometry;
-      appendPointTaggedText(point.getCoordinate(), level, writer, point.getPrecisionModel());
+      appendPointTaggedText(point.getCoordinate(), writer, point.getPrecisionModel());
     }
     else if (geometry instanceof LineString) {
-      appendLineStringTaggedText((LineString) geometry, level, writer);
+      appendLineStringTaggedText((LineString) geometry, writer);
     }
     else if (geometry instanceof Polygon) {
-      appendPolygonTaggedText((Polygon) geometry, level, writer);
+      appendPolygonTaggedText((Polygon) geometry, writer);
     }
     else if (geometry instanceof MultiPoint) {
-      appendMultiPointTaggedText((MultiPoint) geometry, level, writer);
+      appendMultiPointTaggedText((MultiPoint) geometry, writer);
     }
     else if (geometry instanceof MultiLineString) {
-      appendMultiLineStringTaggedText((MultiLineString) geometry, level, writer);
+      appendMultiLineStringTaggedText((MultiLineString) geometry, writer);
     }
     else if (geometry instanceof MultiPolygon) {
-      appendMultiPolygonTaggedText((MultiPolygon) geometry, level, writer);
+      appendMultiPolygonTaggedText((MultiPolygon) geometry, writer);
     }
     else if (geometry instanceof GeometryCollection) {
-      appendGeometryCollectionTaggedText((GeometryCollection) geometry, level, writer);
+      appendGeometryCollectionTaggedText((GeometryCollection) geometry, writer);
     }
     else {
       Assert.shouldNeverReachHere("Unsupported Geometry implementation:"
@@ -213,12 +148,12 @@ class ODataWKTWriter
    *@param  precisionModel  the <code>PrecisionModel</code> to use to convert
    *      from a precise coordinate to an external coordinate
    */
-  private void appendPointTaggedText(Coordinate coordinate, int level, Writer writer,
+  private void appendPointTaggedText(Coordinate coordinate, Writer writer,
       PrecisionModel precisionModel)
     throws IOException
   {
     writer.write("Point");
-    appendPointText(coordinate, level, writer, precisionModel);
+    appendPointText(coordinate, writer, precisionModel);
   }
 
   /**
@@ -228,11 +163,11 @@ class ODataWKTWriter
    *@param  lineString  the <code>LineString</code> to process
    *@param  writer      the output writer to append to
    */
-  private void appendLineStringTaggedText(LineString lineString, int level, Writer writer)
+  private void appendLineStringTaggedText(LineString lineString, Writer writer)
     throws IOException
   {
     writer.write("LineString");
-    appendLineStringText(lineString, level, false, writer);
+    appendLineStringText(lineString, writer);
   }
 
   /**
@@ -242,11 +177,11 @@ class ODataWKTWriter
    *@param  polygon  the <code>Polygon</code> to process
    *@param  writer   the output writer to append to
    */
-  private void appendPolygonTaggedText(Polygon polygon, int level, Writer writer)
+  private void appendPolygonTaggedText(Polygon polygon, Writer writer)
     throws IOException
   {
     writer.write("Polygon");
-    appendPolygonText(polygon, level, false, writer);
+    appendPolygonText(polygon, writer);
   }
 
   /**
@@ -256,11 +191,11 @@ class ODataWKTWriter
    *@param  multipoint  the <code>MultiPoint</code> to process
    *@param  writer      the output writer to append to
    */
-  private void appendMultiPointTaggedText(MultiPoint multipoint, int level, Writer writer)
+  private void appendMultiPointTaggedText(MultiPoint multipoint, Writer writer)
     throws IOException
   {
     writer.write("MultiPoint");
-    appendMultiPointText(multipoint, level, writer);
+    appendMultiPointText(multipoint, writer);
   }
 
   /**
@@ -270,12 +205,12 @@ class ODataWKTWriter
    *@param  multiLineString  the <code>MultiLineString</code> to process
    *@param  writer           the output writer to append to
    */
-  private void appendMultiLineStringTaggedText(MultiLineString multiLineString, int level,
+  private void appendMultiLineStringTaggedText(MultiLineString multiLineString, 
       Writer writer)
     throws IOException
   {
     writer.write("MultiLineString");
-    appendMultiLineStringText(multiLineString, level, false, writer);
+    appendMultiLineStringText(multiLineString, writer);
   }
 
   /**
@@ -285,11 +220,11 @@ class ODataWKTWriter
    *@param  multiPolygon  the <code>MultiPolygon</code> to process
    *@param  writer        the output writer to append to
    */
-  private void appendMultiPolygonTaggedText(MultiPolygon multiPolygon, int level, Writer writer)
+  private void appendMultiPolygonTaggedText(MultiPolygon multiPolygon, Writer writer)
     throws IOException
   {
     writer.write("MultiPolygon");
-    appendMultiPolygonText(multiPolygon, level, writer);
+    appendMultiPolygonText(multiPolygon, writer);
   }
 
   /**
@@ -299,12 +234,12 @@ class ODataWKTWriter
    *@param  geometryCollection  the <code>GeometryCollection</code> to process
    *@param  writer              the output writer to append to
    */
-  private void appendGeometryCollectionTaggedText(GeometryCollection geometryCollection, int level,
+  private void appendGeometryCollectionTaggedText(GeometryCollection geometryCollection, 
       Writer writer)
     throws IOException
   {
     writer.write("Collection");
-    appendGeometryCollectionText(geometryCollection, level, writer);
+    appendGeometryCollectionText(geometryCollection, writer);
   }
 
   /**
@@ -316,7 +251,7 @@ class ODataWKTWriter
    *@param  precisionModel  the <code>PrecisionModel</code> to use to convert
    *      from a precise coordinate to an external coordinate
    */
-  private void appendPointText(Coordinate coordinate, int level, Writer writer,
+  private void appendPointText(Coordinate coordinate, Writer writer,
       PrecisionModel precisionModel)
     throws IOException
   {
@@ -325,26 +260,6 @@ class ODataWKTWriter
     	  appendCoordinate(coordinate, writer);
       }
       writer.write(")");
-  }
-
-  /**
-   * Appends the i'th coordinate from the sequence to the writer
-   *
-   * @param  seq  the <code>CoordinateSequence</code> to process
-   * @param i     the index of the coordinate to write
-   * @param  writer the output writer to append to
-   */
-  private void appendCoordinate(CoordinateSequence seq, int i, Writer writer)
-      throws IOException
-  {
-    writer.write(writeNumber(seq.getX(i)) + " " + writeNumber(seq.getY(i)));
-    if (outputDimension >= 3 && seq.getDimension() >= 3) {
-      double z = seq.getOrdinate(i, 3);
-      if (! Double.isNaN(z)) {
-        writer.write(" ");
-        writer.write(writeNumber(z));
-      }
-    }
   }
 
   /**
@@ -385,9 +300,9 @@ class ODataWKTWriter
    *  appends it to the writer.
    *
    *@param  lineString  the <code>LineString</code> to process
-   *@param  writer      the output writer to append to
+   * @param  writer      the output writer to append to
    */
-  private void appendLineStringText(LineString lineString, int level, boolean doIndent, Writer writer)
+  private void appendLineStringText(LineString lineString, Writer writer)
     throws IOException
   {
       writer.write("(");
@@ -405,16 +320,16 @@ class ODataWKTWriter
    *  appends it to the writer.
    *
    *@param  polygon  the <code>Polygon</code> to process
-   *@param  writer   the output writer to append to
+   * @param  writer   the output writer to append to
    */
-  private void appendPolygonText(Polygon polygon, int level, boolean indentFirst, Writer writer)
+  private void appendPolygonText(Polygon polygon, Writer writer)
     throws IOException
   {
       writer.write("(");
-      appendLineStringText(polygon.getExteriorRing(), level, false, writer);
+      appendLineStringText(polygon.getExteriorRing(), writer);
       for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
         writer.write(", ");
-        appendLineStringText(polygon.getInteriorRingN(i), level + 1, true, writer);
+        appendLineStringText(polygon.getInteriorRingN(i), writer);
       }
       writer.write(")");
   }
@@ -426,7 +341,7 @@ class ODataWKTWriter
    *@param  multiPoint  the <code>MultiPoint</code> to process
    *@param  writer      the output writer to append to
    */
-  private void appendMultiPointText(MultiPoint multiPoint, int level, Writer writer)
+  private void appendMultiPointText(MultiPoint multiPoint, Writer writer)
     throws IOException
   {
       writer.write("(");
@@ -448,20 +363,16 @@ class ODataWKTWriter
    *@param  multiLineString  the <code>MultiLineString</code> to process
    *@param  writer           the output writer to append to
    */
-  private void appendMultiLineStringText(MultiLineString multiLineString, int level, boolean indentFirst,
+  private void appendMultiLineStringText(MultiLineString multiLineString, 
       Writer writer)
     throws IOException
   {
-      int level2 = level;
-      boolean doIndent = indentFirst;
       writer.write("(");
       for (int i = 0; i < multiLineString.getNumGeometries(); i++) {
         if (i > 0) {
           writer.write(", ");
-          level2 = level + 1;
-          doIndent = true;
         }
-        appendLineStringText((LineString) multiLineString.getGeometryN(i), level2, doIndent, writer);
+        appendLineStringText((LineString) multiLineString.getGeometryN(i), writer);
       }
       writer.write(")");
   }
@@ -473,19 +384,15 @@ class ODataWKTWriter
    *@param  multiPolygon  the <code>MultiPolygon</code> to process
    *@param  writer        the output writer to append to
    */
-  private void appendMultiPolygonText(MultiPolygon multiPolygon, int level, Writer writer)
+  private void appendMultiPolygonText(MultiPolygon multiPolygon, Writer writer)
     throws IOException
   {
-      int level2 = level;
-      boolean doIndent = false;
       writer.write("(");
       for (int i = 0; i < multiPolygon.getNumGeometries(); i++) {
         if (i > 0) {
           writer.write(", ");
-          level2 = level + 1;
-          doIndent = true;
         }
-        appendPolygonText((Polygon) multiPolygon.getGeometryN(i), level2, doIndent, writer);
+        appendPolygonText((Polygon) multiPolygon.getGeometryN(i), writer);
       }
       writer.write(")");
   }
@@ -497,18 +404,16 @@ class ODataWKTWriter
    *@param  geometryCollection  the <code>GeometryCollection</code> to process
    *@param  writer              the output writer to append to
    */
-  private void appendGeometryCollectionText(GeometryCollection geometryCollection, int level,
+  private void appendGeometryCollectionText(GeometryCollection geometryCollection, 
       Writer writer)
     throws IOException
   {
-      int level2 = level;
       writer.write("(");
       for (int i = 0; i < geometryCollection.getNumGeometries(); i++) {
         if (i > 0) {
           writer.write(", ");
-          level2 = level + 1;
         }
-        appendGeometryTaggedText(geometryCollection.getGeometryN(i), level2, writer);
+        write(geometryCollection.getGeometryN(i), writer);
       }
       writer.write(")");
   }

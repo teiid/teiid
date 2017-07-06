@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.optimizer.relational.rules;
@@ -154,7 +150,8 @@ public class RulePushAggregates implements
 	            				if (groupingExpressions.isEmpty()) {
 	            					addEmptyFilter(aggregates, groupNode, metadata, capFinder, RuleRaiseAccess.getModelIDFromAccess(child, metadata));
 	            				}
-	            				FrameUtil.convertNode(groupNode.getParent(), null, null, ((SymbolMap)groupNode.getProperty(Info.SYMBOL_MAP)).inserseMapping(), metadata, false);
+	            				access.getGroups().clear();
+	            				access.getGroups().addAll(groupNode.getGroups());
 	            				RuleRaiseAccess.performRaise(null, access, access.getParent());
 	            				if (groupingExpressions.isEmpty() && RuleRaiseAccess.canRaiseOverSelect(access, metadata, capFinder, access.getParent(), null)) {
 	            					RuleRaiseAccess.performRaise(null, access, access.getParent());
@@ -730,6 +727,8 @@ public class RulePushAggregates implements
     			break;
         	}        		
     	}
+        
+        boolean recollectAggregates = false; 
         for (PlanNode planNode : possibleTargetNodes) {
             Set<Expression> stagedGroupingSymbols = new LinkedHashSet<Expression>();
             Collection<AggregateSymbol> aggregates = aggregateMap.get(planNode);
@@ -741,6 +740,10 @@ public class RulePushAggregates implements
 
         	filterExpressions(stagedGroupingSymbols, planNode.getGroups(), groupingExpressions, false);
 
+        	if (recollectAggregates) {
+        	    recollectAggregates = false;
+        	    allAggregates = collectAggregates(groupNode);
+        	}
             collectSymbolsFromOtherAggregates(allAggregates, aggregates, planNode, stagedGroupingSymbols);
             
             //perform a costing check, if there's not a significant reduction, then don't stage
@@ -761,6 +764,8 @@ public class RulePushAggregates implements
             }
             
             addGroupBy(planNode, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, true, stagedGroupingSymbols.isEmpty() && containsNullDependent(aggregates));
+            //with the staged grouping added, the parent aggregate expressions can change due to mapping
+            recollectAggregates = true;
         }
     }
 
@@ -1074,6 +1079,9 @@ public class RulePushAggregates implements
             PlanNode parentAccess = NodeEditor.findParent(originatingNode, NodeConstants.Types.ACCESS, NodeConstants.Types.GROUP);
 
             if (parentAccess != null) {
+                if (!NodeEditor.findAllNodes(parentAccess, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE).isEmpty()) {
+                    continue; //already did a decomposition
+                }
                 while (parentAccess.getType() == NodeConstants.Types.SELECT) {
                     parentAccess = parentAccess.getParent();
                 }

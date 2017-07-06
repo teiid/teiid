@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.query.metadata;
 
@@ -63,6 +59,7 @@ public class DatabaseUtil {
             // add override with properties
             if (db.getDataWrapper(t.getName()) == null) {
                 DataWrapper dw = new DataWrapper(t.getName());
+                dw.setType(t.getType());
                 for (final String key : t.getProperties().stringPropertyNames()) {
                     dw.setProperty(key, t.getPropertyValue(key));
                 }
@@ -101,13 +98,6 @@ public class DatabaseUtil {
 	            }
             }
             
-            if (m.getDescription() != null) {
-                schema.setAnnotation(m.getDescription());
-            }
-            
-            if(!m.isVisible()) {
-                schema.setVisible(false);
-            }
             db.addSchema(schema);
         }
         
@@ -162,7 +152,6 @@ public class DatabaseUtil {
     
     private static Permission convert(DataPermission dp) {
         Permission p = new Permission();
-        p.setResourceType(ResourceType.TABLE);
         
         p.setAllowAlter(dp.getAllowAlter());
         p.setAllowDelete(dp.getAllowDelete());
@@ -172,18 +161,25 @@ public class DatabaseUtil {
         p.setAllowUpdate(dp.getAllowUpdate());
         p.setResourceName(dp.getResourceName());
         
-        int dotCount = dp.getResourceName().length() - dp.getResourceName().replaceAll("\\.", "").length();
-        
-        // this is more of a guessing game here..
         if (dp.getAllowLanguage() != null && dp.getAllowLanguage()) {
             p.setAllowUsage(true);
             p.setResourceType(ResourceType.LANGUAGE);
-        } else if (dotCount == 0) {
-            p.setResourceType(ResourceType.SCHEMA);
-        } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
-            p.setResourceType(ResourceType.PROCEDURE);
-        } else if (dotCount >= 2 ) {
-            p.setResourceType(ResourceType.COLUMN);
+        } else if (dp.getResourceType() != null) {
+            p.setResourceType(ResourceType.valueOf(dp.getResourceType().name()));
+        } else {
+            int dotCount = dp.getResourceName().length() - dp.getResourceName().replaceAll("\\.", "").length(); //$NON-NLS-1$ //$NON-NLS-2$
+            
+            if (dotCount == 0) {
+                p.setResourceType(ResourceType.SCHEMA);
+            } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
+                // this may not be correct as it could be a function as well
+                p.setResourceType(ResourceType.PROCEDURE);
+            } else if (dotCount >= 2) {
+                // this may not be correct as it could be a table
+                p.setResourceType(ResourceType.COLUMN);
+            } else {
+                p.setResourceType(ResourceType.TABLE);
+            }
         }
         
         if (dp.getMask() != null) {
@@ -233,7 +229,7 @@ public class DatabaseUtil {
             mmd.setName(schema.getName());
             mmd.setDescription(schema.getAnnotation());
             mmd.setVisible(Boolean.valueOf(schema.isVisible()));
-            
+            mmd.getPropertiesMap().putAll(schema.getProperties());
             if (schema.isPhysical()) {
                 mmd.setModelType(Model.Type.PHYSICAL);
                 
@@ -251,19 +247,32 @@ public class DatabaseUtil {
             vdb.addModel(mmd);
         }
         
+        copyDatabaseGrantsAndRoles(database, vdb);
+        
+        return vdb;
+    }
+
+    public static void copyDatabaseGrantsAndRoles(Database database,
+            VDBMetaData vdb) {
         // roles
         for (Grant grant:database.getGrants()) {
             Role role = database.getRole(grant.getRole());
             DataPolicyMetadata dpm = convert(grant, role);
             vdb.addDataPolicy(dpm);
         }
-        return vdb;
+        
+        for (Role role : database.getRoles()) {
+            if (vdb.getDataPolicyMap().get(role.getName()) == null) {
+                DataPolicyMetadata dpm = convert(null, role);
+                vdb.addDataPolicy(dpm);
+            }
+        }
     }
     
     static PermissionMetaData convert(Permission from) {
         PermissionMetaData pmd = new PermissionMetaData();
         pmd.setResourceName(from.getResourceName());
-        
+        pmd.setResourceType(DataPolicy.ResourceType.valueOf(from.getResourceType().name()));
         pmd.setAllowAlter(from.hasPrivilege(Privilege.ALTER));
         pmd.setAllowCreate(from.hasPrivilege(Privilege.INSERT));
         pmd.setAllowDelete(from.hasPrivilege(Privilege.DELETE));
@@ -282,19 +291,21 @@ public class DatabaseUtil {
     
     static DataPolicyMetadata convert(Grant from, Role role) {
         DataPolicyMetadata dpm = new DataPolicyMetadata();
-        dpm.setName(from.getRole());
+        dpm.setName(role.getName());
         
-        for (Permission p : from.getPermissions()) {
-            if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.ALL_PRIVILEGES))) {
-                dpm.setGrantAll(true);
-                continue;
-            } else if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.TEMPORARY_TABLE))) {
-                dpm.setAllowCreateTemporaryTables(true);
-                continue;
+        if (from != null) {
+            for (Permission p : from.getPermissions()) {
+                if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.ALL_PRIVILEGES))) {
+                    dpm.setGrantAll(true);
+                    continue;
+                } else if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.TEMPORARY_TABLE))) {
+                    dpm.setAllowCreateTemporaryTables(true);
+                    continue;
+                }
+                
+                PermissionMetaData pmd = convert(p);            
+                dpm.addPermission(pmd);
             }
-            
-            PermissionMetaData pmd = convert(p);            
-            dpm.addPermission(pmd);
         }
         
         dpm.setDescription(role.getAnnotation());

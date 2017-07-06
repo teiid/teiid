@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connector version="1.5">
+
+   <vendor-name>Red Hat Middleware LLC</vendor-name>
+   <eis-type>Teiid Couchbase Connector</eis-type>
+   <resourceadapter-version>1.0</resourceadapter-version>
+   <license>
+      <description>
+ Copyright Red Hat, Inc. and/or its affiliates
+ and other contributors as indicated by the @author tags and
+ the COPYRIGHT.txt file distributed with this work.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+      </description>
+      <license-required>true</license-required>
+   </license>
+   <resourceadapter>
+      <resourceadapter-class>org.teiid.resource.adapter.couchbase.CouchbaseResourceAdapter</resourceadapter-class>
+
+      <outbound-resourceadapter>
+         <connection-definition>
+            <managedconnectionfactory-class>org.teiid.resource.adapter.couchbase.CouchbaseManagedConnectionFactory</managedconnectionfactory-class>
+
+            <config-property>
+               <description>{$display:"ConnectionString", $description:"the connection string to identify the remote Couchbase Server Cluster", $required:"true"}</description>
+               <config-property-name>ConnectionString</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property> 
+            
+            <config-property>
+               <description>{$display:"Keyspace", $description:"Couchbase Server Keyspace/Bucket Name", $required:"true"}</description>
+               <config-property-name>Keyspace</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+
+            <config-property>
+               <description>{$display:"Namespace", $description:"Couchbase Server Namespace Name", $required:"true"}</description>
+               <config-property-name>Namespace</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Password",$description:"Couchbase Server Keyspace/Bucket Password",$masked:"true"}</description> 
+               <config-property-name>Password</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property> 
+            
+            <config-property>
+               <description>{$display:"TimeUnit",$allowed:["MILLISECONDS","SECONDS","MINUTES"],$description:"Open Keyspace/Bucket timeout TimeUnit"}</description> 
+               <config-property-name>TimeUnit</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>             
+            
+            <config-property>
+                <description>{$display:"ManagementTimeout", $description:"The timeout for management operations"}</description>
+                <config-property-name>ManagementTimeout</config-property-name>
+                <config-property-type>java.lang.Long</config-property-type>
+            </config-property> 
+            <config-property>
+                <description>{$display:"QueryTimeout", $description:"The timeout for query operations"}</description>
+                <config-property-name>QueryTimeout</config-property-name>
+                <config-property-type>java.lang.Long</config-property-type>
+            </config-property>  
+            
+            <config-property>
+                <description>{$display:"ViewTimeout", $description:"The timeout for view operations"}</description>
+                <config-property-name>ViewTimeout</config-property-name>
+                <config-property-type>java.lang.Long</config-property-type>
+            </config-property>  
+            
+            <config-property>
+                <description>{$display:"KvTimeout", $description:"The timeout for binary (key/value) operations"}</description>
+                <config-property-name>KvTimeout</config-property-name>
+                <config-property-type>java.lang.Long</config-property-type>
+            </config-property>  
+            
+            <config-property>
+                <description>{$display:"SearchTimeout", $description:"The timeout for search operations"}</description>
+                <config-property-name>SearchTimeout</config-property-name>
+                <config-property-type>java.lang.Long</config-property-type>
+            </config-property>  
+            
+            <config-property>
+                <description>{$display:"ConnectTimeout", $description:"The timeout for connect operations"}</description>
+                <config-property-name>ConnectTimeout</config-property-name>
+                <config-property-type>java.lang.Long</config-property-type>
+            </config-property>       
+            
+            <config-property>
+               <description>{$display:"DnsSrvEnabled",$description:"Whether DNS SRV lookup for the bootstrap nodes"}</description> 
+               <config-property-name>DnsSrvEnabled</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+            </config-property>             
+                        
+            <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
+            <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
+            <connection-interface>javax.resource.cci.Connection</connection-interface>
+            <connection-impl-class>org.teiid.resource.spi.WrappedConnection</connection-impl-class>
+
+         </connection-definition>
+         
+         <transaction-support>NoTransaction</transaction-support>
+        
+        <authentication-mechanism>
+            <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
+            <credential-interface>javax.resource.spi.security.PasswordCredential</credential-interface>
+        </authentication-mechanism>
+        <reauthentication-support>false</reauthentication-support>
+      </outbound-resourceadapter>
+   </resourceadapter>
+</connector>

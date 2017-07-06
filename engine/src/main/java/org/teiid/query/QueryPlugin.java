@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query;
@@ -150,10 +146,6 @@ public class QueryPlugin { // extends Plugin {
 		TEIID30126,
 		TEIID30127,
 		TEIID30128,
-		TEIID30129,
-		TEIID30130,
-		TEIID30131,
-		TEIID30133,
 		TEIID30134,
 		TEIID30135,
 		TEIID30136,
@@ -221,10 +213,8 @@ public class QueryPlugin { // extends Plugin {
 		TEIID30208,
 		TEIID30209,
 		TEIID30210,
-		TEIID30211,
 		TEIID30212,
 		TEIID30213,
-		TEIID30216,
 		TEIID30217,
 		TEIID30218,
 		TEIID30219,
@@ -275,27 +265,6 @@ public class QueryPlugin { // extends Plugin {
 		TEIID30274,
 		TEIID30275,
 		TEIID30278,
-		TEIID30281,
-		TEIID30283,
-		TEIID30284,
-		TEIID30285,
-		TEIID30286,
-		TEIID30287,
-		TEIID30288,
-		TEIID30294,
-		TEIID30295,
-		TEIID30296,
-		TEIID30297,
-		TEIID30300,
-		TEIID30301,
-		TEIID30302,
-		TEIID30303,
-		TEIID30304,
-		TEIID30305,
-		TEIID30306,
-		TEIID30307,
-		TEIID30308,
-		TEIID30309,
 		TEIID30311,
 		TEIID30312,
 		TEIID30314,
@@ -356,7 +325,6 @@ public class QueryPlugin { // extends Plugin {
 		TEIID30403,
 		TEIID30404,
 		TEIID30405,
-		TEIID30406,
 		TEIID30407,
 		TEIID30409,
 		TEIID30410,
@@ -390,7 +358,6 @@ public class QueryPlugin { // extends Plugin {
 		TEIID30448,
 		TEIID30449,
 		TEIID30452,
-		TEIID30457,
 		TEIID30463,
 		TEIID30464,
 		TEIID30465,
@@ -655,6 +622,12 @@ public class QueryPlugin { // extends Plugin {
         TEIID31253,
         TEIID31254,
         TEIID31255,
-        TEIID31256
+        TEIID31256, 
+        TEIID31257,
+        TEIID31258, 
+        TEIID31259, 
+        TEIID31260, 
+        TEIID31261, 
+        TEIID31262
 	}
 }

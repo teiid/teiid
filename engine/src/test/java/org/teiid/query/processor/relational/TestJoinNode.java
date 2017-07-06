@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.processor.relational;
@@ -622,6 +618,31 @@ public class TestJoinNode {
             Arrays.asList(new Object[] { new Integer(10), new Integer(10) }),    
             Arrays.asList(new Object[] { new Integer(10), new Integer(10) }),    
             Arrays.asList(new Object[] { null, 15 })
+        };
+        helpTestJoin();
+    }
+    
+    @Test public void testFullOuterJoinNoRows() throws Exception {
+        this.joinType = JoinType.JOIN_FULL_OUTER;
+        this.leftTuples = new List[0];
+        this.rightTuples = new List[] {Arrays.asList(1) };
+        expected = new List[] {
+           Arrays.asList(new Object[] { null, 1 }),  
+        };
+        expectedReversed = new List[] {
+            Arrays.asList(new Object[] { 1, null }),  
+        };
+        helpTestJoin();
+    }
+    
+    @Test public void testLeftJoinNoRows() throws Exception {
+        this.joinType = JoinType.JOIN_LEFT_OUTER;
+        this.leftTuples = new List[0];
+        this.rightTuples = new List[] {Arrays.asList(1) };
+        expected = new List[] {
+        };
+        expectedReversed = new List[] {
+                Arrays.asList(1, null)
         };
         helpTestJoin();
     }

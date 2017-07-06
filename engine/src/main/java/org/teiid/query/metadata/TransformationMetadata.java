@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.metadata;
@@ -60,9 +56,6 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingDocument;
-import org.teiid.query.mapping.xml.MappingLoader;
-import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.sql.lang.ObjectTable;
 import org.teiid.query.sql.lang.SPParameter;
 
@@ -126,7 +119,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	private static final long serialVersionUID = 1058627332954475287L;
 	
 	/** Delimiter character used when specifying fully qualified entity names */
-    public static final char DELIMITER_CHAR = StringUtil.Constants.DOT_CHAR;
+    public static final char DELIMITER_CHAR = '.';
     public static final String DELIMITER_STRING = String.valueOf(DELIMITER_CHAR);
     
     // error message cached to avoid i18n lookup each time
@@ -741,38 +734,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if(tableRecord.isMaterialized()) {
 	        return tableRecord.getMaterializedStageTable();
         }
-        return null;
-    }
-
-    public MappingNode getMappingNode(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        Table tableRecord = (Table) groupID;
-        
-        MappingDocument mappingDoc = (MappingDocument) getFromMetadataCache(groupID, "xml-doc"); //$NON-NLS-1$
-        
-        if (mappingDoc != null) {
-        	return mappingDoc;
-        }
-        
-		final String groupName = tableRecord.getFullName();
-        if(tableRecord.isVirtual()) {
-            // get mapping transform
-            String document = tableRecord.getSelectTransformation();            
-            InputStream inputStream = new ByteArrayInputStream(document.getBytes());
-            MappingLoader reader = new MappingLoader();
-            try{
-                mappingDoc = reader.loadDocument(inputStream);
-                mappingDoc.setName(groupName);
-            } catch (Exception e){
-                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30363, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30363, groupName, mappingDoc));
-            } finally {
-            	try {
-					inputStream.close();
-            	} catch(Exception e) {}
-            }
-            addToMetadataCache(groupID, "xml-doc", mappingDoc); //$NON-NLS-1$
-            return mappingDoc;
-        }
-
         return null;
     }
 

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.metadatastore;
 
@@ -28,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collection;
@@ -47,7 +44,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.Admin.ExportFormat;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.PropertyDefinition;
@@ -271,8 +267,8 @@ public class TestDDLMetadataStore {
         FileInputStream vdb = new FileInputStream(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.xml");
         es.deployVDB(vdb);
         
-        Admin admin = es.getAdmin();
-        String content = admin.getSchema("Portfolio", "1", null, null, null, ExportFormat.DDL);
+        String content = ConvertVDB.convert(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.xml"));
+        
         es.undeployVDB("Portfolio");
         
         /*
@@ -316,4 +312,25 @@ public class TestDDLMetadataStore {
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "override-vdb.ddl"));
         assertEquals(expected, content);
     }     
+    
+    @Test
+    public void testMultiSource() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        es.start(ec); 
+        es.addTranslator(FileExecutionFactory.class);
+        
+        es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataPath() + "/" + "multisource-vdb.ddl"), true);
+        
+        es.getAdmin().addSource("multisource", "1", "MarketData", "x", "file", "z");
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:multisource", null);
+        DatabaseMetaData dmd = c.getMetaData();
+        ResultSet rs = dmd.getProcedureColumns(null, null, "deleteFile", null);
+        int count = 0;
+        while (rs.next()) {
+            count++;
+        }
+        assertEquals(2, count);
+    }
 }

@@ -1,30 +1,23 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.unittest;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,8 +33,6 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
-import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
@@ -52,14 +43,6 @@ import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingAttribute;
-import org.teiid.query.mapping.xml.MappingDocument;
-import org.teiid.query.mapping.xml.MappingElement;
-import org.teiid.query.mapping.xml.MappingNode;
-import org.teiid.query.mapping.xml.MappingOutputter;
-import org.teiid.query.mapping.xml.MappingSequenceNode;
-import org.teiid.query.mapping.xml.MappingVisitor;
-import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.MetadataValidator;
@@ -952,18 +935,6 @@ public class RealMetadataFactory {
         elements.add(vm1g37e.iterator().next());       
         createAccessPattern("vm1.g37.ap1", vm1g37, elements); //e1 //$NON-NLS-1$
         
-        //XML STUFF =============================================
-        createXmlDocument("doc1", xmltest, exampleDoc1()); //$NON-NLS-1$
-        createXmlDocument("doc2", xmltest, exampleDoc2()); //$NON-NLS-1$
-        createXmlDocument("doc3", xmltest, exampleDoc3()); //$NON-NLS-1$
-        createXmlDocument("doc4", xmltest, exampleDoc4());         //$NON-NLS-1$
-        createXmlDocument("doc5", xmltest, exampleDoc5()); //$NON-NLS-1$
-        createXmlDocument("doc6", xmltest, exampleDoc6()); //$NON-NLS-1$
-
-        // Defect 11479 - test ambiguous doc short names
-        createXmlDocument("xmltest2.docA", vm1, exampleDoc1()); //$NON-NLS-1$
-        createXmlDocument("xmltest3.docA", vm1, exampleDoc2()); //$NON-NLS-1$
-
         // Create mapping classes for xmltest.doc5
         QueryNode mc1n1 = new QueryNode("SELECT e1 FROM pm1.g1 UNION ALL SELECT e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1mc1 = createVirtualGroup("mc1", xmltest, mc1n1); //$NON-NLS-1$
@@ -1704,57 +1675,6 @@ public class RealMetadataFactory {
         return table;
 	}
 	
-	public static Table createXmlDocument(String name, Schema model, MappingDocument plan) {
-		String doc = docToString(plan);
-		Table table = createVirtualGroup(name, model, new QueryNode(doc));
-		table.setTableType(org.teiid.metadata.Table.Type.Document);
-		extractColumns(table, plan);
-		return table;
-	}
-	
-	static void extractColumns(final Table table, MappingDocument plan) {
-		MappingVisitor mv = new MappingVisitor() {
-			@Override
-			public void visit(MappingElement element) {
-				String type = element.getType();
-				addColumn(element, type);
-			}
-
-			private void addColumn(MappingNode element,
-					String type) {
-				if (type != null) {
-					//TODO: choose the appropriate runtime type
-					Class<?> c = DataTypeManager.getDataTypeClass(type);
-					if (c == DefaultDataClasses.OBJECT) {
-						type = DefaultDataTypes.STRING;
-					}
-				} else {
-					type = DefaultDataTypes.STRING;
-				}
-				createElement(element.getFullyQualifiedName(), table, type);
-			}
-			
-			@Override
-			public void visit(MappingAttribute attribute) {
-				String type = attribute.getType();
-				addColumn(attribute, type);
-			}
-		};
-		plan.acceptVisitor(new Navigator(true, mv));
-	}
-
-	public static String docToString(MappingDocument plan) {
-		MappingOutputter out = new MappingOutputter();
-        StringWriter stream = new StringWriter();
-        try {
-			out.write(plan, new PrintWriter(stream));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		String doc = stream.toString();
-		return doc;
-	}
-
     /**
      * Create a virtual group that allows updates with default settings.
      */
@@ -1896,84 +1816,6 @@ public class RealMetadataFactory {
     	return createKey(org.teiid.metadata.KeyRecord.Type.AccessPattern, name, group, elements);
     }
     
-    private static MappingDocument exampleDoc1() {
-        MappingDocument doc = new MappingDocument(false);
-        MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
-        MappingElement node1 = root.addChildElement(new MappingElement("node1")); //$NON-NLS-1$
-        MappingElement node2 = node1.addChildElement(new MappingElement("node2")); //$NON-NLS-1$
-        node2.addChildElement(new MappingElement("node3")); //$NON-NLS-1$        
-        return doc;
-    }
-
-    private static MappingDocument exampleDoc2() {
-        
-        MappingDocument doc = new MappingDocument(false);
-        MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
-        MappingElement node1 = root.addChildElement(new MappingElement("node1")); //$NON-NLS-1$
-        
-        MappingSequenceNode node2 = node1.addSequenceNode(new MappingSequenceNode());    
-        node2.addChildElement(new MappingElement("node3")); //$NON-NLS-1$
-        root.addChildElement(new MappingElement("node2")); //$NON-NLS-1$
-        return doc;
-    }
-
-    // has ambiguous short and long names
-    private static MappingDocument exampleDoc3() {
-        MappingDocument doc = new MappingDocument(false);
-        MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
-
-        MappingElement node1 = root.addChildElement(new MappingElement("node1"));    
-        
-        node1.addChildElement(new MappingElement("node2")); //$NON-NLS-1$
-        root.addChildElement(new MappingElement("node2")); //$NON-NLS-1$
-        return doc;
-    }
-   
-    // has attributes and elements
-    private static MappingDocument exampleDoc4() {
-        
-        MappingDocument doc = new MappingDocument(false);
-        
-        MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
-
-        root.addAttribute(new MappingAttribute("node6")); //$NON-NLS-1$
-        root.addStagingTable("xmltest.doc4.tm1.g1"); //$NON-NLS-1$
-        
-        MappingElement node1 =root.addChildElement(new MappingElement("node1")); //$NON-NLS-1$
-        node1.addAttribute(new MappingAttribute("node2")); //$NON-NLS-1$
-        
-        MappingElement node3 =root.addChildElement(new MappingElement("node3")); //$NON-NLS-1$
-        node3.addAttribute(new MappingAttribute("node4")); //$NON-NLS-1$
-        
-        MappingElement node5 = node3.addChildElement(new MappingElement("node4")); //$NON-NLS-1$
-        MappingElement duplicateRoot = node5.addChildElement(new MappingElement("root")); //$NON-NLS-1$
-
-        duplicateRoot.addChildElement(new MappingElement("node6")); //$NON-NLS-1$        
-        return doc;
-    }    
-
-    // has a union in the mapping class
-    private static MappingDocument exampleDoc5() {
-        MappingDocument doc = new MappingDocument(false);
-        MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
-
-        MappingElement node1 = root.addChildElement(new MappingElement("node1")); //$NON-NLS-1$
-        node1.addChildElement(new MappingElement("node2","xmltest.mc1.e1")); //$NON-NLS-1$ //$NON-NLS-2$
-        node1.setSource("xmltest.mc1"); //$NON-NLS-1$
-        node1.setMaxOccurrs(-1);
-        return doc;
-    }	
-    
-    // has two elements with common suffix, but not ambiguous
-    private static MappingDocument exampleDoc6() {
-        MappingDocument doc = new MappingDocument(false);
-        MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
-
-        root.addChildElement(new MappingElement("node")); //$NON-NLS-1$
-        root.addChildElement(new MappingElement("thenode")); //$NON-NLS-1$
-        return doc;
-    }
-
 	public static VDBMetaData example1VDB() {
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName("example1");
@@ -2453,197 +2295,6 @@ public class RealMetadataFactory {
 	    Procedure sq2 = createStoredProcedure("proc", physModel, Arrays.asList(rs3p2, rs3p3));
 	    sq2.setResultSet(rs3);
 	    return createTransformationMetadata(metadataStore, "multiBinding");
-	}
-
-	/**
-	 * set up metadata for virtual doc model of this basic structure:
-	 * <pre>
-	 * 
-	 * items
-	 *   --suppliers (many-to-many relationship between items and suppliers)
-	 *       --orders
-	 *       --employees (an employees works for a supplier and "specializes" in an item)
-	 * 
-	 * </pre> 
-	 * @return
-	 */
-	public static TransformationMetadata exampleCase3225() {
-		MetadataStore metadataStore = new MetadataStore();
-	    
-	    // Create models
-	    Schema stock = createPhysicalModel("stock", metadataStore); //$NON-NLS-1$
-	    Schema xmltest = createVirtualModel("xmltest", metadataStore);     //$NON-NLS-1$
-	
-	    // Create physical groups
-	    Table items = createPhysicalGroup("items", stock); //$NON-NLS-1$
-	    Table item_supplier = createPhysicalGroup("item_supplier", stock); //$NON-NLS-1$
-	    Table suppliers = createPhysicalGroup("suppliers", stock); //$NON-NLS-1$
-	    Table orders = createPhysicalGroup("orders", stock); //$NON-NLS-1$
-	    Table employees = createPhysicalGroup("employees", stock); //$NON-NLS-1$
-	         
-	    // Create physical elements
-	    createElements(items, 
-	        new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-	
-	    //many-to-many join table
-	    createElements(item_supplier, 
-	        new String[] { "itemNum", "supplierNum" }, //$NON-NLS-1$ //$NON-NLS-2$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-	
-	    createElements(suppliers, 
-	        new String[] { "supplierNum", "supplierName", "supplierZipCode" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-	
-	    createElements(orders, 
-	        new String[] { "orderNum", "itemFK", "supplierFK", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ 
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
-	
-	    createElements(employees, 
-	        new String[] { "employeeNum", "supplierNumFK", "specializesInItemNum", "supervisorNum", "firstName", "lastName" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	
-	    // Create mapping classes - items doc
-	    QueryNode rsQuery = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Table rsItems = createVirtualGroup("items", xmltest, rsQuery); //$NON-NLS-1$
-	
-	    QueryNode rsQuery2 = new QueryNode("SELECT stock.suppliers.supplierNum, supplierName, supplierZipCode, stock.item_supplier.itemNum FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-	    rsQuery2.addBinding("xmltest.items.itemNum"); //$NON-NLS-1$
-	    Table rsSuppliers = createVirtualGroup("suppliers", xmltest, rsQuery2); //$NON-NLS-1$
-	
-	    QueryNode rsQuery3 = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus, itemFK, supplierFK FROM stock.orders WHERE itemFK = ? AND supplierFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-	    rsQuery3.addBinding("xmltest.suppliers.itemNum"); //$NON-NLS-1$
-	    rsQuery3.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
-	    Table rsOrders = createVirtualGroup("orders", xmltest, rsQuery3); //$NON-NLS-1$
-	
-	    QueryNode rsQuery4 = new QueryNode("SELECT employeeNum, firstName, lastName, supervisorNum, specializesInItemNum, supplierNumFK FROM stock.employees WHERE specializesInItemNum = ? AND supplierNumFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-	    rsQuery4.addBinding("xmltest.suppliers.itemNum"); //$NON-NLS-1$
-	    rsQuery4.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
-	    Table rsEmployees = createVirtualGroup("employees", xmltest, rsQuery4); //$NON-NLS-1$
-	
-	    // Create mapping classes elements - items doc
-	    createElements(rsItems, 
-	        new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });        
-	
-	    createElements(rsSuppliers, 
-	        new String[] { "supplierNum", "supplierName", "supplierZipCode", "itemNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-	
-	    createElements(rsOrders, 
-	        new String[] { "orderNum", "orderDate", "orderQty", "orderStatus", "itemFK", "supplierFK" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	
-	    createElements(rsEmployees, 
-	        new String[] { "employeeNum", "firstName", "lastName", "supervisorNum", "specializesInItemNum", "supplierNumFK" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	
-	    // MAPPING DOC ======================================================================
-	    MappingDocument doc = new MappingDocument(true);
-	    MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
-	    
-	    MappingElement cats = root.addChildElement(new MappingElement("Catalog")); //$NON-NLS-1$
-	    MappingElement itemsA = cats.addChildElement(new MappingElement("Items")); //$NON-NLS-1$
-	
-	    MappingElement item = itemsA.addChildElement(new MappingElement("Item")); //$NON-NLS-1$
-	    item.setSource("xmltest.items");//$NON-NLS-1$
-	    item.setMaxOccurrs(-1);
-	    item.addAttribute(new MappingAttribute("ItemID", "xmltest.items.itemNum")); //$NON-NLS-1$ //$NON-NLS-2$
-	    item.addChildElement(new MappingElement("Name", "xmltest.items.itemName")); //$NON-NLS-1$ //$NON-NLS-2$
-	    item.addChildElement(new MappingElement("Quantity", "xmltest.items.itemQuantity")); //$NON-NLS-1$ //$NON-NLS-2$
-	    
-	    //NESTED STUFF======================================================================
-	    MappingElement nestedWrapper = item.addChildElement(new MappingElement("Suppliers")); //$NON-NLS-1$
-	    MappingElement supplier = nestedWrapper.addChildElement(new MappingElement("Supplier")); //$NON-NLS-1$
-	    supplier.setSource("xmltest.suppliers");//$NON-NLS-1$
-	    supplier.setMaxOccurrs(-1);
-	    supplier.addAttribute(new MappingAttribute("SupplierID", "xmltest.suppliers.supplierNum")); //$NON-NLS-1$ //$NON-NLS-2$
-	    supplier.addChildElement(new MappingElement("Name","xmltest.suppliers.supplierName")); //$NON-NLS-1$ //$NON-NLS-2$
-	    supplier.addChildElement(new MappingElement("Zip", "xmltest.suppliers.supplierZipCode")); //$NON-NLS-1$ //$NON-NLS-2$
-	    
-	    MappingElement ordersWrapper = supplier.addChildElement(new MappingElement("Orders")); //$NON-NLS-1$
-	    MappingElement order = ordersWrapper.addChildElement(new MappingElement("Order")); //$NON-NLS-1$
-	    order.setSource("xmltest.orders"); //$NON-NLS-1$
-	    order.setMaxOccurrs(-1);
-	    order.addAttribute(new MappingAttribute("OrderID", "xmltest.orders.orderNum")); //$NON-NLS-1$ //$NON-NLS-2$
-	    order.addChildElement(new MappingElement("OrderDate", "xmltest.orders.orderDate")); //$NON-NLS-1$ //$NON-NLS-2$
-	    order.addChildElement(new MappingElement("OrderQuantity", "xmltest.orders.orderQty")); //$NON-NLS-1$ //$NON-NLS-2$
-	
-	    order.addChildElement(new MappingElement("OrderStatus", "xmltest.orders.orderStatus")) //$NON-NLS-1$ //$NON-NLS-2$
-	        .setMinOccurrs(0);                
-	    //NESTED STUFF======================================================================
-	    
-	    MappingElement employeesWrapper = supplier.addChildElement(new MappingElement("Employees")); //$NON-NLS-1$
-	    MappingElement employee = employeesWrapper.addChildElement(new MappingElement("Employee")); //$NON-NLS-1$
-	    employee.setSource("xmltest.employees"); //$NON-NLS-1$
-	    employee.setMaxOccurrs(-1);
-	    employee.addAttribute(new MappingAttribute("EmployeeID", "xmltest.employees.employeeNum")); //$NON-NLS-1$ //$NON-NLS-2$
-	    employee.addChildElement(new MappingElement("FirstName", "xmltest.employees.firstName")); //$NON-NLS-1$ //$NON-NLS-2$
-	    employee.addChildElement(new MappingElement("LastName", "xmltest.employees.lastName")); //$NON-NLS-1$ //$NON-NLS-2$
-	    employee.addAttribute(new MappingAttribute("SupervisorID", "xmltest.employees.supervisorNum")); //$NON-NLS-1$ //$NON-NLS-2$
-	    
-	    // END MAPPING DOC ======================================================================
-	    
-	    // Create virtual docs and doc elements
-	    createXmlDocument("itemsDoc", xmltest, doc); //$NON-NLS-1$
-	        
-	    // Create mapping classes - baseball players employees doc
-	    QueryNode playersNode = new QueryNode("SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE specializesInItemNum is not null"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Table rsPlayers = createVirtualGroup("player", xmltest, playersNode); //$NON-NLS-1$
-	
-	    QueryNode managersNode = new QueryNode("SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE stock.employees.employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-	    managersNode.addBinding("xmltest.player.supervisorNum"); //$NON-NLS-1$
-	    Table rsManagers = createVirtualGroup("managers", xmltest, managersNode); //$NON-NLS-1$
-	
-	        // TODO what if elements in criteria weren't fully qualified? see defect 19541
-	    QueryNode ownersNode = new QueryNode("SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE stock.employees.employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$ 
-	    ownersNode.addBinding("xmltest.managers.supervisorNum"); //$NON-NLS-1$
-	    Table rsOwners = createVirtualGroup("owners", xmltest, ownersNode); //$NON-NLS-1$
-	
-	    // Create mapping classes elements - items doc
-	    createElements(rsPlayers, 
-	        new String[] { "employeeNum", "firstName", "lastName", "supervisorNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	
-	    createElements(rsManagers, 
-	         new String[] { "employeeNum", "firstName", "lastName", "supervisorNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	         new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	
-	    createElements(rsOwners, 
-	       new String[] { "employeeNum", "firstName", "lastName", "supervisorNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	       new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	
-	
-	    
-	    // MAPPING DOC - baseball players ======================================================================
-	    MappingDocument doc2 = new MappingDocument(true);
-	    MappingElement root2 = doc2.addChildElement(new MappingElement("BaseballPlayers")); //$NON-NLS-1$
-	    
-	    MappingElement player = root2.addChildElement(new MappingElement("Player")); //$NON-NLS-1$
-	    player.setSource("xmltest.player"); //$NON-NLS-1$
-	    player.setMaxOccurrs(-1);
-	    player.addAttribute(new MappingAttribute("PlayerID", "xmltest.player.employeeNum")); //$NON-NLS-1$ //$NON-NLS-2$
-	    player.addChildElement(new MappingElement("FirstName", "xmltest.player.firstName")); //$NON-NLS-1$ //$NON-NLS-2$
-	    player.addChildElement(new MappingElement("LastName", "xmltest.player.lastName")); //$NON-NLS-1$ //$NON-NLS-2$
-	
-	    MappingElement manager = player.addChildElement(new MappingElement("Manager")); //$NON-NLS-1$
-	    manager.setSource("xmltest.managers");//$NON-NLS-1$
-	    manager.setMaxOccurrs(-1);
-	    manager.addAttribute(new MappingAttribute("ManagerID", "xmltest.managers.employeeNum")); //$NON-NLS-1$ //$NON-NLS-2$
-	    manager.addChildElement(new MappingElement("FirstName", "xmltest.managers.firstName")); //$NON-NLS-1$ //$NON-NLS-2$
-	    manager.addChildElement(new MappingElement("LastName", "xmltest.managers.lastName")); //$NON-NLS-1$ //$NON-NLS-2$
-	            
-	    MappingElement owner = manager.addChildElement(new MappingElement("Owner")); //$NON-NLS-1$
-	    owner.setSource("xmltest.owners"); //$NON-NLS-1$
-	    owner.setMaxOccurrs(-1);
-	    owner.addAttribute(new MappingAttribute("OwnerID", "xmltest.owners.employeeNum")); //$NON-NLS-1$ //$NON-NLS-2$
-	    owner.addChildElement(new MappingElement("FirstName", "xmltest.owners.firstName")); //$NON-NLS-1$ //$NON-NLS-2$
-	    owner.addChildElement(new MappingElement("LastName", "xmltest.owners.lastName")); //$NON-NLS-1$ //$NON-NLS-2$       
-	    // END MAPPING DOC ======================================================================
-	    
-	    // Create virtual docs and doc elements
-	    createXmlDocument("playersDoc", xmltest, doc2); //$NON-NLS-1$
-	    return createTransformationMetadata(metadataStore, "case3225");
 	}
 
 	/**

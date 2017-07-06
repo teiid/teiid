@@ -1,49 +1,44 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.jboss;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.concurrent.Executor;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.as.controller.ModelController;
-import org.jboss.as.server.Services;
-import org.jboss.as.server.deployment.*;
+import org.jboss.as.server.deployment.Attachments;
+import org.jboss.as.server.deployment.DeploymentPhaseContext;
+import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.metadata.property.PropertyReplacer;
 import org.jboss.metadata.property.PropertyReplacers;
 import org.jboss.metadata.property.PropertyResolver;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
-import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
-import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.UDFMetaData;
@@ -77,7 +72,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			parseVDBXML(file, deploymentUnit, phaseContext, true);			
 		}
 		else if (TeiidAttachments.isVDBDDLDeployment(deploymentUnit)) {
-			parseVDBDDL(file, deploymentUnit, phaseContext);
+			parseVDBDDL(file, deploymentUnit, phaseContext, true);
 		}
 		else {
 			// scan for different files 
@@ -102,12 +97,18 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 				});
 				
 				VirtualFile vdbXml = file.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+				VirtualFile vdbDDL = file.getChild("/META-INF/vdb.ddl"); //$NON-NLS-1$
 				
-				if (!vdbXml.exists()) {
+				if (!vdbXml.exists() && !vdbDDL.exists()) {
 					throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50101, deploymentUnit));
 				}
-				parseVDBXML(vdbXml, deploymentUnit, phaseContext, false);
 				
+				if (vdbXml.exists()) {
+				    parseVDBXML(vdbXml, deploymentUnit, phaseContext, false);
+				} else {
+				    parseVDBDDL(vdbDDL, deploymentUnit, phaseContext, false);
+				}
+                
 				mergeMetaData(deploymentUnit);
 
 			} catch (IOException e) {
@@ -154,7 +155,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 	}
 
 	private VDBMetaData parseVDBDDL(VirtualFile file, DeploymentUnit deploymentUnit,
-			DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
+			DeploymentPhaseContext phaseContext, boolean xmlDeployment) throws DeploymentUnitProcessingException {
 		try {
             PropertyReplacer replacer = deploymentUnit.getAttachment(org.jboss.as.ee.metadata.property.Attachments.FINAL_PROPERTY_REPLACER);
             String vdbContents = replacer.replaceProperties(ObjectConverterUtil.convertToString(file.openStream()));
@@ -171,7 +172,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			}
 			
 			vdb.setStatus(Status.LOADING);
-			vdb.setXmlDeployment(true);
+			vdb.setXmlDeployment(xmlDeployment);
 			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);
 			LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+file.getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
 			return vdb;

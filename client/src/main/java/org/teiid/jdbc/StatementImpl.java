@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.jdbc;
@@ -161,9 +157,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	private boolean closeOnCompletion;
     
     static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s+(?:to\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s+(?:(?:to|=)\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_CHARACTERISTIC_STATEMENT = Pattern.compile("\\s*set\\s+session\\s+characteristics\\s+as\\s+transaction\\s+isolation\\s+level\\s+((?:read\\s+(?:(?:committed)|(?:uncommitted)))|(?:repeatable\\s+read)|(?:serializable))\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*|(?:\"[^\"]*\")+)\\s*;?\\s*?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+((?:transaction isolation level)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     
     /**
      * MMStatement Constructor.
@@ -647,6 +643,30 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 					new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 			return booleanFuture(true);
 		}
+		if (show.equalsIgnoreCase("transaction isolation level")) { //$NON-NLS-1$
+            List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
+            ArrayList<Object> row = new ArrayList<Object>(1);
+            switch (driverConnection.getTransactionIsolation()) {
+            case Connection.TRANSACTION_READ_COMMITTED:
+                row.add("READ COMMITTED"); //$NON-NLS-1$
+                break;
+            case Connection.TRANSACTION_READ_UNCOMMITTED:
+                row.add("READ UNCOMMITTED"); //$NON-NLS-1$
+                break;
+            case Connection.TRANSACTION_REPEATABLE_READ:
+                row.add("REPEATABLE READ"); //$NON-NLS-1$
+                break;
+            case Connection.TRANSACTION_SERIALIZABLE:
+                row.add("SERIALIZABLE"); //$NON-NLS-1$
+                break;
+            default:
+                row.add("UNKNOWN"); //$NON-NLS-1$
+            }
+            records.add(row);
+            createResultSet(records, new String[] {"TRANSACTION ISOLATION"}, //$NON-NLS-1$
+                    new String[] {DataTypeManager.DefaultDataTypes.STRING});
+            return booleanFuture(true);
+        }
 		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getExecutionProperty(show)));
 		createResultSet(records, new String[] {show}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
 		return booleanFuture(true);

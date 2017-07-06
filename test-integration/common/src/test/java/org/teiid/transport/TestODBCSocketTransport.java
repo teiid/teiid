@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.transport;
@@ -53,6 +49,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 import org.teiid.runtime.EmbeddedConfiguration;
@@ -744,6 +741,42 @@ public class TestODBCSocketTransport {
         checkApplicationName(s, "ODBC");
         s.execute("set application_name to other");
         checkApplicationName(s, "other");
+    }
+    
+    @Test public void testGeometry() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))')");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        assertEquals("geometry", rsmd.getColumnTypeName(1));
+        assertEquals("00200000030000000000000001000000054044000000000000000000000000000040490000000000004049000000000000000000000000000040490000000000000000000000000000000000000000000040440000000000000000000000000000", rs.getString(1));
+    }
+    
+    @Test public void testConstraintDef() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT pg_get_constraintdef((select oid from pg_constraint where contype = 'f' and conrelid = (select oid from pg_class where relname = 'Functions')), true)");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        assertEquals("FOREIGN KEY (VDBName,SchemaName) REFERENCES SYS.Schemas(VDBName,Name)", rs.getString(1));
+    }
+    
+    @Test public void testXML() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT xmlelement(name x)");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        assertEquals("xml", rsmd.getColumnTypeName(1));
+        assertEquals("<x></x>", rs.getString(1));
+    }
+    
+    @Test public void testVersion() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT version()");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        assertEquals(PgCatalogMetadataStore.POSTGRESQL_VERSION, rs.getString(1));
     }
 
     private void checkApplicationName(Statement s, String value) throws SQLException {

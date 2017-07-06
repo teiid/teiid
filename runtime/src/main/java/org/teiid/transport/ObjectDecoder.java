@@ -1,24 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * Copyright 2008, Red Hat Middleware LLC, and individual contributors
- * by the @author tags. See the COPYRIGHT.txt in the distribution for a
- * full listing of individual contributors.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.transport;
 
@@ -26,9 +21,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.codec.serialization.CompatibleObjectEncoder;
 
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.StreamCorruptedException;
@@ -42,6 +39,7 @@ import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.netty.handler.codec.serialization.CompactObjectInputStream;
 import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
+import org.teiid.runtime.RuntimePlugin;
 
 
 /**
@@ -107,7 +105,12 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
     	if (result == null) {
-    	    ByteBuf frame = (ByteBuf) super.decode(ctx, buffer);
+    	    ByteBuf frame = null;
+    	    try {
+    	        frame = (ByteBuf) super.decode(ctx, buffer);
+    	    } catch (TooLongFrameException e) {
+    	        throw new IOException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40166), e);
+    	    }
             if (frame == null) {
                 return null;
             }

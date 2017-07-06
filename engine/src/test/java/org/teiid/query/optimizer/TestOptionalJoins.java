@@ -1,28 +1,25 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.optimizer;
 
 import org.junit.Test;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -603,6 +600,37 @@ public class TestOptionalJoins {
 				0, // Sort
 				0  // UnionAll
 				});
+    }
+    
+    @Test public void testOptionalUsingFk() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t1 (col1 integer primary key, col2 varchar);"
+                + " create foreign table t2 (col1 integer primary key, col2 integer, FOREIGN KEY (col2) REFERENCES t1 (col1), FOREIGN KEY (col1) REFERENCES t3 (col1));"
+                + " create foreign table t3 (col1 integer primary key, col2 integer);", "x", "y");
+        ProcessorPlan plan = TestOptimizer.helpPlan("select t2.* from t1 inner join t2 on t1.col1 = t2.col2", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_0.col1, g_0.col2 FROM y.t2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        
+        plan = TestOptimizer.helpPlan("select t1.*, t2.* from t1 inner join t2 on t1.col1 = t2.col2 inner join t3 on t2.col1 = t3.col1", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_0.col1, g_0.col2, g_1.col1, g_1.col2 FROM y.t1 AS g_0, y.t2 AS g_1 WHERE g_0.col1 = g_1.col2"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
+    }
+    
+    @Test public void testNotOptionalUsingFk() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t1 (col1 integer primary key, col2 varchar);"
+                + " create foreign table t2 (col1 integer primary key, col2 integer, FOREIGN KEY (col2) REFERENCES t1 (col1));", "x", "y");
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select t2.* from t1 inner join t2 on t1.col1 = t2.col2 and t1.col1 > 100", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_1.col1, g_1.col2 FROM y.t1 AS g_0, y.t2 AS g_1 WHERE (g_0.col1 = g_1.col2) AND (g_0.col1 > 100) AND (g_1.col2 > 100)"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        
+        plan = TestOptimizer.helpPlan("select t2.* from t1 inner join t2 on t1.col1 = t2.col2 and t1.col2 = t2.col1", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_0.col2, g_1.col1, g_1.col2 FROM y.t1 AS g_0, y.t2 AS g_1 WHERE g_0.col1 = g_1.col2"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        
+        plan = TestOptimizer.helpPlan("select t2.* from t1 inner join t2 on t1.col1 + 1 = t2.col2", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_0.col2 AS c_0, g_0.col1 AS c_1 FROM y.t2 AS g_0 ORDER BY c_0", "SELECT g_0.col1 FROM y.t1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+
     }
     
 }

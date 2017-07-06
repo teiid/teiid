@@ -1,0 +1,3 @@
+Portions Copyright (C) 2008-2017 Red Hat, Inc.
+Portions Copyright (C) 2000-2007 MetaMatrix, Inc.
+Portions Copyright (c) 2003-2011, PostgreSQL Global Development Group

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.resolver;
@@ -66,10 +62,8 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
-import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -295,15 +289,6 @@ public class TestResolver {
 		}
 	}
     
-    private void helpTestIsXMLQuery(String sql, boolean isXML) throws QueryResolverException, QueryMetadataException, TeiidComponentException {
-        // parse
-        Query query = (Query) helpParse(sql);
-
-        // check whether it's xml
-        boolean actual = QueryResolver.isXMLQuery(query, metadata);
-        assertEquals("Wrong answer for isXMLQuery", isXML, actual); //$NON-NLS-1$
-    }
-	
     /**
      * Helper method to resolve an exec aka stored procedure, then check that the
      * expected parameter expressions are the same as actual parameter expressions. 
@@ -1235,50 +1220,6 @@ public class TestResolver {
         helpResolve(sql);
 	}	
     
-    @Test public void testIsXMLQuery1() throws Exception {
-        helpTestIsXMLQuery("SELECT * FROM pm1.g1", false);     //$NON-NLS-1$
-    }
-
-    @Test public void testIsXMLQuery2() throws Exception {
-        helpTestIsXMLQuery("SELECT * FROM xmltest.doc1", true); //$NON-NLS-1$
-    }
-
-    /**
-     * Must be able to resolve XML query if short doc name
-     * is used (assuming short doc name isn't ambiguous in a
-     * VDB).  Defect 11479.
-     */
-    @Test public void testIsXMLQuery3() throws Exception {
-        helpTestIsXMLQuery("SELECT * FROM doc1", true); //$NON-NLS-1$
-    }
-
-    @Test public void testIsXMLQueryFail1() throws Exception {
-        helpTestIsXMLQuery("SELECT * FROM xmltest.doc1, xmltest.doc2", false); //$NON-NLS-1$
-    }
-
-    @Test public void testIsXMLQueryFail2() throws Exception {
-        helpTestIsXMLQuery("SELECT * FROM xmltest.doc1, pm1.g1", false); //$NON-NLS-1$
-    }
-
-    @Test public void testIsXMLQueryFail3() throws Exception {
-        helpTestIsXMLQuery("SELECT * FROM pm1.g1, xmltest.doc1", false); //$NON-NLS-1$
-    }
-
-    /**
-     * "docA" is ambiguous as there exist two documents called
-     * xmlTest2.docA and xmlTest3.docA.  Defect 11479.
-     */
-    @Test public void testIsXMLQueryFail4() throws Exception {
-        Query query = (Query) helpParse("SELECT * FROM docA"); //$NON-NLS-1$
-
-        try {
-            QueryResolver.isXMLQuery(query, metadata);
-            fail("expected exception"); //$NON-NLS-1$
-        } catch (QueryResolverException e) {
-            assertEquals("Group specified is ambiguous, resubmit the query by fully qualifying the group name: docA", e.getMessage()); //$NON-NLS-1$
-        }
-    }
-    
     @Test public void testStringConversion1() {
 		// Expected left expression
         ElementSymbol e1 = new ElementSymbol("pm3.g1.e2"); //$NON-NLS-1$
@@ -2118,12 +2059,6 @@ public class TestResolver {
         assertEquals(sql, c.toString());
     }
     
-    @Test public void testXMLWithProcSubquery() {
-        String sql = "SELECT * FROM xmltest.doc4 WHERE node2 IN (SELECT e1 FROM (EXEC pm1.vsp1()) AS x)"; //$NON-NLS-1$
-        Command c = helpResolve(sql);
-        assertEquals(sql, c.toString());
-    }
-    
     @Test public void testDefect18832() {
         String sql = "SELECT * from (SELECT null as a, e1 FROM pm1.g1) b"; //$NON-NLS-1$
         Command c = helpResolve(sql);
@@ -2223,20 +2158,6 @@ public class TestResolver {
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
         helpResolveException(procedure, "TEIID31118 Element \"VARIABLES.X\" is not defined by any relevant group."); //$NON-NLS-1$
-    }
-    
-    /**
-     * same as above, but with an xml query 
-     * @throws Exception
-     */
-    @Test public void testVariableDeclarationAfterStatement1() throws Exception{
-        String procedure = "CREATE VIRTUAL PROCEDURE "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "select * from xmltest.doc1 where node1 = VARIABLES.X;\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE string VARIABLES.X = 1;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        helpResolveException(procedure, "TEIID30136 Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
     }
     
     @Test public void testCreate() {
@@ -2350,22 +2271,6 @@ public class TestResolver {
         helpResolveException(sql, metadata, "TEIID31118 Element \"ROWS_UPDATED\" is not defined by any relevant group."); //$NON-NLS-1$
     }
     
-    @Test public void testXMLQueryWithVariable() {
-        String sql = "CREATE VIRTUAL PROCEDURE " //$NON-NLS-1$
-            + "BEGIN " //$NON-NLS-1$
-            + "declare string x = '1'; " //$NON-NLS-1$
-            +"select * from xmltest.doc1 where node1 = x; " //$NON-NLS-1$
-            +"end "; //$NON-NLS-1$
-
-        CreateProcedureCommand command = (CreateProcedureCommand) helpResolve(sql); 
-        
-        CommandStatement cmdStmt = (CommandStatement)command.getBlock().getStatements().get(1);
-        
-        CompareCriteria criteria = (CompareCriteria)((Query)cmdStmt.getCommand()).getCriteria();
-        
-        assertEquals(ProcedureReservedWords.VARIABLES, ((ElementSymbol)criteria.getRightExpression()).getGroupSymbol().getName());
-    }
-    
     /**
      *  We could check to see if the expressions are evaluatable to a constant, but that seems unnecessary
      */
@@ -2387,22 +2292,6 @@ public class TestResolver {
         helpResolve(sql);
     }
                 
-    @Test public void testResolveXMLSelect() {
-        String procedure = "CREATE VIRTUAL PROCEDURE "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE string VARIABLES.X = 1;\n";         //$NON-NLS-1$
-        procedure = procedure + "select VARIABLES.X from xmltest.doc1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        helpResolveException(procedure, "TEIID30136 Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
-    }
-    
-    @Test public void testXMLJoinFail() {
-        String query = "select * from xmltest.doc1, xmltest.doc2"; //$NON-NLS-1$
-         
-        helpResolveException(query, "TEIID30112 Only one XML document may be specified in the FROM clause of a query."); //$NON-NLS-1$
-    }
-    
     @Test public void testExecProjectedSymbols() {
         String query = "exec pm1.sq1()"; //$NON-NLS-1$
          
@@ -2449,14 +2338,6 @@ public class TestResolver {
         String sql = "CREATE LOCAL TEMPORARY TABLE temp_table (column1 string, column1 string)"; //$NON-NLS-1$
         
         helpResolveException(sql, "TEIID30091 Cannot create group \'temp_table\' with multiple columns named \'column1\'"); //$NON-NLS-1$
-    }
-    
-    @Test public void testXMLQuery4() {
-        helpResolveException("SELECT * FROM xmltest.doc1 group by a2", "TEIID30130 Queries against XML documents can not have a GROUP By clause"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testXMLQuery5() {
-        helpResolveException("SELECT * FROM xmltest.doc1 having a2='x'", "TEIID30131 Queries against XML documents can not have a HAVING clause"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testSelectIntoWithOrderBy() {
@@ -3008,6 +2889,18 @@ public class TestResolver {
     	Command c = helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue = 'a'", tm);
     	Query q = (Query)c;
     	assertTrue(((CompareCriteria)q.getCriteria()).getLeftExpression() instanceof ElementSymbol);
+    }
+    
+    @Test public void testLeadOffset() {
+        //must be integer
+        String sql = "SELECT LEAD(e1, 'a') over (order by e2) FROM pm1.g1";
+        helpResolveException(sql);
+    }
+    
+    @Test public void testLeadDefault() {
+        //must have same type
+        String sql = "SELECT LEAD(e2, 1, 'a') over (order by e2) FROM pm1.g1";
+        helpResolveException(sql);
     }
     
     private void helpTestWidenToString(String sql) {

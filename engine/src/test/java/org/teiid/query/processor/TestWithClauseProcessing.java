@@ -68,7 +68,7 @@ public class TestWithClauseProcessing {
 	    BasicSourceCapabilities typicalCapabilities = TestOptimizer.getTypicalCapabilities();
 	    typicalCapabilities.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
 		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(typicalCapabilities), 
-	    		new String[] {"SELECT a.x, a.z FROM a WHERE a.z = TRUE ORDER BY a.x", "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    		new String[] {"SELECT a.x, a.z FROM a WHERE a.z = TRUE", "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)"}, ComparisonMode.EXACT_COMMAND_STRING);
 	    
 	    helpProcess(plan, dataManager, expected);
 	    
@@ -285,14 +285,14 @@ public class TestWithClauseProcessing {
 		RealMetadataFactory.setCardinality("pm1.g2", 100000, metadata);
 	    String sql = "with a (x) as /*+ no_inline */ (select e1 from pm1.g1) SELECT a.x from pm1.g2, a where (pm1.g2.e1 = a.x)"; //$NON-NLS-1$
 	    
-	    TestOptimizer.helpPlan(sql, metadata, null, TestOptimizer.getGenericFinder(false), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT a.x FROM a ORDER BY a.x"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    TestOptimizer.helpPlan(sql, metadata, null, TestOptimizer.getGenericFinder(false), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT a.x FROM a"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testWithJoinPlanning1() throws TeiidException {
 		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
 	    String sql = "with a (x) as /*+ no_inline */ (select e1 from pm1.g1) SELECT a.x from pm1.g2, a where (pm1.g2.e1 = a.x)"; //$NON-NLS-1$
 	    
-	    TestOptimizer.helpPlan(sql, metadata, null, TestOptimizer.getGenericFinder(false), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT a.x FROM a ORDER BY a.x"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    TestOptimizer.helpPlan(sql, metadata, null, TestOptimizer.getGenericFinder(false), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT a.x FROM a"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testWithBlockingJoin() throws TeiidException {
@@ -1137,6 +1137,50 @@ public class TestWithClauseProcessing {
         
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
     }
-	
+    
+    @Test public void testIntermediateCTENotPushed() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "with CTE as (select e2 as a from pm1.g1 as a),"
+                + " CTE_NOT_PUSHED as (select count(a) as c from CTE),"
+                + " CTE_UNION as (select c from CTE_NOT_PUSHED union all select c from CTE_NOT_PUSHED)"
+                + " select * from CTE join CTE_UNION on true";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("WITH CTE (a) AS (SELECT g_0.e2 FROM g1 AS g_0) SELECT g_0.a FROM CTE AS g_0", Arrays.asList(1), Arrays.asList(2));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(2, 1), Arrays.asList(2, 2), Arrays.asList(2, 1), Arrays.asList(2, 2)});
+    }
+    
+    @Test public void testIntermediateCTENotPushed1() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "with CTE as (select count(e2) as a from pm1.g1 as a),"
+                + " CTE_1 as (select a as c from CTE),"
+                + " CTE_UNION as (select c from CTE_1 union all select c from CTE_1)"
+                + " select * from CTE join CTE_UNION on true";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("SELECT g_0.e2 FROM g1 AS g_0", Arrays.asList(1), Arrays.asList(2));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(2, 2), Arrays.asList(2, 2)});
+    }
+
 }
 

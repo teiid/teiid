@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.processor;
@@ -434,6 +430,66 @@ public class TestAggregateProcessing {
 
 		helpProcess(plan, dataManager, expected);
 	}
+	
+    @Test public void testMultiJoinCriteria1() throws Exception {
+        String sql = "SELECT max(t3.e4), max(t2.e4) as s FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3, pm1.g4 as t4, pm2.g1 as t5 "
+                + "WHERE t1.e1 = t2.e1 and (t2.e2 = t3.e2 and t1.e3 || t2.e3 = t3.e3) and t3.e3 = t4.e3 and t4.e4 = t5.e4"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+                Arrays.asList(null, null)
+        };
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(false);
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
+	
+    @Test public void testMultiJoinCriteria1a() throws Exception {
+        String sql = "SELECT max(t3.e4), max(t2.e4) as s FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3, pm1.g4 as t4, pm2.g1 as t5 "
+                + "WHERE t1.e1 = t2.e1 and (t2.e2 = t3.e2 and t1.e3 || t2.e3 = t3.e3) and t3.e3 = t4.e3 and t4.e4 = t5.e4"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+                Arrays.asList(null, null)
+        };
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(true);
+        
+        BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+        //caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, false);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+        caps.setFunctionSupport("convert", true);
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps));
+        
+        dataManager.addData("SELECT DISTINCT g_0.e3 AS c_0, g_0.e4 AS c_1 FROM pm1.g4 AS g_0 ORDER BY c_0", Arrays.asList(false, 1.0));
+        dataManager.addData("SELECT DISTINCT g_0.e4 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList(1.0));
+        dataManager.addData("SELECT DISTINCT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", Arrays.asList("a", false));
+        dataManager.addData("SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g2 AS g_0 ORDER BY c_0", Arrays.asList("a", 1, false, 1.0));
+        dataManager.addData("SELECT v_0.c_0, v_0.c_1, v_0.c_2, MAX(v_0.c_3) AS c_3 FROM (SELECT g_0.e2 AS c_0, convert(g_0.e3, string) AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g3 AS g_0) AS v_0 WHERE v_0.c_2 = FALSE GROUP BY v_0.c_0, v_0.c_1, v_0.c_2 ORDER BY v_0.c_0, v_0.c_1");
+        //dataManager.addData("SELECT g_0.e2, convert(g_0.e3, string), g_0.e3, g_0.e4 FROM pm1.g3 AS g_0 WHERE g_0.e3 = FALSE", Arrays.asList(1, "false", false, 1.0));
+
+        CommandContext cc = createCommandContext();
+        cc.setMetadata(RealMetadataFactory.example1Cached());
+        helpProcess(plan, cc, dataManager, expected);
+    }
+    
+    @Test public void testMultiJoinCriteria2() throws Exception {
+        String sql = "SELECT max(t3.e4), max(t2.e4) as s FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3, pm1.g4 as t4 "
+                + "WHERE t1.e1 = t2.e1 and (t2.e2 = t3.e2 and t1.e3 || t2.e3 = t3.e3) and t3.e3 = t4.e3"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+                Arrays.asList(null, null)
+        };
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(false);
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
 	
 	@Test public void testMultiJoinGroupBy() throws Exception {
 		String sql = "SELECT count(t2.e4) as s, t1.e3 || t2.e3 FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3 WHERE t1.e1 = t2.e1 and t2.e2 = t3.e2 GROUP BY t1.e3 || t2.e3"; //$NON-NLS-1$
@@ -1309,6 +1365,26 @@ public class TestAggregateProcessing {
         
         TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
                 hdm, new List<?>[] {Arrays.asList(1), Arrays.asList(2), Arrays.asList(1)});
+    }
+    
+    @Test public void testGroupByPredicateInCase() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(
+                " CREATE FOREIGN TABLE wdv (id integer, numericvalue bigdecimal);" +
+                " CREATE FOREIGN TABLE tv (id integer, varvalue bigdecimal);", "x", "y");
+        
+        String sql = "select case when dv.varvalue is null then 'missing' else 'wrong' end as t"
+                + " from wdv nv left join tv dv on dv.id = nv.id where (dv.varvalue is null or round(nv.numericvalue,0) <> round(dv.varvalue,0))"
+                + " group by dv.varvalue is null";
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_1.varvalue, g_0.numericvalue, g_1.varvalue IS NULL FROM y.wdv AS g_0 LEFT OUTER JOIN y.tv AS g_1 ON g_1.id = g_0.id", Arrays.asList(BigDecimal.valueOf(1.0), BigDecimal.valueOf(2.0), false));
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                hdm, new List<?>[] {Arrays.asList("wrong")});
     }
     
 }

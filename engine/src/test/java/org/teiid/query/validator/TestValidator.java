@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.validator;
@@ -54,8 +50,6 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingDocument;
-import org.teiid.query.mapping.xml.MappingElement;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
@@ -116,18 +110,6 @@ public class TestValidator {
         vGroupE2.get(2).setSearchType(SearchType.Like_Only);
         vGroupE2.get(3).setSearchType(SearchType.All_Except_Like);
     
-        // Create virtual documents
-        MappingDocument doc = new MappingDocument(false);
-        MappingElement complexRoot = doc.addChildElement(new MappingElement("a0")); //$NON-NLS-1$
-        
-        MappingElement sourceNode = complexRoot.addChildElement(new MappingElement("a1")); //$NON-NLS-1$
-        sourceNode.setSource("test.group"); //$NON-NLS-1$
-        sourceNode.addChildElement(new MappingElement("a2", "test.group.e1")); //$NON-NLS-1$ //$NON-NLS-2$
-        sourceNode.addChildElement(new MappingElement("b2", "test.group.e2")); //$NON-NLS-1$ //$NON-NLS-2$
-        sourceNode.addChildElement(new MappingElement("c2", "test.group.e3")); //$NON-NLS-1$ //$NON-NLS-2$
-        
-    	Schema docModel = RealMetadataFactory.createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
-        RealMetadataFactory.createXmlDocument("doc1", docModel, doc); //$NON-NLS-1$
     	return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
     }
 	
@@ -603,271 +585,6 @@ public class TestValidator {
     	helpValidate("SELECT xmlserialize(? AS BLOB ENCODING \"UTF-75\" INCLUDING XMLDECLARATION)", new String[] {"XMLSERIALIZE(? AS BLOB ENCODING \"UTF-75\" INCLUDING XMLDECLARATION)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
-    @Test public void testXMLQuery1() {
-    	helpValidate("SELECT * FROM vm1.doc1", new String[] {}, exampleMetadata()); //$NON-NLS-1$
-    }
-
-    @Test public void testXMLQuery2() {
-    	helpValidate("SELECT * FROM vm1.doc1 where a2='x'", new String[] {}, exampleMetadata()); //$NON-NLS-1$
-    }
-
-    @Test public void testXMLQuery3() {
-    	helpValidate("SELECT * FROM vm1.doc1 order by a2", new String[] {}, exampleMetadata()); //$NON-NLS-1$
-    }
-
-    @Test public void testXMLQuery6() {
-    	helpValidate("SELECT * FROM vm1.doc1 UNION SELECT * FROM vm1.doc1", new String[] {"\"xml\"", "SELECT * FROM vm1.doc1 UNION SELECT * FROM vm1.doc1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
-    
-    @Test public void testXMLQueryWithLimit() {
-    	helpValidate("SELECT * FROM vm1.doc1 limit 1", new String[] {"SELECT * FROM vm1.doc1 LIMIT 1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /** test rowlimit function is valid */
-    @Test public void testXMLQueryRowLimit() {
-        helpValidate("SELECT * FROM vm1.doc1 where 2 = RowLimit(a2)", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }
-    
-    /** rowlimit function operand must be nonnegative integer */
-    @Test public void testXMLQueryRowLimit1() {
-        helpValidate("SELECT * FROM vm1.doc1 where RowLimit(a2)=-1", new String[] {"RowLimit(a2) = -1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /** rowlimit function operand must be nonnegative integer */
-    @Test public void testXMLQueryRowLimit2() {
-        helpValidate("SELECT * FROM vm1.doc1 where RowLimit(a2)='x'", new String[] {"RowLimit(a2) = 'x'"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /** rowlimit function cannot be nested within another function (this test inserts an implicit type conversion) */
-    @Test public void testXMLQueryRowLimitNested() {
-        helpValidate("SELECT * FROM vm1.doc1 where RowLimit(a2)=a2", new String[] {"RowLimit(a2) = a2"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /** rowlimit function cannot be nested within another function */
-    @Test public void testXMLQueryRowLimitNested2() {
-        helpValidate("SELECT * FROM vm1.doc1 where convert(RowLimit(a2), string)=a2", new String[] {"convert(RowLimit(a2), string) = a2"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /** rowlimit function operand must be nonnegative integer */
-    @Test public void testXMLQueryRowLimit3a() {
-        helpValidate("SELECT * FROM vm1.doc1 where RowLimit(a2) = convert(a2, integer)", new String[] {"RowLimit(a2) = convert(a2, integer)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /** rowlimit function operand must be nonnegative integer */
-    @Test public void testXMLQueryRowLimit3b() {
-        helpValidate("SELECT * FROM vm1.doc1 where convert(a2, integer) = RowLimit(a2)", new String[] {"convert(a2, integer) = RowLimit(a2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-    
-    /** rowlimit function arg must be an element symbol */
-    @Test public void testXMLQueryRowLimit4() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit('x') = 3", new String[] {"rowlimit('x')"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /** rowlimit function arg must be an element symbol */
-    @Test public void testXMLQueryRowLimit5() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(concat(a2, 'x')) = 3", new String[] {"rowlimit(concat(a2, 'x'))"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /** rowlimit function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitConjunct() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) = 3 OR a2 = 'x'", new String[] {"(rowlimit(a2) = 3) OR (a2 = 'x')"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /** rowlimit function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitCompound() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) = 3 AND a2 = 'x'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }
-
-    /** rowlimit function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitCompound2() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) = 3 AND concat(a2, 'y') = 'xy'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }
-
-    /** rowlimit function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitCompound3() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) = 3 AND (concat(a2, 'y') = 'xy' OR concat(a2, 'y') = 'zy')", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }    
-
-    /** each rowlimit function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitCompound4() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) = 3 AND rowlimit(c2) = 4", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }    
-
-    /** 
-     * It doesn't make sense to use rowlimit twice on same element, but can't be
-     * invalidated here (could be two different elements but in the same 
-     * mapping class - needs to be caught in XMLPlanner)
-     */
-    @Test public void testXMLQueryRowLimitCompound5() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) = 3 AND rowlimit(a2) = 4", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }    
-
-    @Test public void testXMLQueryRowLimitInvalidCriteria() {
-        helpValidate("SELECT * FROM vm1.doc1 where not(rowlimit(a2) = 3)", new String[] {"NOT (rowlimit(a2) = 3)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitInvalidCriteria2() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) IN (3)", new String[] {"rowlimit(a2) IN (3)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-    
-    @Test public void testXMLQueryRowLimitInvalidCriteria3() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) LIKE 'x'", new String[] {"rowlimit(a2) LIKE 'x'"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitInvalidCriteria4() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) IS NULL", new String[] {"rowlimit(a2) IS NULL"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitInvalidCriteria5() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) IN (SELECT e0 FROM vTest.vMap)", new String[] {"rowlimit(a2) IN (SELECT e0 FROM vTest.vMap)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitInvalidCriteria6() {
-        helpValidate("SELECT * FROM vm1.doc1 where 2 = CASE WHEN rowlimit(a2) = 2 THEN 2 END", new String[] {"2 = CASE WHEN rowlimit(a2) = 2 THEN 2 END"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitInvalidCriteria6a() {
-        helpValidate("SELECT * FROM vm1.doc1 where 2 = CASE rowlimit(a2) WHEN 2 THEN 2 END", new String[] {"2 = CASE rowlimit(a2) WHEN 2 THEN 2 END"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-    
-    @Test public void testXMLQueryRowLimitInvalidCriteria7() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) BETWEEN 2 AND 3", new String[] {"rowlimit(a2) BETWEEN 2 AND 3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitInvalidCriteria8() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimit(a2) = ANY (SELECT e0 FROM vTest.vMap)", new String[] {"rowlimit(a2) = ANY (SELECT e0 FROM vTest.vMap)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-    
-    /** using rowlimit pseudo-function in non-XML query is invalid */
-    @Test public void testNonXMLQueryRowLimit() {        
-        helpValidate("SELECT e2 FROM vTest.vMap WHERE rowlimit(e1) = 2", new String[] {"rowlimit(e1)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    /** test rowlimitexception function is valid */
-    @Test public void testXMLQueryRowLimitException() {
-        helpValidate("SELECT * FROM vm1.doc1 where 2 = RowLimitException(a2)", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }
-    
-    /** rowlimitexception function operand must be nonnegative integer */
-    @Test public void testXMLQueryRowLimitException1() {
-        helpValidate("SELECT * FROM vm1.doc1 where RowLimitException(a2)=-1", new String[] {"RowLimitException(a2) = -1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /** rowlimitexception function operand must be nonnegative integer */
-    @Test public void testXMLQueryRowLimitException2() {
-        helpValidate("SELECT * FROM vm1.doc1 where RowLimitException(a2)='x'", new String[] {"RowLimitException(a2) = 'x'"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /** rowlimitexception function cannot be nested within another function (this test inserts an implicit type conversion) */
-    @Test public void testXMLQueryRowLimitExceptionNested() {
-        helpValidate("SELECT * FROM vm1.doc1 where RowLimitException(a2)=a2", new String[] {"RowLimitException(a2) = a2"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /** rowlimitexception function cannot be nested within another function */
-    @Test public void testXMLQueryRowLimitExceptionNested2() {
-        helpValidate("SELECT * FROM vm1.doc1 where convert(RowLimitException(a2), string)=a2", new String[] {"convert(RowLimitException(a2), string) = a2"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /** rowlimitexception function operand must be nonnegative integer */
-    @Test public void testXMLQueryRowLimitException3a() {
-        helpValidate("SELECT * FROM vm1.doc1 where RowLimitException(a2) = convert(a2, integer)", new String[] {"RowLimitException(a2) = convert(a2, integer)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /** rowlimitexception function operand must be nonnegative integer */
-    @Test public void testXMLQueryRowLimitException3b() {
-        helpValidate("SELECT * FROM vm1.doc1 where convert(a2, integer) = RowLimitException(a2)", new String[] {"convert(a2, integer) = RowLimitException(a2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-    
-    /** rowlimitexception function arg must be an element symbol */
-    @Test public void testXMLQueryRowLimitException4() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception('x') = 3", new String[] {"rowlimitexception('x')"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /** rowlimitexception function arg must be an element symbol */
-    @Test public void testXMLQueryRowLimitException5() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(concat(a2, 'x')) = 3", new String[] {"rowlimitexception(concat(a2, 'x'))"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /** rowlimitexception function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitExceptionConjunct() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) = 3 OR a2 = 'x'", new String[] {"(rowlimitexception(a2) = 3) OR (a2 = 'x')"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /** rowlimitexception function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitExceptionCompound() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) = 3 AND a2 = 'x'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }
-
-    /** rowlimitexception function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitExceptionCompound2() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) = 3 AND concat(a2, 'y') = 'xy'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }
-
-    /** rowlimitexception function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitExceptionCompound3() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) = 3 AND (concat(a2, 'y') = 'xy' OR concat(a2, 'y') = 'zy')", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }    
-
-    /** each rowlimitexception function arg must be a single conjunct */
-    @Test public void testXMLQueryRowLimitExceptionCompound4() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) = 3 AND rowlimitexception(c2) = 4", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }    
-
-    /** 
-     * It doesn't make sense to use rowlimitexception twice on same element, but can't be
-     * invalidated here (could be two different elements but in the same 
-     * mapping class - needs to be caught in XMLPlanner)
-     */
-    @Test public void testXMLQueryRowLimitExceptionCompound5() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) = 3 AND rowlimitexception(a2) = 4", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
-    }    
-
-    @Test public void testXMLQueryRowLimitExceptionInvalidCriteria() {
-        helpValidate("SELECT * FROM vm1.doc1 where not(rowlimitexception(a2) = 3)", new String[] {"NOT (rowlimitexception(a2) = 3)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitExceptionInvalidCriteria2() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) IN (3)", new String[] {"rowlimitexception(a2) IN (3)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-    
-    @Test public void testXMLQueryRowLimitExceptionInvalidCriteria3() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) LIKE 'x'", new String[] {"rowlimitexception(a2) LIKE 'x'"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitExceptionInvalidCriteria4() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) IS NULL", new String[] {"rowlimitexception(a2) IS NULL"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitExceptionInvalidCriteria5() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) IN (SELECT e0 FROM vTest.vMap)", new String[] {"rowlimitexception(a2) IN (SELECT e0 FROM vTest.vMap)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitExceptionInvalidCriteria6() {
-        helpValidate("SELECT * FROM vm1.doc1 where 2 = CASE WHEN rowlimitexception(a2) = 2 THEN 2 END", new String[] {"2 = CASE WHEN rowlimitexception(a2) = 2 THEN 2 END"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitExceptionInvalidCriteria6a() {
-        helpValidate("SELECT * FROM vm1.doc1 where 2 = CASE rowlimitexception(a2) WHEN 2 THEN 2 END", new String[] {"2 = CASE rowlimitexception(a2) WHEN 2 THEN 2 END"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-    
-    @Test public void testXMLQueryRowLimitExceptionInvalidCriteria7() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) BETWEEN 2 AND 3", new String[] {"rowlimitexception(a2) BETWEEN 2 AND 3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    @Test public void testXMLQueryRowLimitExceptionInvalidCriteria8() {
-        helpValidate("SELECT * FROM vm1.doc1 where rowlimitexception(a2) = ANY (SELECT e0 FROM vTest.vMap)", new String[] {"rowlimitexception(a2) = ANY (SELECT e0 FROM vTest.vMap)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-    
-    /** using rowlimit pseudo-function in non-XML query is invalid */
-    @Test public void testNonXMLQueryRowLimitException() {        
-        helpValidate("SELECT e2 FROM vTest.vMap WHERE rowlimitexception(e1) = 2", new String[] {"rowlimitexception(e1)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-
-    /** using context pseudo-function in non-XML query is invalid */
-    @Test public void testNonXMLQueryContextOperator() {        
-        helpValidate("SELECT e2 FROM vTest.vMap WHERE context(e1, e1) = 2", new String[] {"context(e1, e1)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }      
-    
     @Test public void testValidateSubquery1() {        
         helpValidate("SELECT e2 FROM (SELECT e2 FROM vTest.vMap WHERE e2 = 'a') AS x", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
     }
@@ -1463,14 +1180,6 @@ public class TestValidator {
         helpRunValidator(command, new String[] {command.toString()}, RealMetadataFactory.example1Cached()); 
     }
     
-    @Test public void testNestedContexts() {
-        helpValidate("SELECT * FROM vm1.doc1 where context(a0, context(a0, a2))='x'", new String[] {"context(a0, context(a0, a2))"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testValidContextElement() {
-        helpValidate("SELECT * FROM vm1.doc1 where context(1, a2)='x'", new String[] {"context(1, a2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     @Test public void testInsertIntoVirtualWithQuery() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         Command command = helpResolve("insert into vm1.g1 select 1, 2, true, 3", metadata); //$NON-NLS-1$
@@ -1865,6 +1574,16 @@ public class TestValidator {
         String userUpdateStr = "ALTER TRIGGER tr ON pm1.g2 AFTER INSERT DISABLED;"; //$NON-NLS-1$
         
         helpValidate(userUpdateStr, new String[]{"ALTER TRIGGER tr ON pm1.g2 AFTER INSERT DISABLED"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testInvalidValueFunctions() {        
+        helpValidate("SELECT FIRST_VALUE(e3) over () FROM test.group", new String[] {"FIRST_VALUE(e3) OVER ()"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT FIRST_VALUE(e3 order by e2) over (order by e2) FROM test.group", new String[] {"FIRST_VALUE(e3 ORDER BY e2) OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT LAST_VALUE(e3, e2) over (order by e2) FROM test.group", new String[] {"LAST_VALUE(e3, e2) OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT LAST_VALUE() over (order by e2) FROM test.group", new String[] {"LAST_VALUE() OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT LAG() over (order by e2) FROM test.group", new String[] {"LAG() OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        //should succeed
+        helpValidate("SELECT LAG(e3) over (order by e2) FROM test.group", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

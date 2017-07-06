@@ -15,5 +15,6 @@
         <module name="org.jboss.teiid.common-core"/>
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid.translator.file.api"/>
+        <module name="org.apache.commons.net"/>
     </dependencies>
 </module>

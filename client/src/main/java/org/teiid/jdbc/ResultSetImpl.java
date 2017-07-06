@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.jdbc;
@@ -276,6 +272,10 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         }
         return getAbsoluteRowNumber();
     }
+    
+    public Object getRawCurrentValue() {
+        return currentValue;
+    }
 
     /**
      * Get the value of the current row at the column index specified.
@@ -300,21 +300,21 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         if (currentValue instanceof Streamable<?>) {
     		Object reference = ((Streamable<?>)currentValue).getReference();
         	if (reference != null) {
-        		currentValue = reference;
-        		return currentValue;
+        		return reference;
         	}
             if(currentValue instanceof ClobType){
-            	currentValue = new ClobImpl(createInputStreamFactory((ClobType)currentValue), ((ClobType)currentValue).getLength());
+            	return new ClobImpl(createInputStreamFactory((ClobType)currentValue), ((ClobType)currentValue).getLength());
             }
             else if (currentValue instanceof BlobType) {
             	InputStreamFactory isf = createInputStreamFactory((BlobType)currentValue);
             	isf.setLength(((BlobType)currentValue).getLength());
-            	currentValue = new BlobImpl(isf);
+            	return new BlobImpl(isf);
             }
             else if (currentValue instanceof XMLType) {
             	XMLType val = (XMLType)currentValue;
-            	currentValue = new SQLXMLImpl(createInputStreamFactory(val));
-            	((SQLXMLImpl)currentValue).setEncoding(val.getEncoding());
+            	SQLXMLImpl impl = new SQLXMLImpl(createInputStreamFactory(val));
+            	impl.setEncoding(val.getEncoding());
+            	return impl;
             } 
         } 
         else if (currentValue instanceof java.util.Date) {
@@ -322,11 +322,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         }
         else if (maxFieldSize > 0 && currentValue instanceof String) {
         	String val = (String)currentValue;
-        	currentValue = val.substring(0, Math.min(maxFieldSize/2, val.length()));
+        	return val.substring(0, Math.min(maxFieldSize/2, val.length()));
         }
         else if (currentValue instanceof BinaryType) {
         	BinaryType val = (BinaryType)currentValue;
-        	currentValue = val.getBytesDirect();
+        	return val.getBytesDirect();
         }
         return currentValue;
     }

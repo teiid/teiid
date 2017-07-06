@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.systemmodel;
 
@@ -28,12 +24,10 @@ import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.deployers.VirtualDatabaseException;
-import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
-import org.teiid.translator.TranslatorException;
 
+@SuppressWarnings("nls")
 public class TestPGMetadata extends AbstractMMQueryTestCase {
     static FakeServer server = null;
     
@@ -47,9 +41,7 @@ public class TestPGMetadata extends AbstractMMQueryTestCase {
             server.stop();
     }
 
-    private static VDBMetaData buildVDB(String name)
-            throws ConnectorManagerException, VirtualDatabaseException,
-            TranslatorException {
+    private static VDBMetaData buildVDB(String name) {
         VDBMetaData vdb = new VDBMetaData();
         vdb.setName(name);        
         ModelMetaData mmd = new ModelMetaData();
@@ -78,21 +70,28 @@ public class TestPGMetadata extends AbstractMMQueryTestCase {
         vdb.addProperty("include-pg-metadata", "true");
         server.deployVDB(vdb);
         this.internalConnection = server.createConnection("jdbc:teiid:y"); //$NON-NLS-1$ //$NON-NLS-2$
-        try {
-            execute("select * FROM pg_am"); //$NON-NLS-1$          
-        } catch (Exception e) {
-            Assert.fail("there should be PG metadata");
-        }
+        execute("select * FROM pg_am"); //$NON-NLS-1$          
     }
     @Test 
     public void test_PG_Metadata_DEFAULT() throws Exception {
         VDBMetaData vdb = buildVDB("z");
         server.deployVDB(vdb);
         this.internalConnection = server.createConnection("jdbc:teiid:z"); //$NON-NLS-1$ //$NON-NLS-2$
-        try {
-            execute("select * FROM pg_am"); //$NON-NLS-1$          
-        } catch (Exception e) {
-            Assert.fail("there should be PG metadata");
-        }
+        execute("select * FROM pg_am"); //$NON-NLS-1$          
     }    
+    
+    @Test public void testTypes() throws Exception {
+        VDBMetaData vdb = buildVDB("t");
+        server.deployVDB(vdb);
+        this.internalConnection = server.createConnection("jdbc:teiid:t"); //$NON-NLS-1$ //$NON-NLS-2$
+        execute("select format_type((select oid from pg_type where typname = '_int2'), 0)"); //$NON-NLS-1$
+        assertResults(new String[] {"expr1[string]", "smallint[]"});
+        
+        execute("select format_type((select oid from pg_type where typname = 'float4'), 0)"); //$NON-NLS-1$
+        assertResults(new String[] {"expr1[string]", "real"});
+        
+        execute("select format_type((select oid from pg_type where typname = 'numeric'), 100)"); //$NON-NLS-1$
+        assertResults(new String[] {"expr1[string]", "numeric(0,96)"});
+    }
+    
 }

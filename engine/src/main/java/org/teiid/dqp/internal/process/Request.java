@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.dqp.internal.process;
@@ -68,7 +64,6 @@ import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.proc.ProcedurePlan;
-import org.teiid.query.processor.xml.XMLPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
@@ -356,6 +351,12 @@ public class Request {
 			return this.transactionContext;
 		}
 		TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getSessionId());
+		
+		if (tc.getTransactionType() == TransactionContext.Scope.REQUEST && this.workContext.isDerived()) {
+		    //to a sub-request, request scope should appear as global - which means associated and non-suspendable
+	        tc = tc.clone();
+	        tc.setTransactionType(TransactionContext.Scope.GLOBAL);
+		}
         
         Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
 
@@ -480,17 +481,8 @@ public class Request {
         
         generatePlan(false);
         
-        postProcessXML();
-        
         createProcessor();
     }
-
-	private void postProcessXML() {
-        if (requestMsg.getXMLFormat() != null && processPlan instanceof XMLPlan) {
-        	((XMLPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
-        }
-        this.context.setValidateXML(requestMsg.getValidationMode());
-	}
 
 	protected boolean validateAccess(String[] commandStr, Command command, CommandType type) throws QueryValidatorException, TeiidComponentException {
 		boolean returnsResultSet = command.returnsResultSet();

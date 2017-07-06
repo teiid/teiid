@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.common.buffer.impl;
@@ -636,7 +632,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 						if (!map.containsKey(entry.getId())) {
 							return true; //already removed
 						}
-						info = new PhysicalInfo(s.getId(), entry.getId(), EMPTY_ADDRESS, readAttempts.get());
+						info = new PhysicalInfo(s.getId(), entry.getId(), EMPTY_ADDRESS, readAttempts.get(), entry.getSizeEstimate());
 						info.adding = true;
 						map.put(entry.getId(), info);
 					}
@@ -664,7 +660,6 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			bos.writeLong(s.getId());
 			bos.writeLong(entry.getId());
 			ObjectOutput dos = new ObjectOutputStream(bos);
-			dos.writeInt(entry.getSizeEstimate());
             s.serialize(entry.getObject(), dos);
             dos.close();
         	//synchronized to ensure proper cleanup from a concurrent removal 
@@ -808,8 +803,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 				is.read();
 			}
 			ObjectInput dis = new ObjectInputStream(is);
-			int sizeEstimate = dis.readInt();
-			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), sizeEstimate, serializer.deserialize(dis), ref, true);
+			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), info.sizeEstimate, serializer.deserialize(dis), ref, true);
 			return ce;
         } catch(IOException e) {
         	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30048, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30048, info.gid, oid));
@@ -918,19 +912,22 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	}
 	
 	@Override
-	public boolean remove(Long gid, Long id) {
+	public Integer remove(Long gid, Long id) {
 		Map<Long, PhysicalInfo> map = physicalMapping.get(gid);
 		if (map == null) {
-			return false;
+			return null;
 		}
 		PhysicalInfo info = null;
-		boolean result = false;
+		Integer result = null;
 		synchronized (map) {
-			int size = map.size();
 			info = map.remove(id);
-			result = size != map.size();
+			if (info != null) {
+			    result = info.sizeEstimate;
+			}
 		}
-		free(info, false, false);
+		if (info != null) {
+		    free(info, false, false);
+		}
 		return result;
 	}
 
@@ -1243,6 +1240,11 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	
 	public void setCompactBufferFiles(boolean compactBufferFiles) {
 		this.compactBufferFiles = compactBufferFiles;
+	}
+	
+	@Override
+	public long getMaxStorageSpace() {
+	    return this.storageManager.getMaxStorageSpace();
 	}
 	
 }

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.arquillian;
@@ -209,7 +205,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 		
 		admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 		
-		Thread.sleep(2000);
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
 		
 		WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
@@ -234,7 +230,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
         
-        Thread.sleep(2000);
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
         
         WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
         Response response = client.invoke("OPTIONS", null);
@@ -292,6 +288,8 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
                 "</vdb>";
 
         admin.deploy("loopy-vdb.xml", new ByteArrayInputStream(vdb.getBytes()));
+        
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
 
         WebClient client = WebClient.create("http://localhost:8080/odata4/loopy/gzip/t");
         client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes()));
@@ -333,6 +331,8 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 
         admin.deploy("loopy-vdb.xml", new ByteArrayInputStream(vdb.getBytes()));
 
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        
         String data = "{\"e\":1}";
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         GZIPOutputStream gos = new GZIPOutputStream(bos);
@@ -346,7 +346,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         client.header("Content-Type", "application/json");
 
         Response response = client.put(data);
-        assertEquals("The request should succeed.", 304, response.getStatus());
+        assertEquals("The request should succeed." + response.readEntity(String.class), 304, response.getStatus());
 
         response = client.put(new ByteArrayInputStream(gzipData));
         assertEquals("The request should not succeed. Data is in GZIP format but header not specified.", 400, response.getStatus());

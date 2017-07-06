@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.jboss.teiid.connectors</groupId>
 		<artifactId>accumulo</artifactId>
-		<version>9.3.0.Alpha1-SNAPSHOT</version>
+		<version>10.0.0.Alpha2-SNAPSHOT</version>
 	</parent>
 	<groupId>org.jboss.teiid.connectors</groupId>
 	<artifactId>translator-accumulo</artifactId>
@@ -45,7 +45,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-core</artifactId>
+			<artifactId>hadoop-common</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.thrift</groupId>

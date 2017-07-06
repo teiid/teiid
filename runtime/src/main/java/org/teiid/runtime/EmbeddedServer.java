@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.runtime;
@@ -45,10 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -95,6 +88,7 @@ import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jdbc.CallableStatementImpl;
@@ -113,7 +107,6 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
-import org.teiid.metadatastore.DeploymentBasedDatabaseStore.PendingDataSourceJobs;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.ObjectChannel;
@@ -431,8 +424,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		ppc.setTupleBufferCache(bs.getTupleBufferCache());
 		this.dqp.setPreparedPlanCache(ppc);
 
-		this.dqp.setTransactionService(this.transactionService);
-
+		this.dqp.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, this.transactionService, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Thread.currentThread().getContextClassLoader()));
+		
 		this.dqp.start(config);
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
@@ -768,19 +761,27 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 */
 	public void deployVDBZip(URL url) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException, URISyntaxException {
 		VirtualFile root = PureZipFileSystem.mount(url);
-		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
-		try {
-			VDBMetadataParser.validate(vdbMetadata.openStream());
-		} catch (SAXException e) {
-			throw new VirtualDatabaseException(e);
-		}
-		InputStream is = vdbMetadata.openStream();
 		VDBMetaData metadata;
-		try {
-			metadata = VDBMetadataParser.unmarshell(is);
-		} catch (XMLStreamException e) {
-			throw new VirtualDatabaseException(e);
+		
+		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+		if (vdbMetadata.exists()) {
+    		try {
+    			VDBMetadataParser.validate(vdbMetadata.openStream());
+    		} catch (SAXException e) {
+    			throw new VirtualDatabaseException(e);
+    		}
+    		InputStream is = vdbMetadata.openStream();
+    		try {
+    			metadata = VDBMetadataParser.unmarshell(is);
+    		} catch (XMLStreamException e) {
+    			throw new VirtualDatabaseException(e);
+    		}
+		} else {
+		    vdbMetadata = root.getChild("/META-INF/vdb.ddl"); //$NON-NLS-1$
+	        DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(getVDBRepository());
+	        metadata = store.getVDBMetadata(ObjectConverterUtil.convertToString(vdbMetadata.openStream()));
 		}
+		
 		VDBResources resources = new VDBResources(root, metadata);
 		deployVDB(metadata, resources);
 	}
@@ -796,19 +797,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (!vdb.getOverrideTranslators().isEmpty() && !allowOverrideTranslators()) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40106, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40106, vdb.getName()));
 		}
-		
-	    // if inline datasource needs to be created, then create it first.  
-	    PendingDataSourceJobs jobs = vdb.getAttachment(PendingDataSourceJobs.class);
-	    if (jobs != null && !jobs.isEmpty()) {
-	    	ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("teiid-datasource-creator"));
-	    	for (Callable<Boolean> job :  jobs.values()) {
-	    		try {
-	    			executor.submit(job).get();
-	    		} catch (TeiidRuntimeException | ExecutionException | InterruptedException e){
-	    			// ignore
-	    		}
-	    	}
-	    }		
 		
 		vdb.addAttchment(ClassLoader.class, Thread.currentThread().getContextClassLoader());
 		try {
@@ -905,13 +893,18 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 			throw new TranslatorException(te);
 		}
-		metadataLoaded(vdb, model, store, loadCount, factory, true);
+		metadataLoaded(vdb, model, store, loadCount, factory, true, cmr, vdbResources);
 	}
 	
 	public void undeployVDB(String vdbName) {
-		checkStarted();
-		this.repo.removeVDB(vdbName, "1"); //$NON-NLS-1$
+	    undeployVDB(vdbName, "1");
 	}
+	
+    public void undeployVDB(String vdbName, String version) {
+        checkStarted();
+        this.repo.removeVDB(vdbName, version); //$NON-NLS-1$
+    }
+	
 
 	EmbeddedConfiguration getConfiguration() {
 	    return this.config;
@@ -1017,6 +1010,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	
 	TranslatorRepository getTranslatorRepository() {
 	    return translatorRepository;
+	}
+	
+	ConcurrentHashMap<String, ConnectionFactoryProvider<?>> getConnectionFactoryProviders() {
+	    return connectionFactoryProviders;
 	}
 	
 	protected SessionAwareCache<CachedResults> getRsCache() {

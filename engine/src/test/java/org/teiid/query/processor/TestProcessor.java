@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.processor;
@@ -1853,29 +1849,6 @@ public class TestProcessor {
 		helpProcess(plan, dataManager, expected);
 	}	
 
-	@Test public void testSubqueryXML() {
-		// Create query
-		String sql = "SELECT * FROM (SELECT * FROM xmltest.doc1) AS x"; //$NON-NLS-1$
-
-		// Create expected results
-		List[] expected = new List[] { 
-			Arrays.asList(new Object[] { 
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + //$NON-NLS-1$
-                    "<root><node1><node2><node3/></node2></node1></root>"             //$NON-NLS-1$
-            })
-		};    
-
-		// Construct data manager with data
-		FakeDataManager dataManager = new FakeDataManager();
-		sampleData1(dataManager);
-
-		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
-
-		// Run query
-		helpProcess(plan, dataManager, expected);
-	}
-
     /**
      * Tests a single Subquery EXISTS predicate criteria
      */
@@ -3543,29 +3516,6 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);        
     }    
     
-    @Test public void testXMLUnion_defect8373() {
-        // Create query
-        String sql = "SELECT * FROM xmltest.doc5"; //$NON-NLS-1$
-
-        // Create expected results
-        List[] expected = new List[] {
-            Arrays.asList(new Object[] {
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + //$NON-NLS-1$
-                "<root><node1><node2>a</node2></node1><node1><node2/></node1><node1><node2>a</node2></node1><node1><node2>c</node2></node1><node1><node2>b</node2></node1><node1><node2>a</node2></node1><node1><node2>a</node2></node1><node1><node2/></node1><node1><node2>a</node2></node1><node1><node2>c</node2></node1><node1><node2>b</node2></node1><node1><node2>a</node2></node1></root>" //$NON-NLS-1$
-            })
-        };
-
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-
-        // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
-
-        // Run query
-        helpProcess(plan, dataManager, expected);
-    }
-
     @Test public void testStoredQuery1() {
         // Create query
         String sql = "EXEC pm1.sq1()"; //$NON-NLS-1$
@@ -3696,29 +3646,6 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
-    @Test public void testStoredQuery7() {
-        // Create query
-        String sql = "EXEC pm1.sq17()"; //$NON-NLS-1$
-
-        // Create expected results
-        List[] expected = new List[] { 
-            Arrays.asList(new Object[] { 
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + //$NON-NLS-1$
-                    "<root><node1><node2><node3/></node2></node1></root>"             //$NON-NLS-1$
-            })
-        };    
-
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-
-        // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
-
-        // Run query
-        helpProcess(plan, dataManager, expected);
-    }    
-
     // implict type conversion of parameter
     @Test public void testStoredQuery8() {
         // Create query

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.query.metadata;
 
@@ -54,7 +50,9 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -634,18 +632,33 @@ public class MetadataValidator {
     }
 
 	public static void determineDependencies(AbstractMetadataRecord p, Command command) {
-		Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, true);
 		LinkedHashSet<AbstractMetadataRecord> values = new LinkedHashSet<AbstractMetadataRecord>();
-		for (GroupSymbol group : groups) {
-			Object mid = group.getMetadataID();
-			if (mid instanceof TempMetadataAdapter) {
-				mid = ((TempMetadataID)mid).getOriginalMetadataID();
-			}
-			if (mid instanceof AbstractMetadataRecord) {
-				values.add((AbstractMetadataRecord)mid);
-			}
+		collectDependencies(command, values);
+		p.setIncomingObjects(new ArrayList<AbstractMetadataRecord>(values));
+		if (p instanceof Table) {
+		    Table t = (Table)p;
+		    for (int i = 0; i < t.getColumns().size(); i++) {
+		        LinkedHashSet<AbstractMetadataRecord> columnValues = new LinkedHashSet<AbstractMetadataRecord>();
+		        Column c = t.getColumns().get(i);
+		        c.setIncomingObjects(columnValues);
+                determineDependencies(command, c, i, columnValues);
+		    }
 		}
-		Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(command, true, true);
+	}
+
+    private static void collectDependencies(org.teiid.query.sql.LanguageObject lo,
+            LinkedHashSet<AbstractMetadataRecord> values) {
+        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(lo, true);
+        for (GroupSymbol group : groups) {
+            Object mid = group.getMetadataID();
+            if (mid instanceof TempMetadataAdapter) {
+                mid = ((TempMetadataID)mid).getOriginalMetadataID();
+            }
+            if (mid instanceof AbstractMetadataRecord) {
+                values.add((AbstractMetadataRecord)mid);
+            }
+        }
+        Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(lo, true, true);
 		for (ElementSymbol elem : elems) {
 			Object mid = elem.getMetadataID();
 			if (mid instanceof TempMetadataAdapter) {
@@ -655,8 +668,17 @@ public class MetadataValidator {
 				values.add((AbstractMetadataRecord)mid);
 			}
 		}
-		p.setIncomingObjects(new ArrayList<AbstractMetadataRecord>(values));
-	}
+    }
+
+    private static void determineDependencies(Command command, Column c, int index, LinkedHashSet<AbstractMetadataRecord> columnValues) {
+        if (command instanceof Query) {
+            Expression ex = command.getProjectedSymbols().get(index);
+            collectDependencies(ex, columnValues);
+        } else if (command instanceof SetQuery) {
+            determineDependencies(((SetQuery)command).getLeftQuery(), c, index, columnValues);
+            determineDependencies(((SetQuery)command).getRightQuery(), c, index, columnValues);
+        }
+    }
 	
 	private static Table findTableByName(MetadataStore store, String name) {
 	    

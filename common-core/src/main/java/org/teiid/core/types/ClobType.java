@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.core.types;
@@ -48,6 +44,8 @@ public final class ClobType extends Streamable<Clob> implements NClob, Sequencab
 	private static final long serialVersionUID = 2753412502127824104L;
     
 	private Type type = Type.TEXT;
+
+    private int hash;
 	
     public ClobType() {
     }
@@ -162,7 +160,9 @@ public final class ClobType extends Streamable<Clob> implements NClob, Sequencab
     public CharSequence getCharSequence() {
         return new CharSequence() {
 
-        	private String buffer;
+        	private char[] buffer = new char[CHAR_SEQUENCE_BUFFER_SIZE];
+        	private int bufLength;
+        	private Reader reader;
         	private int beginPosition;
         	        	
             public int length() {
@@ -180,11 +180,26 @@ public final class ClobType extends Streamable<Clob> implements NClob, Sequencab
 
             public char charAt(int index) {
                 try {
-                	if (buffer == null || index < beginPosition || index >= beginPosition + buffer.length()) {
-                		buffer = ClobType.this.getSubString(index + 1, CHAR_SEQUENCE_BUFFER_SIZE);
-                		beginPosition = index;
+                    if ((reader == null || index < beginPosition) && reader != null) {
+                        reader.close();
+                        reader = null;
+                    }
+                	if (buffer == null || index < beginPosition || index >= beginPosition + bufLength) {
+                	    if (reference instanceof ClobImpl) {
+                    	    if (reader == null) {
+                                reader = getCharacterStream();
+                    	    }
+                    	    bufLength = reader.read(buffer, 0, buffer.length);
+                	    } else {
+                	        String stringBuffer = ClobType.this.getSubString(index + 1, CHAR_SEQUENCE_BUFFER_SIZE);
+                	        bufLength = stringBuffer.length();
+                	        buffer = stringBuffer.toCharArray();
+                	    }
+                        beginPosition = index;
                 	}
-                	return buffer.charAt(index - beginPosition);
+                	return buffer[index - beginPosition];
+                } catch (IOException err) {
+                    throw new TeiidRuntimeException(CorePlugin.Event.TEIID10053, err);
                 } catch (SQLException err) {
                       throw new TeiidRuntimeException(CorePlugin.Event.TEIID10053, err);
                 } 
@@ -294,7 +309,12 @@ public final class ClobType extends Streamable<Clob> implements NClob, Sequencab
 			return true;
 		}
 		try {
+		    if (length() != other.length()) {
+		        return false;
+		    }
 			return this.compareTo(other) == 0;
+		} catch (SQLException e) {
+		    return false;
 		} catch (TeiidRuntimeException e) {
 			return false;
 		}
@@ -303,7 +323,10 @@ public final class ClobType extends Streamable<Clob> implements NClob, Sequencab
 	@Override
 	public int hashCode() {
 	    try {
-	        return HashCodeUtil.expHashCode(this.getCharSequence());
+	        if (hash == 0) {
+	            hash = HashCodeUtil.expHashCode(this.getCharSequence());
+	        }
+	        return hash;
 	    } catch (TeiidRuntimeException e) {
 	        return 0;
 	    }

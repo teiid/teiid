@@ -73,12 +73,12 @@ connect
 /subsystem=teiid/translator=salesforce:add(module=org.jboss.teiid.translator.salesforce)
 /subsystem=teiid/translator=salesforce-34:add(module=org.jboss.teiid.translator.salesforce-34)
 /subsystem=teiid/translator=hive:add(module=org.jboss.teiid.translator.hive)
-/subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
 /subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
 /subsystem=teiid/translator=odata:add(module=org.jboss.teiid.translator.odata)
 /subsystem=teiid/translator=sap-gateway:add(module=org.jboss.teiid.translator.odata)
 /subsystem=teiid/translator=sap-nw-gateway:add(module=org.jboss.teiid.translator.odata)
 /subsystem=teiid/translator=mongodb:add(module=org.jboss.teiid.translator.mongodb)
+/subsystem=teiid/translator=couchbase:add(module=org.jboss.teiid.translator.couchbase)
 /subsystem=teiid/translator=cassandra:add(module=org.jboss.teiid.translator.cassandra)
 /subsystem=teiid/translator=accumulo:add(module=org.jboss.teiid.translator.accumulo)
 /subsystem=teiid/translator=solr:add(module=org.jboss.teiid.translator.solr)
@@ -98,6 +98,7 @@ connect
 /subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
 /subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
 /subsystem=teiid/translator=delegator:add(module=org.jboss.teiid.api)
+/subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -110,10 +111,11 @@ connect
 /subsystem=resource-adapters/resource-adapter=salesforce-34:add(module=org.jboss.teiid.resource-adapter.salesforce-34)
 /subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
+/subsystem=resource-adapters/resource-adapter=couchbase:add(module=org.jboss.teiid.resource-adapter.couchbase)
 /subsystem=resource-adapters/resource-adapter=cassandra:add(module=org.jboss.teiid.resource-adapter.cassandra)
 /subsystem=resource-adapters/resource-adapter=simpledb:add(module=org.jboss.teiid.resource-adapter.simpledb)
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
-
+/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
 
 /:reload

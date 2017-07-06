@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.jdbc;
@@ -32,6 +28,7 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 
@@ -139,6 +136,9 @@ public class TestStatement {
 		
 		assertFalse(statement.execute("set \"foo\" 'b''a1r' ; ")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "b'a1r");
+		
+	    assertFalse(statement.execute("set \"foo\" = 'bar'; ")); //$NON-NLS-1$
+	    Mockito.verify(conn).setExecutionProperty("foo", "bar");
 	}
 	
 	@Test public void testSetPayloadStatement() throws Exception {
@@ -298,5 +298,21 @@ public class TestStatement {
 		assertFalse(statement.execute("set session characteristics as transaction isolation level repeatable read")); //$NON-NLS-1$
 		Mockito.verify(conn).setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
 	}
+	
+	@Test public void testShowTxnIsolationLevel() throws SQLException {
+        ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+        StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY) {
+            @Override
+            protected TimeZone getServerTimeZone() throws SQLException {
+                return TimeZone.getDefault();
+            }  
+        };
+        Mockito.stub(conn.getTransactionIsolation()).toReturn(Connection.TRANSACTION_READ_COMMITTED);
+        assertTrue(statement.execute("show transaction isolation level")); //$NON-NLS-1$
+        ResultSet rs = statement.getResultSet();
+        rs.next();
+        assertEquals("READ COMMITTED", rs.getString(1));
+        assertFalse(rs.next());
+    }
 	
 }

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /*
@@ -53,6 +49,7 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
@@ -158,6 +155,24 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         		}
         	});
         }
+        registerFunctionModifier(SourceSystemFunctions.LPAD, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                List<Expression> params = function.getParameters();
+                return Arrays.asList("RIGHT(REPLICATE(", //$NON-NLS-1$
+                        params.size()>2?params.get(2):new Literal(" ", TypeFacility.RUNTIME_TYPES.STRING), ", ", //$NON-NLS-1$ //$NON-NLS-2$
+                                params.get(1), ") + ", params.get(0), ", ", params.get(1), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        }); 
+        registerFunctionModifier(SourceSystemFunctions.RPAD, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                List<Expression> params = function.getParameters();
+                return Arrays.asList("LEFT(", params.get(0), " + REPLICATE(", //$NON-NLS-1$ //$NON-NLS-2$ 
+                        params.size()>2?params.get(2):new Literal(" ", TypeFacility.RUNTIME_TYPES.STRING), ", ", //$NON-NLS-1$ //$NON-NLS-2$ 
+                                params.get(1), "), ", params.get(1), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        });
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
@@ -325,6 +340,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("LEFT"); //$NON-NLS-1$
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
         supportedFunctions.add("LOWER"); //$NON-NLS-1$
+        supportedFunctions.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("REPEAT"); //$NON-NLS-1$
         //supportedFunctions.add("RAND"); //$NON-NLS-1$
@@ -346,6 +362,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("MONTHNAME"); //$NON-NLS-1$
         //supportedFunctions.add("NOW"); //$NON-NLS-1$
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
+        supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
@@ -472,6 +489,11 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     @Override
     public boolean useUnicodePrefix() {
     	return true;
+    }
+    
+    @Override
+    public boolean supportsOnlyFormatLiterals() {
+        return true;
     }
     
     @Override

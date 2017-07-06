@@ -1,27 +1,23 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.sql.Date;
 import java.util.LinkedHashSet;
@@ -75,7 +71,7 @@ public class TestMongoDBMetadataProcessor {
         row.append("col3", new Long(3L));
         row.append("col5", Boolean.TRUE);
         row.append("col6", new Date(0L));
-        row.append("col6", new DBRef(db, "ns", "one"));
+        row.append("col6", new DBRef(db.getName(), "ns", "one"));
         row.append("col7", array);
         row.append("col8", new Binary("binary".getBytes()));
         
@@ -126,7 +122,19 @@ public class TestMongoDBMetadataProcessor {
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
-        		"CREATE FOREIGN TABLE child (\n" + 
+                "CREATE FOREIGN TABLE \"table\" (\n" + 
+                "\t\"_id\" integer,\n" + 
+                "\tcol2 double,\n" + 
+                "\tcol3 long,\n" + 
+                "\tcol5 boolean,\n" + 
+                "\tcol6 string,\n" + 
+                "\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
+                "\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n"+
+                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
+                ") OPTIONS (UPDATABLE TRUE);\n" +
+                "\n" + 
+                "CREATE FOREIGN TABLE child (\n" + 
         		"\tcol1 string,\n" + 
         		"\tcol2 string,\n" + 
         	    "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n"+
@@ -147,18 +155,6 @@ public class TestMongoDBMetadataProcessor {
         		"\tcol2 double,\n" + 
         		"\tcol3 long,\n" + 
         		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
-        		") OPTIONS (UPDATABLE TRUE);\n"+
-        		"\n"+
-        		"CREATE FOREIGN TABLE \"table\" (\n" + 
-        		"\t\"_id\" integer,\n" + 
-        		"\tcol2 double,\n" + 
-        		"\tcol3 long,\n" + 
-        		"\tcol5 boolean,\n" + 
-        		"\tcol6 string,\n" + 
-        		"\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
-        		"\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n"+
-        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-        		"\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
         		") OPTIONS (UPDATABLE TRUE);";
         assertEquals(expected, metadataDDL);
     }
@@ -192,7 +188,7 @@ public class TestMongoDBMetadataProcessor {
         row.append("col3", new Long(3L));
         row.append("col5", Boolean.TRUE);
         row.append("col6", new Date(0L));
-        row.append("col6", new DBRef(db, "ns", "one"));
+        row.append("col6", new DBRef(db.getName(), "ns", "one"));
         row.append("col7", array);
         row.append("col8", new Binary("binary".getBytes()));
         
@@ -243,6 +239,18 @@ public class TestMongoDBMetadataProcessor {
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
+                "CREATE FOREIGN TABLE \"table\" (\n" + 
+                "\t\"_id\" integer,\n" + 
+                "\tcol2 double,\n" + 
+                "\tcol3 long,\n" + 
+                "\tcol5 boolean,\n" + 
+                "\tcol6 string,\n" + 
+                "\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
+                "\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n"+
+                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
+                ") OPTIONS (UPDATABLE TRUE);\n" +
+                "\n" + 
                 "CREATE FOREIGN TABLE child (\n" + 
                 "\tcol1 string,\n" + 
                 "\tcol2 string,\n" + 
@@ -257,19 +265,7 @@ public class TestMongoDBMetadataProcessor {
                 "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
                 "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
                 "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 
-                "\n" +
-                "CREATE FOREIGN TABLE \"table\" (\n" + 
-                "\t\"_id\" integer,\n" + 
-                "\tcol2 double,\n" + 
-                "\tcol3 long,\n" + 
-                "\tcol5 boolean,\n" + 
-                "\tcol6 string,\n" + 
-                "\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
-                "\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n"+
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-                "\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
-                ") OPTIONS (UPDATABLE TRUE);";
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');";
         assertEquals(expected, metadataDDL);
     }    
 }

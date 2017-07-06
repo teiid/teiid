@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.rewriter;
@@ -496,16 +492,10 @@ public class QueryRewriter {
         // Rewrite criteria
         Criteria crit = query.getCriteria();
         if(crit != null) {
-        	if (query.getIsXML()) {
-        		//only rewrite expressions, removing whole predicates could change the nature of the query, 
-        		//because we aren't considering the xml pseudo-functions context, row limit, etc. 
-        		rewriteExpressions(crit);
-        	} else {
-        		boolean preserveUnknownOld = preserveUnknown;
-                preserveUnknown = false;
-        		crit = rewriteCriteria(crit);
-        		preserveUnknown = preserveUnknownOld;
-        	}
+    		boolean preserveUnknownOld = preserveUnknown;
+            preserveUnknown = false;
+    		crit = rewriteCriteria(crit);
+    		preserveUnknown = preserveUnknownOld;
             if(crit == TRUE_CRITERIA) {
                 query.setCriteria(null);
             } else if (crit == UNKNOWN_CRITERIA) {
@@ -515,7 +505,7 @@ public class QueryRewriter {
             } 
         }
         
-        if (from != null && !query.getIsXML()) {
+        if (from != null) {
         	rewriteSubqueriesAsJoins(query);
         }
 
@@ -535,24 +525,22 @@ public class QueryRewriter {
             } 
         }
         
-        if (!query.getIsXML()) {
-        	//remove multiple element symbols
-        	boolean hasMes = false;
-        	for (Expression ex : query.getSelect().getSymbols()) {
-        		if (ex instanceof MultipleElementSymbol) {
-        			hasMes = true;
-        		}
-        	}
-        	if (hasMes) {
-        		query.getSelect().setSymbols(query.getSelect().getProjectedSymbols());
-        	}
-        }
+    	//remove multiple element symbols
+    	boolean hasMes = false;
+    	for (Expression ex : query.getSelect().getSymbols()) {
+    		if (ex instanceof MultipleElementSymbol) {
+    			hasMes = true;
+    		}
+    	}
+    	if (hasMes) {
+    		query.getSelect().setSymbols(query.getSelect().getProjectedSymbols());
+    	}
         
         boolean preserveUnknownOld = preserveUnknown;
         preserveUnknown = true;
         rewriteExpressions(query.getSelect());
         
-        if (from != null && !query.getIsXML()) {
+        if (from != null) {
             List<Expression> symbols = query.getSelect().getSymbols();
             RuleMergeCriteria rmc = new RuleMergeCriteria(null, null, null, this.context, this.metadata);
             TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
@@ -579,9 +567,7 @@ public class QueryRewriter {
             }
         }
         
-        if (!query.getIsXML()) {
-            query = (Query)rewriteOrderBy(query);
-        }
+        query = (Query)rewriteOrderBy(query);
         preserveUnknown = preserveUnknownOld;
 
         if (query.getLimit() != null) {
@@ -2365,6 +2351,7 @@ public class QueryRewriter {
     	FUNCTION_MAP.put(FunctionLibrary.FORMATDATE, 8);
     	FUNCTION_MAP.put(FunctionLibrary.FORMATTIME, 9);
     	FUNCTION_MAP.put(SourceSystemFunctions.TRIM, 10);
+    	FUNCTION_MAP.put(SourceSystemFunctions.SUBSTRING, 11);
     }
     
 	private Expression rewriteFunction(Function function) throws TeiidComponentException, TeiidProcessingException{
@@ -2530,6 +2517,20 @@ public class QueryRewriter {
 					}
 				}
 				break;
+			}
+			case 11: {
+			    if (function.getArg(1) instanceof Constant) {
+                    Constant c = (Constant)function.getArg(1);
+                    if (!c.isMultiValued() && !c.isNull()) {
+                        int val = (Integer) c.getValue();
+                        if (val == 0) {
+                            function.getArgs()[1] = new Constant(1);
+                        } else if (val < 0) {
+                            return new Constant(null, function.getType());
+                        }
+                    }
+                }
+			    break;
 			}
 			}
 		}

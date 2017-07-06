@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.rewriter;
@@ -911,14 +907,6 @@ public class TestQueryRewriter {
                                 "SELECT e1 FROM pm1.g1 WHERE '3' IN (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
     }
 
-    @Test public void testRewriteXMLCriteria1() {
-        helpTestRewriteCriteria("context(pm1.g1.e1, pm1.g1.e1) = convert(5, string)", "context(pm1.g1.e1, pm1.g1.e1) = '5'"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testRewriteXMLCriteria2() {
-        helpTestRewriteCriteria("context(pm1.g1.e1, convert(5, string)) = 2+3", "context(pm1.g1.e1, '5') = '5'"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     //base test.  no change is expected
     @Test public void testRewriteLookupFunction1() {
         String criteria = "lookup('pm1.g1','e1', 'e2', 1) = 'ab'"; //$NON-NLS-1$
@@ -1302,10 +1290,6 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteInWithNull() {
         helpTestRewriteCriteria("convert(null, string) in (pm1.g1.e1, pm1.g1.e2)", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testRewriteXMLCriteriaCases5630And5640() {
-        helpTestRewriteCommand("select * from xmltest.doc1 where node1 = null", "SELECT * FROM xmltest.doc1 WHERE node1 = null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCorrelatedSubqueryInHaving() throws Exception {
@@ -1824,6 +1808,18 @@ public class TestQueryRewriter {
 	@Test public void testRewriteCritBooleanExpression() {
         helpTestRewriteCriteria("not (pm1.g1.e3)", //$NON-NLS-1$
                                 "pm1.g1.e3 <> TRUE" );         //$NON-NLS-1$
+    }
+	
+    @Test public void testRewriteSubstringZeroIndex() throws TeiidComponentException, TeiidProcessingException {
+        helpTestRewriteExpression("substring(pm1.g1.e1, 0, 5)", "substring(pm1.g1.e1, 1, 5)", RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testDontRewriteSubstring() throws TeiidComponentException, TeiidProcessingException {
+        helpTestRewriteExpression("substring(pm1.g1.e1, pm1.g1.e2, 5)", "substring(pm1.g1.e1, pm1.g1.e2, 5)", RealMetadataFactory.example1Cached());
+    }
+
+    @Test public void testRewriteSubstringNegativeIndex() throws TeiidComponentException, TeiidProcessingException {
+        helpTestRewriteExpression("substring(pm1.g1.e1, -1, 5)", "null", RealMetadataFactory.example1Cached());
     }
 
 }

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
@@ -200,8 +196,8 @@ public class TestVisitors {
         SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
         visitor.visit(command);
         assertEquals("SELECT Contact.Name FROM Contact WHERE ((Contact.Name = 'foo') AND (Account.Id = '5')) AND (Contact.AccountId != NULL)", visitor.getQuery().toString().trim()); //$NON-NLS-1$
-    }	
-	
+    }
+    
 	@Test public void testInnerJoin() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName FROM Account inner join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
 		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
@@ -362,5 +358,13 @@ public class TestVisitors {
 		String source = "SELECT COUNT(Id) FROM Opportunity WHERE Opportunity.Amount > 100000000";
 		helpTest(sql, source);
 	}
+	
+	@Test public void testCustomJoin() throws Exception {
+        String sql = "select a.id, a.name, b.Order_Recipe_Steps__c, b.name from Media_Prep_Order_Recipe_Step__c a "
+                + "inner join Recipe_Step_Detail__c b on (a.id = b.Order_Recipe_Steps__c)"
+                + " where b.name = 'abc'";
+        String source = "SELECT Order_Recipe_Steps__r.Id, Order_Recipe_Steps__r.Name, Recipe_Step_Detail__c.Order_Recipe_Steps__c, Recipe_Step_Detail__c.Name FROM Recipe_Step_Detail__c WHERE (Recipe_Step_Detail__c.Name = 'abc') AND (Recipe_Step_Detail__c.Order_Recipe_Steps__c != NULL)";
+        helpTest(sql, source);
+    }   
 	
 }

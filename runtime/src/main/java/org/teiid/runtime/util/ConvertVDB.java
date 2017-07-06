@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.runtime.util;
 
@@ -34,10 +30,7 @@ import java.util.LinkedHashMap;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.Admin.ExportFormat;
 import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
@@ -66,7 +59,7 @@ public class ConvertVDB {
     public static void main(String[] args) throws Exception {
         
         if (args.length < 1) {
-            System.out.println("usage: CovertVDB /path/to/file.vdb");
+            System.out.println("usage: CovertVDB /path/to/file-vdb.xml");
             System.exit(0);
         }
 
@@ -75,10 +68,10 @@ public class ConvertVDB {
             System.out.println("vdb file does not exist");
         }
         
-        if (f.getName().toLowerCase().endsWith(".vdb") || f.getName().toLowerCase().endsWith(".xml")) {
+        if (f.getName().toLowerCase().endsWith(".xml")) {
             System.out.println(convert(f));
         } else {
-            System.out.println("Unknown file type supplied, only .VDB, .XML based VDBs are supported");
+            System.out.println("Unknown file type supplied, only .XML based VDBs are supported");
         }
     }
 
@@ -116,19 +109,10 @@ public class ConvertVDB {
         
         es.start(ec);
         try {
-            if (f.getName().toLowerCase().endsWith(".vdb")) {
-                es.deployVDBZip(f.toURI().toURL());
-                Admin admin = es.getAdmin();
-                VDB vdb = admin.getVDBs().iterator().next();
-                String format = System.getProperty("format", "DDL");
-                return admin.getSchema(vdb.getName(), vdb.getVersion(), null, null, null, ExportFormat.valueOf(format));
-            } else if (f.getName().toLowerCase().endsWith("-vdb.xml")) {
-                return es.convertVDB(new FileInputStream(f));
-            } 
+            return es.convertVDB(new FileInputStream(f));
         } finally {
             es.stop();
         }
-        return null;
     }
     
     private static class MyServer extends EmbeddedServer {
@@ -163,49 +147,60 @@ public class ConvertVDB {
             for (ModelMetaData m:modelMetaDatas.values()) {
                 Schema schema = new Schema();
                 schema.setName(m.getName());
+                schema.setAnnotation(m.getDescription());
+                schema.setVisible(m.isVisible());
+                schema.setPhysical(m.isSource());
+                schema.setProperties(m.getPropertiesMap());
                 metadataStore.addSchema(schema);
             }
             
             Database db = DatabaseUtil.convert(metadata, metadataStore);
             DDLStringVisitor visitor = new DDLStringVisitor(null, null) {
+                
+                @Override
+                protected void createdSchmea(Schema schema) {
+                }
+                
                 @Override
                 protected void visit(Schema schema) {
-                    //super.visit(schema);
                     ModelMetaData m = modelMetaDatas.get(schema.getName());
                     String replace = "";
-                    if (m.isSource()) {
-                        String sourceName = m.getSourceNames().get(0);
-                        String schemaName = m.getPropertiesMap().get("importer.schemaPattern");
-                        if (schemaName == null) {
-                            schemaName = "%";
-                        }
-                        
-                        if (m.getSourceMetadataType().isEmpty()) {
-                            // nothing defined; so this is NATIVE only
-                           replace = replaceNative(m, sourceName, schemaName);                   
-                        } else {
-                            // may one or more defined
-                            for (int i = 0; i < m.getSourceMetadataType().size(); i++) {
-                                String type =  m.getSourceMetadataType().get(i);
-                                if (type.equalsIgnoreCase("NATIVE")) {
-                                    replace += replaceNative(m, sourceName, schemaName);
-                                } else if (type.equalsIgnoreCase("DDL")){
-                                    replace = m.getSourceMetadataText().get(0);
-                                }
+                    String sourceName = m.getSourceNames().isEmpty()?"":m.getSourceNames().get(0);
+                    String schemaName = m.getPropertiesMap().get("importer.schemaPattern");
+                    if (schemaName == null) {
+                        schemaName = "%";
+                    }
+                    
+                    if (m.getSourceMetadataType().isEmpty()) {
+                        // nothing defined; so this is NATIVE only
+                       if (m.isSource()) {
+                           replace = replaceMetadataTag(m, sourceName, schemaName, true);
+                       }
+                    } else {
+                        // may one or more defined
+                        for (int i = 0; i < m.getSourceMetadataType().size(); i++) {
+                            String type =  m.getSourceMetadataType().get(i);
+                            if (type.equalsIgnoreCase("NATIVE")) {
+                                replace += replaceMetadataTag(m, sourceName, schemaName, true);
+                            } else if (!type.equalsIgnoreCase("DDL")){
+                                replace += replaceMetadataTag(m, type, schemaName, false);
+                            } else {
+                                replace += m.getSourceMetadataText().get(i) + "\n"; //$NON-NLS-1$
                             }
                         }
-                    } else {
-                        replace = m.getSourceMetadataText().get(0);
                     }
                     buffer.append(replace);
                 }
+                
             };
             visitor.visit(db);
             return visitor.toString();
         }
 
-        private String replaceNative(ModelMetaData m, String sourceName, String schemaName) {
-            String replace = "IMPORT FOREIGN SCHEMA "+SQLStringVisitor.escapeSinglePart(schemaName)+" FROM SERVER "+SQLStringVisitor.escapeSinglePart(sourceName)+" INTO "+SQLStringVisitor.escapeSinglePart(m.getName())+" OPTIONS (\n";
+        private String replaceMetadataTag(ModelMetaData m, String sourceName, String schemaName, boolean server) {
+            String replace = "IMPORT FOREIGN SCHEMA "+SQLStringVisitor.escapeSinglePart(schemaName)+" FROM " + (server?"SERVER ":"REPOSITORY ")+SQLStringVisitor.escapeSinglePart(sourceName)+" INTO "+SQLStringVisitor.escapeSinglePart(m.getName());
+            if (!m.getPropertiesMap().isEmpty()) {
+               replace += " OPTIONS (\n";
                Iterator<String> it = m.getPropertiesMap().keySet().iterator();
                while (it.hasNext()) {
                    String key = it.next();
@@ -214,7 +209,9 @@ public class ConvertVDB {
                        replace += ",\n";
                    }
                }
-               replace += ");\n";
+               replace += ")";
+            }
+            replace+=";\n\n";
             return replace;
         }
 

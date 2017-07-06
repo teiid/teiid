@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2006, Red Hat Middleware LLC, and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.oauth;
 
@@ -33,7 +29,6 @@ import org.apache.cxf.rs.security.oauth.client.OAuthClientUtils;
 import org.apache.cxf.rs.security.oauth2.common.AccessTokenGrant;
 import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
 import org.apache.cxf.rs.security.oauth2.grants.code.AuthorizationCodeGrant;
-
 
 @SuppressWarnings("nls")
 public class OAuthUtil {
@@ -67,6 +62,7 @@ public class OAuthUtil {
         System.out.println("Select type of OAuth authentication");
         System.out.println("1) OAuth 1.0A");
         System.out.println("2) OAuth 2.0");
+        System.out.println("3) OAuth 2.0 - Facebook");
         System.out.println();
         
         String input = in.nextLine();
@@ -79,6 +75,8 @@ public class OAuthUtil {
         case 2:
             oauth20Flow(in);
             break;
+        case 3:
+            oauth20FlowFacebook(in);
         }
         in.close();
     }
@@ -167,7 +165,58 @@ public class OAuthUtil {
         System.out.println("");
         System.out.println(MessageFormat.format(OAUTH2_0_DOMAIN, clientID, clientSecret, 
                 clientToken.getRefreshToken(), accessTokenURL));
-    }    
+    }  
+    
+    private static void oauth20FlowFacebook(Scanner in) throws Exception {
+        System.out.println("=== OAuth 2.0 - Facebook Workflow ===");
+        System.out.println();
+
+        String clientID = getInput(in, "Enter the App ID = ");
+        String clientSecret = getInput(in, "Enter the App Secret = ");
+        org.apache.cxf.rs.security.oauth2.client.Consumer consumer = new org.apache.cxf.rs.security.oauth2.client.Consumer(clientID,clientSecret);
+        
+        String authorizeURL = getInput(in, "Enter the User Authorization URL(default: https://www.facebook.com/v2.9/dialog/oauth) = ", true);
+        if(authorizeURL == null) {
+            authorizeURL = "https://www.facebook.com/v2.9/dialog/oauth";
+        }
+        
+        String scope = getInput(in, "Enter scope (default: public_profile,user_friends,email,pages_manage_cta) = ", true);
+        if(scope == null) {
+            scope = "public_profile,user_friends,email,pages_manage_cta";
+        }
+        
+        String callback = getInput(in, "Enter callback URL (the redirect url match the setting in your Facebook App) = ");
+        
+        URI authenticateURL = org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils.getAuthorizationURI(authorizeURL, 
+                consumer.getKey(), 
+                callback, 
+                "Auth URL", 
+                scope);
+        
+        System.out.println("Cut & Paste the URL in a web browser, and Authticate");
+        System.out.println("Authorize URL  = " + authenticateURL.toASCIIString());
+        System.out.println("");
+        
+        String authCode = getInput(in, "Enter Token Secret (Auth Code) from previous step = ");
+        
+        String accessTokenURL = getInput(in, "Enter the Access Token URL(default: https://graph.facebook.com/v2.9/oauth/access_token) = ", true);
+        if(accessTokenURL == null) {
+            accessTokenURL = "https://graph.facebook.com/v2.9/oauth/access_token";
+        }
+        
+        System.out.println("Cut & Paste the URL in a web browser, and Get Access Token");
+        System.out.println("Access Token URL  = " + accessTokenURL + "?client_id=" + clientID + "&client_secret=" + clientSecret + "&redirect_uri=" + callback + "&code=" + authCode);
+        System.out.println("");
+        
+        String access_token = getInput(in, "Enter access_token from previous step = ");
+
+        System.out.println("");
+        System.out.println("Add the following XML into your standalone-teiid.xml file in security-domains subsystem,\n"
+                + "and configure data source securty to this domain");
+        System.out.println("");
+        System.out.println("");
+        System.out.println(MessageFormat.format(OAUTH2_0_DOMAIN, clientID, clientSecret, access_token, accessTokenURL));
+    } 
 
     public static String getInput(Scanner in, String message) throws Exception {
         return getInput(in, message, false); 
@@ -184,6 +233,7 @@ public class OAuthUtil {
             }
             
             if (allowNull) {
+                System.out.println("");
                 return null;
             }
         }

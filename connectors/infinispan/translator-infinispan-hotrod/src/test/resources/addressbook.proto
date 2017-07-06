@@ -1,4 +1,4 @@
-package quickstart;
+ package quickstart;
 
 /* @Indexed */
 message Person {
@@ -6,20 +6,19 @@ message Person {
    /* @IndexedField */
    required string name = 1;
 
-   /* @IndexedField(index=true, store=false) */
+   /* @Id
+    @IndexedField(index=false, store=false) */
    required int32 id = 2;
 
    optional string email = 3;
 
+   enum PhoneType {
+      MOBILE = 0;
+      HOME = 1;
+      WORK = 2;
+   }
 
-   /* @IndexedField(index=true, store=false) */
-   repeated PhoneNumber phoneNumber = 4;
-   
-   optional Address address = 5;
-   
-}
-
- /* @Indexed */
+   /* @Indexed */
    message PhoneNumber {
 
       /* @IndexedField */
@@ -28,24 +27,7 @@ message Person {
       /* @IndexedField(index=false, store=false) */
       optional PhoneType type = 2 [default = HOME];
    }
-   
-   
-   enum PhoneType {
-      MOBILE = 0;
-      HOME = 1;
-      WORK = 2;
-   }
 
-  /* @Indexed */
-   message Address {
-
-      /* @IndexedField */
-      required string Address = 1;
-
-      /* @IndexedField(index=true, store=false) */
-      required string City = 2;
-      
-      /* @IndexedField(index=true, store=false) */
-      required string State = 3;
-     
-   }
+   /* @IndexedField(index=true, store=false) */
+   repeated PhoneNumber phone = 4;
+}

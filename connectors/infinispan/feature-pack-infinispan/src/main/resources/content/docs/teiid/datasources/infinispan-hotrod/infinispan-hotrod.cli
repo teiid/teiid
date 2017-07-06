@@ -1,0 +1,4 @@
+/subsystem=resource-adapters/resource-adapter=infinispanDS:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
+/subsystem=resource-adapters/resource-adapter=infinispanDS/connection-definitions=infinispanDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=infinispanDS/connection-definitions=infinispanDS/config-properties=RemoteServerList:add(value="${server-list}" )
+/subsystem=resource-adapters/resource-adapter=infinispanDS:activate

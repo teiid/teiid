@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.translator.jdbc;
@@ -569,7 +565,17 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
-			ResultSet fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
+		    ResultSet fks = null;
+		    try {
+		        fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
+		    } catch (SQLException e) {
+		        if (tableInfo.type != null && StringUtil.indexOfIgnoreCase(tableInfo.type, "TABLE") < 0) { //$NON-NLS-1$
+		            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "skipping foreign keys for non-table", tableInfo.table.getFullName()); //$NON-NLS-1$
+		        } else {
+		            LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11026, tableInfo.table.getFullName(), tableInfo.type));
+		        }
+		        continue;
+		    }
 			HashMap<String, FKInfo> allKeys = new HashMap<String, FKInfo>();
 			while (fks.next()) {
 				String columnName = fks.getString(8);

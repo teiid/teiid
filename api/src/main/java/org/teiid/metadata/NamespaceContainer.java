@@ -1,27 +1,24 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.metadata;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,7 +29,7 @@ import org.teiid.core.util.StringUtil;
 /**
  * Defines a base schema that is the holder for namespace and type information
  */
-public class NamespaceContainer extends AbstractMetadataRecord {
+public class NamespaceContainer implements Serializable {
     
     static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
     private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$
@@ -48,6 +45,8 @@ public class NamespaceContainer extends AbstractMetadataRecord {
     private static final String TEIID_LDAP = "teiid_ldap"; //$NON-NLS-1$
     private static final String TEIID_REST = "teiid_rest"; //$NON-NLS-1$
     private static final String TEIID_PI = "teiid_pi"; //$NON-NLS-1$
+    private static final String TEIID_COUCHBASE = "teiid_couchbase"; //$NON-NLS-1$
+    private static final String TEIID_INFINISPAN = "teiid_ispn"; //$NON-NLS-1$
 
     public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
     public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
@@ -61,6 +60,8 @@ public class NamespaceContainer extends AbstractMetadataRecord {
     public static final String LDAP_URI = "{http://www.teiid.org/translator/ldap/2015}"; //$NON-NLS-1$
     public static final String REST_URI = "{http://teiid.org/rest}"; //$NON-NLS-1$
     public static final String PI_URI = "{http://www.teiid.org/translator/pi/2016}"; //$NON-NLS-1$
+    public static final String COUCHBASE_URI = "{http://www.teiid.org/translator/couchbase/2017}"; //$NON-NLS-1$
+    public static final String INFINISPAN_URI = "{http://www.teiid.org/translator/infinispan/2017}"; //$NON-NLS-1$
 
     public static final Map<String, String> BUILTIN_NAMESPACES;
     static {
@@ -78,6 +79,8 @@ public class NamespaceContainer extends AbstractMetadataRecord {
         map.put(TEIID_LDAP, LDAP_URI.substring(1, LDAP_URI.length()-1));
         map.put(TEIID_REST, REST_URI.substring(1, REST_URI.length()-1));
         map.put(TEIID_PI, PI_URI.substring(1, PI_URI.length()-1));
+        map.put(TEIID_COUCHBASE, COUCHBASE_URI.substring(1, COUCHBASE_URI.length()-1));
+        map.put(TEIID_INFINISPAN, INFINISPAN_URI.substring(1, INFINISPAN_URI.length()-1));
         BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
     }
     
@@ -98,7 +101,10 @@ public class NamespaceContainer extends AbstractMetadataRecord {
         if (this.namespaces == null) {
              this.namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
         }
-        this.namespaces.put(prefix, uri);
+        String old = this.namespaces.put(prefix, uri);
+        if (old != null && !old.equals(uri)) {
+            throw new MetadataException(DataPlugin.Event.TEIID60037, DataPlugin.Util.gs(DataPlugin.Event.TEIID60037, prefix, old, uri));
+        }
     }
     
     public Map<String, String> getNamespaces() {

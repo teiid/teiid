@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /*
@@ -76,6 +72,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	public SQLServerExecutionFactory() {
+	    setSupportsFullOuterJoins(true);
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(2);
 	}
@@ -272,13 +269,13 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
         supportedFunctions.add(SourceSystemFunctions.LOCATE);
         supportedFunctions.add("LOWER"); //$NON-NLS-1$
-        //supportedFunctons.add("LPAD"); //$NON-NLS-1$
+        supportedFunctions.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("REPEAT"); //$NON-NLS-1$
         //supportedFunctions.add("RAND"); //$NON-NLS-1$
         supportedFunctions.add("REPLACE"); //$NON-NLS-1$
         supportedFunctions.add("RIGHT"); //$NON-NLS-1$
-        //supportedFunctons.add("RPAD"); //$NON-NLS-1$
+        supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SPACE"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
@@ -561,21 +558,31 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	if (getVersion().compareTo(ELEVEN_0) >= 0 || !(command instanceof QueryExpression)) {
     		if (getVersion().compareTo(ELEVEN_0) >= 0 && command instanceof QueryExpression) {
     			QueryExpression queryCommand = (QueryExpression)command;
-    			if (queryCommand.getLimit() != null && queryCommand.getOrderBy() == null) {
-    				//an order by is required
-    				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
-    			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct()) 
-                            || (queryCommand instanceof SetQuery && !((SetQuery)queryCommand).isAll()))) {
-    			        //can't use the @@version with distinct
-    			        useRowNumber = true;
+    			if (queryCommand.getLimit() != null) {
+    			    if (queryCommand.getOrderBy() == null) {
+        				//an order by is required
+        				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
+        			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct()) 
+                                || (queryCommand instanceof SetQuery && !((SetQuery)queryCommand).isAll()))) {
+        			        //can't use the @@version with distinct
+        			        useRowNumber = true;
+        			    } else {
+            				List<Object> parts = new ArrayList<Object>();
+            				Limit limit = queryCommand.getLimit();
+            				queryCommand.setLimit(null);
+            				parts.add(queryCommand);
+            				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
+            				parts.add(limit);
+            				return parts;
+        			    }
     			    } else {
-        				List<Object> parts = new ArrayList<Object>();
-        				Limit limit = queryCommand.getLimit();
-        				queryCommand.setLimit(null);
-        				parts.add(queryCommand);
-        				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
-        				parts.add(limit);
-        				return parts;
+    			        List<Object> parts = new ArrayList<Object>();
+                        Limit limit = queryCommand.getLimit();
+                        queryCommand.setLimit(null);
+                        parts.add(queryCommand);
+                        parts.add(" "); //$NON-NLS-1$
+                        parts.add(limit);
+                        return parts;
     			    }
     			}
     		}

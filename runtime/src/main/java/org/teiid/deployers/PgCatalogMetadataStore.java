@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.deployers;
 
@@ -29,7 +25,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -43,6 +41,8 @@ import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.util.StringUtil;
+import org.teiid.language.SQLConstants;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
@@ -59,11 +59,14 @@ import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.transport.PgBackendProtocol;
 
 public class PgCatalogMetadataStore extends MetadataFactory {
 	private static final long serialVersionUID = 2158418324376966987L;
 	
+	public static final String POSTGRESQL_VERSION = System.getProperties().getProperty("org.teiid.pgVersion", "PostgreSQL 8.2"); //$NON-NLS-1$ //$NON-NLS-2$
+
 	public static final String TYPMOD = "(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN 4+(65536*(case when (t1.Precision>32767) then 32767 else t1.Precision end)+(case when (t1.Scale>32767) then 32767 else t1.Scale end)) " + //$NON-NLS-1$
 				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END)"; //$NON-NLS-1$
 
@@ -86,6 +89,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_pg_inherits();
 		add_pg_stats();
 		add_geography_columns();
+		add_pg_constraint();
 		addFunction("regClass", "regclass").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("objDescription", "obj_description"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -104,14 +108,39 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_table_is_visible", "pg_table_is_visible"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_get_constraintdef", "pg_get_constraintdef"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_type_is_visible", "pg_type_is_visible"); //$NON-NLS-1$ //$NON-NLS-2$
 		FunctionMethod func = addFunction("asPGVector", "asPGVector"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setProperty(ResolverVisitor.TEIID_PASS_THROUGH_TYPE, Boolean.TRUE.toString());
-		addFunction("getOid", "getOid"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("getOid", "getOid").setNullOnNull(true);; //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("version", "version"); //$NON-NLS-1$ //$NON-NLS-1$
 		func = addFunction("pg_client_encoding", "pg_client_encoding"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
 	}
 	
-	private void add_pg_prepared_xacts() {
+	private Table add_pg_constraint() {
+	    Table t = createView("pg_constraint"); //$NON-NLS-1$ 
+        
+	    addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+	    addColumn("conname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("contype", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("consrc", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("conrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+	    addColumn("confrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+	    addColumn("conkey", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.SHORT)), t); //$NON-NLS-1$ 
+        
+        String transformation = "SELECT pg_catalog.getOid(UID) as oid, name as conname, lower(left(Type, 1)) as contype, " //$NON-NLS-1$
+                + "null as consrc, " //$NON-NLS-1$
+                + "pg_catalog.getOid(TableUID) as conrelid, pg_catalog.getOid(RefTableUID) as confrelid, " //$NON-NLS-1$
+                + "ColPositions as conkey " + //$NON-NLS-1$
+                "FROM Sys.Keys WHERE Type in ('Primary', 'Unique', 'Foreign')"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+        return t;       
+        
+    }
+
+    private void add_pg_prepared_xacts() {
 	    Table t = createView("pg_prepared_xacts"); //$NON-NLS-1$ 
 	    //xid
         addColumn("transaction", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
@@ -308,6 +337,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		
 		//additional column not present in pg metadata - for column metadata query
 		addColumn("relnspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		
+		addColumn("reloptions", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.STRING)), t); //$NON-NLS-1$
 
 		addPrimaryKey("pk_pg_class", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -320,7 +351,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
 				"false as relhasoids, " + //$NON-NLS-1$
-				"t1.SchemaName as relnspname " + //$NON-NLS-1$
+				"t1.SchemaName as relnspname, " + //$NON-NLS-1$
+				"null as reloptions " + //$NON-NLS-1$
 				"FROM SYS.Tables t1 UNION ALL SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
 				"pg_catalog.getOid(uid) as relnamespace, " + //$NON-NLS-1$
 				"convert('i', char) as relkind," + //$NON-NLS-1$
@@ -330,7 +362,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
 				"false as relhasoids, " + //$NON-NLS-1$
-				"t1.SchemaName as relnspname " + //$NON-NLS-1$
+				"t1.SchemaName as relnspname, " + //$NON-NLS-1$
+				"null as reloptions " + //$NON-NLS-1$
 				"FROM SYS.Keys t1 WHERE t1.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		return t;		
@@ -510,13 +543,14 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("typrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("typelem", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("typinput", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("typdefault", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
 		//non-pg column to associate the teiid type name - this is expected to be unique.
 		//aliases are handled by matpg_datatype
 		addColumn("teiid_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
 		String transformation =
-			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput, teiid_name from texttable('" + //$NON-NLS-1$
+			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput, null as typdefault, teiid_name from texttable('" + //$NON-NLS-1$
 			"16,bool,1,b,0,-1,0,0,boolean\n" + //$NON-NLS-1$
 			"17,bytea,-1,b,0,-1,0,0,blob\n" + //$NON-NLS-1$
 			"1043,varchar,-1,b,0,-1,0,0,string\n" + //$NON-NLS-1$
@@ -551,7 +585,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"1016,_int8,-1,b,0,-1,0,20,long[]\n" + //$NON-NLS-1$
 			"1021,_float4,-1,b,0,-1,0,700,float[]\n" + //$NON-NLS-1$
 			"1022,_float8,-1,b,0,-1,0,701,double[]\n" + //$NON-NLS-1$
-			"1031,_numeric,-1,b,0,-1,0,1700,double[]\n" + //$NON-NLS-1$
+			"1031,_numeric,-1,b,0,-1,0,1700,bigdecimal[]\n" + //$NON-NLS-1$
 			"1115,_timestamp,-1,b,0,-1,0,1114,timestamp[]\n" + //$NON-NLS-1$
 			"1182,_date,-1,b,0,-1,0,1082,date[]\n" + //$NON-NLS-1$
 			"1183,_time,-1,b,0,-1,0,1083,time[]\n" + //$NON-NLS-1$
@@ -753,12 +787,42 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                 ResultSet rs = ps.getResultSet();
                 if (rs.next()) {
                     String name = rs.getString(1);
+                    boolean isArray = name.startsWith("_"); //$NON-NLS-1$
+                    if (isArray) {
+                        name = name.substring(1);
+                    }
+                    switch (name) {
+                    case "bool": //$NON-NLS-1$
+                        name = "boolean"; //$NON-NLS-1$
+                        break;
+                    case "varchar": //$NON-NLS-1$
+                        name = "character varying"; //$NON-NLS-1$
+                        break;
+                    case "int2": //$NON-NLS-1$
+                        name = "smallint"; //$NON-NLS-1$
+                        break;
+                    case "int4": //$NON-NLS-1$
+                        name = "integer"; //$NON-NLS-1$
+                        break;
+                    case "int8": //$NON-NLS-1$
+                        name = "bigint"; //$NON-NLS-1$
+                        break;
+                    case "float4": //$NON-NLS-1$
+                        name = "real"; //$NON-NLS-1$
+                        break;
+                    case "float8": //$NON-NLS-1$
+                        name = "double precision"; //$NON-NLS-1$
+                        break;
+                    }
                     if (typmod > 4) {
                         if (name.equals("numeric")) {  //$NON-NLS-1$
                             name += "("+((typmod-4)>>16)+","+((typmod-4)&0xffff)+")";  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                         } else if (name.equals("bpchar") || name.equals("varchar")) { //$NON-NLS-1$ //$NON-NLS-2$
                             name += "("+(typmod-4)+")";  //$NON-NLS-1$ //$NON-NLS-2$
                         }
+                    }
+                    if (isArray) {
+                        name += "[]"; //$NON-NLS-1$
                     }
                     return name;
                 }
@@ -782,6 +846,41 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		public static BlobType asBinary2(GeometryType geom, String encoding) throws FunctionExecutionException {
 		    return GeometryFunctionMethods.asBlob(geom, encoding);
 		}
+		
+		public static boolean pg_table_is_visible(int oid) throws FunctionExecutionException {
+            return true;
+        }
+		
+	    public static String pg_get_constraintdef(org.teiid.CommandContext cc, int oid, boolean pretty) throws SQLException {
+	        //return a simple constraint def
+	        try (Connection c = cc.getConnection(); PreparedStatement ps = c.prepareStatement("select pkcolumn_name, pktable_schem, pktable_name, fkcolumn_name from REFERENCEKEYCOLUMNS where getoid(fk_uid) = ? order by KEY_SEQ")) { //$NON-NLS-1$
+	            ps.setInt(1, oid);
+	            ps.execute();
+	            ResultSet rs = ps.getResultSet();
+	            String refTable = null;
+	            List<String> columnNames = new ArrayList<String>();
+	            List<String> refColumnNames = new ArrayList<String>();
+	            while (rs.next()) {
+	                if (refTable == null) {
+	                    refTable = SQLStringVisitor.escapeSinglePart(rs.getString(2)) + SQLConstants.Tokens.DOT + SQLStringVisitor.escapeSinglePart(rs.getString(3));
+	                }
+	                columnNames.add(SQLStringVisitor.escapeSinglePart(rs.getString(4)));
+	                refColumnNames.add(SQLStringVisitor.escapeSinglePart(rs.getString(1)));
+	            }
+	            if (refTable == null) {
+	                return null;
+	            }
+	            return "FOREIGN KEY (" + StringUtil.join(columnNames, ",")+ ") REFERENCES " + refTable + "("+ StringUtil.join(refColumnNames, ",") + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	        }
+	    }
+	    
+	    public static boolean pg_type_is_visible(int oid) throws FunctionExecutionException {
+            return true;
+        }
+	    
+	    public static String version() {
+	        return POSTGRESQL_VERSION;
+	    }
 		
 	}
 }

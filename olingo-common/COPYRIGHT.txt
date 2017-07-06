@@ -1,0 +1,2 @@
+Portions Copyright (C) 2008-2017 Red Hat, Inc.
+Portions Copyright (C) 2001 Vivid Solutions

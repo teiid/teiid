@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.processor;
@@ -1260,6 +1256,47 @@ public class TestDependentJoins {
 		assertEquals(1, vals.size());
     }
     
+    @Test public void testNestedFullDepJoin() throws Exception {
+        BasicSourceCapabilities pm1Caps = TestOptimizer.getTypicalCapabilities();
+        pm1Caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        pm1Caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.FULL_DEPENDENT_JOIN, true);
+        TransformationMetadata metadata = TestOptimizer.example1();
+        
+        RealMetadataFactory.setCardinality("pm1.g1", 5, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", 5, metadata);
+        RealMetadataFactory.setCardinality("pm1.g3", 1000, metadata);
+        RealMetadataFactory.setCardinality("pm2.g2", 10000, metadata);
+        
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        capFinder.addCapabilities("pm1", pm1Caps);
+        capFinder.addCapabilities("pm2", caps);
+        
+        CommandContext cc = new CommandContext();
+        cc.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select pm1.g1.e1, pm1.g1.e2, pm1.g3.e2 FROM pm1.g1 inner join pm1.g3 on pm1.g1.e1 = pm1.g3.e1 inner join pm1.g2 on pm1.g3.e2 = pm1.g2.e2 left outer join pm2.g2 on pm1.g3.e4 = pm2.g2.e4 order by pm1.g1.e1", 
+                metadata, null), metadata, capFinder, null, true, cc);
+
+        TestOptimizer.checkAtomicQueries(new String[] {"WITH TEIID_TEMP__1 (col1, col2, col3, col4) AS (<dependent values>) SELECT g_0.col2 AS c_0, g_0.col3 AS c_1, g_0.col4 AS c_2 FROM TEIID_TEMP__1 AS g_0 LEFT OUTER JOIN pm2.g2 AS g_1 ON g_0.col1 = g_1.e4 ORDER BY c_0" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
+        
+        List<?>[] expected = new List<?>[] { 
+            Arrays.asList(new Object[] { "a", 2, 1.0 }), //$NON-NLS-1$
+        };  
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+        dataManager.addData("SELECT g_0.e2 AS c_0 FROM g2 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList(1), Arrays.asList(2)});
+        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e4 AS c_2 FROM g3 AS g_0 WHERE g_0.e1 IN ('a', 'b') AND g_0.e2 IN (1, 2) ORDER BY c_0", new List<?>[] {Arrays.asList("a", 2, 1.0)});
+        dataManager.addData("WITH TEIID_TEMP__1 (e4, e1, e2, e2) AS (?) SELECT g_0.col2 AS c_0, g_0.col3 AS c_1, g_0.col4 AS c_2 FROM TEIID_TEMP__1 AS g_0 LEFT OUTER JOIN g2 AS g_1 ON g_0.col1 = g_1.e4 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 2, 1.0)});
+        TestProcessor.helpProcess(plan, dataManager, expected);
+        Select select = (Select)dataManager.getPushdownCommands().get(3);
+        List<? extends List<?>> vals = select.getWith().getItems().get(0).getDependentValues();
+        assertEquals(1, vals.size());
+    }
+    
     @Test public void testNoFullDepJoin() throws Exception {
     	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
     	caps.setCapabilitySupport(Capability.FULL_DEPENDENT_JOIN, true);
@@ -1472,6 +1509,81 @@ public class TestDependentJoins {
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 2);
+        
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testLargeInAsDependentSet() { 
+        String sql = "SELECT pm1.g1.e2 FROM pm1.g1 WHERE pm1.g1.e1 in ('a', 'b', 'c', 'd')"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(1),
+            Arrays.asList(2),
+        };    
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.setBlockOnce(true);
+        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b')", Arrays.asList(1));
+        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('c', 'd')", Arrays.asList(2));
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 2);
+        bsc.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testMultiCritDepJoin1WithLargeIn() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1=pm2.g1.e1 and pm1.g1.e2 IN (1,2,3) option makedep pm1.g1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+        };    
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.setBlockOnce(true);
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList("a"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 1) AND (g_0.e1 = 'a')", Arrays.asList("a"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 2) AND (g_0.e1 = 'a')", Arrays.asList("a"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 3) AND (g_0.e1 = 'a')", Arrays.asList("a"));
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 2);
+        bsc.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testDupliciatePredicate() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1=pm2.g1.e1 and pm1.g1.e1 IN ('a','b','c') option makedep pm1.g1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+        };    
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.setBlockOnce(true);
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b', 'c') ORDER BY c_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b', 'c')", Arrays.asList("a"));
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 5);
+        bsc.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 2);
         
         DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);

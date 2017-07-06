@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.translator.jdbc;
@@ -158,10 +154,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 	            }
 	        	size = batchStart + batchResults.length; 
         	} else {
-        		//it's not clear who to blame
-        		for (int j = batchStart; j <= i; j++) {
-            		result[j] = Statement.EXECUTE_FAILED;
-	            }
+        	    size = batchStart;
         	}
         	//resize the result and throw exception
         	throw new TranslatorBatchException(e, Arrays.copyOf(result, size));
@@ -169,12 +162,8 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
         	if (batchedCommand.isSingleResult()) {
         		throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11011, e, tCommand);
         	}
-        	//it's not clear who to blame
-    		for (int j = batchStart; j <= i; j++) {
-        		result[j] = Statement.EXECUTE_FAILED;
-            }
         	//resize the result and throw exception
-        	throw new TranslatorBatchException(e, Arrays.copyOf(result, i + 1));
+        	throw new TranslatorBatchException(e, Arrays.copyOf(result, batchStart));
         } finally {
             if (commitType) {
                 restoreAutoCommit(!succeeded, null);
@@ -266,41 +255,67 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             		vi = batchCommand.getParameterValues();
             	}
             	
+            	int k = 0;
+            	int batchStart = 0;
                 if (vi != null) {
-                    commitType = getAutoCommit(translatedComm);
-                    if (commitType) {
-                        connection.setAutoCommit(false);
+                    try {
+                        commitType = getAutoCommit(translatedComm);
+                        if (commitType) {
+                            connection.setAutoCommit(false);
+                        }
+                		int maxBatchSize = (command instanceof Insert)?maxPreparedInsertBatchSize:Integer.MAX_VALUE;
+                		boolean done = false;
+                		outer: while (!done) {
+                			for (int i = 0; i < maxBatchSize; i++) {
+                				if (vi.hasNext()) {
+        	            			List<?> values = vi.next();
+        	            			bind(pstatement, translatedComm.getPreparedValues(), values);
+                                    k++;
+                				} else {
+                					if (i == 0) {
+    	            					break outer;
+    	            				}
+    	            				done = true;
+    	            				break;
+                				}
+                			}
+                		    int[] results = pstatement.executeBatch();
+                		    batchStart = k;
+                            if (result == null) {
+                		    	result = results;
+                		    } else {
+                		    	int len = result.length;
+                		    	result = Arrays.copyOf(result, len + results.length);
+                		    	System.arraycopy(results, 0, result, len, results.length);
+                		    }
+                		}
+                    } catch (SQLException e) {
+                        int size = k + 1;
+                        if (result == null) {
+                            result = new int[size];
+                        } else {
+                            result = Arrays.copyOf(result, size);
+                        }
+                        //if there is a BatchUpdateException, there are more update counts to accumulate
+                        if (e instanceof BatchUpdateException) {
+                            BatchUpdateException bue = (BatchUpdateException)e;
+                            int[] batchResults = bue.getUpdateCounts();
+                            for (int j = 0; j < batchResults.length; j++) {
+                                result[batchStart + j] = batchResults[j];
+                            }
+                            size = batchStart + batchResults.length;
+                        } else {
+                            size = batchStart;
+                        }
+                        //resize the result and throw exception
+                        throw new TranslatorBatchException(e, Arrays.copyOf(result, size));
                     }
-            		int maxBatchSize = (command instanceof Insert)?maxPreparedInsertBatchSize:Integer.MAX_VALUE;
-            		boolean done = false;
-            		outer: while (!done) {
-            			for (int i = 0; i < maxBatchSize; i++) {
-            				if (vi.hasNext()) {
-    	            			List<?> values = vi.next();
-    	            			bind(pstatement, translatedComm.getPreparedValues(), values);
-            				} else {
-            					if (i == 0) {
-	            					break outer;
-	            				}
-	            				done = true;
-	            				break;
-            				}
-            			}
-            		    int[] results = pstatement.executeBatch();
-            		    if (result == null) {
-            		    	result = results;
-            		    } else {
-            		    	int len = result.length;
-            		    	result = Arrays.copyOf(result, len + results.length);
-            		    	System.arraycopy(results, 0, result, len, results.length);
-            		    }
-            		}
                 } else {
             		bind(pstatement, translatedComm.getPreparedValues(), null);
         			updateCount = pstatement.executeUpdate();
         			result = new int[] {updateCount};
-        			addStatementWarnings();
                 }
+                addStatementWarnings();
                 succeeded = true;
             } 
             if (keyColumnDataTypes != null) {

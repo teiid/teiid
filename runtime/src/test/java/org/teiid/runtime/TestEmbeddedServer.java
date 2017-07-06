@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.runtime;
@@ -33,6 +29,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +41,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -52,6 +50,7 @@ import javax.transaction.*;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
@@ -80,7 +79,9 @@ import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.query.sql.symbol.Reference;
@@ -403,6 +404,63 @@ public class TestEmbeddedServer {
 		rs.next();
 		assertEquals("HELLO WORLD", rs.getString(1));
 	}
+	
+    @Test public void testDeployZipDDL() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        File f = UnitTestUtil.getTestScratchFile("some.vdb");
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
+        out.putNextEntry(new ZipEntry("v1.ddl")); 
+        out.write("CREATE VIEW helloworld as SELECT 'HELLO WORLD';".getBytes("UTF-8"));
+        out.putNextEntry(new ZipEntry("META-INF/vdb.ddl"));
+        String externalDDL = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "IMPORT FOREIGN SCHEMA public FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v1.ddl');";
+        out.write(externalDDL.getBytes("UTF-8"));
+        out.close();
+        
+        es.deployVDBZip(f.toURI().toURL());
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
+        rs.next();
+        assertEquals("HELLO WORLD", rs.getString(1));
+    }	
+    
+    @Test public void testDDLVDBImport() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl1 = "CREATE DATABASE x VERSION '1';"
+                + "USE DATABASE x VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIEW x as select 1;";
+        
+        String ddl2 = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "IMPORT DATABASE x VERSION '1';";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl1.getBytes("UTF-8")), true);
+        es.deployVDB(new ByteArrayInputStream(ddl2.getBytes("UTF-8")), true);
+    }
+    
+    @Test(expected=MetadataException.class) public void testAlterImported() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl1 = "CREATE DATABASE x VERSION '1';"
+                + "USE DATABASE x VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIEW x as select 1;";
+        
+        String ddl2 = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "IMPORT DATABASE x VERSION '1';"
+                + "set schema test2;"
+                + "DROP VIEW x;";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl1.getBytes("UTF-8")), true);
+        es.deployVDB(new ByteArrayInputStream(ddl2.getBytes("UTF-8")), true);
+    }
 	
 	@Test public void testDeployDesignerZip() throws Exception {
 		es.start(new EmbeddedConfiguration());
@@ -1646,6 +1704,7 @@ public class TestEmbeddedServer {
 	}
 	
 	@Test public void testSubqueryCache() throws Exception {
+	    UnitTestUtil.enableLogging(Level.WARNING, "org.teiid");
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		es.start(ec);
 		ModelMetaData mmd = new ModelMetaData();
@@ -1938,7 +1997,7 @@ public class TestEmbeddedServer {
 			fail();
 		} catch (BatchUpdateException e) {
 			int[] updateCounts = e.getUpdateCounts();
-			assertArrayEquals(new int[] {1, -3}, updateCounts);
+			assertArrayEquals(new int[] {1}, updateCounts);
 			assertEquals(-1, s.getUpdateCount());
 		}
 		
@@ -1970,7 +2029,7 @@ public class TestEmbeddedServer {
 		s.addBatch("update pm1.g1 set e1 = 'a' where e2 = 1"); //$NON-NLS-1$
 		s.addBatch("update pm1.g1 set e1 = 'b' where e2 = 2"); //$NON-NLS-1$
 		hcef.updateMap.clear();
-		hcef.addUpdate("UPDATE pm1.g1 SET e1 = 'a' WHERE pm1.g1.e2 = 1;UPDATE pm1.g1 SET e1 = 'b' WHERE pm1.g1.e2 = 2;", new TranslatorBatchException(new SQLException(), new int[] {1, -3}));
+		hcef.addUpdate("UPDATE pm1.g1 SET e1 = 'a' WHERE pm1.g1.e2 = 1;\nUPDATE pm1.g1 SET e1 = 'b' WHERE pm1.g1.e2 = 2;", new TranslatorBatchException(new SQLException(), new int[] {1, -3}));
 		try {
 			s.executeBatch();
 			fail();
@@ -2091,6 +2150,50 @@ public class TestEmbeddedServer {
         rs.next();
         assertArrayEquals(new BigDecimal[] {BigDecimal.valueOf(1.0)}, (BigDecimal[])rs.getArray(1).getArray());
         assertEquals("bigdecimal[]", rs.getMetaData().getColumnTypeName(1));
+    }
+    
+    @Ignore("limit to/exclude not yet implemented")
+    @Test public void testImportExcept() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        es.addMetadataRepository("x", new MetadataRepository() {
+            @Override
+            public void loadMetadata(MetadataFactory factory,
+                    ExecutionFactory executionFactory,
+                    Object connectionFactory, String text)
+                    throws TranslatorException {
+                assertEquals("helloworld1,other", factory.getModelProperties().get("importer.excludeTables"));
+                Table t = factory.addTable("helloworld");
+                t.setVirtual(true);
+                factory.addColumn("col", "string", t);
+                t.setSelectTransformation("select 'HELLO WORLD'");
+            }
+        });
+        String externalDDL = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "IMPORT FOREIGN SCHEMA public except (helloworld1, other) FROM REPOSITORY x INTO test2;";
+        
+        es.deployVDB(new ByteArrayInputStream(externalDDL.getBytes(Charset.forName("UTF-8"))), true);
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
+        rs.next();
+        assertEquals("HELLO WORLD", rs.getString(1));
+    }
+    
+    @Test public void testFailOver() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("domains-vdb.ddl")), true);
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:domains;autoFailOver=true", null);
+        
+        Statement s = c.createStatement();
+        
+        s.execute("select * from g1");
+        
+        es.undeployVDB("domains");
+        es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("domains-vdb.ddl")), true);
+        
+        s.execute("select * from g1");
     }
 
 }

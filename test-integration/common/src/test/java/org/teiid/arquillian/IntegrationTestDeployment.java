@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.arquillian;
@@ -25,8 +21,10 @@ package org.teiid.arquillian;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -37,6 +35,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ArchivePaths;
@@ -192,7 +192,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 57, translators.size());
+		assertEquals(translators.toString(), 58, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -423,7 +423,7 @@ public class IntegrationTestDeployment {
 	public void getDatasourceTemplateNames() throws Exception {
 		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap", 
 				"accumulo", "file", "ftp", "cassandra", "salesforce", "salesforce-34", "mongodb", "solr", "webservice", 
-				"simpledb", "h2", "teiid-xa", "h2-xa", "teiid-local-xa"}));
+				"simpledb", "h2", "teiid-xa", "h2-xa", "teiid-local-xa", "couchbase", "infinispan"}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
 		assertEquals(vals, templates);
@@ -791,5 +791,28 @@ public class IntegrationTestDeployment {
         assertTrue(vdb.getStatus() == Status.ACTIVE);
         admin.undeploy("bqt.VDB");        
 
-    }	
+    }
+    
+    @Test 
+    public void testDeployZipDDL() throws Exception {
+        File f = UnitTestUtil.getTestScratchFile("some.vdb");
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
+        out.putNextEntry(new ZipEntry("v1.ddl")); 
+        out.write("CREATE VIEW helloworld as SELECT 'HELLO WORLD';".getBytes("UTF-8"));
+        out.putNextEntry(new ZipEntry("META-INF/vdb.ddl"));
+        String externalDDL = "CREATE DATABASE test2 VERSION '1';"
+                + "USE DATABASE test2 VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "IMPORT FOREIGN SCHEMA public FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v1.ddl');";
+        out.write(externalDDL.getBytes("UTF-8"));
+        out.close();
+        
+        admin.deploy("some.vdb", new FileInputStream(f));
+        
+        AdminUtil.waitForVDBLoad(admin, "test2", "1", 3);
+        Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:test2@mm://localhost:31000;user=user;password=user", null);
+        ResultSet rs = conn.createStatement().executeQuery("select * from helloworld");
+        rs.next();
+        assertEquals("HELLO WORLD", rs.getString(1));
+    }    
 }

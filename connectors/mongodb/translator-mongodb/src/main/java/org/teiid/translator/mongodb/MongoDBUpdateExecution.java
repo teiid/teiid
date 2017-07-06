@@ -1,29 +1,30 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.teiid.translator.mongodb;
 
-import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+import static org.teiid.language.visitor.SQLStringVisitor.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.teiid.GeneratedKeys;
 import org.teiid.language.Command;
@@ -31,7 +32,11 @@ import org.teiid.language.Insert;
 import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -617,6 +622,11 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 		Table table = this.visitor.mongoDoc.getTargetTable();
 
 		int cols = table.getPrimaryKey().getColumns().size();
+		
+		if (cols != 1) {
+		    //restrict to only primary keys based upon id
+		    return;
+		}
 		Class<?>[] columnDataTypes = new Class<?>[cols];
 		String[] columnNames = new String[cols];
 		//this is typically expected to be an int/long, but we'll be general here.  we may eventual need the type logic off of the metadata importer
@@ -624,10 +634,13 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
         	columnDataTypes[i] = table.getPrimaryKey().getColumns().get(i).getJavaType();
         	columnNames[i] = table.getPrimaryKey().getColumns().get(i).getName();
         }
+        if (!columnNames[0].equals(MongoDBMetadataProcessor.ID)) {
+            return;
+        }
         GeneratedKeys generatedKeys = this.executionContext.getCommandContext().returnGeneratedKeys(columnNames, columnDataTypes);
         List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
         for (int i = 0; i < columnDataTypes.length; i++) {
-            Object value = this.executionFactory.retrieveValue(result.getField(columnNames[i]), columnDataTypes[i], this.mongoDB, columnNames[i], columnNames[i]);
+            Object value = this.executionFactory.retrieveValue(result.getUpsertedId(), columnDataTypes[i], this.mongoDB, columnNames[i], columnNames[i]);
             vals.add(value);
         }
         generatedKeys.addKey(vals);

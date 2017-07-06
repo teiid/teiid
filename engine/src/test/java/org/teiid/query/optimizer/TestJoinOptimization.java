@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.optimizer;
@@ -507,7 +503,7 @@ public class TestJoinOptimization {
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                                    new String[] {"SELECT g_3.IntKey, g_0.IntKey FROM ((BQT1.SmallB AS g_0 CROSS JOIN BQT1.MediumA AS g_1) INNER JOIN BQT1.MediumB AS g_2 ON ((g_0.IntKey + g_1.IntKey) + g_2.IntKey) = 1) LEFT OUTER JOIN BQT1.SmallA AS g_3 ON g_3.StringKey = g_0.StringKey"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                                    new String[] {"SELECT g_2.IntKey, g_3.IntKey FROM (BQT1.MediumA AS g_0 CROSS JOIN BQT1.MediumB AS g_1) INNER JOIN (BQT1.SmallA AS g_2 LEFT OUTER JOIN BQT1.SmallB AS g_3 ON g_2.StringKey = g_3.StringKey) ON ((g_3.IntKey + g_0.IntKey) + g_1.IntKey) = 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
     }
@@ -1447,7 +1443,7 @@ public class TestJoinOptimization {
 	    
 	    //we're allowing the sort to be pushed, but it's not honored by FakeDataManager
 	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()), 
-	    		new String[] {"SELECT a.x, a.z FROM a WHERE a.z = TRUE ORDER BY a.x", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    		new String[] {"SELECT a.x, a.z FROM a WHERE a.z = TRUE", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
 	    
 	    helpProcess(plan, createCommandContext(), dataManager, null);
 	}
@@ -1480,6 +1476,35 @@ public class TestJoinOptimization {
         hdm.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList("a", 1), Arrays.asList("b", 2));
         
         helpProcess(plan, createCommandContext(), hdm, new List[] {Arrays.asList("b", 2)});
+    }
+	
+	@Test public void testInnerOuterOptimization() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select * from (pm2.g1 inner join pm1.g2 on (pm2.g1.e1 = pm1.g2.e1) inner join pm2.g3 on (pm1.g2.e2 = pm2.g3.e2)) left outer join pm1.g4 on (pm1.g2.e4 = pm1.g4.e4)"; //$NON-NLS-1$
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e2 AS c_0, g_0.e1 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm2.g3 AS g_0 ORDER BY c_0", 
+            "SELECT g_1.e1 AS c_0, g_1.e2 AS c_1, g_0.e1 AS c_2, g_0.e3 AS c_3, g_1.e3 AS c_4, g_1.e4 AS c_5 FROM pm1.g4 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_1.e4 = g_0.e4 ORDER BY c_0", 
+            "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm2.g1 AS g_0 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            3,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            2,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
     }
 	
 }

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.processor;
@@ -482,13 +478,13 @@ public class TestTempTables extends TempTableTestHarness {
 	@Test public void testCompositeKeyJoinUsesKeyOrder() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("create local temporary table x1 (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
-		TestOptimizer.helpPlan("select * from /*+ makenotdep */ x, /*+ makenotdep */ x1 where x.e2 = x1.e2 and x.e1 = x1.e1", this.metadata, new String[] {"SELECT x1.e2, x1.e1 FROM x1 ORDER BY x1.e1, x1.e2", "SELECT x.e2, x.e1 FROM x ORDER BY x.e1, x.e2"}, ComparisonMode.EXACT_COMMAND_STRING);
+		TestOptimizer.helpPlan("select * from /*+ makenotdep */ x, /*+ makenotdep */ x1 where x.e2 = x1.e2 and x.e1 = x1.e1", this.metadata, new String[] {"SELECT x1.e2, x1.e1 FROM x1", "SELECT x.e2, x.e1 FROM x ORDER BY x.e1, x.e2"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testUnneededMergePredicate() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("create local temporary table x1 (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
-		TestOptimizer.helpPlan("select x.e1 from x makenotdep, x1 makenotdep where x.e2 = x1.e2 and x.e1 = x1.e1", this.metadata, new String[] {"SELECT x.e2, x.e1 FROM x ORDER BY x.e1", "SELECT x1.e2, x1.e1 FROM x1 ORDER BY x1.e1"}, ComparisonMode.EXACT_COMMAND_STRING);
+		TestOptimizer.helpPlan("select x.e1 from x makenotdep, x1 makenotdep where x.e2 = x1.e2 and x.e1 = x1.e1", this.metadata, new String[] {"SELECT x.e2, x.e1 FROM x ORDER BY x.e1", "SELECT x1.e2, x1.e1 FROM x1"}, ComparisonMode.EXACT_COMMAND_STRING);
 		execute("insert into x (e2, e1) values (2, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x1 (e2, e1) values (3, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("select x.e1 from x makenotdep, x1 makenotdep where x.e2 = x1.e2 and x.e1 = x1.e1", new List[0]); //$NON-NLS-1$
@@ -574,7 +570,7 @@ public class TestTempTables extends TempTableTestHarness {
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL(
 				"create foreign table g1 (e1 string primary key, e2 integer, e3 boolean, e4 double, FOREIGN KEY (e1) REFERENCES G2 (e1)) options (updatable true);"
 			    + " create foreign table g2 (e1 string primary key, e2 integer, e3 boolean, e4 double) options (updatable true);"
-				+ " create view v options (updatable true) as select g1.e2 from g1 inner join g2 on g1.e1 = g2.e1;"
+				+ " create view v options (updatable true) as select g2.e1, g1.e2 from g1 inner join g2 on g1.e1 = g2.e1;"
 				, "x", "pm1");
 		HardcodedDataManager hdm = new HardcodedDataManager(metadata);
 		setUp(metadata, hdm);
@@ -594,7 +590,7 @@ public class TestTempTables extends TempTableTestHarness {
 		assertNotNull(id);
 		assertNotNull(this.metadata.getPrimaryKey(id));
 		
-		hdm.addData("SELECT g_0.e1 FROM g1 AS g_0, g2 AS g_1 WHERE g_0.e1 = g_1.e1 AND g_0.e2 = 1", new List[] {Arrays.asList("a")});
+		hdm.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 = 1", new List[] {Arrays.asList("a")});
 		hdm.addData("DELETE FROM g1 WHERE g1.e1 = 'a'", new List[] {Arrays.asList(1)});
 		
 		execute("delete from v where e2 = (select max(e2) from x as z where e3 = z.e3)", new List[] {Arrays.asList(1)}, TestOptimizer.getGenericFinder()); //$NON-NLS-1$

@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teiid.query.optimizer.relational.rules;
@@ -109,12 +105,17 @@ public class RulePlanJoins implements OptimizerRule {
         
         //dependency phase
         
+        List<JoinRegion> leftOuterJoinRegions = new LinkedList<JoinRegion>();
+        
         for (Iterator<JoinRegion> joinRegionIter = joinRegions.iterator(); joinRegionIter.hasNext();) {
             JoinRegion joinRegion = joinRegionIter.next();
             
             //skip regions that have nothing to plan
             if (joinRegion.getJoinSourceNodes().size() + joinRegion.getDependentJoinSourceNodes().size() < 2) {
                 joinRegionIter.remove();
+                if (joinRegion.getLeft() != null) {
+                    leftOuterJoinRegions.add(joinRegion);
+                }
                 continue;
             }
             
@@ -147,6 +148,12 @@ public class RulePlanJoins implements OptimizerRule {
             groupJoinsForPushing(metadata, capabilitiesFinder, joinRegion, context);
         }
         
+        //check for optimizing across left outer joins
+        for (JoinRegion joinRegion : leftOuterJoinRegions) {
+            groupAcrossLeftOuter(metadata, capabilitiesFinder, context,
+                    joinRegion);
+        }
+        
         for (Iterator<JoinRegion> joinRegionIter = joinRegions.iterator(); joinRegionIter.hasNext();) {
             JoinRegion joinRegion = joinRegionIter.next();
             
@@ -176,6 +183,69 @@ public class RulePlanJoins implements OptimizerRule {
         }
                         
         return plan;
+    }
+
+    private void groupAcrossLeftOuter(QueryMetadataInterface metadata,
+            CapabilitiesFinder capabilitiesFinder, CommandContext context,
+            JoinRegion joinRegion) throws QueryMetadataException,
+            TeiidComponentException, AssertionError {
+        if (joinRegion.getLeft() == null || joinRegion.getJoinRoot().getLastChild().getType() != NodeConstants.Types.ACCESS) {
+            return;
+        }
+        
+        PlanNode planNodeRight = joinRegion.getJoinRoot().getLastChild();
+        
+        Object modelId = RuleRaiseAccess.getModelIDFromAccess(planNodeRight, metadata);
+        
+        Map<Object, List<PlanNode>> accessMapLeft = getAccessMap(metadata, capabilitiesFinder, joinRegion.getLeft());
+        
+        //TODO: what about same connector, but not the same model
+        List<PlanNode> joinSourcesLeft = accessMapLeft.get(modelId);
+        if (joinSourcesLeft == null) {
+            return;
+        }
+        
+        SupportedJoinCriteria sjc = CapabilitiesUtil.getSupportedJoinCriteria(modelId, metadata, capabilitiesFinder);
+        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
+        List<Criteria> joinCriteria = (List<Criteria>)joinRegion.getJoinRoot().getProperty(Info.JOIN_CRITERIA);
+        for (Criteria crit : joinCriteria) {
+            if (!RuleRaiseAccess.isSupportedJoinCriteria(sjc, crit, modelId, metadata, capabilitiesFinder, null)) {
+                return;
+            }
+        }
+        GroupsUsedByElementsVisitor.getGroups(joinCriteria, groups);
+        groups.removeAll(planNodeRight.getGroups());
+        for (PlanNode planNode : joinSourcesLeft) {
+            if (!planNode.getGroups().containsAll(groups)) {
+                continue;
+            }
+            
+            //see if we can group the planNode with the other side
+            if (RuleRaiseAccess.canRaiseOverJoin(Arrays.asList(planNode, planNodeRight), metadata, capabilitiesFinder, joinCriteria, JoinType.JOIN_LEFT_OUTER, null, context, false, false) == null) {
+                continue;
+            }
+            
+            //remove the parent loj, create a new loj
+            joinRegion.getLeft().getJoinSourceNodes().remove(planNode);
+            
+            PlanNode joinNode = createJoinNode(planNode, planNodeRight, joinCriteria, JoinType.JOIN_LEFT_OUTER);
+            PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, joinNode.getFirstChild(), modelId, capabilitiesFinder, metadata, false);
+            
+            for (Set<PlanNode> source : joinRegion.getLeft().getCritieriaToSourceMap().values()) {
+                if (source.remove(planNode)) {
+                    source.add(newAccess);
+                }
+            }
+
+            joinRegion.getLeft().getJoinSourceNodes().put(newAccess, newAccess);
+            
+            PlanNode root = joinRegion.getJoinRoot();
+            
+            root.getParent().replaceChild(root, root.getFirstChild());
+            
+            joinRegion.getLeft().reconstructJoinRegoin();
+            break;
+        }
     }
 
     /** 
@@ -325,14 +395,7 @@ public class RulePlanJoins implements OptimizerRule {
                     accessNodes.remove(k < i ? k : k - 1);
 
                     //build a new join node
-                    PlanNode joinNode = createJoinNode();
-                    joinNode.getGroups().addAll(accessNode1.getGroups());
-                    joinNode.getGroups().addAll(accessNode2.getGroups());
-                    joinNode.addFirstChild(accessNode2);
-                    joinNode.addLastChild(accessNode1);
-                    joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, joinType);
-                    joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
-
+                    PlanNode joinNode = createJoinNode(accessNode1, accessNode2, joinCriteria, joinType);
                     PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, joinNode.getFirstChild(), entry.getKey(), capFinder, metadata, false);
                     for (PlanNode critNode : joinCriteriaNodes) {
                         critNode.removeFromParent();
@@ -366,6 +429,18 @@ public class RulePlanJoins implements OptimizerRule {
         }
     }
 
+    private PlanNode createJoinNode(PlanNode accessNode1, PlanNode accessNode2,
+            List<Criteria> joinCriteria, JoinType joinType) {
+        PlanNode joinNode = createJoinNode();
+        joinNode.getGroups().addAll(accessNode1.getGroups());
+        joinNode.getGroups().addAll(accessNode2.getGroups());
+        joinNode.addFirstChild(accessNode2);
+        joinNode.addLastChild(accessNode1);
+        joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, joinType);
+        joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
+        return joinNode;
+    }
+
 	private boolean canPushCrossJoin(QueryMetadataInterface metadata, 
 			PlanNode accessNode1, PlanNode accessNode2)
 			throws QueryMetadataException, TeiidComponentException {
@@ -379,11 +454,11 @@ public class RulePlanJoins implements OptimizerRule {
      * Return a map of Access Nodes to JoinSources that may be eligible for pushdown as
      * joins.
      */
-    private Map getAccessMap(QueryMetadataInterface metadata,
+    private Map<Object, List<PlanNode>> getAccessMap(QueryMetadataInterface metadata,
                              CapabilitiesFinder capFinder,
                              JoinRegion joinRegion) throws QueryMetadataException,
                                                    TeiidComponentException {
-        Map accessMap = new HashMap();
+        Map<Object, List<PlanNode>> accessMap = new HashMap();
         
         for (PlanNode node : joinRegion.getJoinSourceNodes().values()) {
             /* check to see if we are directly over an access node.  in the event that the join source root
@@ -466,6 +541,7 @@ public class RulePlanJoins implements OptimizerRule {
                     }
                     
                     joinSources.remove();
+                    currentGroups.addAll(joinSource.getGroups());
                     satisfiedAP = true;
                     joinSource.setProperty(NodeConstants.Info.ACCESS_PATTERN_USED, ap.clone());
                     joinSource.setProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS, allRequiredGroups);
@@ -506,19 +582,34 @@ public class RulePlanJoins implements OptimizerRule {
                 }
                 JoinType jt = (JoinType)root.getProperty(NodeConstants.Info.JOIN_TYPE);
                 
-                boolean treatJoinAsSource = jt.isOuter() || root.getProperty(NodeConstants.Info.ACCESS_PATTERNS) != null 
+                boolean treatJoinAsSource = root.getProperty(NodeConstants.Info.ACCESS_PATTERNS) != null 
                 || root.hasProperty(NodeConstants.Info.MAKE_DEP) || root.hasProperty(NodeConstants.Info.MAKE_IND)
                 || !root.getExportedCorrelatedReferences().isEmpty() || root.hasBooleanProperty(Info.PRESERVE);
                 
-                if (treatJoinAsSource) {
+                JoinRegion next = currentRegion;
+                
+                if (treatJoinAsSource || jt.isOuter()) {
+                    next = null;
                     currentRegion.addJoinSourceNode(root);
+                    //check if this a left outer join that we may optimize across
+                    //TODO: look for more general left outer join associativity
+                    if (!treatJoinAsSource && jt == JoinType.JOIN_LEFT_OUTER
+                            && root.getFirstChild().getType() == NodeConstants.Types.JOIN
+                            && root.getLastChild().getType() == NodeConstants.Types.ACCESS
+                            && !((JoinType)root.getFirstChild().getProperty(Info.JOIN_TYPE)).isOuter()) {
+                        next = new JoinRegion();
+                        joinRegions.add(next);
+                        findJoinRegions(root.getFirstChild(), next, joinRegions);
+                        currentRegion.setLeft(next);
+                        return;
+                    }
                 } else {
                     currentRegion.addParentCriteria(root);
                     currentRegion.addJoinCriteriaList((List)root.getProperty(NodeConstants.Info.JOIN_CRITERIA));
                 }
                 
                 for (PlanNode child : root.getChildren()) {
-                    findJoinRegions(child, treatJoinAsSource?null:currentRegion, joinRegions);
+                    findJoinRegions(child, next, joinRegions);
                 }
                                 
                 return;
