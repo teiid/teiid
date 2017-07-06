@@ -1349,6 +1349,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						}
 						return Arrays.asList(vals[index++]);
 					}
+					
+					@Override
+					public void remove() {
+					    throw new UnsupportedOperationException();
+					}
 				});
 			}
 		}
