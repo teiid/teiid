@@ -315,7 +315,7 @@ public class DependentCriteriaProcessor {
 
         replaceDependentValueIterators();
         
-        LinkedList<Criteria> crits = new LinkedList<Criteria>();
+        LinkedHashSet<Criteria> crits = new LinkedHashSet<Criteria>();
         
         for (int i = 0; i < queryCriteria.size(); i++) {
         	SetState state = this.setStates.get(i);
@@ -333,9 +333,9 @@ public class DependentCriteriaProcessor {
         }
         
         if (crits.size() == 1) {
-        	return crits.get(0);
+        	return crits.iterator().next();
         }
-        return new CompoundCriteria(CompoundCriteria.AND, crits);
+        return new CompoundCriteria(CompoundCriteria.AND, new ArrayList<Criteria>(crits));
     }
     
     public void consumedCriteria() {

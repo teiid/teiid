@@ -1530,4 +1530,28 @@ public class TestDependentJoins {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testDupliciatePredicate() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1=pm2.g1.e1 and pm1.g1.e1 IN ('a','b','c') option makedep pm1.g1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+        };    
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.setBlockOnce(true);
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b', 'c') ORDER BY c_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b', 'c')", Arrays.asList("a"));
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 5);
+        bsc.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 2);
+        
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
 }
