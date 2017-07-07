@@ -130,6 +130,11 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     public void visit(OrderBy obj) {
         visitNodes(obj.getSortSpecifications());
     }
+    
+    @Override
+    public void visit(SortSpecification obj) {
+        visitNode(obj.getExpression());
+    }
 
     public void visit(Select obj) {
     	visitNode(obj.getWith());
