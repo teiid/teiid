@@ -3,7 +3,7 @@
     <parent>
         <artifactId>sandbox</artifactId>
         <groupId>org.jboss.teiid.connectors</groupId>
-        <version>8.7.12.6_2</version>
+        <version>8.7.13.6_2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-yahoo</artifactId>
