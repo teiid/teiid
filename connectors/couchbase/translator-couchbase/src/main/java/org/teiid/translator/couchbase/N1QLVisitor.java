@@ -19,11 +19,13 @@ package org.teiid.translator.couchbase;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 import static org.teiid.language.SQLConstants.Tokens.*;
-import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.*;
+import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,15 +34,14 @@ import org.teiid.language.*;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.language.visitor.SQLStringVisitor;
 
 public class N1QLVisitor extends SQLStringVisitor{
     
     protected CouchbaseExecutionFactory ef;
     
-    private boolean recordColumnName = true;
     private List<String> selectColumns = new ArrayList<>();
-    private List<String> selectColumnReferences = new ArrayList<>();
     private Map<String, CBColumn> columnMap = new HashMap<>();
     
     private AliasGenerator columnAliasGenerator;
@@ -50,14 +51,14 @@ public class N1QLVisitor extends SQLStringVisitor{
     private List<CBColumn> letStack = new ArrayList<>();
     private List<CBColumn> unrelatedStack = new ArrayList<>();
     
-    private List<CBColumn> tmpStack = new ArrayList<>();
-    
     protected String typedName = null;
     protected String typedValue = null;
     
-    private boolean isUnrelatedColumns = false;
-    
     private String topTableAlias;
+    
+    private int placeHolderIndex = 1;
+
+    private Map<String, Expression> aliasedExpressions = new LinkedHashMap<String, Expression>();
 
     public N1QLVisitor(CouchbaseExecutionFactory ef) {
         this.ef = ef;
@@ -153,138 +154,87 @@ public class N1QLVisitor extends SQLStringVisitor{
         }
     }
 
-    private void initUnrelatedColumns(Select obj) {
-        
-        isUnrelatedColumns = true;
-        
-        if(obj.getWhere() != null) {
-            append(obj.getWhere());
+    private void initUnrelatedColumns(Select select) {
+        if (select.getGroupBy() != null) {
+            Collection<ColumnReference> elements = CollectorVisitor.collectElements(select.getGroupBy());
+            findUnrelated(elements);
         }
-        
-        if (obj.getOrderBy() != null) {
-            append(obj.getOrderBy());
+        if (select.getHaving() != null) {
+            Collection<ColumnReference> elements = CollectorVisitor.collectElements(select.getHaving());
+            findUnrelated(elements);
         }
-                
-        isUnrelatedColumns = false;
-        
+        if (select.getWhere() != null) {
+            Collection<ColumnReference> elements = CollectorVisitor.collectElements(select.getWhere());
+            findUnrelated(elements);
+        }
+        if (select.getOrderBy() != null) {
+            Collection<ColumnReference> elements = CollectorVisitor.collectElements(select.getOrderBy());
+            findUnrelated(elements);
+        }
+    }
+
+    private void findUnrelated(Collection<ColumnReference> elements) {
+        for (ColumnReference obj : elements) {
+            if(this.columnMap.get(obj.getName()) != null) {
+                continue;
+            }
+            if (obj.getTable() == null) {
+                //this is a reference to a select alias
+                continue;
+            }
+            retrieveTableProperty(obj.getTable());
+
+            CBColumn column = formCBColumn(obj);
+            
+            if(letStack.size() > 0){
+                String tableAlias = letStack.get(letStack.size() -1).getTableAlias();
+                column.setTableAlias(tableAlias);
+            } else {
+                column.setTableAlias(topTableAlias);
+            }
+            this.unrelatedStack.add(column);
+            this.columnMap.put(obj.getName(), column);
+        }
     }
 
     @Override
     public void visit(AndOr obj) {
         appendNestedCondition(obj, obj.getLeftCondition());
-        if(!isUnrelatedColumns) {
-            buffer.append(Tokens.SPACE).append(obj.getOperator().toString()).append(Tokens.SPACE);
-        }
+        buffer.append(Tokens.SPACE).append(obj.getOperator().toString()).append(Tokens.SPACE);
         appendNestedCondition(obj, obj.getRightCondition());
     }
 
     private void appendWhere(Select obj) {
         
-        this.tmpStack.clear();
-        
         if(this.typedName != null && this.typedValue != null) {
+            String typedWhere = null;
             
-            boolean isTypedNameInLetStack = false;
-            List<CBColumn> typedColumn = new ArrayList<>();
             for(CBColumn column : this.letStack) {
-                if(column.hasTypedWhere() && column.getLeafName().equals(trimWave(this.typedName))) {
-                    typedColumn.add(column);
-                    isTypedNameInLetStack = true;
+                if(column.getLeafName().equals(trimWave(this.typedName))) {
+                    typedWhere = buildTypedWhere(nameInSource(column.getNameReference()), this.typedValue);
+                    break;
                 }
             }
             
-            if(isTypedNameInLetStack) {
-                if(obj.getWhere() != null) {
-                    buffer.append(SPACE).append(WHERE).append(SPACE);
-                    append(obj.getWhere());
-                    if(!isDuplicatedTypeColumn(typedColumn)) {
-                        appendTypedWhere(false, typedColumn);
-                    }
-                } else {
-                    if(!isDuplicatedTypeColumn(typedColumn)) {
-                        buffer.append(SPACE).append(WHERE).append(SPACE);
-                        appendTypedWhere(true, typedColumn);
-                    }
-                }
-            } else {
+            if (typedWhere == null) {
                 String keyspace = nameInSource(this.topTableAlias);
                 if(this.letStack.size() > 0) {
                     keyspace = nameInSource(this.letStack.get(this.letStack.size() - 1).getTableAlias());
                 }
-                String unrelatedType = keyspace + SOURCE_SEPARATOR + buildTypedWhere(this.typedName, this.typedValue);
-                if(obj.getWhere() != null) {
-                    buffer.append(SPACE).append(WHERE).append(SPACE);
-                    append(obj.getWhere());
-                    if(!isDuplicatedTypeColumn(this.typedName)){
-                        buffer.append(SPACE).append(Reserved.AND).append(SPACE).append(unrelatedType);
-                    }
-                } else {
-                    if(!isDuplicatedTypeColumn(this.typedName)) {
-                        buffer.append(SPACE).append(WHERE).append(SPACE);
-                        buffer.append(unrelatedType);
-                    }
-                }
+                typedWhere = keyspace + SOURCE_SEPARATOR + buildTypedWhere(this.typedName, this.typedValue);
             }
-            
-        } else {
+            buffer.append(SPACE).append(WHERE).append(SPACE);
             if(obj.getWhere() != null) {
-                buffer.append(SPACE).append(WHERE).append(SPACE);
                 append(obj.getWhere());
-            }
+                //TODO: detect duplicates / conflicts
+                buffer.append(SPACE).append(Reserved.AND).append(SPACE);
+            } 
+            buffer.append(typedWhere);
+        } else if(obj.getWhere() != null) {
+            buffer.append(SPACE).append(WHERE).append(SPACE);
+            append(obj.getWhere());
         }
         
-    }
-
-    private void appendTypedWhere(boolean and, List<CBColumn> typedColumn) {
-        for(CBColumn column : typedColumn) {
-            if(column.hasTypedWhere()) {
-                if(and) {
-                    buffer.append(column.getTypedWhere());
-                    and = false;
-                } else {
-                    buffer.append(SPACE).append(Reserved.AND).append(SPACE).append(column.getTypedWhere());
-                }
-            }
-        }
-    }
-    
-    private boolean isDuplicatedTypeColumn(List<CBColumn> typedColumn) {
-        boolean result = false;
-        for(CBColumn column : typedColumn) {
-            if(isDuplicatedTypeColumn(column)) {
-                result = true;
-                break;
-            }
-        } 
-        return result;
-    }
-
-    private boolean isDuplicatedTypeColumn(CBColumn typed) {
-        if(typed.isPK() || typed.isIdx()) {
-            return false;
-        }
-        boolean result = false;
-        for(CBColumn column : this.tmpStack) {
-            if(column.isPK() || column.isIdx()) {
-                continue;
-            }
-            if(column.getNameInSource().equals(typed.getNameInSource())) {
-                result = true;
-                break;
-            }
-        }
-        return result;
-    }
-    
-    private boolean isDuplicatedTypeColumn(String typedName) {
-        boolean result = false;
-        for(CBColumn column : this.tmpStack) {
-            if(column.getLeafName().equals(this.trimWave(typedName))) {
-                result = true;
-                break;
-            }
-        }
-        return result;
     }
 
     @Override
@@ -402,85 +352,54 @@ public class N1QLVisitor extends SQLStringVisitor{
     }
 
     @Override
-    public void visit(GroupBy obj) {
-        recordColumnName = false;
-        super.visit(obj);
-        recordColumnName = true;
-    }
-
-    @Override
-    public void visit(OrderBy obj) {
-        recordColumnName = false;
-        if(!isUnrelatedColumns) {
-            buffer.append(ORDER).append(Tokens.SPACE).append(BY).append(Tokens.SPACE);
+    public void visit(DerivedColumn obj) {
+        if (obj.getAlias() != null) {
+            aliasedExpressions.put(obj.getAlias(), obj.getExpression());
         }
-        append(obj.getSortSpecifications());
-        recordColumnName = true;
+        
+        if (obj.getExpression() instanceof ColumnReference) {
+            ColumnReference columnReference = (ColumnReference)obj.getExpression();
+            CBColumn column = defineColumn(columnReference);
+            String aliasName = column.getNameReference();
+            buffer.append(this.nameInSource(aliasName));
+            this.selectColumns.add(column.getNameReference());
+        } else {
+            //this will be retrieved by a placeholder
+            this.selectColumns.add(nextPlaceholder());
+            append(obj.getExpression());
+        }
     }
     
-    @Override
-    public void visit(Comparison obj) {
-        recordColumnName = false;
-        append(obj.getLeftExpression());
-        if(!isUnrelatedColumns) {
-            buffer.append(Tokens.SPACE);
-            buffer.append(obj.getOperator());
-            buffer.append(Tokens.SPACE);
-            appendRightComparison(obj);
-        }
-        recordColumnName = true;
+    private String nextPlaceholder() {
+        return PLACEHOLDER + placeHolderIndex++; 
     }
 
-    @Override
-    public void visit(DerivedColumn obj) {
-        if(recordColumnName) {
-            selectColumnReferences.add(obj.getAlias());
-        }
-        append(obj.getExpression());
+    private CBColumn defineColumn(ColumnReference columnReference) {
+        retrieveTableProperty(columnReference.getTable());
+
+        CBColumn column = formCBColumn(columnReference);
+        
+        this.letStack.add(column);
+        this.columnMap.put(columnReference.getName(), column);
+        return column;
     }
 
     @Override
     public void visit(ColumnReference obj) {
-        
         if(obj.getTable() != null) {
-            
-            if(isUnrelatedColumns  && this.columnMap.get(obj.getName()) != null) {
-                return;
+            CBColumn column = this.columnMap.get(obj.getName());
+            if(column == null) {
+                column = defineColumn(obj);
             }
-            
-            if(!isUnrelatedColumns && !recordColumnName && this.columnMap.get(obj.getName()) != null) {
-                String aliasName = this.columnMap.get(obj.getName()).getNameReference();
-                buffer.append(this.nameInSource(aliasName));
-                this.tmpStack.add(this.columnMap.get(obj.getName()));
-                return;
-            } 
-            
-            retrieveTableProperty(obj.getTable());
-
-            CBColumn column = formCBColumn(obj);
-            
-            if(this.typedName != null && this.typedValue != null && column.getLeafName().equals(trimWave(this.typedName))) {
-                String typedWhere = buildTypedWhere(nameInSource(column.getNameReference()), this.typedValue);
-                column.setTypedWhere(typedWhere);
-            }
-            
-            if(recordColumnName) {
-                this.letStack.add(column);
-                this.columnMap.put(obj.getName(), column);
-                this.selectColumns.add(column.getNameReference());
-                buffer.append(this.nameInSource(column.getNameReference()));
-            } else if(isUnrelatedColumns && !recordColumnName && letStack.size() > 0){
-                String tableAlias = letStack.get(letStack.size() -1).getTableAlias();
-                column.setTableAlias(tableAlias);
-                this.unrelatedStack.add(column);
-                this.columnMap.put(obj.getName(), column);
-            } else if(isUnrelatedColumns && !recordColumnName && letStack.size() == 0) {
-                column.setTableAlias(topTableAlias);
-                this.unrelatedStack.add(column);
-                this.columnMap.put(obj.getName(), column);
-            }
+            String aliasName = column.getNameReference();
+            buffer.append(this.nameInSource(aliasName));
         } else {
-            super.visit(obj);
+            Expression ex = aliasedExpressions.get(obj.getName());
+            if (ex != null) {
+                append(ex);
+            } else {
+                super.visit(obj);
+            }
         }
     }
 
@@ -570,10 +489,6 @@ public class N1QLVisitor extends SQLStringVisitor{
 
     public List<String> getSelectColumns() {
         return selectColumns;
-    }
-
-    public List<String> getSelectColumnReferences() {
-        return selectColumnReferences;
     }
 
     public AliasGenerator getColumnAliasGenerator() {
@@ -682,7 +597,6 @@ public class N1QLVisitor extends SQLStringVisitor{
         private String valueReference;
         private String unnest;
         private String tableAlias;
-        private String typedWhere;
 
         public CBColumn(boolean isPK, boolean isIdx, String nameReference, String leafName, String nameInSource) {
             this.isPK = isPK;
@@ -744,16 +658,5 @@ public class N1QLVisitor extends SQLStringVisitor{
             this.tableAlias = tableAlias;
         }
 
-        public boolean hasTypedWhere() {
-            return this.typedWhere != null && this.typedWhere.length() > 0;
-        }
-
-        public String getTypedWhere() {
-            return typedWhere;
-        }
-
-        public void setTypedWhere(String typedWhere) {
-            this.typedWhere = typedWhere;
-        }
     }
 }
