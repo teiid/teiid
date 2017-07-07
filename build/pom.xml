@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-        <version>10.0.0.Alpha1-SNAPSHOT</version>
+        <version>10.0.0.Alpha2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   
@@ -15,6 +15,8 @@
       <dir.wildfly>wildfly-${version.org.wildfly}</dir.wildfly>
       <!-- Teiid server directory name. -->
       <dir.teiid>teiid-${project.version}</dir.teiid>
+      <!-- explicitly declare for docker plugin -->
+      <project.version>${project.version}</project.version>
   </properties>
   
     <build>
@@ -31,7 +33,6 @@
                     <include>**/*.bat</include>
                     <include>**/*.html</include>
                     <include>**/*.cli</include>
-                    <include>**/Dockerfile</include>
                 </includes>
             </resource>
             <resource>
@@ -44,7 +45,6 @@
                     <exclude>**/*.bat</exclude>
                     <exclude>**/*.html</exclude>
                     <exclude>**/*.cli</exclude>
-                    <exclude>**/Dockerfile</exclude>
                 </excludes>
             </resource>
         </resources>
@@ -119,7 +119,6 @@
                         <descriptor>assembly/wildfly-dist.xml</descriptor>
                         <descriptor>assembly/adminshell-dist.xml</descriptor>
                         <descriptor>assembly/wildfly-server.xml</descriptor>
-                        <descriptor>assembly/docker.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
@@ -153,34 +152,52 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-
+			</plugin>
         </plugins>
     </build>
     
     <profiles>
-        <profile>
-            <!--
-            This profile is activated manually, as in "mvn ... -P release ..."
-            -->
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>assembly/src.xml</descriptor>
-                                <descriptor>assembly/client-jar.xml</descriptor>
-                                <descriptor>assembly/wildfly-dist.xml</descriptor>
-                                <descriptor>assembly/adminshell-dist.xml</descriptor>
-                                <descriptor>assembly/wildfly-server.xml</descriptor>
-                                <descriptor>assembly/docker.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>    
+		<profile>
+			<id>docker-build</id>
+			<activation>
+				<property>
+					<name>docker</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+			         <plugin>
+		                <groupId>io.fabric8</groupId>
+		                <artifactId>docker-maven-plugin</artifactId>
+		                <configuration>
+		                    <images>
+		                        <image>
+		                            <name>teiid/teiid:${project.version}</name>
+		                            <alias>server</alias>
+		                            <build>
+		                                <filter>@</filter>
+		                                <dockerFileDir>${project.basedir}/docker</dockerFileDir>
+		                                <assembly>
+		                                    <descriptor>${project.basedir}/assembly/wildfly-server.xml</descriptor>
+		                                </assembly>
+		                            </build>
+		                        </image>
+		                    </images>
+		                </configuration>
+		                <executions>
+		                    <execution>
+		                        <id>docker-build</id>
+		                        <goals>
+		                            <goal>build</goal>
+		                            <goal>push</goal>
+		                        </goals>
+		                    </execution>
+		                </executions>
+		            </plugin>
+				</plugins>
+			</build>
+		</profile>
+    </profiles>
+    
 </project>

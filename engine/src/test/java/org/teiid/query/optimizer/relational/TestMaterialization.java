@@ -217,6 +217,35 @@ public class TestMaterialization {
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
     
+    @Test public void testManagedMaterializedTransformationInsert() throws Exception {
+        String userSql = "insert into MatTable1 SELECT * FROM ManagedMatView option nocache ManagedMatView"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+        
+        Command command = helpGetCommand(userSql, metadata, null);
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        RelationalPlan plan = (RelationalPlan) TestOptimizer.helpPlanCommand(command, metadata, new DefaultCapabilitiesFinder(bsc),
+                analysis,
+                new String[] {
+                        "SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE mvstatus('MatView', 'ManagedMatView') = 1" }, //$NON-NLS-1$
+                ComparisonMode.EXACT_COMMAND_STRING);
+        
+        bsc.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        
+        plan = (RelationalPlan) TestOptimizer.helpPlanCommand(command, metadata, new DefaultCapabilitiesFinder(bsc),
+                analysis,
+                new String[] {
+                        "INSERT INTO MatTable1 (e1) SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE mvstatus('MatView', 'ManagedMatView') = 1" }, //$NON-NLS-1$
+                ComparisonMode.EXACT_COMMAND_STRING);
+
+        Collection<Annotation> annotations = analysis.getAnnotations();
+        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+    }
+    
     @Test public void testManagedMaterializedTransformationJoin() throws Exception {
         //make sure view removal is not inhibited
         String userSql = "SELECT * FROM ManagedMatView left outer join MatTable1 on ManagedMatView.e1 = MatTable1.e1"; //$NON-NLS-1$
