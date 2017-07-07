@@ -21,11 +21,11 @@
  */
 package org.teiid.translator.couchbase;
 
-import static org.teiid.translator.couchbase.CouchbaseProperties.PLACEHOLDER;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.resource.ResourceException;
 
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.QueryExpression;
@@ -65,57 +65,37 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 		String n1ql = this.visitor.toString();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, n1ql));
 		executionContext.logCommand(n1ql);
-		N1qlQueryResult queryResult = connection.executeQuery(n1ql);
+				
+		N1qlQueryResult queryResult;
+        try {
+            queryResult = connection.execute(n1ql);
+        } catch (ResourceException e) {
+            throw new TranslatorException(e);
+        }
 		this.results = queryResult.iterator();
 	}
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
-	    
-	    if (this.results != null && this.results.hasNext()) {
-	        N1qlQueryRow queryRow = this.results.next();
-	        if(queryRow != null) {
-	            List<Object> row = new ArrayList<>(expectedTypes.length);
-	            JsonObject json = queryRow.value();
-	            
-	            int placeholderIndex = 1;
-	            for(int i = 0 ; i < expectedTypes.length ; i ++){
-	                String columnName = null;
-	                Object value = null;
-	                int cursor = i + 1;
-	                
-	                // column without reference, like 'select col, count(*) from table'
-	                if(cursor <= this.visitor.getSelectColumns().size()){
-	                    columnName = this.visitor.getSelectColumns().get(i);
-	                    value = json.get(columnName); 
-	                }
-	                
-	                // column with alias, like 'select col AS c_1 from table' 
-	                if(value == null && (cursor <= this.visitor.getSelectColumnReferences().size()) && this.visitor.getSelectColumnReferences().get(i) != null) {
-	                    columnName = this.visitor.getSelectColumnReferences().get(i);
-	                    value = json.get(columnName);
-	                }
-	                
-	                // column without reference and alias
-	                String placeholder = buildPlaceholder(placeholderIndex);
-	                if(value == null && json.getNames().contains(placeholder)) {
-	                    columnName = placeholder;
-	                    value = json.get(columnName);
-	                    placeholderIndex++ ;
-	                }
-
-	                row.add(this.executionFactory.retrieveValue(expectedTypes[i], value));
-	            }
-	            return row;
-	        }
-	    } 
-		return null;
+	    if (this.results == null || !this.results.hasNext()) {
+	        return null;
+	    }
+        N1qlQueryRow queryRow = this.results.next();
+        if(queryRow == null) {
+            return null;
+        }
+        List<Object> row = new ArrayList<>(expectedTypes.length);
+        JsonObject json = queryRow.value();
+        
+        for(int i = 0 ; i < expectedTypes.length ; i ++){
+            String columnName = this.visitor.getSelectColumns().get(i);
+            Object value = json.get(columnName);
+            
+            row.add(this.executionFactory.retrieveValue(expectedTypes[i], value));
+        }
+        return row;
 	}
 
-    private String buildPlaceholder(int i) {
-        return PLACEHOLDER + i; 
-    }
-    
     @Override
 	public void close() {
 	    this.results = null;

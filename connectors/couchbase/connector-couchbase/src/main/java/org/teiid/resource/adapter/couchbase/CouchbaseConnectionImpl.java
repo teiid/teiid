@@ -58,18 +58,12 @@ public class CouchbaseConnectionImpl extends BasicConnection implements Couchbas
 	}
 
     @Override
-    public N1qlQueryResult executeQuery(String query) {
-        return executeQuery(N1qlQuery.simple(query));
-    }
-
-    @Override
-    public N1qlQueryResult executeQuery(N1qlQuery query) {
-        return this.bucket.query(query); 
-    }
-    
-    @Override
-    public N1qlQueryResult execute(String statement) {
-        return executeQuery(N1qlQuery.simple(statement));
+    public N1qlQueryResult execute(String statement) throws ResourceException {
+        N1qlQueryResult result = this.bucket.query(N1qlQuery.simple(statement));
+        if (!result.finalSuccess()) {
+            throw new ResourceException(UTIL.gs("query_error", result.errors()), result.status()); //$NON-NLS-1$
+        }
+        return result;
     }
     
     @Override
