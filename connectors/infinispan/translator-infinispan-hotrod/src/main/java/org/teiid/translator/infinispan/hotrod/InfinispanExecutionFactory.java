@@ -27,6 +27,7 @@ import javax.resource.cci.ConnectionFactory;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.infinispan.api.InfinispanConnection;
 import org.teiid.infinispan.api.ProtobufResource;
+import org.teiid.language.Argument;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.Column;
@@ -37,6 +38,7 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -47,6 +49,7 @@ import org.teiid.translator.UpdateExecution;
 @Translator(name = "infinispan-hotrod", description = "The Infinispan Translator Using Protobuf & Hotrod")
 public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFactory, InfinispanConnection>{
 	public static final int MAX_SET_SIZE = 1024;
+	public static final String TEIID_ALIAS_NAMING_CACHE = "teiid-alias-naming-cache"; //$NON-NLS-1$
 
 	private boolean supportsCompareCriteriaOrdered = true;
 	private boolean supportsUpsert = true;
@@ -73,7 +76,8 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     public ResultSetExecution createResultSetExecution(QueryExpression command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             InfinispanConnection connection) throws TranslatorException {
-        return new InfinispanQueryExecution(this, command, executionContext, metadata, connection);
+		return new InfinispanQueryExecution(this, command, executionContext, metadata, connection,
+				supportsDirectQueryProcedure());
     }
 
     @Override
@@ -81,9 +85,17 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
             ExecutionContext executionContext, RuntimeMetadata metadata,
             InfinispanConnection connection) throws TranslatorException {
         return new InfinispanUpdateExecution(command, executionContext, metadata,
-                connection);
+                connection, supportsDirectQueryProcedure());
     }
 
+	@Override
+	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection)
+			throws TranslatorException {
+		return new InfinispanDirectQueryExecution(arguments, command, executionContext,
+				metadata, connection);
+	}
+    
     @Override
     public void getMetadata(MetadataFactory metadataFactory, InfinispanConnection conn) throws TranslatorException {
         ProtobufMetadataProcessor metadataProcessor = (ProtobufMetadataProcessor)getMetadataProcessor();
