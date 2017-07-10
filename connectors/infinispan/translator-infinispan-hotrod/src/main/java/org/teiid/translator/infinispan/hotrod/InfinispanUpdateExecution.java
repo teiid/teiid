@@ -44,24 +44,34 @@ import org.teiid.translator.document.Document;
 import org.teiid.translator.infinispan.hotrod.DocumentFilter.Action;
 import org.teiid.translator.infinispan.hotrod.InfinispanUpdateVisitor.OperationType;
 
+
 public class InfinispanUpdateExecution implements UpdateExecution {
     private int updateCount = 0;
     private Command command;
     private InfinispanConnection connection;
     private ExecutionContext executionContext;
     private RuntimeMetadata metadata;
+    private boolean useAliasCache;
 
     public InfinispanUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata,
-            InfinispanConnection connection) throws TranslatorException {
+            InfinispanConnection connection, boolean useAliasCache) throws TranslatorException {
         this.command = command;
         this.executionContext = executionContext;
         this.metadata = metadata;
         this.connection = connection;
+        this.useAliasCache = useAliasCache;
     }
 
     @Override
     public void execute() throws TranslatorException {
 
+        if (useAliasCache) {
+            if (useAliasCache) {
+				InfinispanQueryExecution.useModifiedGroups(this.connection, this.executionContext, this.metadata,
+						this.command);
+            }
+        }
+    	
         final InfinispanUpdateVisitor visitor = new InfinispanUpdateVisitor(this.metadata);
         visitor.append(this.command);
 
@@ -72,6 +82,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
         TeiidTableMarsheller marshaller = null;
         try {
             Table table = visitor.getParentTable();
+        
             Column pkColumn = visitor.getPrimaryKey();
             if (pkColumn == null) {
                 throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25013, table.getName()));
@@ -119,8 +130,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
             this.connection.registerMarshaller(marshaller);
 
             // if the message in defined in different cache than the default, switch it out now.
-            final RemoteCache<Object,Object> cache = InfinispanQueryExecution.getCache(table, connection);
-
+			final RemoteCache<Object, Object> cache = InfinispanQueryExecution.getCache(table, connection);
 
             if (visitor.getOperationType() == OperationType.DELETE) {
                 paginateResults(cache, visitor.getDeleteQuery(), new Task() {

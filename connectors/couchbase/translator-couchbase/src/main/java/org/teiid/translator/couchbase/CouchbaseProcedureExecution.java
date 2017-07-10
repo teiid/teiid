@@ -17,9 +17,7 @@
  */
 package org.teiid.translator.couchbase;
 
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENTS;
-
+import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.resource.ResourceException;
 
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
@@ -65,7 +65,12 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
         String n1ql = this.visitor.toString();
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29002, call, n1ql));
         executionContext.logCommand(n1ql);
-        N1qlQueryResult queryResult = connection.executeQuery(n1ql);
+        N1qlQueryResult queryResult;
+        try {
+            queryResult = connection.execute(n1ql);
+        } catch (ResourceException e) {
+            throw new TranslatorException(e);
+        }
         this.results = queryResult.iterator();
     }
 
