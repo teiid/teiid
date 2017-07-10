@@ -3,13 +3,13 @@ SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbas
 CREATE FOREIGN TABLE test (
 	documentID string OPTIONS (UPDATABLE FALSE),
 	ID string OPTIONS (NAMEINSOURCE '`test`.`ID`'),
-	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
 	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
-	CustomerID string OPTIONS (NAMEINSOURCE '`test`.`CustomerID`'),
-	CreditCard_CardNumber string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`CardNumber`'),
-	CreditCard_Type string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`Type`'),
+	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
 	CreditCard_CVN integer OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`CVN`'),
+	CreditCard_CardNumber string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`CardNumber`'),
 	CreditCard_Expiry string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`Expiry`'),
+	CreditCard_Type string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`Type`'),
+	CustomerID string OPTIONS (NAMEINSOURCE '`test`.`CustomerID`'),
 	CONSTRAINT PK0 PRIMARY KEY(documentID)
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false');
 
@@ -23,7 +23,7 @@ CREATE FOREIGN TABLE test_SavedAddresses (
 CREATE FOREIGN TABLE test_Items (
 	documentID string,
 	test_Items_idx integer,
-	test_Items_Quantity integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`Quantity`'),
 	test_Items_ItemID integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`ItemID`'),
+	test_Items_Quantity integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`Quantity`'),
 	FOREIGN KEY(documentID) REFERENCES test 
 ) OPTIONS (NAMEINSOURCE '`test`.`Items`[]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');

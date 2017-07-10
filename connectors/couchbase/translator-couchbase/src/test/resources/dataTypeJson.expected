@@ -2,16 +2,16 @@ SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbas
 
 CREATE FOREIGN TABLE test (
 	documentID string OPTIONS (UPDATABLE FALSE),
-	attr_double double OPTIONS (NAMEINSOURCE '`test`.`attr_double`'),
-	attr_jsonObject_key string OPTIONS (NAMEINSOURCE '`test`.`attr_jsonObject`.`key`'),
-	attr_string string OPTIONS (NAMEINSOURCE '`test`.`attr_string`'),
-	attr_long long OPTIONS (NAMEINSOURCE '`test`.`attr_long`'),
-	attr_null string OPTIONS (NAMEINSOURCE '`test`.`attr_null`'),
-	attr_integer integer OPTIONS (NAMEINSOURCE '`test`.`attr_integer`'),
-	attr_boolean boolean OPTIONS (NAMEINSOURCE '`test`.`attr_boolean`'),
+	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
 	attr_bigDecimal bigdecimal OPTIONS (NAMEINSOURCE '`test`.`attr_bigDecimal`'),
 	attr_bigInteger biginteger OPTIONS (NAMEINSOURCE '`test`.`attr_bigInteger`'),
-	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
+	attr_boolean boolean OPTIONS (NAMEINSOURCE '`test`.`attr_boolean`'),
+	attr_double double OPTIONS (NAMEINSOURCE '`test`.`attr_double`'),
+	attr_integer integer OPTIONS (NAMEINSOURCE '`test`.`attr_integer`'),
+	attr_jsonObject_key string OPTIONS (NAMEINSOURCE '`test`.`attr_jsonObject`.`key`'),
+	attr_long long OPTIONS (NAMEINSOURCE '`test`.`attr_long`'),
+	attr_null string OPTIONS (NAMEINSOURCE '`test`.`attr_null`'),
+	attr_string string OPTIONS (NAMEINSOURCE '`test`.`attr_string`'),
 	CONSTRAINT PK0 PRIMARY KEY(documentID)
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false');
 
