@@ -40,7 +40,7 @@ import org.teiid.translator.TranslatorException;
 public class InfinispanDirectQueryExecution implements ProcedureExecution {
 
 	private static Pattern truncatePattern = Pattern.compile("truncate (\\S+)");
-	private static Pattern swapPattern = Pattern.compile("swap (\\S+)\\s+(\\S+)");
+	private static Pattern renamePattern = Pattern.compile("rename (\\S+)\\s+(\\S+)");
 	
     protected int columnCount;
     private List<Argument> arguments;
@@ -65,19 +65,11 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
     	Matcher m = truncatePattern.matcher(command);
     	if (m.matches()) {
     		String tableName =  m.group(1);
-    		tableName = getAliasName(context, aliasCache, tableName);
-    		Table table = metadata.getTable(tableName);
-    		String cacheName = ProtobufMetadataProcessor.getCacheName(table);
-    		BasicCache<Object, Object> cache = connection.getCacheFactory().getCache(cacheName);
-    		if (cache == null) {
-				throw new TranslatorException(InfinispanPlugin.Event.TEIID25014,
-						InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25014, tableName));
-    		}
-    		cache.clear();
+    		clearContents(aliasCache, tableName);
     		return;
     	} 
         
-    	m = swapPattern.matcher(command);
+    	m = renamePattern.matcher(command);
     	if (m.matches()) {
     		String tableOne = m.group(1);
     		String tableTwo = m.group(2);
@@ -93,8 +85,25 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
     			throw new TranslatorException(InfinispanPlugin.Event.TEIID25015,
     					InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25015, tableOne, aliasName));
     		}
+    		clearContents(aliasCache, tableOne);
+    		return;
     	}
+    	
+		throw new TranslatorException(InfinispanPlugin.Event.TEIID25016,
+				InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25016, command));
     }
+
+	private void clearContents(BasicCache<String, String> aliasCache, String tableName) throws TranslatorException {
+		tableName = getAliasName(context, aliasCache, tableName);
+		Table table = metadata.getTable(tableName);
+		String cacheName = ProtobufMetadataProcessor.getCacheName(table);
+		BasicCache<Object, Object> cache = connection.getCacheFactory().getCache(cacheName);
+		if (cache == null) {
+			throw new TranslatorException(InfinispanPlugin.Event.TEIID25014,
+					InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25014, tableName));
+		}
+		cache.clear();
+	}
 
 	static String getAliasName(ExecutionContext context, BasicCache<String, String> aliasCache, String alias)
 			throws TranslatorException {

@@ -24,15 +24,7 @@ import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -254,7 +246,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
 
     private void scanObjectRow(String key, String keyInSource, JsonObject value, MetadataFactory mf, Table table, String referenceTableName, boolean isNestedType, Dimension dimension) {
         
-        Set<String> names = value.getNames();
+        Set<String> names = new TreeSet<String>(value.getNames());
         
         for(String name : names) {
             String columnName = name;
@@ -271,8 +263,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 } else if(isArrayJsonType(columnValue)) {
                     String tableName = repleaceTypedName(table.getName(), newKey);
                     String tableNameInSource = newKeyInSource + SQUARE_BRACKETS ;
-                    Table subTable = addTable(tableName, tableNameInSource, true, referenceTableName, dimension, mf);
-                    scanRow(newKey, newKeyInSource, jsonValue, mf, subTable, referenceTableName, true, dimension);
+                    Dimension d = new Dimension();
+                    Table subTable = addTable(tableName, tableNameInSource, true, referenceTableName, d, mf);
+                    scanRow(newKey, newKeyInSource, jsonValue, mf, subTable, referenceTableName, true, d);
                 }
             } else {
                 if(isNestedType) {
@@ -292,7 +285,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 if(isObjectJsonType(element)) {
                     JsonObject json = (JsonObject) element;
                     
-                    for(String name : json.getNames()) {
+                    for(String name : new TreeSet<String>(json.getNames())) {
                         Object columnValue = json.get(name);
                         String columnType = this.getDataType(columnValue);
                         if(columnType.equals(OBJECT)) {
@@ -302,8 +295,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                             } else if (isArrayJsonType(jsonValue)) {
                                 String tableName = table.getName() + UNDERSCORE + name + UNDERSCORE + dimension.get();
                                 String tableNameInSrc = table.getNameInSource() + SOURCE_SEPARATOR + this.nameInSource(name) + SQUARE_BRACKETS;
-                                Table subTable = addTable(tableName, tableNameInSrc, true, referenceTableName, dimension, mf);
-                                scanRow(keyspace, keyInSource, jsonValue, mf, subTable, referenceTableName, true, dimension);
+                                Dimension d = new Dimension();
+                                Table subTable = addTable(tableName, tableNameInSrc, true, referenceTableName, d, mf);
+                                scanRow(keyspace, keyInSource, jsonValue, mf, subTable, referenceTableName, true, d);
                             }
                         } else {
                             String columnName = table.getName() + UNDERSCORE + name;
@@ -315,8 +309,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 } else if(isArrayJsonType(element)) {
                     String tableName = table.getName() + UNDERSCORE + dimension.get();
                     String tableNameInSrc = table.getNameInSource() + SQUARE_BRACKETS;
-                    Table subTable = addTable(tableName, tableNameInSrc, true, referenceTableName, dimension, mf);
-                    scanRow(keyspace, keyInSource, (JsonValue)element, mf, subTable, referenceTableName, true, dimension);
+                    Dimension d = dimension.copy();
+                    Table subTable = addTable(tableName, tableNameInSrc, true, referenceTableName, d, mf);
+                    scanRow(keyspace, keyInSource, (JsonValue)element, mf, subTable, referenceTableName, true, d);
                 } else {
                     String elementType = getDataType(element);
                     String columnName = table.getName();
@@ -361,9 +356,8 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 Column idx = mf.addColumn(idxName, INTEGER, table);
                 idx.setUpdatable(true);
             }
-            dimension.increment();
         } 
-     
+        dimension.increment();
         return table;
     }
 
@@ -648,38 +642,24 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
      *  +-------------+--------------------+-------------------------+------------------------------+--------------------------+
      *}</pre>
      */
-    public static class Dimension implements Comparable<Dimension> {
+    public static class Dimension{
         
-        private final String name;
-        int dimension;
-        
-        public Dimension() {
-            this.name = DIM_SUFFIX ;
-            this.dimension = 1;
-        }
+        int dimension = 1;
         
         public void increment() {
             dimension++;
         }
         
+        public Dimension copy() {
+            Dimension result = new Dimension();
+            result.dimension = dimension;
+            return result;
+        }
+
         public String get(){
-            return this.name + this.dimension;
+            return DIM_SUFFIX + this.dimension;
         }
         
-        public int dim() {
-            return this.dimension;
-        } 
-        
-        @Override
-        public int compareTo(Dimension dim) {
-            if(this.dimension < dim.dimension) {
-                return -1;
-            } else if(this.dimension > dim.dimension) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
     }
    
 }
