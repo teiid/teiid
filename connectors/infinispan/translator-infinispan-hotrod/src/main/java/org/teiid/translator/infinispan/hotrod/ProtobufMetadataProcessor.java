@@ -494,4 +494,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         return table.getProperty(PARENT_COLUMN_NAME, false);
     }
 
+    static String getCacheName(Table table) {
+        return table.getProperty(CACHE, false);
+    }    
 }
