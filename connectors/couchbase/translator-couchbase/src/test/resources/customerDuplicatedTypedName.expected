@@ -3,8 +3,8 @@ SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbas
 CREATE FOREIGN TABLE Customer (
 	documentID string OPTIONS (UPDATABLE FALSE),
 	ID string OPTIONS (NAMEINSOURCE '`test`.`ID`'),
-	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
 	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
+	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
 	CONSTRAINT PK0 PRIMARY KEY(documentID)
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''Customer''');
 
@@ -18,8 +18,8 @@ CREATE FOREIGN TABLE Customer_SavedAddresses (
 CREATE FOREIGN TABLE test2_Customer (
 	documentID string OPTIONS (UPDATABLE FALSE),
 	ID string OPTIONS (NAMEINSOURCE '`test2`.`ID`'),
-	type string OPTIONS (NAMEINSOURCE '`test2`.`type`'),
 	Name string OPTIONS (NAMEINSOURCE '`test2`.`Name`'),
+	type string OPTIONS (NAMEINSOURCE '`test2`.`type`'),
 	CONSTRAINT PK0 PRIMARY KEY(documentID)
 ) OPTIONS (NAMEINSOURCE '`test2`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''test2_Customer''');
 

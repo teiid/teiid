@@ -3,8 +3,8 @@ SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbas
 CREATE FOREIGN TABLE Customer (
 	documentID string OPTIONS (UPDATABLE FALSE),
 	ID string OPTIONS (NAMEINSOURCE '`test`.`ID`'),
-	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
 	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
+	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
 	CONSTRAINT PK0 PRIMARY KEY(documentID)
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''Customer''');
 
@@ -17,20 +17,20 @@ CREATE FOREIGN TABLE Customer_SavedAddresses (
 
 CREATE FOREIGN TABLE Oder (
 	documentID string OPTIONS (UPDATABLE FALSE),
-	CustomerID string OPTIONS (NAMEINSOURCE '`test`.`CustomerID`'),
-	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
-	CreditCard_CardNumber string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`CardNumber`'),
-	CreditCard_Type string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`Type`'),
 	CreditCard_CVN integer OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`CVN`'),
+	CreditCard_CardNumber string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`CardNumber`'),
 	CreditCard_Expiry string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`Expiry`'),
+	CreditCard_Type string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`Type`'),
+	CustomerID string OPTIONS (NAMEINSOURCE '`test`.`CustomerID`'),
 	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
+	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
 	CONSTRAINT PK0 PRIMARY KEY(documentID)
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''Oder''');
 
 CREATE FOREIGN TABLE Oder_Items (
 	documentID string,
 	Oder_Items_idx integer,
-	Oder_Items_Quantity integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`Quantity`'),
 	Oder_Items_ItemID integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`ItemID`'),
+	Oder_Items_Quantity integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`Quantity`'),
 	FOREIGN KEY(documentID) REFERENCES Oder 
 ) OPTIONS (NAMEINSOURCE '`test`.`Items`[]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');

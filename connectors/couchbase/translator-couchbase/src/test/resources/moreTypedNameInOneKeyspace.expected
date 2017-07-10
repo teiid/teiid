@@ -32,8 +32,8 @@ CREATE FOREIGN TABLE QuickstartA (
 
 CREATE FOREIGN TABLE QuickstartB (
 	documentID string OPTIONS (UPDATABLE FALSE),
+	category string OPTIONS (NAMEINSOURCE '`test`.`category`'),
 	name string OPTIONS (NAMEINSOURCE '`test`.`name`'),
 	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
-	category string OPTIONS (NAMEINSOURCE '`test`.`category`'),
 	CONSTRAINT PK0 PRIMARY KEY(documentID)
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''QuickstartB''');

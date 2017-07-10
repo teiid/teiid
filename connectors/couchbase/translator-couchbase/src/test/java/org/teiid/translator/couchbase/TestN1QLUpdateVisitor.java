@@ -18,7 +18,7 @@
 package org.teiid.translator.couchbase;
 
 import static org.junit.Assert.*;
-import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.formOder;
+import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,11 +35,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 public class TestN1QLUpdateVisitor extends TestVisitor {
     
     private void helpTest(String sql, String key) throws TranslatorException {
-        Command command = translationUtility.parseCommand(sql);
-
-        N1QLUpdateVisitor visitor = TRANSLATOR.getN1QLUpdateVisitor();
-        visitor.append(command);
-        String actual = visitor.toString();
+        String actual = helpTranslate(sql);
         
         if(PRINT_TO_CONSOLE.booleanValue()) {
             System.out.println(actual);
@@ -51,21 +47,33 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         
         assertEquals(key, N1QL.getProperty(key, ""), actual);
     }
+
+    private String helpTranslate(String sql) {
+        Command command = translationUtility.parseCommand(sql);
+
+        N1QLUpdateVisitor visitor = TRANSLATOR.getN1QLUpdateVisitor();
+        visitor.append(command);
+        String actual = visitor.toString();
+        return actual;
+    }
     
     @Test
     public void testInsert() throws TranslatorException  {
         
-        String sql = "INSERT INTO Customer VALUES ('customer-1', 'Customer_12346', 'Customer', 'Kylin Soong')";
+        String sql = "INSERT INTO Customer (documentID, ID, type, Name) VALUES ('customer-1', 'Customer_12346', 'Customer', 'Kylin Soong')";
         helpTest(sql, "N1QL1401");
         
         sql = "INSERT INTO Customer (documentID, ID, Name, type) VALUES ('customer-1', 'Customer_12346', 'Kylin Soong', 'Customer')";
         helpTest(sql, "N1QL1402");
         
-        sql = "INSERT INTO Oder VALUES ('order-1', 'Customer_12345', 'Oder', '4111 1111 1111 111', 'Visa', 123, '12/12', 'Air Ticket')";
-        helpTest(sql, "N1QL1403");
-        
         sql = "INSERT INTO Oder (documentID, CustomerID, type, CreditCard_CardNumber, CreditCard_Type, CreditCard_CVN, CreditCard_Expiry, Name) VALUES ('order-1', 'Customer_12345', 'Oder', '4111 1111 1111 111', 'Visa', 123, '12/12', 'Air Ticket')";
-        helpTest(sql, "N1QL1404");
+        String translated = helpTranslate(sql);
+        JsonObject json = JsonObject.create();
+        json.put("type", "Oder");
+        json.put("Name", "Air Ticket");
+        json.put("CustomerID", "Customer_12345");
+        json.put("CreditCard", JsonObject.create().put("CardNumber", "4111 1111 1111 111").put("Expiry", "12/12").put("CVN", 123).put("Type", "Visa"));
+        assertEquals("INSERT INTO `test` (KEY, VALUE) VALUES ('order-1', "+json+") RETURNING META(`test`).id AS PK", translated);
         
         sql = "INSERT INTO Customer (ID, Name, type) VALUES ('Customer_12346', 'Kylin Soong', 'Customer')";
         try {
@@ -93,12 +101,12 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         sql = "INSERT INTO Customer_SavedAddresses (documentID, Customer_SavedAddresses_idx, Customer_SavedAddresses) VALUES ('customer-1', 2,  'Beijing')";
         helpTest(sql, "N1QL1410");
         
-        sql = "INSERT INTO Oder_Items VALUES ('order-1', 2, 5, 92312)";
-        helpTest(sql, "N1QL1411");
-        
         sql = "INSERT INTO Oder_Items (documentID, Oder_Items_idx, Oder_Items_Quantity, Oder_Items_ItemID) VALUES ('order-1', 2, 5, 92312)";
-        helpTest(sql, "N1QL1412");
-        
+        translated = helpTranslate(sql);
+        json = JsonObject.create();
+        json.put("Quantity", 5);
+        json.put("ItemID", 92312);
+        assertEquals("UPDATE `test` USE KEYS 'order-1' SET `Items` = ARRAY_CONCAT(IFMISSINGORNULL(`Items`, []), ["+json+"]) RETURNING META(`test`).id AS PK", translated);
     }
     
     @Test
@@ -440,14 +448,11 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
     @Test
     public void testUpsert() throws TranslatorException  {
         
-        String sql = "UPSERT INTO Customer VALUES ('customer-1', 'Customer_12346', 'Customer', 'Kylin Soong')";
+        String sql = "UPSERT INTO Customer (documentID, ID, type, Name) VALUES ('customer-1', 'Customer_12346', 'Customer', 'Kylin Soong')";
         helpTest(sql, "N1QL2001");
         
         sql = "UPSERT INTO Customer (documentID, ID, Name, type) VALUES ('customer-1', 'Customer_12346', 'Kylin Soong', 'Customer')";
         helpTest(sql, "N1QL2002");
-        
-        sql = "UPSERT INTO Oder VALUES ('order-1', 'Customer_12345', 'Oder', '4111 1111 1111 111', 'Visa', 123, '12/12', 'Air Ticket')";
-        helpTest(sql, "N1QL2003");
         
         sql = "UPSERT INTO Oder (documentID, CustomerID, type, CreditCard_CardNumber, CreditCard_Type, CreditCard_CVN, CreditCard_Expiry, Name) VALUES ('order-1', 'Customer_12345', 'Oder', '4111 1111 1111 111', 'Visa', 123, '12/12', 'Air Ticket')";
         helpTest(sql, "N1QL2004");
@@ -457,9 +462,6 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         
         sql = "UPSERT INTO Customer_SavedAddresses (documentID, Customer_SavedAddresses_idx, Customer_SavedAddresses) VALUES ('customer-1', 2,  'Beijing')";
         helpTest(sql, "N1QL2006");
-        
-        sql = "UPSERT INTO Oder_Items VALUES ('order-1', 2, 5, 92312)";
-        helpTest(sql, "N1QL2007");
         
         sql = "UPSERT INTO Oder_Items (documentID, Oder_Items_idx, Oder_Items_Quantity, Oder_Items_ItemID) VALUES ('order-1', 2, 5, 92312)";
         helpTest(sql, "N1QL2008");
