@@ -20,12 +20,22 @@ package org.teiid.translator.ws;
 import java.util.List;
 import java.util.Map;
 
-import javax.wsdl.*;
+import javax.wsdl.Binding;
+import javax.wsdl.BindingOperation;
+import javax.wsdl.Definition;
+import javax.wsdl.Input;
+import javax.wsdl.Message;
+import javax.wsdl.Operation;
+import javax.wsdl.Output;
+import javax.wsdl.Port;
+import javax.wsdl.Service;
+import javax.wsdl.WSDLException;
 import javax.wsdl.extensions.ExtensibilityElement;
 import javax.wsdl.extensions.http.HTTPBinding;
 import javax.wsdl.extensions.soap.SOAPBinding;
 import javax.wsdl.extensions.soap.SOAPOperation;
 import javax.wsdl.extensions.soap12.SOAP12Binding;
+import javax.wsdl.extensions.soap12.SOAP12Operation;
 import javax.wsdl.factory.WSDLFactory;
 import javax.wsdl.xml.WSDLReader;
 import javax.xml.namespace.QName;
@@ -148,15 +158,27 @@ public class WSDLMetadataProcessor implements MetadataProcessor<WSConnection> {
 		}
 		
 		ExtensibilityElement operationExtension = getExtensibilityElement(bindingOperation.getExtensibilityElements(), "operation"); //$NON-NLS-1$
-		if (!(operationExtension instanceof SOAPOperation)) {
+		if (!(operationExtension instanceof SOAPOperation) && !(operationExtension instanceof SOAP12Operation)) {
 			return;
 		}
-		// soap:operation
-		SOAPOperation soapOperation = (SOAPOperation) operationExtension;
-		String style = soapOperation.getStyle();
-		if (style.equalsIgnoreCase("rpc")) { //$NON-NLS-1$
-			LogManager.logInfo(LogConstants.CTX_CONNECTOR, WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15004, operation.getName()));
-			return;
+		if (operationExtension instanceof SOAPOperation) {
+			// soap:operation
+			SOAPOperation soapOperation = (SOAPOperation) operationExtension;
+			String style = soapOperation.getStyle();
+			if (style.equalsIgnoreCase("rpc")) { //$NON-NLS-1$
+				LogManager.logInfo(LogConstants.CTX_CONNECTOR,
+						WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15004, operation.getName()));
+				return;
+			}
+		} else if (operationExtension instanceof SOAP12Operation) {
+			// soap:operation
+			SOAP12Operation soapOperation = (SOAP12Operation) operationExtension;
+			String style = soapOperation.getStyle();
+			if (style.equalsIgnoreCase("rpc")) { //$NON-NLS-1$
+				LogManager.logInfo(LogConstants.CTX_CONNECTOR,
+						WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15004, operation.getName()));
+				return;
+			}			
 		}
 
 		Procedure procedure = mf.addProcedure(operation.getName());
