@@ -263,8 +263,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 } else if(isArrayJsonType(columnValue)) {
                     String tableName = repleaceTypedName(table.getName(), newKey);
                     String tableNameInSource = newKeyInSource + SQUARE_BRACKETS ;
-                    Table subTable = addTable(tableName, tableNameInSource, true, referenceTableName, dimension, mf);
-                    scanRow(newKey, newKeyInSource, jsonValue, mf, subTable, referenceTableName, true, dimension);
+                    Dimension d = new Dimension();
+                    Table subTable = addTable(tableName, tableNameInSource, true, referenceTableName, d, mf);
+                    scanRow(newKey, newKeyInSource, jsonValue, mf, subTable, referenceTableName, true, d);
                 }
             } else {
                 if(isNestedType) {
@@ -294,8 +295,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                             } else if (isArrayJsonType(jsonValue)) {
                                 String tableName = table.getName() + UNDERSCORE + name + UNDERSCORE + dimension.get();
                                 String tableNameInSrc = table.getNameInSource() + SOURCE_SEPARATOR + this.nameInSource(name) + SQUARE_BRACKETS;
-                                Table subTable = addTable(tableName, tableNameInSrc, true, referenceTableName, dimension, mf);
-                                scanRow(keyspace, keyInSource, jsonValue, mf, subTable, referenceTableName, true, dimension);
+                                Dimension d = new Dimension();
+                                Table subTable = addTable(tableName, tableNameInSrc, true, referenceTableName, d, mf);
+                                scanRow(keyspace, keyInSource, jsonValue, mf, subTable, referenceTableName, true, d);
                             }
                         } else {
                             String columnName = table.getName() + UNDERSCORE + name;
@@ -307,8 +309,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 } else if(isArrayJsonType(element)) {
                     String tableName = table.getName() + UNDERSCORE + dimension.get();
                     String tableNameInSrc = table.getNameInSource() + SQUARE_BRACKETS;
-                    Table subTable = addTable(tableName, tableNameInSrc, true, referenceTableName, dimension, mf);
-                    scanRow(keyspace, keyInSource, (JsonValue)element, mf, subTable, referenceTableName, true, dimension);
+                    Dimension d = dimension.copy();
+                    Table subTable = addTable(tableName, tableNameInSrc, true, referenceTableName, d, mf);
+                    scanRow(keyspace, keyInSource, (JsonValue)element, mf, subTable, referenceTableName, true, d);
                 } else {
                     String elementType = getDataType(element);
                     String columnName = table.getName();
@@ -353,9 +356,8 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 Column idx = mf.addColumn(idxName, INTEGER, table);
                 idx.setUpdatable(true);
             }
-            dimension.increment();
         } 
-     
+        dimension.increment();
         return table;
     }
 
@@ -640,38 +642,24 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
      *  +-------------+--------------------+-------------------------+------------------------------+--------------------------+
      *}</pre>
      */
-    public static class Dimension implements Comparable<Dimension> {
+    public static class Dimension{
         
-        private final String name;
-        int dimension;
-        
-        public Dimension() {
-            this.name = DIM_SUFFIX ;
-            this.dimension = 1;
-        }
+        int dimension = 1;
         
         public void increment() {
             dimension++;
         }
         
+        public Dimension copy() {
+            Dimension result = new Dimension();
+            result.dimension = dimension;
+            return result;
+        }
+
         public String get(){
-            return this.name + this.dimension;
+            return DIM_SUFFIX + this.dimension;
         }
         
-        public int dim() {
-            return this.dimension;
-        } 
-        
-        @Override
-        public int compareTo(Dimension dim) {
-            if(this.dimension < dim.dimension) {
-                return -1;
-            } else if(this.dimension > dim.dimension) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
     }
    
 }
