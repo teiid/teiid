@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -240,7 +241,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
 
     private void scanObjectRow(String key, String keyInSource, JsonObject value, MetadataFactory mf, Table table, String referenceTableName, boolean isNestedType, Dimension dimension) {
         
-        Set<String> names = value.getNames();
+        Set<String> names = new TreeSet<String>(value.getNames());
         
         for(String name : names) {
             String columnName = name;
@@ -278,7 +279,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 if(isObjectJsonType(element)) {
                     JsonObject json = (JsonObject) element;
                     
-                    for(String name : json.getNames()) {
+                    for(String name : new TreeSet<String>(json.getNames())) {
                         Object columnValue = json.get(name);
                         String columnType = this.getDataType(columnValue);
                         if(columnType.equals(OBJECT)) {
