@@ -22,13 +22,9 @@
 package org.teiid.translator.couchbase;
 
 import static org.junit.Assert.*;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
-import static org.teiid.translator.couchbase.CouchbaseProperties.DOCUMENTID;
-import static org.teiid.translator.couchbase.CouchbaseProperties.FALSE_VALUE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.UNDERSCORE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.WAVE;
-import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_ARRAY_TABLE;
-import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.NAMED_TYPE_PAIR;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.*;
+import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
