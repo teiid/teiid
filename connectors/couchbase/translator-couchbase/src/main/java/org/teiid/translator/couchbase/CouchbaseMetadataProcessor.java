@@ -36,6 +36,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.resource.ResourceException;
+
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.logging.LogConstants;
@@ -51,8 +53,8 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.TypeFacility;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.TypeFacility;
 
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
@@ -77,22 +79,29 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             
     @Override
     public void process(MetadataFactory mf, CouchbaseConnection conn) throws TranslatorException {
-
-        List<String> keyspaces = loadKeyspaces(conn);
-        for(String keyspace : keyspaces) {
-            addTable(mf, conn, conn.getNamespace(), keyspace);  
+        if (this.typeNameList == null) {
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29009));
+        }
+        
+        try {
+            List<String> keyspaces = loadKeyspaces(conn);
+            for(String keyspace : keyspaces) {
+                addTable(mf, conn, conn.getNamespace(), keyspace);  
+            }
+        } catch (ResourceException e) {
+            throw new TranslatorException(e);
         }
        
         addProcedures(mf, conn);
     }
 
-    private List<String> loadKeyspaces(CouchbaseConnection conn) {
+    private List<String> loadKeyspaces(CouchbaseConnection conn) throws ResourceException {
         
         String namespace = conn.getNamespace();
         
         boolean isValidSchema = false;
         String n1qlNamespaces = buildN1QLNamespaces();
-        Iterator<N1qlQueryRow> namespaces = conn.executeQuery(n1qlNamespaces).iterator();
+        Iterator<N1qlQueryRow> namespaces = conn.execute(n1qlNamespaces).iterator();
         while(namespaces.hasNext()) {
             JsonObject row = namespaces.next().value();
             if(row.getString(NAME).equals(namespace)){
@@ -113,7 +122,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         
         List<String> results = new ArrayList<>();
         String n1qlKeyspaces = buildN1QLKeyspaces(namespace);
-        List<N1qlQueryRow> keyspaces = conn.executeQuery(n1qlKeyspaces).allRows();
+        List<N1qlQueryRow> keyspaces = conn.execute(n1qlKeyspaces).allRows();
         for(N1qlQueryRow row : keyspaces){
             String keyspace = row.value().getString(NAME);
             if(keyspaceSet == null) {
@@ -144,8 +153,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
      * @param conn - CouchbaseConnection
      * @param namespace - couchbase namespace
      * @param keyspace - couchbase  keyspace
+     * @throws ResourceException 
      */
-    private void addTable(MetadataFactory mf, CouchbaseConnection conn, String namespace, String keyspace) {
+    private void addTable(MetadataFactory mf, CouchbaseConnection conn, String namespace, String keyspace) throws ResourceException {
         
         String nameInSource = nameInSource(keyspace);
         
@@ -155,7 +165,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         if(typeNameList != null && typeNameList.size() > 0) {
             String typeQuery = buildN1QLTypeQuery(typeNameList, namespace, keyspace);
             LogManager.logTrace(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29003, typeQuery)); 
-            List<N1qlQueryRow> rows = conn.executeQuery(typeQuery).allRows();
+            List<N1qlQueryRow> rows = conn.execute(typeQuery).allRows();
             
             for(N1qlQueryRow row : rows) {
                 JsonObject rowJson = row.value();
@@ -207,7 +217,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             
             String query = buildN1QLQuery(tableNameTypeMap.get(name), name, namespace, keyspace, this.sampleSize, hasTypeIdentifier);
             LogManager.logTrace(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29003, query)); 
-            Iterator<N1qlQueryRow> result = conn.executeQuery(query).iterator();
+            Iterator<N1qlQueryRow> result = conn.execute(query).iterator();
             while(result.hasNext()) {
                 JsonObject row = result.next().value(); // result.next() always can not be null
                 JsonObject currentRowJson = row.getObject(keyspace);
@@ -447,7 +457,6 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     private List<String> getTypeName(String keyspace) {
         
         if(this.typeNameList == null) {
-            LogManager.logWarning(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29009));
             return null;
         }
         
@@ -597,7 +606,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         this.sampleSize = sampleSize;
     }
 
-    @TranslatorProperty(display = "TypeNameList", category = PropertyType.IMPORT, description = "A comma-separate list of the attributes that the buckets use to specify document types. Each list item must be a bucket name surrounded by back quotes (`), a colon (:), and an attribute name surrounded by back quotes (`).") //$NON-NLS-1$ //$NON-NLS-2$
+    @TranslatorProperty(display = "TypeNameList", category = PropertyType.IMPORT, description = "A comma-separated list of the attributes that the buckets use to specify document types. Each list item must be a bucket name surrounded by back quotes (`), a colon (:), and an attribute name surrounded by back quotes (`).") //$NON-NLS-1$ //$NON-NLS-2$
     public String getTypeNameList() {
         return typeNameList;
     }
@@ -606,7 +615,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         this.typeNameList = typeNameList;
     }
     
-    @TranslatorProperty(display = "SampleKeyspaces", category = PropertyType.IMPORT, description = "A comma-separate list of the keyspace names to define which keyspaces that should be map, default map all keyspaces") //$NON-NLS-1$ //$NON-NLS-2$
+    @TranslatorProperty(display = "SampleKeyspaces", category = PropertyType.IMPORT, description = "A comma-separated list of the keyspace names to define which keyspaces that should be map, default map all keyspaces") //$NON-NLS-1$ //$NON-NLS-2$
     public String getSampleKeyspaces() {
         return sampleKeyspaces;
     }

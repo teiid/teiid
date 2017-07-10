@@ -59,20 +59,20 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	    setSupportsSelectDistinct(true);
 		setSourceRequiredForMetadata(false);
 		setTransactionSupport(TransactionSupport.NONE);
+		setSourceRequiredForMetadata(true);
 		// Couchbase subquery returns an array every time, Join relate with use-keys-clause
 	}
 
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-		
+		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("SUBSTR"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("LOG"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("RANDOM"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.TRANSLATE, new AliasModifier("REPLACE"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, new FunctionModifier(){
             @Override
             public List<?> translate(Function function) {
@@ -147,6 +147,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	    supportedFunctions.add(SourceSystemFunctions.TRANSLATE);
 	    supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
 	    supportedFunctions.add(SourceSystemFunctions.UCASE);
+	    supportedFunctions.add(SourceSystemFunctions.REPLACE);
 	    
 	    //conversion
 	    supportedFunctions.add(SourceSystemFunctions.CONVERT);
@@ -293,11 +294,6 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 
     @Override
     public boolean supportsCompareCriteriaEquals() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsDirectQueryProcedure() {
         return true;
     }
 

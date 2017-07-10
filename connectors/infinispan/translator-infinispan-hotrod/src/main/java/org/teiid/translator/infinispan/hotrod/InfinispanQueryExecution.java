@@ -17,17 +17,23 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.commons.api.BasicCache;
 import org.teiid.infinispan.api.InfinispanConnection;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.DataNotAvailableException;
@@ -38,31 +44,38 @@ import org.teiid.translator.infinispan.hotrod.DocumentFilter.Action;
 
 public class InfinispanQueryExecution implements ResultSetExecution {
 
-    private QueryExpression command;
+    private Select command;
     private InfinispanConnection connection;
     private RuntimeMetadata metadata;
     private ExecutionContext executionContext;
     private InfinispanResponse results;
     private TeiidTableMarsheller marshaller;
+    private boolean useAliasCache;
 
-    public InfinispanQueryExecution(InfinispanExecutionFactory translator,
-            QueryExpression command, ExecutionContext executionContext,
-            RuntimeMetadata metadata, InfinispanConnection connection) throws TranslatorException {
-        this.command = command;
+	public InfinispanQueryExecution(InfinispanExecutionFactory translator, QueryExpression command,
+			ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection,
+			boolean useAliasCache) throws TranslatorException {
+        this.command = (Select)command;
         this.connection = connection;
         this.metadata = metadata;
         this.executionContext = executionContext;
+        this.useAliasCache = useAliasCache;
     }
 
     @Override
     public void execute() throws TranslatorException {
         try {
+            if (useAliasCache) {
+            	useModifiedGroups(this.connection, this.executionContext, this.metadata, this.command);
+            }
+            
             final IckleConversionVisitor visitor = new IckleConversionVisitor(metadata, false);
             visitor.append(this.command);
             Table table = visitor.getParentTable();
+            
             String queryStr = visitor.getQuery();
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, "SourceQuery:", queryStr);
-
+            
             DocumentFilter docFilter = null;
             if (queryStr.startsWith("FROM ") && ((Select)command).getWhere() != null) {
                 SQLStringVisitor ssv = new SQLStringVisitor() {
@@ -87,6 +100,28 @@ public class InfinispanQueryExecution implements ResultSetExecution {
             this.connection.unRegisterMarshaller(this.marshaller);
         }
     }
+
+	static void useModifiedGroups(InfinispanConnection connection, ExecutionContext context, RuntimeMetadata metadata,
+			Command command) throws TranslatorException {
+		BasicCache<String, String> aliasCache = InfinispanDirectQueryExecution.getAliasCache(connection);
+		CollectorVisitor.collectGroups(command).forEach(namedTable -> {
+			try {
+				Table table = InfinispanDirectQueryExecution.getAliasTable(context, metadata, aliasCache,
+						namedTable.getMetadataObject());
+				Collection<ColumnReference> columns = CollectorVisitor.collectElements(command);
+				columns.forEach(reference -> {
+					if (reference.getTable().getMetadataObject().equals(namedTable.getMetadataObject())) {
+						Column column = table.getColumnByName(reference.getMetadataObject().getName());
+						reference.getTable().setMetadataObject(table);
+						reference.setMetadataObject(column);
+					}
+				});
+				namedTable.setMetadataObject(table);
+			} catch (TranslatorException e) {
+				LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
+			}
+		});
+	}
 
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {

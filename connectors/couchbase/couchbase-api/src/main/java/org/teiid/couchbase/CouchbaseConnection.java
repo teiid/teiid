@@ -17,9 +17,9 @@
  */
 package org.teiid.couchbase;
 
+import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 
-import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 
 /**
@@ -51,27 +51,9 @@ public interface CouchbaseConnection extends Connection {
     /**
      * Executes the given N1QL statement, which returns a single <code>N1qlQueryResult</code> 
      * object.
-     * @param query is a N1QL statement, analogous to a relational database SQL statement.  
-     * @return returns a <code>N1qlQueryResult</code> object that contains the JSON objects 
-     *         produced by the given query.
-     */
-    N1qlQueryResult executeQuery(String query);
-    
-    /**
-     * Executes the given <code>N1qlQuery</code> object which represents a complex N1QL statement.
-     * returns a single <code>N1qlQueryResult</code> object.
-     * @param query is a <code>N1qlQuery</code> object which represents a complex N1QL statement.
-     * @return returns a <code>N1qlQueryResult</code> object that contains the JSON objects 
-     *         produced by the given query.
-     */
-    N1qlQueryResult executeQuery(N1qlQuery query);
-    
-    /**
-     * Executes the given N1QL statement, which returns a single <code>N1qlQueryResult</code> 
-     * object.
      * 
      * @param statement Any N1QL statement, like Insert, Select, Update, Delete, etc.
      * @return
      */
-    N1qlQueryResult execute(String statement);
+    N1qlQueryResult execute(String statement) throws ResourceException;
 }

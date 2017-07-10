@@ -155,6 +155,9 @@ public class TestN1QLVisitor extends TestVisitor {
         
         sql = "SELECT Name, type FROM Customer ORDER BY Name DESC";
         helpTest(sql, "N1QL0605");
+        
+        sql = "SELECT id as a FROM Customer ORDER BY a";
+        helpTest(sql, "N1QL0606");
     }
     
     @Test
@@ -187,6 +190,9 @@ public class TestN1QLVisitor extends TestVisitor {
 
         sql = "SELECT CreditCard_CardNumber, CreditCard_Expiry, Name FROM Oder WHERE CustomerID = 'Customer_12345' AND CreditCard_Type = 'Visa' AND CreditCard_CVN = 123";
         helpTest(sql, "N1QL0807");
+        
+        sql = "SELECT Name, type  FROM Customer WHERE type = 'Customer?'";
+        helpTest(sql, "N1QL0808");
     }
     
     @Test // test where clause against array
@@ -220,7 +226,7 @@ public class TestN1QLVisitor extends TestVisitor {
         sql = "SELECT UCASE(attr_string) FROM T2";
         helpTest(sql, "N1QL0902");
         
-        sql = "SELECT TRANSLATE(attr_string, 'is', 'are') FROM T2";
+        sql = "SELECT replace(attr_string, 'xy', 'z') FROM T2";
         helpTest(sql, "N1QL0903");
         
         sql = "SELECT couchbase.CONTAINS(attr_string, 'is') FROM T2";
@@ -240,6 +246,9 @@ public class TestN1QLVisitor extends TestVisitor {
         
         sql = "SELECT couchbase.POSITION(attr_string, 'is') FROM T2";
         helpTest(sql, "N1QL0909");
+        
+        sql = "SELECT substring(attr_string, 1, 2) FROM T2";
+        helpTest(sql, "N1QL0910");
     }
     
     @Test

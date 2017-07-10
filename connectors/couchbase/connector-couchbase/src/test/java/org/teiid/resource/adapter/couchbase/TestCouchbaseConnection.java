@@ -31,7 +31,7 @@ public class TestCouchbaseConnection {
     public void testKeyspaces () throws ResourceException {
         CouchbaseConnection conn = sample();
         Set<String> keyspaces = new HashSet<>();
-        N1qlQueryResult result = conn.executeQuery("SELECT * FROM system:keyspaces"); //$NON-NLS-1$
+        N1qlQueryResult result = conn.execute("SELECT * FROM system:keyspaces"); //$NON-NLS-1$
         Iterator<N1qlQueryRow> rows = result.rows();
         while(rows.hasNext()) {
             N1qlQueryRow row = rows.next();
