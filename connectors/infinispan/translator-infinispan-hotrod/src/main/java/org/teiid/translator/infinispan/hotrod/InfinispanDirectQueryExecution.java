@@ -85,7 +85,7 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
     			throw new TranslatorException(InfinispanPlugin.Event.TEIID25015,
     					InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25015, tableOne, aliasName));
     		}
-    		clearContents(aliasCache, tableOne);
+		clearContents(aliasCache, tableTwo);
     		return;
     	}
     	
