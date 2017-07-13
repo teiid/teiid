@@ -29,7 +29,7 @@ public interface Transaction extends AdminObject, DomainAware {
 	String getAssociatedSession();
 	
 	/**
-	 * Get the scope for the transaction.  Will be one of GLOBAL, LOCAL, or REQUEST
+	 * Get the scope for the transaction.  Will be one of GLOBAL, LOCAL, REQUEST or INHERITED
 	 * @return
 	 */
 	String getScope();
