@@ -243,7 +243,7 @@ public class TestTPCR extends BaseQueryTest {
                 new List<?>[] { Arrays.asList("x", "y")};
         
         doProcess(tm, sql, 
-                finder, dm, expected, true);
+                finder, dm, expected, DEBUG);
 
     }
  
