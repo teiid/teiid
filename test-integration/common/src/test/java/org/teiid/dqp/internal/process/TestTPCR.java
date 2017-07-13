@@ -25,22 +25,25 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.jdbc.oracle.OracleExecutionFactory;
 import org.teiid.translator.jdbc.sqlserver.SQLServerExecutionFactory;
 import org.teiid.util.Version;
 
 
-
+@SuppressWarnings("nls")
 public class TestTPCR extends BaseQueryTest {
 
     private static final boolean DEBUG = false;
@@ -218,5 +221,34 @@ public class TestTPCR extends BaseQueryTest {
 		sef.setDatabaseVersion(Version.DEFAULT_VERSION);
 		return CapabilitiesConverter.convertCapabilities(sef);
 	}
+    
+    public void testMultiLevelCorrelationWithSubqueryMergeJoin() throws Exception {
+        FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
+        
+        String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tpch.ddl"));
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("x", new RealMetadataFactory.DDLHolder("tpch1", ddl),
+                new RealMetadataFactory.DDLHolder("tpch2", ddl));
+        
+        OracleExecutionFactory oef = new OracleExecutionFactory();
+        oef.setDatabaseVersion(Version.getVersion("11.0"));
+        SourceCapabilities bsc1 = CapabilitiesConverter.convertCapabilities(oef, 1);
+        SourceCapabilities bsc2 = CapabilitiesConverter.convertCapabilities(oef, 2);
+        
+        finder.addCapabilities("tpch1", bsc1); //$NON-NLS-1$
+        finder.addCapabilities("tpch2", bsc2); //$NON-NLS-1$
+        
+        HardcodedDataManager dm = new HardcodedDataManager(tm);
+        dm.addData("SELECT g_0.\"S_SUPPLIERKEY\" AS c_0, g_0.\"S_NAME\" AS c_1, g_0.\"S_ADDRESS\" AS c_2 FROM \"SOAEDS\".\"SUPPLIER\" AS g_0, \"SOAEDS\".\"NATION\" AS g_1 WHERE g_0.\"S_NATIONKEY\" = g_1.\"N_NATIONKEY\" AND g_1.\"N_NAME\" = 'BRAZIL' ORDER BY c_0", Arrays.asList(1, "x", "y"));
+        dm.addData("SELECT g_0.\"PS_SUPPLIERKEY\" AS c_0 FROM \"SOAEDS\".\"PARTSUPP\" AS g_0 WHERE g_0.\"PS_PARTKEY\" IN (SELECT g_1.\"P_PARTKEY\" FROM \"SOAEDS\".\"PART\" AS g_1 WHERE g_1.\"P_NAME\" LIKE 'powder%') AND g_0.\"PS_AVAILQTY\" > (SELECT (0.5 * SUM(g_2.\"L_QUANTITY\")) FROM \"SOAEDS\".\"LINEITEM\" AS g_2 WHERE g_2.\"L_PARTKEY\" = g_0.\"PS_PARTKEY\" AND g_2.\"L_SUPPLIERKEY\" = g_0.\"PS_SUPPLIERKEY\" AND g_2.\"L_SHIPDATE\" >= {ts '1994-01-01 00:00:00.0'} AND g_2.\"L_SHIPDATE\" < {ts '1995-01-01 00:00:00.0'}) ORDER BY c_0", Arrays.asList(1));
+        
+        String sql = "select s_name, s_address from tpch1.soaeds.supplier, tpch1.soaeds.nation where s_supplierkey in ( select ps_supplierkey from tpch2.soaeds.partsupp where ps_partkey in ( select p_partkey from tpch2.soaeds.part where p_name like 'powder%' ) and ps_availqty > ( select 0.5 * sum(l_quantity) from tpch2.soaeds.lineitem where l_partkey = ps_partkey and l_supplierkey = ps_supplierkey and l_shipdate >= '1994-01-01' and l_shipdate < TIMESTAMPADD(SQL_TSI_YEAR,'1', '1994-01-01') ) ) and s_nationkey = n_nationkey and n_name = 'BRAZIL' order by s_name;";
+        
+        List<?>[] expected =
+                new List<?>[] { Arrays.asList("x", "y")};
+        
+        doProcess(tm, sql, 
+                finder, dm, expected, DEBUG);
+
+    }
  
 }

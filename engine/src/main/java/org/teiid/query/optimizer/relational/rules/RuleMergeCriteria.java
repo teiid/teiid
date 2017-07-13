@@ -67,6 +67,7 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
+import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
@@ -569,6 +570,11 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		
 		plannedResult.query = (Query)plannedResult.query.clone();
+		for (Command c : CommandCollectorVisitor.getCommands(plannedResult.query)) {
+		    //subqueries either need to be re-resolved or replanned to maintain 
+		    //multilevel correlated references.  it's easier for now to replan
+	        c.setProcessorPlan(null);
+		}
 		plannedResult.query.setLimit(null);
 
 		List<GroupSymbol> rightGroups = plannedResult.query.getFrom().getGroups();
