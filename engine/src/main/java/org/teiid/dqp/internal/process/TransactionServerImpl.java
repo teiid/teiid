@@ -510,7 +510,7 @@ public class TransactionServerImpl implements TransactionService {
 						}
 					});
 					tc.setTransaction(tx);
-					tc.setTransactionType(Scope.GLOBAL);
+					tc.setTransactionType(Scope.INHERITED);
 				}
 				//TODO: it may be appropriate to throw an up-front exception
 			} catch (SystemException e) {
@@ -562,7 +562,8 @@ public class TransactionServerImpl implements TransactionService {
     public void cancelTransactions(String threadId, boolean requestOnly) throws XATransactionException {
     	TransactionContext tc = requestOnly?transactions.getTransactionContext(threadId):transactions.removeTransactionContext(threadId);
         
-        if (tc == null || tc.getTransactionType() == TransactionContext.Scope.NONE 
+        if (tc == null || tc.getTransactionType() == TransactionContext.Scope.NONE
+        		|| tc.getTransactionType() == TransactionContext.Scope.INHERITED
         		|| (requestOnly && tc.getTransactionType() != TransactionContext.Scope.REQUEST)) {
             return;
         }

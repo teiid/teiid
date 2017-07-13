@@ -441,7 +441,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private boolean isSuspendable() {
-		return this.transactionContext.getTransaction() != null && !(this.useCallingThread && this.transactionContext.getTransactionType() == Scope.GLOBAL);
+		return this.transactionContext.getTransaction() != null
+				&& !(this.useCallingThread && (this.transactionContext.getTransactionType() == Scope.GLOBAL
+						|| this.transactionContext.getTransactionType() == Scope.INHERITED));
 	}
 
 	private void suspend() {

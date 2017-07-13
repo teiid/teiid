@@ -40,7 +40,8 @@ public class TransactionContext extends ExecutionContext implements Serializable
 		GLOBAL,
 		LOCAL,
 		NONE,
-		REQUEST
+		REQUEST,
+		INHERITED
 	}
 	
     private String threadId;
