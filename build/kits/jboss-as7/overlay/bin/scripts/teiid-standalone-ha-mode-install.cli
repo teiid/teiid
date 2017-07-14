@@ -95,6 +95,7 @@
 /subsystem=teiid/translator=ucanaccess:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
 /subsystem=teiid/translator=couchbase:add(module=org.jboss.teiid.translator.couchbase)
+/subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
 
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -112,6 +113,7 @@
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
 /subsystem=resource-adapters/resource-adapter=couchbase:add(module=org.jboss.teiid.resource-adapter.couchbase)
+/subsystem=resource-adapters/resource-adapter=infinispan-hotrod:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
 
 
 /deployment=teiid-odata.war:add(runtime-name=teiid-odata.war,content=[{path=dataVirtualization/vdb/teiid-odata.war/,archive=false,relative-to=jboss.home.dir}],enabled=true)
