@@ -52,7 +52,7 @@ public class DependentCriteriaProcessor {
 	
     public static class SetState {
 
-        Collection<Object> replacement = new LinkedHashSet<Object>();
+        Collection<Constant> replacement = new LinkedHashSet<Constant>();
 
         Expression valueExpression;
 
@@ -71,6 +71,8 @@ public class DependentCriteriaProcessor {
     	}
         
         long valueCount = 1;
+
+        SetCriteria existingSet;
 
     }
 
@@ -187,6 +189,22 @@ public class DependentCriteriaProcessor {
         this.eval = new SubqueryAwareEvaluator(Collections.emptyMap(), dependentNode.getDataManager(), dependentNode.getContext(), dependentNode.getBufferManager());
         queryCriteria = Criteria.separateCriteriaByAnd(dependentCriteria);
         
+        Map<Expression, SetCriteria> setMap = new HashMap<Expression, SetCriteria>();
+        for (int i = 0; i < queryCriteria.size(); i++) {
+            Criteria criteria = queryCriteria.get(i);
+            if (!(criteria instanceof AbstractSetCriteria)) {
+                continue;
+            }
+            
+            if (criteria instanceof SetCriteria) {
+                SetCriteria setCriteria = (SetCriteria)criteria;
+                if (setCriteria.isNegated() || !setCriteria.isAllConstants()) {
+                    continue;
+                }
+                setMap.put(setCriteria.getExpression(), setCriteria);
+            }
+        }
+        
         for (int i = 0; i < queryCriteria.size(); i++) {
         	Criteria criteria = queryCriteria.get(i);
             if (!(criteria instanceof AbstractSetCriteria)) {
@@ -212,6 +230,12 @@ public class DependentCriteriaProcessor {
                 
                 SetState state = new SetState();
                 setStates.put(i, state);
+                SetCriteria sc = setMap.get(dsc.getExpression());
+                if (sc != null) {
+                    state.existingSet = sc;
+                    int index = queryCriteria.indexOf(sc);
+                    queryCriteria.set(index, QueryRewriter.TRUE_CRITERIA);
+                }
                 state.valueExpression = dsc.getValueExpression();
                 if (dsc.hasMultipleAttributes()) {
                 	state.valueCount = ((Array)dsc.getExpression()).getExpressions().size();
@@ -315,14 +339,17 @@ public class DependentCriteriaProcessor {
 
         replaceDependentValueIterators();
         
-        LinkedHashSet<Criteria> crits = new LinkedHashSet<Criteria>();
+        LinkedList<Criteria> crits = new LinkedList<Criteria>();
         
         for (int i = 0; i < queryCriteria.size(); i++) {
         	SetState state = this.setStates.get(i);
-        	if (state == null) {
-        		crits.add((Criteria)queryCriteria.get(i).clone());
+        	Criteria criteria = queryCriteria.get(i);
+            if (state == null) {
+                if (criteria != QueryRewriter.TRUE_CRITERIA) {
+                    crits.add((Criteria)criteria.clone());
+                }
         	} else {
-        		Criteria crit = replaceDependentCriteria((AbstractSetCriteria)queryCriteria.get(i), state);
+        		Criteria crit = replaceDependentCriteria((AbstractSetCriteria)criteria, state);
         		if (crit == QueryRewriter.FALSE_CRITERIA) {
         			return QueryRewriter.FALSE_CRITERIA;
         		}
@@ -333,9 +360,9 @@ public class DependentCriteriaProcessor {
         }
         
         if (crits.size() == 1) {
-        	return crits.iterator().next();
+        	return crits.get(0);
         }
-        return new CompoundCriteria(CompoundCriteria.AND, new ArrayList<Criteria>(crits));
+        return new CompoundCriteria(CompoundCriteria.AND, crits);
     }
     
     public void consumedCriteria() {
@@ -418,7 +445,10 @@ public class DependentCriteriaProcessor {
 		                if (lessThanMax || isNull) {
 		                	for (SetState state : source) {
 		                        if (!isNull) {
-		                            state.replacement.add(state.nextValue);
+		                            Constant constant = newConstant(state.nextValue);
+		                            if (state.existingSet == null || state.existingSet.getValues().contains(constant)) {
+		                                state.replacement.add(constant);
+		                            }
 		                        }
 		                        state.nextValue = null;
 		                        state.isNull = false;
@@ -473,18 +503,18 @@ public class DependentCriteriaProcessor {
     		setSize = (int) Math.max(1, this.maxSetSize/state.valueCount);
     		numberOfSets = state.replacement.size()/setSize + (state.replacement.size()%setSize!=0?1:0);
     	}
-    	Iterator<Object> iter = state.replacement.iterator();
+    	Iterator<Constant> iter = state.replacement.iterator();
     	ArrayList<Criteria> orCrits = new ArrayList<Criteria>(numberOfSets);
     	
     	for (int i = 0; i < numberOfSets; i++) {
     		if (setSize == 1 || i + 1 == state.replacement.size()) {
-				orCrits.add(new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, newConstant(iter.next())));    				
+				orCrits.add(new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, iter.next()));    				
 			} else {
 	    		List<Constant> vals = new ArrayList<Constant>(Math.min(state.replacement.size(), setSize));
 				
 	    		for (int j = 0; j < setSize && iter.hasNext(); j++) {
-	    			Object val = iter.next();
-	                vals.add(newConstant(val));
+	    		    Constant val = iter.next();
+	                vals.add(val);
 	            }
 	            
 	            SetCriteria sc = new SetCriteria();
