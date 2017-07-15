@@ -1789,11 +1789,11 @@ public class TestODataIntegration {
                 		        "{" + 
                 		          "\"a\":\"y\"," + 
                 		          "\"b\":\"a\"," + 
-                		          "\"FKX\":[" + 
+                		          "\"FKX\":" + 
                 		            "{" + 
                 		              "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		            "}" + 
-                		          "]," + 
+                		          "," + 
                 		          "\"z_FKY\":[" + 
                 		            "{" + 
                 		              "\"a\":\"a\"," + 
@@ -1801,22 +1801,22 @@ public class TestODataIntegration {
                 		              "\"FKX\":{" + 
                 		                "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		              "}," + 
-                		              "\"FKY\":[" + 
+                		              "\"FKY\":" + 
                 		                "{" + 
                 		                  "\"@odata.id\":\""+baseURL+"/northwind/m/y('y')\"" + 
                 		                "}" + 
-                		              "]" + 
+                		              "" + 
                 		            "}" + 
                 		          "]" + 
                 		        "}," + 
                 		        "{" + 
                 		          "\"a\":\"y1\"," + 
                 		          "\"b\":\"a\"," + 
-                		          "\"FKX\":[" + 
+                		          "\"FKX\":" + 
                 		            "{" + 
                 		              "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		            "}" + 
-                		          "]," + 
+                		          "," + 
                 		          "\"z_FKY\":[" + 
                 		          "]" + 
                 		        "}" + 
@@ -1827,22 +1827,22 @@ public class TestODataIntegration {
                 		        "\"FKX\":{" + 
                 		          "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		        "}," + 
-                		        "\"FKY\":[" + 
+                		        "\"FKY\":" + 
                 		          "{" + 
                 		            "\"a\":\"y\"," + 
                 		            "\"b\":\"a\"," + 
-                		            "\"FKX\":[" + 
+                		            "\"FKX\":" + 
                 		              "{" + 
                 		                "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		              "}" + 
-                		            "]," + 
+                		            "," + 
                 		            "\"z_FKY\":[" + 
                 		              "{" + 
                 		                "\"@odata.id\":\""+baseURL+"/northwind/m/z('a')\"" + 
                 		              "}" + 
                 		            "]" + 
                 		          "}" + 
-                		        "]" + 
+                		        "" + 
                 		      "}" + 
                 		    "}" + 
                 		  "]" + 
