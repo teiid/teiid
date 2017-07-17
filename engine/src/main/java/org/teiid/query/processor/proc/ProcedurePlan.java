@@ -738,7 +738,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         
         if (program.isAtomic() && this.blockContext == null) {
         	TransactionContext tc = this.getContext().getTransactionContext();
-        	if (tc != null && tc.getTransactionType() == Scope.NONE && program.instructionsRequireTransaction(false) != Boolean.FALSE) {
+        	if (tc != null && tc.getTransactionType() == Scope.NONE && Boolean.TRUE.equals(program.instructionsRequireTransaction(false))) {
         		//start a transaction
         		this.getContext().getTransactionServer().begin(tc);
         		this.blockContext = tc;

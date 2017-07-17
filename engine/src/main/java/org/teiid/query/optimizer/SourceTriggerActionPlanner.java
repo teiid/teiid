@@ -305,6 +305,7 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
             }
             //create plan
             ForEachRowPlan result = new ForEachRowPlan();
+            result.setSingleRow(true);
             result.setParams(params);
             TriggerAction parseProcedure;
             GroupSymbol gs = new GroupSymbol(sec.table.getFullName());
