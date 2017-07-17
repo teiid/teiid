@@ -295,15 +295,15 @@ public class Program implements Cloneable, Labeled {
 	}
 
     public Boolean requiresTransaction(boolean transactionalReads) {
-        if (!transactionalReads && this.isAtomic()) {
-            return false;
-        }
         return instructionsRequireTransaction(transactionalReads);
     }
 
     public Boolean instructionsRequireTransaction(boolean transactionalReads) {
         boolean possiblyRequired = false;
         boolean last = false;
+        if (this.programInstructions == null) {
+            return false;
+        }
         for (ProgramInstruction instruction : this.programInstructions) {
             Boolean instructionRequires = instruction.requiresTransaction(transactionalReads);
             if (instructionRequires == null) {

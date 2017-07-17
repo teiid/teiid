@@ -236,47 +236,24 @@ public class RelationalPlan extends ProcessorPlan {
     
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-    	boolean txnWtih = false;
 		if (this.with != null) {
     		for (WithQueryCommand withCommand : this.with) {
     			if (withCommand.isRecursive()) {
     				SetQuery setQuery = (SetQuery)withCommand.getCommand();
     				Boolean leftRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads);
     				Boolean rightRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads); 
-    				if (Boolean.TRUE.equals(leftRequires) || Boolean.TRUE.equals(rightRequires)) {
+    				if (!Boolean.FALSE.equals(leftRequires) || !Boolean.FALSE.equals(rightRequires)) {
     					return true;
-    				}
-    				if (leftRequires == null || rightRequires == null) {
-    					if (txnWtih) {
-    						return true;
-    					}
-    					txnWtih = true;
     				}
     			} else {
     				Boolean requires = withCommand.getCommand().getProcessorPlan().requiresTransaction(transactionalReads);
-    				if (Boolean.TRUE.equals(requires)) {
+    				if (!Boolean.FALSE.equals(requires)) {
     					return true;
-    				}
-    				if (requires == null) {
-    					if (txnWtih) {
-    						return true;
-    					}
-    					txnWtih = true;
     				}
 				}
 			}
     	}
-    	Boolean requires = requiresTransaction(transactionalReads, root);
-    	if (Boolean.TRUE.equals(requires)) {
-			return true;
-		}
-		if (requires == null && txnWtih) {
-			return true;
-		}
-		if (txnWtih || requires == null) {
-			return null;
-		}
-		return false;
+    	return requiresTransaction(transactionalReads, root);
     }
     
     static Boolean requiresTransaction(boolean transactionalReads, RelationalNode node) {
@@ -284,6 +261,7 @@ public class RelationalPlan extends ProcessorPlan {
     	if (Boolean.TRUE.equals(requiresTxn)) {
     		return true;
     	}
+    	boolean last = true;
 		for (RelationalNode child : node.getChildren()) {
 			if (child == null) {
 				continue;
@@ -297,7 +275,13 @@ public class RelationalPlan extends ProcessorPlan {
 					return true;
 				}
 				requiresTxn = null;
+				last = true;
+			} else {
+			    last = false;
 			}
+		}
+		if (requiresTxn == null && !last) {
+		    return true;
 		}
 		return requiresTxn;
     }

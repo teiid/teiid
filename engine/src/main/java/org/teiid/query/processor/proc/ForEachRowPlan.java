@@ -53,6 +53,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 	private ProcedurePlan rowProcedure;
 	private Map<ElementSymbol, Expression> params;
 	private Map<Expression, Integer> lookupMap;
+	private boolean singleRow;
 	
 	private ProcessorDataManager dataMgr;
     private BufferManager bufferMgr;
@@ -64,6 +65,9 @@ public class ForEachRowPlan extends ProcessorPlan {
     private long updateCount;
     
     private TransactionContext planContext;
+    private List<?> nextTuple;
+    private boolean first = true;
+    private boolean nextNull = false;
 
 	@Override
 	public ProcessorPlan clone() {
@@ -117,7 +121,11 @@ public class ForEachRowPlan extends ProcessorPlan {
 		try {
 			while (true) {
 				if (currentTuple == null) {
-					currentTuple = tupleSource.nextTuple();
+				    if (nextTuple != null) {
+				        currentTuple = nextTuple;
+				    } else if (!nextNull) {
+				        currentTuple = tupleSource.nextTuple();
+				    }
 					if (currentTuple == null) {
 						if (this.planContext != null) {
 							TransactionService ts = this.getContext().getTransactionServer();
@@ -129,6 +137,28 @@ public class ForEachRowPlan extends ProcessorPlan {
 						return result;
 					}
 				}
+				if (first) {
+                    TransactionContext tc = this.getContext().getTransactionContext();
+                    if (this.planContext == null && tc != null && tc.getTransactionType() == Scope.NONE) {
+                        Boolean txnRequired = rowProcedure.requiresTransaction(false);
+                        boolean start = false;
+                        if (txnRequired == null) {
+                            nextTuple = tupleSource.nextTuple();
+                            if (nextTuple != null) {
+                                start = true;
+                            } else {
+                                nextNull = true;
+                            }
+                        } else if (Boolean.TRUE.equals(txnRequired)) {
+                            start = true;
+                        }
+                        if (start) {
+                            this.getContext().getTransactionServer().begin(tc);
+                            this.planContext = tc;
+                        }
+                    }
+                    first = false;
+                }
 				if (this.rowProcessor == null) {
 					rowProcedure.reset();
 					CommandContext context = getContext().clone();
@@ -160,7 +190,8 @@ public class ForEachRowPlan extends ProcessorPlan {
 	@Override
 	public void open() throws TeiidComponentException, TeiidProcessingException {
     	TransactionContext tc = this.getContext().getTransactionContext();
-    	if (tc != null && tc.getTransactionType() == Scope.NONE) {
+    	if (tc != null && tc.getTransactionType() == Scope.NONE && queryPlan != null
+    	        && !Boolean.FALSE.equals(queryPlan.requiresTransaction(false))) {
     		//start a transaction - if not each of the row plans will
     		//be executed in it's own transaction, which is bad for performance
     		
@@ -206,11 +237,28 @@ public class ForEachRowPlan extends ProcessorPlan {
 		this.queryProcessor = null;
 		this.tupleSource = null;
 		this.planContext = null;
+		this.first = true;
+		this.nextTuple = null;
+		this.nextNull = false;
 	}
 	
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
-		return true;
+		Boolean requiresTxn = queryPlan.requiresTransaction(transactionalReads);
+		if (!Boolean.FALSE.equals(requiresTxn)) {
+		    return true;
+		}
+		Boolean forEach = rowProcedure.requiresTransaction(transactionalReads);
+		if (Boolean.TRUE.equals(forEach)) {
+            return true;
+        }
+		if (forEach == null) {
+		    if (!singleRow) {
+	            return true;
+		    }
+		    return null;
+        }
+		return false;
 	}
 	
 	@Override
@@ -224,6 +272,10 @@ public class ForEachRowPlan extends ProcessorPlan {
 	
 	public void setTupleSource(TupleSource tupleSource) {
         this.tupleSource = tupleSource;
+    }
+	
+	public void setSingleRow(boolean singleRow) {
+        this.singleRow = singleRow;
     }
 	
 }

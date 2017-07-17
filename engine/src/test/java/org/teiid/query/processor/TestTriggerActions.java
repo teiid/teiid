@@ -29,16 +29,24 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.teiid.api.exception.query.QueryProcessingException;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.TestUpdateValidator;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 
 @SuppressWarnings("nls")
 public class TestTriggerActions {
@@ -330,6 +338,62 @@ public class TestTriggerActions {
         ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
         List<?>[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
+	}
+	
+	@Test public void testTransactions() throws Exception {
+	    TransformationMetadata metadata = RealMetadataFactory.fromDDL("x",
+	            new RealMetadataFactory.DDLHolder("virt", "CREATE VIEW users options (updatable true) as select id, dummy_data, updated_at from db1.user1 union all select id, dummy_data, updated_at from db2.user2; "
+	                    + "CREATE TRIGGER ON users INSTEAD OF DELETE AS FOR EACH ROW IF (OLD.id < (SELECT MAX(id) FROM db1.user1)) BEGIN ATOMIC DELETE FROM db1.user1 WHERE id = OLD.id; END ELSE IF (OLD.id = (SELECT MAX(id) FROM db1.user1)) BEGIN ATOMIC UPDATE db1.user1 SET dummy_data = '', updated_at = NOW() WHERE id = OLD.id; END ELSE IF (OLD.id > (SELECT MAX(id) FROM db1.user1)) BEGIN ATOMIC DELETE FROM db2.user2 WHERE id = OLD.id; END; "
+	                    + "CREATE TRIGGER ON users INSTEAD OF INSERT AS FOR EACH ROW begin atomic insert into db1.user1 (id) values (new.id); insert into db2.user2 (id) values (new.id); end; "
+	                    + "CREATE TRIGGER ON users INSTEAD OF update AS FOR EACH ROW begin atomic end; "),
+	            new RealMetadataFactory.DDLHolder("db1", "create foreign table user1 (id integer, dummy_data string, updated_at timestamp) options (updatable true);"),
+	            new RealMetadataFactory.DDLHolder("db2", "create foreign table user2 (id integer, dummy_data string, updated_at timestamp) options (updatable true);"));
+	    
+	    String sql = "delete from users where id = 203";
+	    HardcodedDataManager dm = new HardcodedDataManager();
+	    dm.addData("SELECT g_0.id, g_0.dummy_data, g_0.updated_at FROM db1.user1 AS g_0 WHERE g_0.id = 203", Arrays.asList(203, "", null));
+	    dm.addData("SELECT g_0.id, g_0.dummy_data, g_0.updated_at FROM db2.user2 AS g_0 WHERE g_0.id = 203");
+	    dm.addData("SELECT g_0.id FROM db1.user1 AS g_0", Arrays.asList(203), Arrays.asList(204));
+	    dm.addData("DELETE FROM db1.user1 WHERE id = 203", Arrays.asList(1));
+	    dm.addData("INSERT INTO db1.user1 (id) VALUES (205)", Arrays.asList(1));
+	    dm.addData("INSERT INTO db2.user2 (id) VALUES (205)", Arrays.asList(1));
+	    
+	    CommandContext context = createCommandContext();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setSourceProperty(Capability.TRANSACTION_SUPPORT, TransactionSupport.XA);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        //assumed required, but won't start a txn
+        assertTrue(plan.requiresTransaction(false));
+        
+        TransactionContext tc = new TransactionContext();
+        TransactionService ts = Mockito.mock(TransactionService.class);
+        Mockito.doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                ((TransactionContext)invocation.getArguments()[0]).setTransactionType(Scope.REQUEST);
+                return null;
+            }
+        }).when(ts).begin(tc);
+        
+        context.setTransactionService(ts);
+        context.setTransactionContext(tc);
+        
+        List<?>[] expected = new List[] {Arrays.asList(1)};
+        helpProcess(plan, context, dm, expected);
+        Mockito.verify(ts, Mockito.never()).begin(tc);
+        
+        //required, and will start a txn
+        sql = "insert into users (id) values (205)";
+        plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        assertTrue(plan.requiresTransaction(false));
+        
+        helpProcess(plan, context, dm, expected);
+        Mockito.verify(ts, Mockito.times(1)).begin(tc);
+        
+        //does nothing
+        sql = "update users set id = 205";
+        plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        assertFalse(plan.requiresTransaction(false));
 	}
 
 }
