@@ -271,6 +271,33 @@ public class TestHiveExecutionFactory {
     	Mockito.verify(mf, Mockito.times(0)).addTable("x");
     }
     
+    @Test public void testQuoting() throws Exception {
+        HiveMetadataProcessor hmp = new HiveMetadataProcessor();
+        Connection c = Mockito.mock(Connection.class);
+        MetadataFactory mf = Mockito.mock(MetadataFactory.class);
+        Table table = new Table();
+        Mockito.stub(mf.addTable("x")).toReturn(table);
+        Column col = new Column();
+        col.setName("y");
+        Mockito.stub(mf.addColumn("y", "string", table)).toReturn(col);
+        Statement stmt = Mockito.mock(Statement.class);
+        Mockito.stub(c.createStatement()).toReturn(stmt);
+        ResultSet rs = Mockito.mock(ResultSet.class);
+        Mockito.stub(stmt.executeQuery("SHOW TABLES")).toReturn(rs);
+        Mockito.stub(rs.next()).toReturn(true).toReturn(false);
+        Mockito.stub(rs.getString(1)).toReturn("x");
+        
+        ResultSet rs1 = Mockito.mock(ResultSet.class);
+        Mockito.stub(stmt.executeQuery("DESCRIBE x")).toReturn(rs1);
+        Mockito.stub(rs1.next()).toReturn(true).toReturn(false);
+        Mockito.stub(rs1.getString(1)).toReturn("y");
+        Mockito.stub(rs1.getString(2)).toReturn("string");
+        
+        hmp.process(mf, c);
+        assertEquals("`x`", table.getNameInSource());
+        assertEquals("`y`", col.getNameInSource());
+    }
+    
     @Test public void testStringLiteral() {
     	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
         Command obj = commandBuilder.getCommand("select pm1.g1.e2 from pm1.g1 where pm1.g1.e1 = 'a''b\\c'");
