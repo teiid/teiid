@@ -57,7 +57,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         registerFunctionModifier("*", new AliasModifier("product"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("/", new AliasModifier("div"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
-		
+		setMaxInCriteriaSize(1024); //default for solr
 	}
 	
 	@Override
