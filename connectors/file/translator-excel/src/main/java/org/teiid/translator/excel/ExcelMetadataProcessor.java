@@ -27,6 +27,7 @@ import javax.resource.ResourceException;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -257,6 +258,9 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		case Cell.CELL_TYPE_BOOLEAN:
 			return TypeFacility.RUNTIME_NAMES.BOOLEAN;
 		default:
+		    if (DateUtil.isCellDateFormatted(cell)) {
+		        return TypeFacility.RUNTIME_NAMES.TIMESTAMP;
+		    }
 			return TypeFacility.RUNTIME_NAMES.DOUBLE;
 		}
 	}

@@ -221,7 +221,7 @@ public class TestExcelMetadataProcessor {
 				"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
 				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
 				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" +
-				"	\"time\" double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n"+
+				"	\"time\" timestamp OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n"+
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
 				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
 		
@@ -303,7 +303,7 @@ public class TestExcelMetadataProcessor {
 				"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
 				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
 				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
-				"	\"time\" double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n" +
+				"	\"time\" timestamp OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n" +
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
 				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '3');";
 		
@@ -343,7 +343,7 @@ public class TestExcelMetadataProcessor {
         		"\tFirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
         		"\tLastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
         		"\tAge double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
-        		"\t\"time\" double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n"+
+        		"\t\"time\" timestamp OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n"+
         		"\tCONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
         		") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
         
@@ -364,7 +364,7 @@ public class TestExcelMetadataProcessor {
                 "\tFirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
                 "\tLastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
                 "\tAge double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
-                "\t\"time\" double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n"+
+                "\t\"time\" timestamp OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n"+
                 "\tCONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
                 ") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" '*.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
         
