@@ -5,13 +5,13 @@
     </properties>
     
     <resources>
-        <artifact name="${org.jboss.teiid:teiid-engine}"/>
-        <artifact name="${org.jboss.teiid:saxon-xom}"/>
-        <artifact name="${org.jboss.teiid:teiid-jboss-integration}"/>
-        <artifact name="${org.jboss.teiid:teiid-metadata}"/>
-        <artifact name="${org.jboss.teiid:teiid-runtime}"/>
-        <artifact name="${org.jboss.teiid:teiid-jboss-admin}"/>
-        <artifact name="${org.jboss.teiid:teiid-data-quality}"/>
+        <artifact name="${org.teiid:teiid-engine}"/>
+        <artifact name="${org.teiid:saxon-xom}"/>
+        <artifact name="${org.teiid:teiid-jboss-integration}"/>
+        <artifact name="${org.teiid:teiid-metadata}"/>
+        <artifact name="${org.teiid:teiid-runtime}"/>
+        <artifact name="${org.teiid:teiid-jboss-admin}"/>
+        <artifact name="${org.teiid:teiid-data-quality}"/>
         <resource-root path="deployments" />
     </resources>
 

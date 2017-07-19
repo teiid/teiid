@@ -5,7 +5,7 @@
     </properties>
     
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:google-api}" />
+        <artifact name="${org.teiid.connectors:google-api}" />
     </resources>
 
     <dependencies>

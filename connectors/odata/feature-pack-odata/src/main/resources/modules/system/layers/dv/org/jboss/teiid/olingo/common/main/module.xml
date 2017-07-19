@@ -5,7 +5,7 @@
     </properties>
     
     <resources>
-        <artifact name="${org.jboss.teiid:teiid-olingo-common}"/>
+        <artifact name="${org.teiid:teiid-olingo-common}"/>
     </resources>
 
     <dependencies>

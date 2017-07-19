@@ -5,7 +5,7 @@
     </properties>
     
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:translator-excel}" />
+        <artifact name="${org.teiid.connectors:translator-excel}" />
         <!-- Insert resources here -->
     </resources>
 

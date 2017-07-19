@@ -2,31 +2,31 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-      <groupId>org.jboss.teiid.connectors</groupId>
+      <groupId>org.teiid.connectors</groupId>
       <artifactId>misc</artifactId>
         <version>10.0.0.Alpha2-SNAPSHOT</version>
     </parent>
     <artifactId>translator-jpa</artifactId>
-    <groupId>org.jboss.teiid.connectors</groupId>
+    <groupId>org.teiid.connectors</groupId>
     <name>JPA2 Translator</name>
     <description>This translator provides access to any JPA based entities</description>
     <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
         </dependency>   
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>       
             <type>test-jar</type>
             <scope>test</scope>

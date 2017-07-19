@@ -4,7 +4,7 @@
     </properties>
        
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:connector-ldap}"/>
+        <artifact name="${org.teiid.connectors:connector-ldap}"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
