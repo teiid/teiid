@@ -181,8 +181,15 @@ public final class RuleMergeVirtual implements
         			return root; //cannot remove if the no source side is an outer side, or if it can change the meaning of the plan
             	}
             	PlanNode other = isLeft? FrameUtil.findJoinSourceNode(parentJoin.getLastChild()):left;
-            	if (other != null && (SymbolMap)other.getProperty(NodeConstants.Info.CORRELATED_REFERENCES) != null) {
-            		return root; //TODO: we don't have the logic yet to then replace the correlated references
+            	if (other != null) {
+            	    //scan all sources under the other side as there could be a join structure
+            	    for (PlanNode node : NodeEditor.findAllNodes(other, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE)) {
+            	        SymbolMap map = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+            	        if (map != null) {
+            	            //TODO: we don't have the logic yet to then replace the correlated references
+            	            return root;
+            	        }
+            	    }
             	}
             }
         }

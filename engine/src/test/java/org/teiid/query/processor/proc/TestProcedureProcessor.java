@@ -2570,6 +2570,19 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataManager, tm);
     }
     
+    @Test public void testTeiid5001() throws Exception {
+        String sql = "SELECT d.id FROM ( SELECT 'l1' as domain ) dim_md_domains_to_load, table(CALL testcase.proc_web_avg_visit_duration_empty(\"domain\" => domain)) x JOIN testcase.dim_md_date_ranges d ON true";
+        
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE VIEW testcase.dim_md_date_ranges AS SELECT 1 as \"id\" union all select 2 "
+                + "CREATE VIRTUAL PROCEDURE proc_web_avg_visit_duration_empty( domain string ) RETURNS (i integer) AS BEGIN select 1; END", "x", "testcase");
+        
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] { Arrays.asList(1), Arrays.asList(2) }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
     private static final boolean DEBUG = false;
     
 }
