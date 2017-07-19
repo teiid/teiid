@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-        <groupId>org.jboss.teiid.connectors</groupId>
+        <groupId>org.teiid.connectors</groupId>
         <artifactId>jdbc</artifactId>
         <version>10.0.0.Alpha2-SNAPSHOT</version>
     </parent>
@@ -24,28 +24,28 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-wildfly-integration-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
         </dependency>        
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-prestodb</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-hive</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-phoenix</artifactId>
             <version>${project.version}</version>
         </dependency>                        

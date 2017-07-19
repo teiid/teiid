@@ -4,7 +4,7 @@
         <property name="jboss.api" value="private"/>
     </properties>
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:translator-mongodb}" />
+        <artifact name="${org.teiid.connectors:translator-mongodb}" />
         <!-- Insert resources here -->
     </resources>
 

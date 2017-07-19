@@ -4,7 +4,7 @@
     </properties>
        
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:connector-ftp}"/>
+        <artifact name="${org.teiid.connectors:connector-ftp}"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>

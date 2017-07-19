@@ -1,12 +1,12 @@
 <project xsi:schemaLocation='http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns='http://maven.apache.org/POM/4.0.0'>
   <parent>
-    <groupId>org.jboss.teiid</groupId>
+    <groupId>org.teiid</groupId>
     <artifactId>documentation</artifactId>
     <version>8.0.0.alpha2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>javadocs</artifactId>
-  <groupId>org.jboss.teiid.documentation</groupId>
+  <groupId>org.teiid.documentation</groupId>
   <name>Teiid Javadocs</name>
   <description>Javadocs for the Teiid project</description>
   <dependencies>
@@ -27,7 +27,7 @@
               <includeDependencySources>true</includeDependencySources>
               <detectOfflineLinks>false</detectOfflineLinks>
               <dependencySourceIncludes>
-                <dependencySourceInclude>org.jboss.teiid*</dependencySourceInclude>
+                <dependencySourceInclude>org.teiid*</dependencySourceInclude>
               </dependencySourceIncludes>
             </configuration>
           </execution>

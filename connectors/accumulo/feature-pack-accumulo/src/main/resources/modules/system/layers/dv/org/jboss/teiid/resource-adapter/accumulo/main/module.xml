@@ -4,7 +4,7 @@
     </properties>
        
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:connector-accumulo}"/>
+        <artifact name="${org.teiid.connectors:connector-accumulo}"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>

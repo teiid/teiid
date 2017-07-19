@@ -4,7 +4,7 @@
     </properties>
        
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:connector-simpledb}"/>
+        <artifact name="${org.teiid.connectors:connector-simpledb}"/>
         <resource-root path="."/>
     </resources>
 

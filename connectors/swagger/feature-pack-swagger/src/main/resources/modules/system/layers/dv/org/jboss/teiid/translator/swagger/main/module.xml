@@ -5,7 +5,7 @@
     </properties>
     
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:translator-swagger}"/>
+        <artifact name="${org.teiid.connectors:translator-swagger}"/>
         <!-- Insert resources here -->
     </resources>
 

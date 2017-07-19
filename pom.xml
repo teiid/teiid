@@ -7,7 +7,7 @@
     </parent>  
     
     <modelVersion>4.0.0</modelVersion>
-	<groupId>org.jboss.teiid</groupId>
+	<groupId>org.teiid</groupId>
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
@@ -117,8 +117,8 @@
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
         <developerConnection>scm:git:git@github.com:teiid/teiid.git</developerConnection>
         <url>http://github.com/teiid/teiid</url>
-	<tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+    </scm>
 	<licenses>
 		<license>
             <name>Apache License, Version 2.0</name>
@@ -167,32 +167,64 @@
 			</roles>
 			<timezone>-6</timezone>
 		</developer>
-		<developer>
-			<name>Kylin Soong</name>
-			<id>kylinsoong</id>
-			<email>ksoong@redhat.com</email>
-			<organization>Red Hat</organization>
-			<roles>
-				<role>Developer</role>
-			</roles>
-			<timezone>+8</timezone>
-		</developer>
 	</developers>
+	<distributionManagement>
+		<repository>
+			<id>oss.sonatype.org</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+		<snapshotRepository>
+			<id>oss.sonatype.org</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>	
 	<profiles>
-    <profile>
-      <!-- 
-          This profile is activated manually, as in "mvn ... -P release ..."
-		  -->
-      <id>release</id>
-      <modules>
-        <module>build</module>        
-      </modules>
-      <build>
-        <plugins>
-       
-        </plugins>
-      </build>
-    </profile>
+	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
+	<profile>
+		<id>release</id>
+		<modules>
+			<module>build</module>
+		</modules>
+	</profile>
+	<profile>		
+		<id>final-release</id>
+		<modules>
+			<module>build</module>
+		</modules>
+		<build>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>${version.javadoc.plugin}</version>
+					<configuration>
+						<maxmemory>512m</maxmemory>
+						<!-- <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames> -->
+						<failOnError>false</failOnError>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<artifactId>maven-gpg-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>sign-artifacts</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>sign</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</build>
+	</profile>
         
     <profile>
       <id>docs</id>
@@ -217,160 +249,140 @@
 	</profiles>
 	<build>
 	<!-- This section defines the default plugin settings inherited by child projects. -->
-		<pluginManagement>
-			<plugins>
-		<!-- Fixes how test resources of a project can be used in projects dependent on it  -->
-				<plugin>
-		            <groupId>org.apache.maven.plugins</groupId>
-		            <artifactId>maven-javadoc-plugin</artifactId>
-		            <version>${version.javadoc.plugin}</version>
-		            <configuration>
-		              <maxmemory>512m</maxmemory>
-		              <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames>
-		              <failOnError>false</failOnError>
-		            </configuration>
-		            <executions>
-		              <execution>
-		                <goals>
-		                  <goal>aggregate-jar</goal>
-		                </goals>
-		              </execution>
-		            </executions>
-	          	</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<version>${version.jar.plugin}</version>
-				</plugin>
-				<plugin>
-				  <artifactId>maven-assembly-plugin</artifactId>
-				  <version>2.4</version>
-				</plugin>
-                <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-rar-plugin</artifactId>
-                <version>2.3</version>
-               </plugin>
-                <plugin>
-                    <groupId>org.wildfly.build</groupId>
-                    <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
-                    <version>${version.org.wildfly.build-tools}</version>
-                </plugin>                
-			</plugins>
-		</pluginManagement>
+	<pluginManagement>
 		<plugins>
-	  <!-- Specify the compiler options and settings -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${version.compiler.plugin}</version>
-				<configuration>
-					<source>${maven.compiler.source}</source>
-					<target>${maven.compiler.target}</target>
-					<showDeprecation>false</showDeprecation>
-					<showWarnings>false</showWarnings>
-				</configuration>
-			</plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-checkstyle-plugin</artifactId>
-                            <version>2.13</version>
-                            <executions>
-                                <execution>
-                                    <id>verify-style</id>
-                                    <phase>process-classes</phase>
-                                    <goals>
-                                        <goal>check</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                            <configuration>
-                                <logViolationsToConsole>true</logViolationsToConsole>
-                                <failOnViolation>false</failOnViolation>
-                                <checkstyleRules>
-                                    <module name="Checker">
-                                        <module name="FileTabCharacter" />
-                                    </module>
-                                </checkstyleRules>
-                            </configuration>
-                        </plugin>
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>${version.surefire.plugin}</version>
-				<configuration>
-				    <enableAssertions>true</enableAssertions>
-					<includes>
-						<include>**/*TestCase.java</include>
-						<include>**/*Test.java</include>
-						<include>**/Test*.java</include>
-					</includes>
-					<excludes>
-						<exclude>**/Abstract*TestCase.java</exclude>
-			<!-- hack to prevent anonymous inner classes in Tests from being run as tests -->
-						<include>**/Test*$*.java</include>
-					</excludes>
-					<systemPropertyVariables>
-						<user.dir>${basedir}/target</user.dir>
-						<java.io.tmpdir>${basedir}/target</java.io.tmpdir>
-					</systemPropertyVariables>
-				</configuration>
-			</plugin>
-      <!-- 
-      Build a test-jar for each project, so that src/test/* resources and classes can be used
-      in other projects.  Also customize how the jar files are assembled.
-      -->
+			<!-- Fixes how test resources of a project can be used in projects dependent on it -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>test-jar</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<archive>
-						<manifest>
-							<addDefaultSpecificationEntries> true</addDefaultSpecificationEntries>
-							<addDefaultImplementationEntries> true</addDefaultImplementationEntries>
-						</manifest>
-						<manifestEntries>
-							<Implementation-URL>${project.url}</Implementation-URL>
-						</manifestEntries>
-					</archive>
-				</configuration>
+				<version>${version.jar.plugin}</version>
 			</plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>${version.source.plugin}</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>maven-bundle-plugin</artifactId>
-                    <extensions>true</extensions>
-                </plugin>
-            <plugin>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-				    <!--
-				      During release:perform, enable the "release" profile
-				    -->
-			        <releaseProfiles>release</releaseProfiles>
-                    <goals>deploy</goals>
-                    <arguments>-Ddocker=true</arguments>
-                </configuration>
-            </plugin>             
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.4</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-rar-plugin</artifactId>
+				<version>2.3</version>
+			</plugin>
+			<plugin>
+				<groupId>org.wildfly.build</groupId>
+				<artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
+				<version>${version.org.wildfly.build-tools}</version>
+			</plugin>
 		</plugins>
+	</pluginManagement>
+	<plugins>
+		<!-- Specify the compiler options and settings -->
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<version>${version.compiler.plugin}</version>
+			<configuration>
+				<source>${maven.compiler.source}</source>
+				<target>${maven.compiler.target}</target>
+				<showDeprecation>false</showDeprecation>
+				<showWarnings>false</showWarnings>
+			</configuration>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-checkstyle-plugin</artifactId>
+			<version>2.13</version>
+			<executions>
+				<execution>
+					<id>verify-style</id>
+					<phase>process-classes</phase>
+					<goals>
+						<goal>check</goal>
+					</goals>
+				</execution>
+			</executions>
+			<configuration>
+				<logViolationsToConsole>true</logViolationsToConsole>
+				<failOnViolation>false</failOnViolation>
+				<checkstyleRules>
+					<module name="Checker">
+						<module name="FileTabCharacter" />
+					</module>
+				</checkstyleRules>
+			</configuration>
+		</plugin>
+		<plugin>
+			<artifactId>maven-surefire-plugin</artifactId>
+			<version>${version.surefire.plugin}</version>
+			<configuration>
+				<enableAssertions>true</enableAssertions>
+				<includes>
+					<include>**/*TestCase.java</include>
+					<include>**/*Test.java</include>
+					<include>**/Test*.java</include>
+				</includes>
+				<excludes>
+					<exclude>**/Abstract*TestCase.java</exclude>
+					<!-- hack to prevent anonymous inner classes in Tests from being run 
+						as tests -->
+					<include>**/Test*$*.java</include>
+				</excludes>
+				<systemPropertyVariables>
+					<user.dir>${basedir}/target</user.dir>
+					<java.io.tmpdir>${basedir}/target</java.io.tmpdir>
+				</systemPropertyVariables>
+			</configuration>
+		</plugin>
+		<!-- Build a test-jar for each project, so that src/test/* resources and 
+			classes can be used in other projects. Also customize how the jar files are 
+			assembled. -->
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-jar-plugin</artifactId>
+			<executions>
+				<execution>
+					<goals>
+						<goal>test-jar</goal>
+					</goals>
+				</execution>
+			</executions>
+			<configuration>
+				<archive>
+					<manifest>
+						<addDefaultSpecificationEntries> true</addDefaultSpecificationEntries>
+						<addDefaultImplementationEntries> true</addDefaultImplementationEntries>
+					</manifest>
+					<manifestEntries>
+						<Implementation-URL>${project.url}</Implementation-URL>
+					</manifestEntries>
+				</archive>
+			</configuration>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-source-plugin</artifactId>
+			<executions>
+				<execution>
+					<id>attach-sources</id>
+					<goals>
+						<goal>jar-no-fork</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>maven-bundle-plugin</artifactId>
+			<extensions>true</extensions>
+		</plugin>
+		<plugin>
+			<artifactId>maven-release-plugin</artifactId>
+			<configuration>
+				<!-- During release:perform, enable the "release" profile -->
+				<releaseProfiles>release</releaseProfiles>
+				<goals>deploy</goals>
+				<arguments>-Ddocker=true</arguments>
+			</configuration>
+		</plugin>
+	</plugins>
 	</build>
 	<dependencies>
 		<dependency>
@@ -408,258 +420,258 @@
       
           <!-- Internal dependencies -->
 			<dependency>
-			  <groupId>org.jboss.teiid.connectors</groupId>
+			  <groupId>org.teiid.connectors</groupId>
 			  <artifactId>translator-odata</artifactId>
 			  <version>${project.version}</version>
 			</dependency>
 			<dependency>
-              <groupId>org.jboss.teiid</groupId>
+              <groupId>org.teiid</groupId>
               <artifactId>teiid-olingo-common</artifactId>
               <version>${project.version}</version>
             </dependency>
            <dependency>
-                <groupId>org.jboss.teiid</groupId>
+                <groupId>org.teiid</groupId>
                 <artifactId>teiid-olingo-patches</artifactId>
                 <version>${project.version}</version>
            </dependency>                  
         	<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<groupId>org.teiid.connectors</groupId>
             	<artifactId>translator-loopback</artifactId>
             	<version>${project.version}</version>
         	</dependency>       
         	<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<groupId>org.teiid.connectors</groupId>
             	<artifactId>translator-solr</artifactId>
             	<version>${project.version}</version>
         	</dependency>         
         	<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<groupId>org.teiid.connectors</groupId>
             	<artifactId>translator-accumulo</artifactId>
             	<version>${project.version}</version>
         	</dependency>      
 			<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<groupId>org.teiid.connectors</groupId>
             	<artifactId>translator-cassandra</artifactId>
             	<version>${project.version}</version>
        		</dependency>      
         	<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<groupId>org.teiid.connectors</groupId>
             	<artifactId>translator-object</artifactId>
             	<version>${project.version}</version>
         	</dependency>      
        		<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<groupId>org.teiid.connectors</groupId>
             	<artifactId>translator-object</artifactId>
             	<version>${project.version}</version>
             	<type>test-jar</type>
         	</dependency>  
         	<dependency>
-          		<groupId>org.jboss.teiid.connectors</groupId>
+          		<groupId>org.teiid.connectors</groupId>
           		<artifactId>translator-ws</artifactId>
           		<version>${project.version}</version>
         	</dependency>    
        		<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<groupId>org.teiid.connectors</groupId>
             	<artifactId>translator-salesforce</artifactId>
             	<version>${project.version}</version>
         	</dependency>
             <dependency>
-                <groupId>org.jboss.teiid.connectors</groupId>
+                <groupId>org.teiid.connectors</groupId>
                 <artifactId>translator-salesforce-34</artifactId>
                 <version>${project.version}</version>
             </dependency>
 	        <dependency>
-	            <groupId>org.jboss.teiid.connectors</groupId>
+	            <groupId>org.teiid.connectors</groupId>
 	            <artifactId>connector-salesforce</artifactId>
 	            <version>${project.version}</version>
 	        </dependency>
             <dependency>
-                <groupId>org.jboss.teiid.connectors</groupId>
+                <groupId>org.teiid.connectors</groupId>
                 <artifactId>connector-salesforce-34</artifactId>
                 <version>${project.version}</version>
             </dependency>           	                	
       		<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<groupId>org.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>
 				<version>${project.version}</version>
 			</dependency>
       		<dependency>
-            	<groupId>org.jboss.teiid</groupId>
+            	<groupId>org.teiid</groupId>
            		<artifactId>teiid-hibernate-dialect</artifactId>
 				<version>${project.version}</version>
 			</dependency>        	      	   			        	      	   
             <dependency>
-      	    	<groupId>org.jboss.teiid.connectors</groupId>
+      	    	<groupId>org.teiid.connectors</groupId>
             	<artifactId>google-api</artifactId>
   	        	<version>${project.version}</version>
         	</dependency>
             <dependency>
-      	    	<groupId>org.jboss.teiid.connectors</groupId>
+      	    	<groupId>org.teiid.connectors</groupId>
             	<artifactId>mongodb-api</artifactId>
   	        	<version>${project.version}</version>
         	</dependency>
             <dependency>
-                <groupId>org.jboss.teiid.connectors</groupId>
+                <groupId>org.teiid.connectors</groupId>
                 <artifactId>couchbase-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-      	    	<groupId>org.jboss.teiid.connectors</groupId>
+      	    	<groupId>org.teiid.connectors</groupId>
             	<artifactId>simpledb-api</artifactId>
   	        	<version>${project.version}</version>
         	</dependency>         	       	
             <dependency>
-                <groupId>org.jboss.teiid.connectors</groupId>
+                <groupId>org.teiid.connectors</groupId>
                 <artifactId>document-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.jboss.teiid.connectors</groupId>
+                <groupId>org.teiid.connectors</groupId>
                 <artifactId>file-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
         	<dependency>
-           	 	<groupId>org.jboss.teiid.connectors</groupId>
+           	 	<groupId>org.teiid.connectors</groupId>
             	<artifactId>translator-jdbc</artifactId>    
             	<version>${project.version}</version>  
             	<type>test-jar</type>
         	</dependency>			
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-common-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-common-core</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-api</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-client</artifactId>
 				<version>${project.version}</version>
 			</dependency>
             <dependency>
-                <groupId>org.jboss.teiid</groupId>
+                <groupId>org.teiid</groupId>
                 <artifactId>teiid-admin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.jboss.teiid</groupId>
+                <groupId>org.teiid</groupId>
                 <artifactId>teiid-admin</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>                                                      
             <dependency>
-                <groupId>org.jboss.teiid</groupId>
+                <groupId>org.teiid</groupId>
                 <artifactId>teiid-jboss-admin</artifactId>
                 <version>${project.version}</version>
             </dependency>
 	        <dependency>
-	            <groupId>org.jboss.teiid</groupId>
+	            <groupId>org.teiid</groupId>
 	            <artifactId>teiid-jboss-security</artifactId>
 	            <version>${project.version}</version>
 	        </dependency>
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-adminshell</artifactId>
                 <version>${project.version}</version>
 			</dependency>                      
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-client</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-engine</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-                <groupId>org.jboss.teiid</groupId>
+                <groupId>org.teiid</groupId>
                 <artifactId>saxon-xom</artifactId>
                 <version>${project.version}</version>
             </dependency>
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-engine</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 	        <dependency>
-	            <groupId>org.jboss.teiid</groupId>
+	            <groupId>org.teiid</groupId>
 	            <artifactId>rest-service</artifactId>
 	            <version>${project.version}</version>
 	        </dependency>			
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-metadata</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-metadata</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.teiid</groupId>
+				<groupId>org.teiid</groupId>
 				<artifactId>teiid-txn-jbossts</artifactId>
 				<version>${project.version}</version>
 			</dependency>
             <dependency>
-                <groupId>org.jboss.teiid</groupId>
+                <groupId>org.teiid</groupId>
                 <artifactId>teiid-jboss-integration</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.jboss.teiid</groupId>
+                <groupId>org.teiid</groupId>
                 <artifactId>teiid-runtime</artifactId>
                 <version>${project.version}</version>
             </dependency>    
               <dependency>
-                <groupId>org.jboss.teiid</groupId>
+                <groupId>org.teiid</groupId>
                 <artifactId>teiid-runtime</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
 			<dependency>
-			  <groupId>org.jboss.teiid</groupId>
+			  <groupId>org.teiid</groupId>
 			  <artifactId>test-integration-common</artifactId>
 			  <version>${project.version}</version>
 			  <type>test-jar</type>
 			</dependency>
 			
 	       <dependency>
-               <groupId>org.jboss.teiid.connectors</groupId>
+               <groupId>org.teiid.connectors</groupId>
                <artifactId>translator-file</artifactId>
                <version>${project.version}</version>
            </dependency>
            <dependency>
-               <groupId>org.jboss.teiid.connectors</groupId>
+               <groupId>org.teiid.connectors</groupId>
                <artifactId>connector-file</artifactId>
                <version>${project.version}</version>
            </dependency>
            <dependency>
-               <groupId>org.jboss.teiid</groupId>
+               <groupId>org.teiid</groupId>
                <artifactId>teiid-data-quality</artifactId>
                <version>${project.version}</version>
            </dependency>
@@ -715,12 +727,12 @@
 				<groupId>ant-contrib</groupId>
 				<artifactId>cpptasks</artifactId>
 				<version>${version.ant-contrib}</version>
-				<exclusions>
-								<exclusion>
-									<groupId>ant</groupId>
-									<artifactId>ant</artifactId>
-								</exclusion>
-				</exclusions>
+					<exclusions>
+						<exclusion>
+							<groupId>ant</groupId>
+							<artifactId>ant</artifactId>
+						</exclusion>
+					</exclusions>
 			</dependency>					
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>

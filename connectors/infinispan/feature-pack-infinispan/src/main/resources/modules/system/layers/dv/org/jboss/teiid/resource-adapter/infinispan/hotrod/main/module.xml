@@ -4,7 +4,7 @@
     </properties>
     
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:connector-infinispan-hotrod}" />
+        <artifact name="${org.teiid.connectors:connector-infinispan-hotrod}" />
         <resource-root path="."/>
 
         <!-- Insert resources here -->

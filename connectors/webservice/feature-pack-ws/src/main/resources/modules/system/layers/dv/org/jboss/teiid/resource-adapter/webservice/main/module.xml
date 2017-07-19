@@ -6,7 +6,7 @@
     <main-class name="org.teiid.oauth.OAuthUtil"/>
     
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:connector-ws}"/>
+        <artifact name="${org.teiid.connectors:connector-ws}"/>
         <resource-root path="." />
         <!-- Insert resources here -->
     </resources>

@@ -2,22 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>swagger</artifactId>
-		<groupId>org.jboss.teiid.connectors</groupId>
+		<groupId>org.teiid.connectors</groupId>
 		<version>10.0.0.Alpha2-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>translator-swagger</artifactId>
-	<groupId>org.jboss.teiid.connectors</groupId>
+	<groupId>org.teiid.connectors</groupId>
 	<name>Swagger Translator</name>
 	<description>This translator provides access Swagger based data sources.</description>
 	<packaging>bundle</packaging>
 	<dependencies>
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>teiid-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
 		</dependency>
 		<dependency>
@@ -29,7 +29,7 @@
 			<artifactId>jboss-connector-api_1.7_spec</artifactId>
 		</dependency>
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>document-api</artifactId>
         </dependency> 		
 		<dependency>
@@ -41,7 +41,7 @@
 			<artifactId>swagger-parser</artifactId>
 		</dependency>
         <dependency>
-          <groupId>org.jboss.teiid.connectors</groupId>
+          <groupId>org.teiid.connectors</groupId>
           <artifactId>translator-ws</artifactId>
         </dependency>
         <dependency>

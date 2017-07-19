@@ -8,7 +8,7 @@
 
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
-		<groupId>org.jboss.teiid</groupId>
+		<groupId>org.teiid</groupId>
         <version>10.0.0.Alpha2-SNAPSHOT</version>
 	</parent>
 
@@ -16,7 +16,7 @@
 	<artifactId>test-integration-db</artifactId>
 
 	<name>DB Dependent Integration Tests</name>
- 	<groupId>org.jboss.teiid.teiid-test-integration</groupId>
+ 	<groupId>org.teiid.teiid-test-integration</groupId>
 	<description>Integration tests that require external database dependencies </description>
 	<dependencies>
 
@@ -33,24 +33,24 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-client</artifactId>
         </dependency>
 			
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>teiid-client</artifactId>
 			<type>test-jar</type>
 			<scope>compile</scope>
 		</dependency>
 
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
         </dependency>
 
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
 			<type>test-jar</type>
 			<scope>compile</scope>
@@ -63,14 +63,14 @@
         </dependency>
             
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>teiid-engine</artifactId>
 			<type>test-jar</type>
 			<scope>compile</scope>
 		</dependency> 
 		
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>test-integration-common</artifactId>
 			<type>test-jar</type>
 			<scope>compile</scope>
