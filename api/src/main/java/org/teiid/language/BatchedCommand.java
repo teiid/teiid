@@ -21,6 +21,10 @@ package org.teiid.language;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * @see BulkCommand
+ */
+@Deprecated
 public interface BatchedCommand extends Command {
 	
 	Iterator<? extends List<?>> getParameterValues();

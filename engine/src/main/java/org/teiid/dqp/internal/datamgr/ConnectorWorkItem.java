@@ -58,8 +58,8 @@ import org.teiid.dqp.internal.process.SaveOnReadInputStream;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
-import org.teiid.language.BatchedCommand;
 import org.teiid.language.BatchedUpdates;
+import org.teiid.language.BulkCommand;
 import org.teiid.language.Call;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
@@ -379,7 +379,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 			this.execution = Assertion.isInstanceOf(exec, ResultSetExecution.class, "QueryExpression Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
 		} else {
 			final boolean singleUpdateCount = connector.returnsSingleUpdateCount() 
-					&& (translatedCommand instanceof BatchedUpdates || (translatedCommand instanceof BatchedCommand && ((BatchedCommand)translatedCommand).getParameterValues() != null));
+					&& (translatedCommand instanceof BatchedUpdates || (translatedCommand instanceof BulkCommand && ((BulkCommand)translatedCommand).getParameterValues() != null));
 			
 			Assertion.isInstanceOf(exec, UpdateExecution.class, "Update Executions are expected to be UpdateExecutions"); //$NON-NLS-1$
 			this.execution = new ResultSetExecution() {

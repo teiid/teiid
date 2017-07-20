@@ -30,8 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.GeneratedKeys;
-import org.teiid.language.BatchedCommand;
 import org.teiid.language.BatchedUpdates;
+import org.teiid.language.BulkCommand;
 import org.teiid.language.Command;
 import org.teiid.language.Insert;
 import org.teiid.language.NamedTable;
@@ -250,8 +250,8 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             	}
             	statement = pstatement;
             	Iterator<? extends List<?>> vi = null;
-            	if (command instanceof BatchedCommand) {
-            		BatchedCommand batchCommand = (BatchedCommand)command;
+            	if (command instanceof BulkCommand) {
+            	    BulkCommand batchCommand = (BulkCommand)command;
             		vi = batchCommand.getParameterValues();
             	}
             	

@@ -926,7 +926,7 @@ public class LanguageBridgeFactory {
         return result;
     }
     
-    private void setBatchValues(BatchedCommand bc) {
+    private void setBatchValues(BulkCommand bc) {
     	if (valueIndex == 0) {
     		return;
     	}

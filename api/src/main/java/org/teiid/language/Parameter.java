@@ -45,7 +45,7 @@ public class Parameter extends BaseLanguageObject implements Expression {
 	}
 
 	/**
-	 * 0-based index of the parameter values in the {@link BatchedCommand#getParameterValues()} row value
+	 * 0-based index of the parameter values in the {@link BulkCommand#getParameterValues()} row value
 	 * @return
 	 */
 	public int getValueIndex() {

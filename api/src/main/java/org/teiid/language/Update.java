@@ -26,7 +26,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 /**
  * Represents an UPDATE command in the language objects.
  */
-public class Update extends BaseLanguageObject implements BatchedCommand {
+public class Update extends BaseLanguageObject implements BulkCommand {
     
     private NamedTable table;
 	private List<SetClause> changes;
