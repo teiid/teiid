@@ -175,7 +175,7 @@ public class ForEachRowPlan extends ProcessorPlan {
     		this.planContext = tc;
     	}
     	if (queryPlan != null) {
-    		queryProcessor = new QueryProcessor(queryPlan, getContext(), this.bufferMgr, this.dataMgr);
+    		queryProcessor = new QueryProcessor(queryPlan, getContext().clone(), this.bufferMgr, this.dataMgr);
     		tupleSource = new BatchCollector.BatchProducerTupleSource(queryProcessor);
     	}
 	}
