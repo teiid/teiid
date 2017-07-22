@@ -120,12 +120,12 @@ public class RelationalPlan extends ProcessorPlan {
 				if (withCommand.isRecursive()) {
 					SetQuery setQuery = (SetQuery)withCommand.getCommand();
 					ProcessorPlan initial = setQuery.getLeftQuery().getProcessorPlan();
-					QueryProcessor withProcessor = new QueryProcessor(initial, getContext(), root.getBufferManager(), root.getDataManager());
+					QueryProcessor withProcessor = new QueryProcessor(initial, getContext().clone(), root.getBufferManager(), root.getDataManager());
 					processors.put(withCommand.getGroupSymbol().getName(), new RecursiveTableProcessor(withProcessor, withCommand.getColumns(), setQuery.getRightQuery().getProcessorPlan(), setQuery.isAll()));
 					continue;
 				}
 				ProcessorPlan plan = withCommand.getCommand().getProcessorPlan();
-				QueryProcessor withProcessor = new QueryProcessor(plan, getContext(), root.getBufferManager(), root.getDataManager()); 
+				QueryProcessor withProcessor = new QueryProcessor(plan, getContext().clone(), root.getBufferManager(), root.getDataManager()); 
 				processors.put(withCommand.getGroupSymbol().getName(), new TableProcessor(withProcessor, withCommand.getColumns()));
 			}
     	}
