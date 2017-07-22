@@ -85,7 +85,8 @@ public class QueryProcessor implements BatchProducer {
     /**
      * Construct a processor with all necessary information to process.
      * @param plan The plan to process
-     * @param context The context that this plan is being processed in
+     * @param context The context that this plan is being processed in.  
+     * <b>Should be cloned from the parent to properly scope the tuplebuffer cache</b>
      * @param bufferMgr The buffer manager that provides access to tuple sources
      * @param dataMgr The data manager that provides access to get data
      * @throws TeiidComponentException 

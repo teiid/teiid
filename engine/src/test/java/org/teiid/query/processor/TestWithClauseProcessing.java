@@ -14,6 +14,8 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -1180,6 +1182,27 @@ public class TestWithClauseProcessing {
         hdm.addData("SELECT g_0.e2 FROM g1 AS g_0", Arrays.asList(1), Arrays.asList(2));
         
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(2, 2), Arrays.asList(2, 2)});
+    }
+    
+    @Test public void testTupleBufferCacheAndWithClause() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table test_a (a integer, b integer);", "x", "test");
+        
+        String sql = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("cte-query.sql"));
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        
+        FakeDataManager fdm = new FakeDataManager();
+        fdm.registerTuples(metadata, "test_a", new List<?>[] {
+                Arrays.asList(1, 1),
+                Arrays.asList(3, 10),});
+        
+        
+       TestProcessor.helpProcess(plan, fdm, new List<?>[] {Arrays.asList(3, 3)});
     }
 
 }
