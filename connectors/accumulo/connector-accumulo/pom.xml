@@ -2,7 +2,7 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>accumulo</artifactId>
-		<version>10.0.0.Alpha2</version>
+		<version>10.0.0.Alpha3-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.teiid.connectors</groupId>
