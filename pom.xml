@@ -168,16 +168,6 @@
 			<timezone>-6</timezone>
 		</developer>
 	</developers>
-	<distributionManagement>
-		<repository>
-			<id>oss.sonatype.org</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-		<snapshotRepository>
-			<id>oss.sonatype.org</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>	
 	<profiles>
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
 	<profile>
@@ -191,6 +181,16 @@
 		<modules>
 			<module>build</module>
 		</modules>
+		<distributionManagement>
+			<repository>
+				<id>oss.sonatype.org</id>
+				<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+			</repository>
+			<snapshotRepository>
+				<id>oss.sonatype.org</id>
+				<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			</snapshotRepository>
+		</distributionManagement>			
 		<build>
 			<plugins>
 				<plugin>
@@ -377,7 +377,7 @@
 			<artifactId>maven-release-plugin</artifactId>
 			<configuration>
 				<!-- During release:perform, enable the "release" profile -->
-				<releaseProfiles>release</releaseProfiles>
+				<releaseProfiles>final-release</releaseProfiles>
 				<goals>deploy</goals>
 				<arguments>-Ddocker=true</arguments>
 			</configuration>
