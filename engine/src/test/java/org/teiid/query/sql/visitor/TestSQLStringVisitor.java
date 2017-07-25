@@ -1784,6 +1784,13 @@ public class TestSQLStringVisitor {
                 new Constant(false) ); //$NON-NLS-1$
         
         helpTest(cc1, "(m.g.c1 = 'abc') = FALSE"); //$NON-NLS-1$
+        
+        cc1.setLeftExpression(new CompoundCriteria(Arrays.asList(cc, new CompareCriteria(
+                new ElementSymbol("m.g.c2"), //$NON-NLS-1$
+                CompareCriteria.GT,
+                new Constant(1)))));
+        
+        helpTest(cc1, "((m.g.c1 = 'abc') AND (m.g.c2 > 1)) = FALSE"); //$NON-NLS-1$
     }
     
 }
