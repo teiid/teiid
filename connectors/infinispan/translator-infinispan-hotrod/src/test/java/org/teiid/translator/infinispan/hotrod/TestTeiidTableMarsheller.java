@@ -46,6 +46,7 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.infinispan.api.InfinispanDocument;
 import org.teiid.infinispan.api.TableWireFormat;
+import org.teiid.infinispan.api.TeiidTableMarsheller;
 import org.teiid.language.Select;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;

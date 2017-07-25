@@ -17,6 +17,7 @@
  */
 package org.teiid.infinispan.api;
 
+import java.io.Serializable;
 import java.util.TreeMap;
 
 import org.infinispan.protostream.descriptors.Type;
@@ -24,8 +25,9 @@ import org.infinispan.protostream.impl.WireFormat;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.metadata.Column;
 
-public class TableWireFormat {
-    private int readTag;
+public class TableWireFormat implements Serializable{
+	private static final long serialVersionUID = -9204011747402762948L;
+	private int readTag;
     private int writeTag;
     private Type type;
     private Column column;

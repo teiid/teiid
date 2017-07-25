@@ -18,8 +18,10 @@
 package org.teiid.infinispan.api;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.translator.document.Document;
@@ -28,8 +30,17 @@ public class InfinispanDocument extends Document {
     private TreeMap<Integer, TableWireFormat> wireMap;
     private boolean matched = true;
     private Map<String, Stats> statsMap = new HashMap<>();
+    private Object identifier;
+    
+    public Object getIdentifier() {
+		return identifier;
+	}
 
-    static class Stats {
+	public void setIdentifier(Object identifier) {
+		this.identifier = identifier;
+	}
+
+	static class Stats {
         AtomicInteger matched = new AtomicInteger(0);
         AtomicInteger unmatched = new AtomicInteger(0);
     }
@@ -86,4 +97,39 @@ public class InfinispanDocument extends Document {
             return s.unmatched.get();
         }
     }
+    
+    public int merge(InfinispanDocument updates) {
+        int updated = 1;
+        for (Entry<String, Object> entry:updates.getProperties().entrySet()) {
+            addProperty(entry.getKey(), entry.getValue());
+        }
+
+        // update children if any
+        for (Entry<String, List<Document>> entry:updates.getChildren().entrySet()) {
+            String childName = entry.getKey();
+
+            List<? extends Document> childUpdates = updates.getChildDocuments(childName);
+            InfinispanDocument childUpdate = (InfinispanDocument)childUpdates.get(0);
+            if (childUpdate.getProperties().isEmpty()) {
+                continue;
+            }
+
+            List<? extends Document> previousChildren = getChildDocuments(childName);
+            if (previousChildren == null || previousChildren.isEmpty()) {
+                addChildDocument(childName, childUpdate);
+            } else {
+                for (Document doc : previousChildren) {
+                    InfinispanDocument previousChild = (InfinispanDocument)doc;
+                    if (previousChild.isMatched()) {
+                        for (Entry<String, Object> childEntry:childUpdate.getProperties().entrySet()) {
+                            String key = childEntry.getKey().substring(childEntry.getKey().lastIndexOf('/')+1);
+                            previousChild.addProperty(key, childEntry.getValue());
+                            updated++;
+                        }
+                    }
+                }
+            }
+        }
+        return updated;
+    }    
 }

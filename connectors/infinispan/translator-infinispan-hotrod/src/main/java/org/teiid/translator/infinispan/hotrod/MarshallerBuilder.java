@@ -19,7 +19,9 @@ package org.teiid.translator.infinispan.hotrod;
 
 import java.util.TreeMap;
 
+import org.teiid.infinispan.api.DocumentFilter;
 import org.teiid.infinispan.api.TableWireFormat;
+import org.teiid.infinispan.api.TeiidTableMarsheller;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;

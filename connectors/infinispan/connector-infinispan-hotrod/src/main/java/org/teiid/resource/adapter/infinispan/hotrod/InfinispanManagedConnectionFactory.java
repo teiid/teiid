@@ -29,6 +29,7 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
+import org.infinispan.commons.marshall.jboss.GenericJBossMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
@@ -84,11 +85,17 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     class InfinispanConnectionFactory extends BasicConnectionFactory<InfinispanConnectionImpl> {
         private static final long serialVersionUID = 1064143496037686580L;
         private RemoteCacheManager cacheManager;
+        private RemoteCacheManager scriptCacheManager;
         private HashSet<String> registeredProtoFiles = new HashSet<>();
         private SerializationContext ctx;
 
         public InfinispanConnectionFactory() throws ResourceException {
-            try {
+            buildCacheManager();
+            buildScriptCacheManager();
+        }
+
+		private void buildCacheManager() throws ResourceException {
+			try {
                 ConfigurationBuilder builder = new ConfigurationBuilder();
                 builder.addServers(remoteServerList);
                 builder.marshaller(new ProtoStreamMarshaller());
@@ -110,7 +117,23 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
             } catch (Throwable e) {
                 throw new ResourceException(e);
             }
-        }
+		}
+		
+		private void buildScriptCacheManager() throws ResourceException {
+			try {
+                ConfigurationBuilder builder = new ConfigurationBuilder();
+                builder.addServers(remoteServerList);
+                builder.marshaller(new GenericJBossMarshaller());
+                handleSecurity(builder);
+
+                // note this object is expensive, so there needs to only one
+                // instance for the JVM, in this case one per RA instance.
+                this.scriptCacheManager = new RemoteCacheManager(builder.build());
+                this.scriptCacheManager.start();
+            } catch (Throwable e) {
+                throw new ResourceException(e);
+            }
+		}		
 
         public void handleSecurity(ConfigurationBuilder builder) throws ResourceException {
             if (saslMechanism != null && supportedSasl(saslMechanism)) {                    
@@ -193,7 +216,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
         @Override
         public InfinispanConnectionImpl getConnection() throws ResourceException {
-            return new InfinispanConnectionImpl(this.cacheManager, cacheName,this.ctx, this);
+            return new InfinispanConnectionImpl(this.cacheManager, this.scriptCacheManager, cacheName,this.ctx, this);
         }
     }
 
