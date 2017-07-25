@@ -19,14 +19,23 @@ package org.teiid.translator.infinispan.hotrod;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.teiid.infinispan.api.InfinispanDocument;
 import org.teiid.infinispan.api.TableWireFormat;
-import org.teiid.language.*;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Condition;
+import org.teiid.language.Delete;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.Literal;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.Update;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
@@ -75,42 +84,71 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
                     InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25013, getParentTable().getName())));
             return;
         }
+        
+        if (obj.getParameterValues() == null) {
+        	List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
+        	this.insertPayload = buildInsertPayload(obj, values);
+        	if (this.insertPayload != null) {
+        		this.identity = this.insertPayload.getIdentifier();
+        	}
+        }
+    }
 
-        // table that insert issued for
-        Table table = obj.getTable().getMetadataObject();
-        try {
-            // create the top table parent document, where insert is actually being done at
-            InfinispanDocument targetDocument = buildTargetDocument(table, true);
-
+    Map<Object, InfinispanDocument> getBulkInsertPayload(Insert obj, int batchSize, Iterator<? extends List<Expression>> iter){
+    	Map<Object, InfinispanDocument> updates = new TreeMap<>();
+    	int count = 0;
+    	while (iter.hasNext()) {
+    		InfinispanDocument doc = buildInsertPayload(obj, iter.next());
+    		updates.put(doc.getIdentifier(), doc);
+    		if (count++ == batchSize) {
+    			break;
+    		}
+    	}
+    	return updates;
+    }
+    
+	private InfinispanDocument buildInsertPayload(Insert obj, List<Expression> values) {
+        InfinispanDocument targetDocument = null;
+		try {
+	        // table that insert issued for
+	        Table table = obj.getTable().getMetadataObject();
+	        Column pkColumn = getPrimaryKey();
+	        
+	        // create the top table parent document, where insert is actually being done at
+			targetDocument = buildTargetDocument(table, true);
+			
             // build the payload object from insert
             int elementCount = obj.getColumns().size();
-            for (int i = 0; i < elementCount; i++) {
+        	
+        	for (int i = 0; i < elementCount; i++) {
                 ColumnReference columnReference = obj.getColumns().get(i);
                 Column column = columnReference.getMetadataObject();
-                this.projectedExpressions.add(columnReference);
-
-                List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
-                Expression expr = values.get(i);
-                Object value = resolveExpressionValue(expr);
-
+                
+                Object value = null;
+                if (values.get(i) instanceof Expression) {
+	                Expression expr = values.get(i);
+	                value = resolveExpressionValue(expr);
+                } else {
+                	value = values.get(i);
+                }
                 updateDocument(targetDocument, column, value);
 
                 if (column.equals(pkColumn) || pkColumn.equals(normalizePseudoColumn(column))) {
-                    this.identity = value;
+                    targetDocument.setIdentifier(value);
                 }
             }
-            this.insertPayload = targetDocument;
+            if (targetDocument.getIdentifier() == null) {
+                this.exceptions.add(new TranslatorException(
+                        InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, getParentTable().getName())));
+            }	            
         } catch (NumberFormatException e) {
             this.exceptions.add(new TranslatorException(e));
         } catch (TranslatorException e) {
             this.exceptions.add(new TranslatorException(e));
         }
-
-        if (this.identity == null) {
-            this.exceptions.add(new TranslatorException(
-                    InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, getParentTable().getName())));
-        }
-    }
+		return targetDocument;
+	}
+    
 
     @SuppressWarnings("unchecked")
     private void updateDocument(InfinispanDocument parentDocument, Column column, Object value)
@@ -278,18 +316,6 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
             append(obj.getWhere());
             this.whereClause = obj.getWhere();
         }
-    }
-
-    public List<String> getProjectedColumnNames() {
-        ArrayList<String> names = new ArrayList<>();
-        for (Expression expr: this.projectedExpressions) {
-            if (expr instanceof ColumnReference) {
-                names.add(((ColumnReference)expr).getMetadataObject().getName());
-            } else if (expr instanceof Function) {
-                names.add(((Function)expr).getName());
-            }
-        }
-        return names;
     }
 
     public String getUpdateQuery() {

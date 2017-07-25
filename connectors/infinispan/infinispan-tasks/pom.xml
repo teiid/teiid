@@ -4,45 +4,21 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>infinispan</artifactId>
-		<version>10.0.0.Alpha3-SNAPSHOT</version>
+		<version>10.0.0.Alpha2-SNAPSHOT</version>
 	</parent>
-	<artifactId>infinispan-api</artifactId>
-	<name>Infinispan API</name>
-	<description>This defines the common API for Infinispan</description>
+	<artifactId>infinispan-tasks</artifactId>
+	<name>Infinispan Server Tasks</name>
+	<description>This defines Server Side tasks for Infinispan</description>
 	<packaging>bundle</packaging>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.teiid</groupId>
-			<artifactId>teiid-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.teiid</groupId>
-			<artifactId>teiid-common-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.teiid.connectors</groupId>
-			<artifactId>document-api</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
 			<artifactId>infinispan-commons</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
-			<artifactId>infinispan-client-hotrod</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.infinispan</groupId>
-			<artifactId>infinispan-remote-query-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.infinispan</groupId>
 			<artifactId>infinispan-tasks-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.squareup</groupId>
-			<artifactId>protoparser</artifactId>
 		</dependency>
 	</dependencies>
 

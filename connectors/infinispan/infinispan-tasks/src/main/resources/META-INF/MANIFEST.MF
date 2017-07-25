@@ -1,0 +1,1 @@
+Dependencies: javax.api,org.infinispan.commons,org.infinispan.client.hotrod,org.infinispan.tasks.api

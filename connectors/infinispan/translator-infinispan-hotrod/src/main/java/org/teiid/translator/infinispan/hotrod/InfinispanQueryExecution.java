@@ -23,7 +23,10 @@ import java.util.List;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.commons.api.BasicCache;
+import org.teiid.infinispan.api.DocumentFilter;
 import org.teiid.infinispan.api.InfinispanConnection;
+import org.teiid.infinispan.api.TeiidTableMarsheller;
+import org.teiid.infinispan.api.DocumentFilter.Action;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -40,7 +43,6 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.hotrod.DocumentFilter.Action;
 
 public class InfinispanQueryExecution implements ResultSetExecution {
 
