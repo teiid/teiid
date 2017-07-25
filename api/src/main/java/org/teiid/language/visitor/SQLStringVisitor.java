@@ -164,7 +164,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Comparison obj) {
-        if (obj.getLeftExpression() instanceof Comparison) {
+        if (obj.getLeftExpression() instanceof Condition) {
             buffer.append(Tokens.LPAREN);
             append(obj.getLeftExpression());
             buffer.append(Tokens.RPAREN);
@@ -174,7 +174,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         buffer.append(Tokens.SPACE);
         buffer.append(obj.getOperator());
         buffer.append(Tokens.SPACE);
-        if (obj.getRightExpression() instanceof Comparison) {
+        if (obj.getRightExpression() instanceof Condition) {
             buffer.append(Tokens.LPAREN);
             appendRightComparison(obj);
             buffer.append(Tokens.RPAREN);
