@@ -649,6 +649,10 @@ public class TestPostgreSQLTranslator {
         helpTestVisitor(TranslationHelper.BQT_VDB,
                 "SELECT intkey from bqt1.smalla where (intkey < 10) = true", //$NON-NLS-1$
                 "SELECT SmallA.IntKey FROM SmallA WHERE (SmallA.IntKey < 10) = TRUE"); //$NON-NLS-1$
+        
+        helpTestVisitor(TranslationHelper.BQT_VDB,
+                "select SmallA.StringKey from BQT1.SmallA where ((BooleanValue=true) and (IntKey=1)) = true", //$NON-NLS-1$
+                "SELECT SmallA.StringKey FROM SmallA WHERE (SmallA.BooleanValue = TRUE AND SmallA.IntKey = 1) = TRUE"); //$NON-NLS-1$
     }
     
 }
