@@ -15,7 +15,7 @@
         <useAllReactorProjects>true</useAllReactorProjects>
                
         <includes>
-            <include>org.jboss.teiid:teiid-adminshell</include>
+            <include>org.teiid:teiid-adminshell</include>
         </includes>
                         
         <binaries>        
