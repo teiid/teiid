@@ -63,7 +63,7 @@
         <version.org.apache.olingo>4.2.0-teiid-8</version.org.apache.olingo>
         <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
         <version.commons-codec>1.9</version.commons-codec>
-        <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
+        <version.com.fasterxml.jackson.core>2.5.4</version.com.fasterxml.jackson.core>
 	    <version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
 	    <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
         <!-- <version.org.reflections>0.9.9</version.org.reflections>  -->
@@ -92,8 +92,8 @@
         <version.olap4j>1.1.0</version.olap4j>
         <version.accumulo>1.6.4</version.accumulo>
         <version.hadoop-core>0.20.2</version.hadoop-core>
-        <version.thrift>0.9.1</version.thrift>
-        <version.zookeeper>3.4.5</version.zookeeper>
+        <version.thrift>0.9.3</version.thrift>
+        <version.zookeeper>3.4.10</version.zookeeper>
         <version.solr>4.6.0</version.solr>
         <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>       
   	    
