@@ -58,8 +58,8 @@
         <version.gdata-core>1.47.1</version.gdata-core>
         <version.olap4j>1.1.0</version.olap4j>
         <version.hadoop-common>2.2.0</version.hadoop-common>
-        <version.thrift>0.9.1</version.thrift>
-        <version.zookeeper>3.4.6</version.zookeeper>
+        <version.thrift>0.9.3</version.thrift>
+        <version.zookeeper>3.4.10</version.zookeeper>
         <version.accumulo>1.7.3</version.accumulo>
         <version.solr>6.4.1</version.solr>
         <version.noggit>0.6</version.noggit>
