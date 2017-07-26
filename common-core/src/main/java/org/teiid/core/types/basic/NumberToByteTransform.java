@@ -19,20 +19,12 @@
 package org.teiid.core.types.basic;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
-public class NumberToByteTransform extends Transform {
-	
-	private Class<?> sourceType;
+public class NumberToByteTransform extends NumberToNumberTransform {
 	
 	public NumberToByteTransform(Class<?> sourceType) {
-		this.sourceType = sourceType;
-	}
-	
-	@Override
-	public Class<?> getSourceType() {
-		return sourceType;
+	    super(Byte.MIN_VALUE, Byte.MAX_VALUE, sourceType);
 	}
 
 	/**
@@ -44,7 +36,7 @@ public class NumberToByteTransform extends Transform {
 	 * the transformation fails
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
-		checkValueRange(value, Byte.MIN_VALUE, Byte.MAX_VALUE);
+		checkValueRange(value);
 		return Byte.valueOf(((Number)value).byteValue());
 	}
 

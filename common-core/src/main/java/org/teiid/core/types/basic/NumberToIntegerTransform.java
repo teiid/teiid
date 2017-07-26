@@ -19,24 +19,17 @@
 package org.teiid.core.types.basic;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
-public class NumberToIntegerTransform extends Transform {
+public class NumberToIntegerTransform extends NumberToNumberTransform {
 	
-	private Class<?> sourceType;
 	private boolean isNarrowing;
 	
 	public NumberToIntegerTransform(Class<?> sourceType, boolean isNarrowing) {
-		this.sourceType = sourceType;
+		super(Integer.MIN_VALUE, Integer.MAX_VALUE, sourceType);
 		this.isNarrowing = isNarrowing;
 	}
 	
-	@Override
-	public Class<?> getSourceType() {
-		return sourceType;
-	}
-
 	/**
 	 * This method transforms a value of the source type into a value
 	 * of the target type.
@@ -47,7 +40,7 @@ public class NumberToIntegerTransform extends Transform {
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
 		if (isNarrowing) {
-			checkValueRange(value, Integer.MIN_VALUE, Integer.MAX_VALUE);
+			checkValueRange(value);
 		}
 		return Integer.valueOf(((Number)value).intValue());
 	}
