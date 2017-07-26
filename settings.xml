@@ -58,12 +58,12 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
       </repositories> 
     </profile>    
     <profile>
-      <id>jboss-techpreview</id>
+      <id>jdv-lastest</id>
       <repositories>
         <repository>
           <id>jboss-techpreview</id>
           <name>JBoss Tech Preview</name>
-          <url>https://maven.repository.redhat.com/techpreview/all/</url>
+          <url>http://download.eng.bos.redhat.com/brewroot/repos/jb-dv-6.4-build/latest/maven/</url>
           <layout>default</layout>
           <releases>
             <enabled>true</enabled>
@@ -115,9 +115,9 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
   
 
   <activeProfiles>
+    <activeProfile>jdv-lastest</activeProfile>
     <activeProfile>jboss-public-repository</activeProfile>
     <activeProfile>jboss-developer-repository</activeProfile>
-    <activeProfile>jboss-techpreview</activeProfile>
     <activeProfile>jboss-earlyaccess</activeProfile>
     <activeProfile>thirdparty-uploads</activeProfile>
   </activeProfiles>
