@@ -32,17 +32,8 @@ public class OperationResponseImpl implements OperationResponse {
     }
     
     @Override
-    public void addRow(ResultSet rs, boolean sameEntity) throws SQLException {
+    public void addRow(ResultSet rs) throws SQLException {
         this.complexValues.add(getComplexProperty(rs));
-    }
-    
-    @Override
-    public boolean isSameEntity(ResultSet rs) throws SQLException {
-        return false;
-    }
-    
-    @Override
-    public void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException {
     }
     
     private ComplexValue getComplexProperty(ResultSet rs) throws SQLException {
@@ -58,7 +49,7 @@ public class OperationResponseImpl implements OperationResponse {
             Property property;
             try {
                 property = EntityCollectionResponse.buildPropery(propName,
-                        (SingletonPrimitiveType) edmProperty.getType(), edmProperty.isCollection(), value);
+                        (SingletonPrimitiveType) edmProperty.getType(), edmProperty.getPrecision(), edmProperty.getScale(), edmProperty.isCollection(), value);
                 properties.put(i, property);
             } catch (IOException e) {
                 throw new SQLException(e);
@@ -116,9 +107,9 @@ public class OperationResponseImpl implements OperationResponse {
     public void setReturnValue(Object returnValue) throws SQLException {
         try {
 			EdmReturnType returnType = this.procedureReturn.getReturnType();
-            this.returnValue = EntityCollectionResponse
-                    .buildPropery("return", (SingletonPrimitiveType) returnType.getType(), 
-                            returnType.isCollection(), returnValue); //$NON-NLS-1$
+            this.returnValue = EntityCollectionResponse.buildPropery("return", //$NON-NLS-1$
+                    (SingletonPrimitiveType) returnType.getType(), returnType.getPrecision(), returnType.getScale(),
+                    returnType.isCollection(), returnValue); 
 		} catch (TeiidProcessingException e) {
 			throw new SQLException(e);
 		} catch (IOException e) {

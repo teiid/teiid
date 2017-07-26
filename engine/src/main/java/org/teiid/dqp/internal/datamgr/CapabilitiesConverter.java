@@ -117,6 +117,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.FULL_DEPENDENT_JOIN, srcCaps.supportsFullDependentJoins());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, srcCaps.supportsSubqueryInOn());
         tgtCaps.setCapabilitySupport(Capability.ARRAY_TYPE, srcCaps.supportsArrayType());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION_ARRAY_TYPE, srcCaps.supportsSelectExpressionArrayType());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, srcCaps.supportsOnlyCorrelatedSubqueries());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, srcCaps.supportsStringAgg());
         tgtCaps.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, srcCaps.supportsSelectWithoutFrom());

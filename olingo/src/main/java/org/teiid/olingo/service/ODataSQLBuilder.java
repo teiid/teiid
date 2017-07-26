@@ -28,9 +28,9 @@ import java.net.URISyntaxException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.Property;
@@ -51,6 +51,7 @@ import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 import org.apache.olingo.server.core.uri.UriResourceEntitySetImpl;
 import org.apache.olingo.server.core.uri.parser.Parser;
 import org.apache.olingo.server.core.uri.parser.UriParserException;
+import org.apache.olingo.server.core.uri.queryoption.ExpandOptionImpl;
 import org.apache.olingo.server.core.uri.validator.UriValidationException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -71,18 +72,25 @@ import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
+import org.teiid.olingo.service.TeiidServiceHandler.ExpandNode;
 import org.teiid.olingo.service.TeiidServiceHandler.OperationParameterValueProvider;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.ScalarSubquery;
 
 public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
+	
+	final static int MAX_EXPAND_LEVEL = 3;
+	
     private final MetadataStore metadata;
     private boolean prepared = true;
     private final ArrayList<SQLParameter> params = new ArrayList<SQLParameter>();
@@ -169,11 +177,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     public Query selectQuery() throws TeiidException {
         
-        if (this.expandOption != null) {
-            processExpandOption(this.expandOption);
-        }
-        
-        if (!this.exceptions.isEmpty()) {
+    	if (!this.exceptions.isEmpty()) {
             throw this.exceptions.get(0);
         }
 
@@ -182,85 +186,188 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             AggregateSymbol aggregateSymbol = new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null);
             Select select = new Select(Arrays.asList(aggregateSymbol));
             query.setSelect(select);
+        } else if (this.orderBy != null) {
+        	if (this.context.getIterator() != null) {
+        		//currently this doesn't matter as the ordering can only be based upon the parent entity
+        		((AggregateSymbol)((AliasSymbol)query.getSelect().getSymbol(query.getSelect().getProjectedSymbols().size() - 1)).getSymbol()).setOrderBy(this.orderBy);
+        	} else {
+        		query.setOrderBy(this.orderBy);
+        	}
         }
-
-        if (this.orderBy != null & !countQuery) {
-            query.setOrderBy(this.orderBy);
+        
+        if (this.expandOption != null) {
+            processExpandOption(this.expandOption, this.context, query, 1, null);
         }
+        
         return query;
     }
     
-    private void processExpandOption(ExpandOption option) {
-        if (option.getExpandItems().size() > 1) {
-            this.exceptions.add(new TeiidNotImplementedException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16042)));
-            return;
-        }
-        for (ExpandItem ei:option.getExpandItems()) {
+    private void processExpandOption(ExpandOption option, DocumentNode node, Query outerQuery, int expandLevel, Integer cyclicLevel) throws TeiidException {
+        checkExpandLevel(expandLevel);
+    	int starLevels = 0;
+    	HashSet<String> seen = new HashSet<String>();
+    	for (ExpandItem ei : option.getExpandItems()) {
+            if (ei.getSearchOption() != null) {
+                throw new TeiidNotImplementedException(
+                        ODataPlugin.Event.TEIID16035, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16035));
+            }  
+        
+            Integer levels = null;
             
-            try {
-                ExpandSQLBuilder esb = new ExpandSQLBuilder(ei);
-                EdmNavigationProperty property = esb.getNavigationProperty();
-                ExpandDocumentNode expandResource = ExpandDocumentNode.buildExpand(
-                        property, this.metadata, this.odata, this.nameGenerator, true,
-                        getUriInfo(), this.parseService);
-                
-                this.context.joinTable(expandResource, property, JoinType.JOIN_LEFT_OUTER);
-                
-                // process $filter
-                if (ei.getFilterOption() != null) {
-                    Expression expandCriteria = processFilterOption(ei.getFilterOption(), expandResource);
-                    expandResource.addCriteria(expandCriteria);
-                    ((JoinPredicate)expandResource.getFromClause()).getJoinCriteria().add(expandCriteria);
-                }
-                
-                this.context.setFromClause(expandResource.getFromClause());
-                
-                if (ei.getOrderByOption() != null) {
-                    if (this.orderBy == null) {
-                        this.orderBy = new OrderBy();
-                    }
-                    processOrderBy(this.orderBy, ei.getOrderByOption().getOrders(), expandResource);
-                }
-                
-                // process $select
-                processSelectOption(ei.getSelectOption(), expandResource, this.reference);
-                this.context.addExpand(expandResource);
-                
-                if (ei.getSkipOption() != null) {
-                    expandResource.setSkip(ei.getSkipOption().getValue());
-                }
-                
-                if (ei.getCountOption() != null) {
-                    expandResource.setCalculateCount(ei.getCountOption().getValue());
-                }
-                
-                if (ei.getTopOption() != null) {
-                    expandResource.setTop(ei.getTopOption().getValue());
-                }
+            if (cyclicLevel != null) {
+                levels = cyclicLevel - 1;
+            } else if (ei.getLevelsOption() != null) {
+            	if (ei.getLevelsOption().isMax()) {
+            		levels = MAX_EXPAND_LEVEL - expandLevel + 1;
+            	} else {
+            		levels = ei.getLevelsOption().getValue();
+            		checkExpandLevel(expandLevel + levels - 1);
+            	}
+            }
+            
+        	ExpandSQLBuilder esb = new ExpandSQLBuilder(ei);
+            EdmNavigationProperty property = esb.getNavigationProperty();
+            if (property == null) {
+            	if (ei.isStar()) {
+            		if (starLevels > 0) {
+            			throw new TeiidProcessingException(
+                                ODataPlugin.Event.TEIID16058, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16058, "*")); //$NON-NLS-1$
+            		}
+            		if (levels != null) {
+            			starLevels = levels;
+            		} else {
+            			starLevels = 1;
+            		}
+            		continue;
+            	}
+            	throw new TeiidNotImplementedException(
+                        ODataPlugin.Event.TEIID16057, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16057));
+            }
+            if (!seen.add(property.getName())) {
+            	throw new TeiidProcessingException(
+                        ODataPlugin.Event.TEIID16058, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16058, property.getName()));
+            }
+            //always pass in the root as the parent as that seems to be the definition of the current context
+            //if instead it should refer to the parent expands, then we would pass in the node instead
+            ExpandDocumentNode expandResource = ExpandDocumentNode.buildExpand(
+                    property, this.metadata, this.odata, this.nameGenerator, true,
+                    getUriInfo(), this.parseService, this.context);
 
-                if (ei.getExpandOption() != null
-                        || ei.getSearchOption() != null
-                        || ei.getLevelsOption() != null) {
-                    this.exceptions.add(new TeiidNotImplementedException(
-                            ODataPlugin.Event.TEIID16041, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16041)));
-                }                            
-            } catch (TeiidException e) {
-                this.exceptions.add(e);
-            }            
-        }
+            node.addExpand(expandResource);
+            
+            // process $filter
+            if (ei.getFilterOption() != null) {
+                Expression expandCriteria = processFilterOption(ei.getFilterOption(), expandResource);
+                expandResource.addCriteria(expandCriteria);
+            }
+
+            OrderBy expandOrder = null;
+            if (ei.getOrderByOption() != null) {
+                expandOrder = new OrderBy();
+                processOrderBy(expandOrder, ei.getOrderByOption().getOrders(), expandResource);
+            } else {
+            	expandOrder = expandResource.addDefaultOrderBy();
+            }
+            
+            // process $select
+            processSelectOption(ei.getSelectOption(), expandResource, this.reference);
+            
+            //TODO: if not the count option, then we can process the skip/top inline
+            //but it's messier - select array_agg(cols) from (select ... where ... order by .. limit) x
+            
+            if (ei.getSkipOption() != null) {
+        		expandResource.setSkip(ei.getSkipOption().getValue());
+            }
+            
+            if (ei.getTopOption() != null) {
+            	expandResource.setTop(ei.getTopOption().getValue());
+            }
+            
+            Query query = expandResource.buildQuery();
+
+            if (ei.getExpandOption() != null) {
+            	processExpandOption(ei.getExpandOption(), expandResource, query, expandLevel + 1, null);
+            } else if (levels != null) {
+            	//self reference check
+            	if (!property.getType().getFullQualifiedName().equals(node.getEdmEntityType().getFullQualifiedName())) {
+            		throw new TeiidProcessingException(ODataPlugin.Event.TEIID16060, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16060, node.getEdmEntityType().getFullQualifiedName(), property.getType().getFullQualifiedName()));
+            	}
+            	
+            	if (levels > 1) {
+                	ExpandOptionImpl eoi = new ExpandOptionImpl();
+                	eoi.addExpandItem(ei);
+                	processExpandOption(eoi, expandResource, query, expandLevel + 1, levels);
+            	}
+            }
+
+            buildAggregateQuery(node, outerQuery, expandResource,
+					expandOrder, query);
+    	}
+    	
+    	if (starLevels > 0) {
+    		List<ExpandNode> starExpand = new ArrayList<TeiidServiceHandler.ExpandNode>();
+    		EdmEntityType edmEntityType = node.getEdmEntityType();
+			buildExpandGraph(seen, starExpand, edmEntityType, starLevels - 1);
+    		if (!starExpand.isEmpty()) {
+    			processExpand(starExpand, node, outerQuery, expandLevel);
+    		}
+    	}
     }
 
-    private Expression processFilterOption(FilterOption option, DocumentNode resource) {
+	private void buildExpandGraph(HashSet<String> seen,
+			List<ExpandNode> starExpand, EdmEntityType edmEntityType, int remainingLevels) {
+		for (String name : edmEntityType.getNavigationPropertyNames()) {
+			if (seen != null && seen.contains(name)) {
+				continue; //explicit expand supersedes
+			}
+			EdmNavigationProperty property = edmEntityType.getNavigationProperty(name);
+			ExpandNode en = new ExpandNode();
+			en.navigationProperty = property;
+			starExpand.add(en);
+			if (remainingLevels > 0) {
+				buildExpandGraph(null, en.children, property.getType(), remainingLevels - 1);
+			}
+		}
+	}
+
+	public static void checkExpandLevel(int expandLevel)
+			throws TeiidProcessingException {
+		if (expandLevel > MAX_EXPAND_LEVEL) {
+        	throw new TeiidProcessingException(
+                    ODataPlugin.Event.TEIID16059, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16059, MAX_EXPAND_LEVEL));
+        }
+	}
+
+	private void buildAggregateQuery(DocumentNode node, Query outerQuery,
+			ExpandDocumentNode expandResource, OrderBy expandOrder, Query query) {
+		Select select = query.getSelect();
+		Array array = new Array(Object.class, new ArrayList<Expression>(select.getSymbols()));
+		select.getSymbols().clear();
+		AggregateSymbol symbol = new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(), false, array);
+		select.addSymbol(symbol);
+		symbol.setOrderBy(expandOrder);
+		            
+		Criteria crit = DocumentNode.buildJoinCriteria(expandResource, node);
+		if (crit == null) {
+		    crit = DocumentNode.buildJoinCriteria(node, expandResource);
+		}
+		if (crit != null) {
+			query.setCriteria(Criteria.combineCriteria(crit, query.getCriteria()));
+		} // else assertion error?
+		
+		expandResource.setColumnIndex(outerQuery.getSelect().getCount() + 1);
+		ScalarSubquery agg = new ScalarSubquery(query);
+		SubqueryHint subqueryHint = new SubqueryHint();
+		subqueryHint.setMergeJoin(true);
+        agg.setSubqueryHint(subqueryHint);
+        outerQuery.getSelect().addSymbol(agg);
+	}
+
+    private Expression processFilterOption(FilterOption option, DocumentNode resource) throws TeiidException {
         ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
                 resource, this.prepared, getUriInfo(), this.metadata, this.odata, 
                 this.nameGenerator, this.params, this.parseService);
-        Expression filter = null;
-        try {
-            filter = visitor.getExpression(option.getExpression());
-        } catch (TeiidException e) {
-            this.exceptions.add(e);
-        }
-        return filter;
+        return visitor.getExpression(option.getExpression());
     }
 
     public List<SQLParameter> getParameters(){
@@ -299,10 +406,14 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         if (this.selectionComplete) {
             return;
         }
-        processSelectOption(option, this.context, this.reference);
+        try {
+			processSelectOption(option, this.context, this.reference);
+		} catch (TeiidException e) {
+			this.exceptions.add(e);
+		}
     }
 
-    private void processSelectOption(SelectOption option, DocumentNode resource, boolean onlyReference) {
+    private void processSelectOption(SelectOption option, DocumentNode resource, boolean onlyReference) throws TeiidException {
         if (option == null) {
             // default select columns
             resource.addAllColumns(onlyReference);
@@ -317,24 +428,18 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     continue;
                 }
 
-                try {
-                    ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
-                            resource, false,
-                            getUriInfo(), this.metadata, this.odata, this.nameGenerator, this.params,
-                            this.parseService);
-                    ElementSymbol expr = (ElementSymbol)visitor.getExpression(si.getResourcePath());
-                    resource.addVisibleColumn(expr.getShortName(), expr);
-                    keys.remove(expr.getShortName());
-                } catch (TeiidException e) {
-                    this.exceptions.add(e);
-                }
+                ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
+                        resource, false,
+                        getUriInfo(), this.metadata, this.odata, this.nameGenerator, this.params,
+                        this.parseService);
+                ElementSymbol expr = (ElementSymbol)visitor.getExpression(si.getResourcePath());
+                resource.addProjectedColumn(expr.getShortName(), expr);
+                keys.remove(expr.getShortName());
             }
             if (!keys.isEmpty() && addkeys) {
                 for (String key:keys) {
                     ElementSymbol es = new ElementSymbol(key, resource.getGroupSymbol());
-                    if (!resource.hasProjectedColumn(es)) {
-                        resource.addProjectedColumn(key, es, false);
-                    }
+                    resource.addProjectedColumn(key, es);
                 }
             }
         }
@@ -347,28 +452,28 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         }
         else {
             List<OrderByItem> orderBys = option.getOrders();
-            this.orderBy = processOrderBy(new OrderBy(), orderBys, this.context);
+            try {
+				this.orderBy = processOrderBy(new OrderBy(), orderBys, this.context);
+			} catch (TeiidException e) {
+				this.exceptions.add(e);
+			}
         }
     }
 
-    private OrderBy processOrderBy(OrderBy orderBy, List<OrderByItem> orderByItems, DocumentNode resource) {
+    private OrderBy processOrderBy(OrderBy orderBy, List<OrderByItem> orderByItems, DocumentNode resource) throws TeiidException {
         for (OrderByItem obitem:orderByItems) {
             ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
                     resource, false,
                     getUriInfo(), this.metadata, this.odata, this.nameGenerator, this.params,
                     this.parseService);
-            try {
-                Expression expr = visitor.getExpression(obitem.getExpression());
-                if (expr instanceof ElementSymbol) {
-                    orderBy.addVariable(expr, !obitem.isDescending());
-                }
-                else {
-                    AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
-                    orderBy.addVariable(alias, !obitem.isDescending());
-                    visitor.getEntityResource().addProjectedColumn(alias, false, EdmInt32.getInstance(), false);
-                }
-            } catch (TeiidException e) {
-                this.exceptions.add(e);
+            Expression expr = visitor.getExpression(obitem.getExpression());
+            if (expr instanceof ElementSymbol) {
+                orderBy.addVariable(expr, !obitem.isDescending());
+            }
+            else {
+                AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
+                orderBy.addVariable(alias, !obitem.isDescending());
+                visitor.getEntityResource().addProjectedColumn(alias, EdmInt32.getInstance(), null, false);
             }
         }
         return orderBy;
@@ -416,7 +521,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     public void visit(UriResourcePrimitiveProperty info) {
         String propertyName = info.getProperty().getName();
         ElementSymbol es = new ElementSymbol(propertyName, this.context.getGroupSymbol());
-        this.context.addVisibleColumn(propertyName, es);
+        this.context.addProjectedColumn(propertyName, es);
         this.selectionComplete = true;
     }
     
@@ -528,36 +633,18 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     }
     //TODO: allow the generated key building.
     public Query selectWithEntityKey(EdmEntityType entityType, Entity entity,
-            Map<String, Object> generatedKeys, Set<EdmNavigationProperty> expand) throws TeiidException {
+            Map<String, Object> generatedKeys, List<ExpandNode> expand) throws TeiidException {
         Table table = findTable(entityType.getName(), this.metadata);
 
         DocumentNode resource = new DocumentNode(table, new GroupSymbol(table.getFullName()), entityType);
         resource.setFromClause(new UnaryFromClause(new GroupSymbol(table.getFullName())));
         resource.addAllColumns(false);
         this.context = resource;
-        
-        FromClause from = resource.getFromClause();
-        Criteria criteria = null;
-        
-        for (EdmNavigationProperty navProperty: expand) {
-            DocumentNode joinResource = ExpandDocumentNode.buildExpand(
-                    navProperty, this.metadata, this.odata, this.nameGenerator,
-                    this.aliasedGroups, getUriInfo(), this.parseService);
-                    
-            resource.joinTable(joinResource, navProperty, JoinType.JOIN_INNER);
-            // In the context of canonical queries if key predicates are available then do not set the criteria 
-            if (joinResource.getCriteria() == null) {
-                joinResource.addCriteria(resource.getCriteria());
-            }
-            joinResource.addAllColumns(false);
-            resource = joinResource;
-            this.context.addExpand(joinResource);
-            from = resource.getFromClause();
-            criteria = resource.getCriteria();
-        }
-        
-        this.context.setFromClause(from);
         Query query = this.context.buildQuery();
+
+        processExpand(expand, resource, query, 1);
+        
+        Criteria criteria = null;
 
         KeyRecord pk = ODataSchemaBuilder.getIdentifier(table);
         for (Column c:pk.getColumns()) {
@@ -584,6 +671,30 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         query.setCriteria(criteria);
         return query;
     }
+
+	private void processExpand(List<ExpandNode> expand, DocumentNode resource, Query outerQuery, int expandLevel)
+			throws TeiidException {
+		if (expand.isEmpty()) {
+			return;
+		}
+		checkExpandLevel(expandLevel);
+		for (ExpandNode expandNode: expand) {
+            ExpandDocumentNode expandResource = ExpandDocumentNode.buildExpand(
+            		expandNode.navigationProperty, this.metadata, this.odata, this.nameGenerator,
+                    this.aliasedGroups, getUriInfo(), this.parseService, this.context);
+                    
+            OrderBy expandOrder = expandResource.addDefaultOrderBy();
+
+            expandResource.addAllColumns(false);
+            resource.addExpand(expandResource);
+            
+            Query query = expandResource.buildQuery();
+
+            processExpand(expandNode.children, expandResource, query, expandLevel + 1);
+            
+            buildAggregateQuery(resource, outerQuery, expandResource, expandOrder, query);
+        }
+	}
     
     public Update update(EdmEntityType entityType, Entity entity, boolean prepared) throws TeiidException {
         Update update = new Update();
@@ -635,7 +746,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         return update;
     }
     
-    public Update updateStreamProperty(EdmProperty edmProperty, final InputStream content) {
+    public Update updateStreamProperty(EdmProperty edmProperty, final InputStream content) throws TeiidException {
         Update update = new Update();
         update.setGroup(this.context.getGroupSymbol());
 
@@ -663,7 +774,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             } else if (lobType.isAssignableFrom(BlobType.class)) {
                 value = new BlobImpl(isf);
             } else {
-                this.exceptions.add(new TeiidException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16031, column.getName())));
+                throw new TeiidException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16031, column.getName()));
             }
             this.params.add(new SQLParameter(value, sqlType));
         }

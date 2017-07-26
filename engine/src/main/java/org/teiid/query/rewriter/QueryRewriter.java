@@ -485,6 +485,33 @@ public class QueryRewriter {
         preserveUnknown = true;
         rewriteExpressions(query.getSelect());
         
+        if (from != null && !query.getIsXML()) {
+            List<Expression> symbols = query.getSelect().getSymbols();
+            RuleMergeCriteria rmc = new RuleMergeCriteria(null, null, null, this.context, this.metadata);
+            TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+            List<GroupSymbol> groups = query.getFrom().getGroups();
+            for (GroupSymbol gs : groups) {
+                names.add(gs.getName());
+            }
+            PlannedResult plannedResult = new PlannedResult();
+            for (int i = 0; i < symbols.size(); i++) {
+                Expression symbol = symbols.get(i);
+                plannedResult.reset();
+                rmc.findSubquery(SymbolMap.getExpression(symbol), context!=null?context.getOptions().isSubqueryUnnestDefault():false, plannedResult);
+                if (plannedResult.query == null || plannedResult.query.getProcessorPlan() != null 
+                        || plannedResult.query.getFrom() == null) {
+                    continue;
+                }
+                determineCorrelatedReferences(groups, plannedResult);
+                boolean requiresDistinct = requiresDistinctRows(query);
+                if (!rmc.planQuery(groups, requiresDistinct, plannedResult)) {
+                    continue;
+                }
+                Query q = convertToJoin(plannedResult, names, query, true);
+                symbols.set(i, new AliasSymbol(ExpressionSymbol.getName(symbol), (Expression) q.getProjectedSymbols().get(0).clone()));
+            }
+        }
+        
         if (!query.getIsXML()) {
             query = (Query)rewriteOrderBy(query);
         }
@@ -521,51 +548,78 @@ public class QueryRewriter {
 					|| plannedResult.query.getWith() != null) {
 				continue;
 			}
-			if (plannedResult.query.getCorrelatedReferences() == null) {
-				//create the correlated refs if they exist
-				//there is a little bit of a design problem here that null usually means no refs.
-				ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
-				CorrelatedReferenceCollectorVisitor.collectReferences(plannedResult.query, groups, correlatedReferences, metadata);
-				if (!correlatedReferences.isEmpty()) {
-		            SymbolMap map = new SymbolMap();
-		            for (Reference reference : correlatedReferences) {
-						map.addMapping(reference.getExpression(), reference.getExpression());
-					}
-		            plannedResult.query.setCorrelatedReferences(map);
-		        }	
-			}
+			determineCorrelatedReferences(groups, plannedResult);
 			boolean requiresDistinct = requiresDistinctRows(query);
 			if (!rmc.planQuery(groups, requiresDistinct, plannedResult)) {
 				continue;
 			}
 			crits.remove();
-			
-			GroupSymbol viewName = RulePlaceAccess.recontextSymbol(new GroupSymbol("X"), names); //$NON-NLS-1$
-			viewName.setName(viewName.getName());
-			viewName.setDefinition(null);
-			Query q = createInlineViewQuery(viewName, plannedResult.query, metadata, plannedResult.query.getSelect().getProjectedSymbols());
-			
-			Iterator<Expression> iter = q.getSelect().getProjectedSymbols().iterator();
-		    HashMap<Expression, Expression> expressionMap = new HashMap<Expression, Expression>();
-		    for (Expression symbol : plannedResult.query.getSelect().getProjectedSymbols()) {
-		        expressionMap.put(SymbolMap.getExpression(symbol), SymbolMap.getExpression(iter.next()));
-		    }
-			for (int i = 0; i < plannedResult.leftExpressions.size(); i++) {
-				plannedResult.nonEquiJoinCriteria.add(new CompareCriteria(SymbolMap.getExpression((Expression)plannedResult.leftExpressions.get(i)), CompareCriteria.EQ, (Expression)plannedResult.rightExpressions.get(i)));
-			}
-			Criteria mappedCriteria = Criteria.combineCriteria(plannedResult.nonEquiJoinCriteria);
-			ExpressionMappingVisitor.mapExpressions(mappedCriteria, expressionMap);
-			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), mappedCriteria));
-			FromClause clause = q.getFrom().getClauses().get(0);
-			if (plannedResult.makeInd) {
-				clause.setMakeInd(new Option.MakeDep());
-			}
-		    query.getFrom().addClause(clause);
-		    query.getTemporaryMetadata().getData().putAll(q.getTemporaryMetadata().getData());
+			convertToJoin(plannedResult, names, query, false);
 			//transform the query into an inner join 
 		}
 		query.setCriteria(Criteria.combineCriteria(query.getCriteria(), Criteria.combineCriteria(current)));
 	}
+	
+	private Query convertToJoin(PlannedResult plannedResult, Set<String> names, Query query, boolean leftOuter) throws QueryResolverException, QueryMetadataException, TeiidComponentException {
+	    GroupSymbol viewName = RulePlaceAccess.recontextSymbol(new GroupSymbol("X"), names); //$NON-NLS-1$
+        viewName.setName(viewName.getName());
+        viewName.setDefinition(null);
+        Query q = createInlineViewQuery(viewName, plannedResult.query, metadata, plannedResult.query.getSelect().getProjectedSymbols());
+        
+        Iterator<Expression> iter = q.getSelect().getProjectedSymbols().iterator();
+        HashMap<Expression, Expression> expressionMap = new HashMap<Expression, Expression>();
+        for (Expression symbol : plannedResult.query.getSelect().getProjectedSymbols()) {
+            expressionMap.put(SymbolMap.getExpression(symbol), SymbolMap.getExpression(iter.next()));
+        }
+        for (int i = 0; i < plannedResult.leftExpressions.size(); i++) {
+            plannedResult.nonEquiJoinCriteria.add(new CompareCriteria(SymbolMap.getExpression((Expression)plannedResult.leftExpressions.get(i)), CompareCriteria.EQ, (Expression)plannedResult.rightExpressions.get(i)));
+        }
+        Criteria mappedCriteria = Criteria.combineCriteria(plannedResult.nonEquiJoinCriteria);
+        ExpressionMappingVisitor.mapExpressions(mappedCriteria, expressionMap);
+        FromClause clause = q.getFrom().getClauses().get(0);
+        if (plannedResult.makeInd) {
+            clause.setMakeInd(new Option.MakeDep());
+        }
+        if (leftOuter) {
+            FromClause leftClause = query.getFrom().getClauses().get(0);
+            if (query.getFrom().getClauses().size() > 1) {
+                leftClause = null;
+                for (FromClause fc : query.getFrom().getClauses()) {
+                    if (leftClause == null) {
+                        leftClause = fc;
+                        continue;
+                    }
+                    leftClause = new JoinPredicate(leftClause, fc, JoinType.JOIN_CROSS);
+                }
+            }
+            query.getFrom().getClauses().clear();
+            JoinPredicate jp = new JoinPredicate(leftClause, clause, JoinType.JOIN_LEFT_OUTER);
+            jp.setJoinCriteria(Criteria.separateCriteriaByAnd(mappedCriteria));
+            query.getFrom().getClauses().add(jp);
+        } else {
+            query.setCriteria(Criteria.combineCriteria(query.getCriteria(), mappedCriteria));
+            query.getFrom().addClause(clause);
+        }
+        query.getTemporaryMetadata().getData().putAll(q.getTemporaryMetadata().getData());
+        return q;
+	}
+
+    private void determineCorrelatedReferences(List<GroupSymbol> groups,
+            PlannedResult plannedResult) {
+        if (plannedResult.query.getCorrelatedReferences() == null) {
+        	//create the correlated refs if they exist
+        	//there is a little bit of a design problem here that null usually means no refs.
+        	ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
+        	CorrelatedReferenceCollectorVisitor.collectReferences(plannedResult.query, groups, correlatedReferences, metadata);
+        	if (!correlatedReferences.isEmpty()) {
+                SymbolMap map = new SymbolMap();
+                for (Reference reference : correlatedReferences) {
+        			map.addMapping(reference.getExpression(), reference.getExpression());
+        		}
+                plannedResult.query.setCorrelatedReferences(map);
+            }	
+        }
+    }
 
 	private boolean requiresDistinctRows(Query query) {
 		Set<AggregateSymbol> aggs = new HashSet<AggregateSymbol>();

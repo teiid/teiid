@@ -34,19 +34,21 @@ import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 public class ExpandDocumentNode extends DocumentNode {
     private String navigationName;
     private boolean collection;
-    private int top;
+    private int top=-1;
     private int skip;
-    private boolean calculateCount;
+    private int columnIndex;
+    private DocumentNode collectionContext;
 
     public static ExpandDocumentNode buildExpand(EdmNavigationProperty property,
             MetadataStore metadata, OData odata, UniqueNameGenerator nameGenerator,
-            boolean useAlias, UriInfo uriInfo, URLParseService parseService) throws TeiidException {
+            boolean useAlias, UriInfo uriInfo, URLParseService parseService, DocumentNode context) throws TeiidException {
         
         EdmEntityType type = property.getType();
         ExpandDocumentNode resource = new ExpandDocumentNode();
         build(resource, type, null, metadata, odata, nameGenerator, useAlias, uriInfo, parseService);
         resource.setNavigationName(property.getName());
         resource.setCollection(property.isCollection());
+        resource.collectionContext = context;
         return resource;
     }
     
@@ -82,11 +84,16 @@ public class ExpandDocumentNode extends DocumentNode {
         return skip;
     }
 
-    public boolean isCalculateCount() {
-        return this.calculateCount;
+	public void setColumnIndex(int count) {
+		this.columnIndex = count;
+	}
+	
+	public int getColumnIndex() {
+		return columnIndex;
+	}
+	
+	public DocumentNode getCollectionContext() {
+        return collectionContext;
     }
-    
-    public void setCalculateCount(boolean calculateCount) {
-        this.calculateCount = calculateCount;
-    }
+	
 }

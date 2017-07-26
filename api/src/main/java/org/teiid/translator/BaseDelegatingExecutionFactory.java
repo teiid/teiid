@@ -551,5 +551,9 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	@Override
 	public boolean supportsProcedureTable() {
 		return delegate.supportsProcedureTable();
-	}
+	}			
+    @Override
+    public boolean supportsSelectExpressionArrayType() {
+        return delegate.supportsSelectExpressionArrayType();
+    }
 }

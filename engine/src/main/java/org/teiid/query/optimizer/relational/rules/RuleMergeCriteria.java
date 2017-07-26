@@ -118,6 +118,18 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		public boolean mergeJoin;
 		public boolean madeDistinct;
 		public boolean makeInd;
+        public void reset() {
+            this.leftExpressions.clear();
+            this.rightExpressions.clear();
+            this.query = null;
+            this.not = false;
+            this.nonEquiJoinCriteria.clear();
+            this.additionalCritieria = null;
+            this.type = null;
+            this.mergeJoin = false;
+            this.madeDistinct = false;
+            this.makeInd = false;
+        }
 	}
 
 	private IDGenerator idGenerator;
@@ -276,7 +288,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		
 		//check if the child is already ordered.  TODO: see if the ordering is compatible.
-		PlanNode childSort = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+		PlanNode childSort = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
 		if (childSort != null) {
 			if (plannedResult.mergeJoin && analysisRecord != null && analysisRecord.recordAnnotations()) {
 				this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, "Could not plan as a merge join since the parent join requires a sort: " + crit, "ignoring MJ hint", Priority.HIGH)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -399,6 +411,38 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 	}
 
+	public PlannedResult findSubquery(Expression expr, boolean unnest, PlannedResult result) {
+	    if (expr instanceof ScalarSubquery) {
+    	    ScalarSubquery scc = (ScalarSubquery)expr;
+            if (scc.getSubqueryHint().isNoUnnest()) {
+                return result;
+            }
+    
+            Query query = (Query)scc.getCommand();
+            
+            if (!isSingleRow(query)) {
+                return result;
+            }
+            
+            result.type = scc.getClass();
+            result.mergeJoin = scc.getSubqueryHint().isMergeJoin();
+            if (!unnest && !result.mergeJoin) {
+                return result;
+            }
+            result.makeInd = scc.getSubqueryHint().isDepJoin();
+            result.query = query;
+	    }
+	    return result;
+	}
+
+    private boolean isSingleRow(Query query) {
+        if (query.hasAggregates() && query.getGroupBy() == null) {
+            return true;
+        }
+        return false;
+        //todo: unique key
+    }
+	
 	public PlannedResult findSubquery(Criteria crit, boolean unnest) throws TeiidComponentException, QueryMetadataException {
 		PlannedResult result = new PlannedResult();
 		if (crit instanceof SubquerySetCriteria) {

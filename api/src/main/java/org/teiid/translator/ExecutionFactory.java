@@ -1160,11 +1160,18 @@ public class ExecutionFactory<F, C> {
 	}
 	
 	/**
-	 * The engine currently uses array types for dependent joins.
+	 * The engine uses array types for dependent joins and for array expression.
 	 * @return true if an array type is supported.
 	 */
 	public boolean supportsArrayType() {
 		return false;
+	}
+	
+	/**
+	 * @return true if array type expressions can be projected
+	 */
+	public boolean supportsSelectExpressionArrayType() {
+	    return supportsArrayType();
 	}
 	
 	/**

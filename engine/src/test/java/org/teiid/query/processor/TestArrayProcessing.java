@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -50,7 +51,9 @@ import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
 public class TestArrayProcessing {
@@ -242,14 +245,57 @@ public class TestArrayProcessing {
 	}
 	
 	@Test public void testQuantifiedCompareProcessing() throws Exception {
-		String sql = "select e1 from pm1.g1 where e2 = some (('a', 'b'))"; //$NON-NLS-1$
+		String sql = "select e2 from pm1.g1 where e1 = some (('a', 'b'))"; //$NON-NLS-1$
 		Command command = helpParse(sql);
 		ProcessorPlan pp = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
 	    HardcodedDataManager dataManager = new HardcodedDataManager();
-	    dataManager.addData("SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("c", 2));
+	    dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("c", 2));
 		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList(1)});
 	    
 	}
+	
+	@Test public void testNestedArrayAgg() throws Exception {
+		String sql = "select array_agg((e1, e2)) from pm1.g1"; //$NON-NLS-1$
+		Command command = helpParse(sql);
+		ProcessorPlan pp = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+	    HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("c", 2));
+		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList(new ArrayImpl(new Object[] {"a", 1}, new Object[] {"c", 2}))});
+	}
+	
+    @Test(expected=TeiidProcessingException.class) public void testLargeArrays() throws Exception {
+        String sql = "WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 70000 ) SELECT array_agg((n, n, n, n, n)) FROM t;"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List[] { 
+            Arrays.asList(2080l),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        dataManager.setBlockOnce();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+        CommandContext cc = createCommandContext();
+        cc.setSession(new SessionMetadata());
+        cc.setSessionVariable(TempTableStore.TEIID_MAX_RECURSION, 100000);
+        helpProcess(plan, cc, dataManager, expected);
+    }
+    
+    @Test public void testArrayProjection() throws Exception {
+        String sql = "SELECT e1, (e2, e3) FROM pm1.g1";
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        bsc.setCapabilitySupport(Capability.ARRAY_TYPE, true);
+        ProcessorPlan pp = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc));
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3 FROM pm1.g1", Arrays.asList("a", 1, false));
+        TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", new ArrayImpl(1, false))});
+        
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION_ARRAY_TYPE, true);
+        pp = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc));
+        dataManager.addData("SELECT pm1.g1.e1, (pm1.g1.e2, pm1.g1.e3) FROM pm1.g1", Arrays.asList("a", new ArrayImpl(1, false)));
+        TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", new ArrayImpl(1, false))});
+    }
 	
 	/**
 	 * TODO

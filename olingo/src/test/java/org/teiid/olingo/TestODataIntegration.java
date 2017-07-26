@@ -21,8 +21,7 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -503,8 +502,8 @@ public class TestODataIntegration {
                         + "\"decimalval\":-20.4,"
                         + "\"timeval\":\"00:00:00\","
                         + "\"dateval\":\"1970-01-01\","
-                        + "\"timestampval\":\"1970-01-01T00:00:00Z\","
-                        + "\"clobval\":null}", response.getContentAsString());
+                        + "\"timestampval\":\"1970-01-01T00:00:00Z\""
+                        + "}", response.getContentAsString());
                 
                 response = http.newRequest(baseURL + "/northwind/m/PostTable(4)/clobval")
                         .method("POST")
@@ -530,10 +529,15 @@ public class TestODataIntegration {
     
     @Test 
     public void testDeepInsert() throws Exception {
-        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
         hc.addUpdate("INSERT INTO x (a, b) VALUES ('teiid', 'dv')", new int[] {1});
-        hc.addUpdate("INSERT INTO y (a, b) VALUES ('odata', 'olingo')", new int[] {1});
-        hc.addUpdate("INSERT INTO y (a, b) VALUES ('odata4', 'olingo4')", new int[] {1});
+        hc.addUpdate("INSERT INTO y (a, b) VALUES ('odata', 'teiid')", new int[] {1});
+        hc.addUpdate("INSERT INTO y (a, b) VALUES ('odata4', 'teiid')", new int[] {1});
+        hc.addUpdate("INSERT INTO z (a, b) VALUES ('odata', 'teiid')", new int[] {1});
+        hc.addUpdate("INSERT INTO z (a, b) VALUES ('odata4', 'olingo4')", new int[] {1});
+        hc.addData("SELECT x.a, x.b FROM x", Arrays.asList(Arrays.asList("teiid", "dv")));
+        hc.addData("SELECT y.b, y.a FROM y", Arrays.asList(Arrays.asList("teiid", "odata"), Arrays.asList("teiid", "odata4")));
+        hc.addData("SELECT z.b, z.a FROM z", Arrays.asList(Arrays.asList("teiid", "odata"), Arrays.asList("olingo4", "odata4")));
         teiid.addTranslator("x10", hc);
         
         try {
@@ -545,6 +549,12 @@ public class TestODataIntegration {
                     + " primary key (a)"
                     + ") options (updatable true);"
                     + "create foreign table y ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT FKX FOREIGN KEY (b) REFERENCES x(a)"                    
+                    + ") options (updatable true);"
+                    + "create foreign table z ("
                     + " a string, "
                     + " b string, "
                     + " primary key (a),"
@@ -562,11 +572,11 @@ public class TestODataIntegration {
                     "     \"y_FKX\": [\n"+
                     "        {"+
                     "          \"a\":\"odata\",\n" +
-                    "          \"b\":\"olingo\"\n" +                    
+                    "          \"b\":\"teiid\"\n" +                    
                     "        },\n"+
                     "        {\n"+
                     "          \"a\":\"odata4\",\n" +
-                    "          \"b\":\"olingo4\"\n" +                    
+                    "          \"b\":\"teiid\"\n" +                    
                     "        }\n"+                    
                     "     ]\n"+
                     "}";
@@ -578,9 +588,44 @@ public class TestODataIntegration {
                     .header("Prefer", "return=representation")
                     .send();
             assertEquals(201, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}", 
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"a\":\"teiid\",\"b\":\"dv\"}", 
                     response.getContentAsString());
 
+            // update to collection based reference
+            payload = "{\n" +
+                    "  \"a\":\"teiid\",\n" +
+                    "  \"b\":\"dv\",\n" +
+                    "    \"y_FKX\": [\n"+
+                    "        {"+
+                    "          \"a\":\"odata\",\n" +
+                    "          \"b\":\"teiid\"\n" +                    
+                    "        },\n"+
+                    "        {\n"+
+                    "          \"a\":\"odata4\",\n" +
+                    "          \"b\":\"teiid\"\n" +                    
+                    "        }\n"+                    
+                    "     ],\n"+ 
+                    "    \"z_FKX\": [\n"+
+                    "        {"+
+                    "          \"a\":\"odata\",\n" +
+                    "          \"b\":\"teiid\"\n" +                    
+                    "        },\n"+
+                    "        {\n"+
+                    "          \"a\":\"odata4\",\n" +
+                    "          \"b\":\"olingo4\"\n" +                    
+                    "        }\n"+                    
+                    "     ]\n"+
+                    "}";
+            response = http.newRequest(baseURL + "/northwind/m/x")
+                    .method("POST")
+                    .content(new StringContentProvider(payload), ContentType.APPLICATION_JSON.toString())
+                    // when this header is defined the return should be expanded, but due to way olingo 
+                    // designed it is going to be a big refactoring.
+                    .header("Prefer", "return=representation")
+                    .send();
+            assertEquals(201, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"a\":\"teiid\",\"b\":\"dv\"}", 
+                    response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -830,10 +875,14 @@ public class TestODataIntegration {
         }
     }
     
-    @SuppressWarnings("unchecked")
     @Test 
     public void test$ItFilter() throws Exception {
-        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+        	@Override
+        	public boolean supportsCompareCriteriaEquals() {
+        		return true;
+        	}
+        };
         hc.addData("SELECT x.c, x.a FROM x WHERE x.a = 'x'", Arrays.asList(Arrays.asList(new String[] {"google.net", "google.com"}, 'x')));
         hc.addData("SELECT x.c, x.a FROM x WHERE x.a = 'y'", Arrays.asList(Arrays.asList(new String[] {"example.net", "example.com"}, 'y')));
         
@@ -855,6 +904,14 @@ public class TestODataIntegration {
             response = http.GET(baseURL + "/northwind/vw/x('y')/c?$filter=startswith($it,'example')");
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#x('y')/c\",\"value\":[\"example.net\",\"example.com\"]}", response.getContentAsString());
+            
+            response = http.GET(baseURL + "/northwind/vw/x('y')/c?$filter=startswith($it,'example')&$orderby=$it");
+            assertEquals(501, response.getStatus());
+            
+            response = http.GET(baseURL + "/northwind/vw/x('x')/c?$filter=endswith($it,'com')%20or%20endswith($it,'net')");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x('x')/c\",\"value\":[\"google.net\",\"google.com\"]}", response.getContentAsString());
+            
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -1482,7 +1539,6 @@ public class TestODataIntegration {
         }
     }
     
-    @SuppressWarnings("unchecked")
     @Test 
     public void testExpandSimple() throws Exception {
         HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
@@ -1571,14 +1627,13 @@ public class TestODataIntegration {
         }
     }    
     
-    @SuppressWarnings("unchecked")
     @Test 
     public void testExpandSimple2() throws Exception {
-        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
         hc.addData("SELECT x.a, x.b FROM x", Arrays.asList(Arrays.asList("xa1", "xb"),
                 Arrays.asList("xa2", "xb2")));
-        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa1'", Arrays.asList(Arrays.asList("ya1", "xa1"), 
-                Arrays.asList("ya2", "xa1")));
+        hc.addData("SELECT y.b, y.a FROM y", Arrays.asList(Arrays.asList("xa1", "ya1"), 
+                Arrays.asList("xa1", "ya2")));
         teiid.addTranslator("x7", hc);
 
         try {
@@ -1624,6 +1679,196 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }     
+    
+    @Test 
+    public void testExpandComplex() throws Exception {
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
+        hc.addData("SELECT x.a, x.b FROM x", Arrays.asList(Arrays.asList("a", "b")));
+        hc.addData("SELECT y.b, y.a FROM y", Arrays.asList(Arrays.asList("a", "y"), Arrays.asList("a", "y1")));
+        hc.addData("SELECT y.a, y.b FROM y", Arrays.asList(Arrays.asList("y", "a"), Arrays.asList("y1","a")));
+        hc.addData("SELECT z.a, z.b FROM z", Arrays.asList(Arrays.asList("a", "y")));
+        hc.addData("SELECT z.b, z.a FROM z", Arrays.asList(Arrays.asList("y", "a")));
+        hc.addData("SELECT tree.a, tree.b FROM tree", Arrays.asList(Arrays.asList("1", "2"), Arrays.asList("2", "3"), Arrays.asList("3", "1")));
+        hc.addData("SELECT tree.b, tree.a FROM tree", Arrays.asList(Arrays.asList("2", "1"), Arrays.asList("3", "2"), Arrays.asList("1", "3")));
+        
+        teiid.addTranslator("x7", hc);
+
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a)"
+                    + ") options (updatable true);"
+                    + "create foreign table y ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT FKX FOREIGN KEY (b) REFERENCES x(a)"                    
+                    + ") options (updatable true);"
+                    + "create foreign table z ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT FKX FOREIGN KEY (a) REFERENCES x(a),"                    
+                    + " CONSTRAINT FKY FOREIGN KEY (b) REFERENCES y(a)"
+                    + ") options (updatable true);"
+                    + "create foreign table tree ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT parent FOREIGN KEY (b) REFERENCES tree(a)"
+                    + ");");
+            
+            mmd.addSourceMapping("x7", "x7", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = null;
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX($expand=z_FKY)")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+            		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
+            			+ "[{\"a\":\"y\",\"b\":\"a\",\"z_FKY\":[{\"a\":\"a\",\"b\":\"y\"}]},{\"a\":\"y1\",\"b\":\"a\",\"z_FKY\":[]}]}"
+            		+ "]}", 
+                    response.getContentAsString());
+            
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX,z_FKX")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+            		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
+            			+ "[{\"a\":\"y\",\"b\":\"a\"},{\"a\":\"y1\",\"b\":\"a\"}],"
+            			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
+            		+ "]}", 
+                    response.getContentAsString());
+
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=*")
+                .method("GET")
+                .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+            		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
+            			+ "[{\"a\":\"y\",\"b\":\"a\"},{\"a\":\"y1\",\"b\":\"a\"}],"
+            			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
+            		+ "]}", 
+                    response.getContentAsString());
+            
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX($filter=a%20eq%20'y1'),*")
+                    .method("GET")
+                    .send();
+                assertEquals(200, response.getStatus());
+                assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+                		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
+                			+ "[{\"a\":\"y1\",\"b\":\"a\"}],"
+                			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
+                		+ "]}", 
+                        response.getContentAsString());
+                
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX,y_FKX")
+                    .method("GET")
+                    .send();
+                assertEquals(400, response.getStatus());
+                
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=*($levels=3)")
+                    .method("GET")
+                    .send();
+                assertEquals(200, response.getStatus());
+                String expected = "{" + 
+                		"\"@odata.context\":\"$metadata#x\"," + 
+                		"\"value\":[" + 
+                		    "{" + 
+                		    "\"a\":\"a\"," + 
+                		      "\"b\":\"b\"," + 
+                		      "\"y_FKX\":[" + 
+                		        "{" + 
+                		          "\"a\":\"y\"," + 
+                		          "\"b\":\"a\"," + 
+                		          "\"FKX\":" + 
+                		            "{" + 
+                		              "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		            "}" + 
+                		          "," + 
+                		          "\"z_FKY\":[" + 
+                		            "{" + 
+                		              "\"a\":\"a\"," + 
+                		              "\"b\":\"y\"," + 
+                		              "\"FKX\":{" + 
+                		                "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		              "}," + 
+                		              "\"FKY\":" + 
+                		                "{" + 
+                		                  "\"@odata.id\":\""+baseURL+"/northwind/m/y('y')\"" + 
+                		                "}" + 
+                		              "" + 
+                		            "}" + 
+                		          "]" + 
+                		        "}," + 
+                		        "{" + 
+                		          "\"a\":\"y1\"," + 
+                		          "\"b\":\"a\"," + 
+                		          "\"FKX\":" + 
+                		            "{" + 
+                		              "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		            "}" + 
+                		          "," + 
+                		          "\"z_FKY\":[" + 
+                		          "]" + 
+                		        "}" + 
+                		      "]," + 
+                		      "\"z_FKX\":{" + 
+                		        "\"a\":\"a\"," + 
+                		        "\"b\":\"y\"," + 
+                		        "\"FKX\":{" + 
+                		          "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		        "}," + 
+                		        "\"FKY\":" + 
+                		          "{" + 
+                		            "\"a\":\"y\"," + 
+                		            "\"b\":\"a\"," + 
+                		            "\"FKX\":" + 
+                		              "{" + 
+                		                "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		              "}" + 
+                		            "," + 
+                		            "\"z_FKY\":[" + 
+                		              "{" + 
+                		                "\"@odata.id\":\""+baseURL+"/northwind/m/z('a')\"" + 
+                		              "}" + 
+                		            "]" + 
+                		          "}" + 
+                		        "" + 
+                		      "}" + 
+                		    "}" + 
+                		  "]" + 
+                		"}";
+                assertEquals(expected, response.getContentAsString());
+            
+            //invalid it's not a self relationship
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX($levels=1)")
+                    .method("GET")
+                    .send();
+                assertEquals(400, response.getStatus());
+                
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX($filter=$it/b%20eq%20a)")
+                    .method("GET")
+                    .send();
+                assertEquals(200, response.getStatus());
+                assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+                        + "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
+                            + "[]}"
+                        + "]}", 
+                        response.getContentAsString());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }    
     
     @Test
     public void testBatch() throws Exception {
@@ -1839,8 +2084,9 @@ public class TestODataIntegration {
                 .send();
         assertEquals(200, response.getStatus());
         String string = response.getContentAsString();
-        assertTrue(string.contains("odata4/loopy/vm1/LobTable(1)/e2"));
-        assertTrue(string.contains("odata4/loopy/vm1/LobTable(2)/e2"));
+        // stream properties are computed, not shown in the payload.
+        assertFalse(string.contains("odata4/loopy/vm1/LobTable(1)/e2"));
+        assertFalse(string.contains("odata4/loopy/vm1/LobTable(2)/e2"));
     } 
     
     @Test
@@ -2039,7 +2285,6 @@ public class TestODataIntegration {
         assertEquals(501, response.getStatus());
     } 
     
-    @SuppressWarnings("unchecked")
     @Test 
     public void testExpand() throws Exception {
         HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
@@ -2051,11 +2296,6 @@ public class TestODataIntegration {
                 Arrays.asList(1, 3, "country"), Arrays.asList(1,4, "abroad"),
                 Arrays.asList(2, 5, "state"), Arrays.asList(2, 6, "country"),
                 Arrays.asList(3,7,"town"), Arrays.asList(3, 8, "town")));
-        hc.addData("SELECT Orders.customerid, Orders.place, Orders.id FROM Orders", 
-                Arrays.asList(Arrays.asList(1, "town", 1), Arrays.asList(1, "state", 2),
-                Arrays.asList(1, "country",3), Arrays.asList(1,"abroad", 4),
-                Arrays.asList(2, "state", 5), Arrays.asList(2, "country", 6),
-                Arrays.asList(3,"town", 7), Arrays.asList(3, "town", 8)));
         hc.addData("SELECT Orders.place, Orders.customerid, Orders.id FROM Orders", 
                 Arrays.asList(Arrays.asList("town",1, 1), Arrays.asList("state", 1, 2),
                 Arrays.asList("country",1, 3), Arrays.asList("abroad", 1, 4),
@@ -2137,7 +2377,7 @@ public class TestODataIntegration {
                     + "]}],"
                     + "\"@odata.nextLink\":\"http://localhost:"));
             assertTrue(response.getContentAsString(), 
-                    response.getContentAsString().endsWith(",8\"}"));
+                    response.getContentAsString().endsWith(",1\"}"));
             
             JsonParser parser = new JsonFactory(new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true))
@@ -2245,7 +2485,29 @@ public class TestODataIntegration {
                     +  "\"Orders_FK0\":[{\"id\":7,\"customerid\":3,\"place\":\"town\"},"
                     + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}]},"
                     + "{\"id\":4,\"name\":\"customer4\",\"Orders_FK0\":[]}]}", 
-                    response.getContentAsString());                  
+                    response.getContentAsString());  
+            
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0($top=0;$count=true)&$count=true")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"@odata.count\":4,\""
+                    + "value\":["
+                        + "{\"id\":1,\"name\":\"customer1\","
+                        + "\"Orders_FK0@odata.count\":4,"
+                        + "\"Orders_FK0\":[]},"
+                        + "{\"id\":2,\"name\":\"customer2\","
+                        + "\"Orders_FK0@odata.count\":2,"
+                        + "\"Orders_FK0\":[]},"
+                        + "{\"id\":3,\"name\":\"customer3\","
+                        + "\"Orders_FK0@odata.count\":2,"
+                        + "\"Orders_FK0\":[]},"
+                        + "{\"id\":4,\"name\":\"customer4\","
+                        + "\"Orders_FK0@odata.count\":0,"
+                        + "\"Orders_FK0\":["
+                        + "]}]}", 
+                    response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -2540,4 +2802,28 @@ public class TestODataIntegration {
         }
     }
     
+    @Test 
+    public void testDecimalPrecisionScale() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "CREATE VIEW SimpleTable(\n" + 
+                    "    intkey integer PRIMARY KEY,\n" + 
+                    "    decimalval decimal(3, 1)) as select 1,12.31 union all select 2, 1.0001 union all select 3, 123.1;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/SimpleTable");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#SimpleTable\",\"value\":[{\"intkey\":1,\"decimalval\":12.3},{\"intkey\":2,\"decimalval\":1.0},{\"intkey\":3,\"decimalval\":123}]}", 
+                    response.getContentAsString());
+            
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
 }
