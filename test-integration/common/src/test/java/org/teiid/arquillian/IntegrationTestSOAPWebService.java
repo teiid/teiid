@@ -25,6 +25,7 @@ package org.teiid.arquillian;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.FileInputStream;
 import java.sql.Connection;
@@ -54,8 +55,9 @@ public class IntegrationTestSOAPWebService {
 	
 	@Before
 	public void setup() throws Exception {
-        admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT, "admin",
+        admin = AdminFactory.getInstance().createAdmin("localhost", 9999, "admin",
                 "admin".toCharArray());
+        assertNotNull(admin);
 	}
 	
 	@After
