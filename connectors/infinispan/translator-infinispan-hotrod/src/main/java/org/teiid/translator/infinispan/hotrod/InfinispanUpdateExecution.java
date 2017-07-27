@@ -206,10 +206,12 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				insertRow(cache, visitor.getIdentity(), visitor.getInsertPayload(), upsert);
 				this.updateCount++;			    
 			} else {
+				
 				boolean putAll = false;
-				if (cache.isEmpty()) {
-					putAll = true;
+				if (this.executionContext.getSourceHint() != null) {
+					putAll = this.executionContext.getSourceHint().indexOf("use-putall") != -1; 
 				}
+				
 				// bulk insert
 				int batchSize = this.executionContext.getBatchSize();
 				Iterator<? extends List<Expression>> args = (Iterator<? extends List<Expression>>) insert
