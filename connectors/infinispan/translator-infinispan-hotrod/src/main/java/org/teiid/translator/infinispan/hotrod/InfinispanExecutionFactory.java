@@ -53,6 +53,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
 
 	private boolean supportsCompareCriteriaOrdered = true;
 	private boolean supportsUpsert = true;
+	private boolean supportsBulkUpdates = false;
 
 	public InfinispanExecutionFactory() {
 		setMaxInCriteriaSize(MAX_SET_SIZE);
@@ -288,8 +289,13 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
         return true;
     }
     
+    @TranslatorProperty(display="Supports Bulk Update", description="If true, translator can support Bulk Updates",advanced=true)
     @Override
     public boolean supportsBulkUpdate() {
-    	return true;
+    	return supportsBulkUpdates;
+    }
+
+    public boolean setSupportsBulkUpdate(boolean supports) {
+        return supportsBulkUpdates = supports;
     }
 }
