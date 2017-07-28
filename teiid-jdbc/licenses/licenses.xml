@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<licenseSummary>
+   <dependencies>
+      <dependency>
+         <groupId>org.jboss.teiid</groupId>
+         <artifactId>teiid-jdbc</artifactId>
+         <version>${project.version}</version>
+         <licenses>
+           <license>
+               <name>GNU Lesser General Public License</name>
+               <url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
+               <local>LICENSE-lgpl-2.1.txt</local>
+            </license>
+         </licenses>
+      </dependency>
+   </dependencies>
+</licenseSummary>

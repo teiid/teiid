@@ -249,14 +249,6 @@
 			      <goal>download-licenses</goal>
 			    </goals>
 			  </execution>
-			</executions>
-		      </plugin>
-
-		     <plugin>
-			<groupId>org.codehaus.mojo</groupId>
-			<artifactId>license-maven-plugin</artifactId>
-			<version>1.13</version>
-			<executions>
 			  <execution>
 			    <id>aggregate-download-licenses</id>
 			    <goals>

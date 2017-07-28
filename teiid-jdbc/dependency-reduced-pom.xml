@@ -12,7 +12,29 @@
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/licenses</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>licenses</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-shade-plugin</artifactId>
+        <version>3.0.0</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -21,7 +43,30 @@
             </goals>
           </execution>
         </executions>
-        <configuration />
+        <configuration>
+          <transformers>
+            <transformer>
+              <resource>META-INF/LICENSE-lgpl-2.1.txt</resource>
+              <file>${basedir}/../LICENSE-lgpl-2.1.txt</file>
+            </transformer>
+            <transformer>
+              <resource>META-INF/licenses.xml</resource>
+              <file>${basedir}/target/licenses/licenses.xml</file>
+            </transformer>
+            <transformer>
+              <resource>META-INF/licenses.html</resource>
+              <file>${basedir}/target/licenses/licenses.html</file>
+            </transformer>
+            <transformer>
+              <resource>META-INF/licenses.css</resource>
+              <file>${basedir}/target/licenses/licenses.css</file>
+            </transformer>
+            <transformer>
+              <resource>META-INF/licenses.xsl</resource>
+              <file>${basedir}/target/licenses/licenses.xsl</file>
+            </transformer>
+          </transformers>
+        </configuration>
       </plugin>
     </plugins>
   </build>
