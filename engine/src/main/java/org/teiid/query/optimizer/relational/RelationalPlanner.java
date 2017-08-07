@@ -600,6 +600,7 @@ public class RelationalPlanner {
         if(hints.hasJoin) {
             rules.push(RuleConstants.CLEAN_CRITERIA);
             rules.push(RuleConstants.COPY_CRITERIA);
+            rules.push(RuleConstants.PLAN_OUTER_JOINS);
         }
         rules.push(RuleConstants.RAISE_ACCESS);
         if (hints.hasFunctionBasedColumns) {
