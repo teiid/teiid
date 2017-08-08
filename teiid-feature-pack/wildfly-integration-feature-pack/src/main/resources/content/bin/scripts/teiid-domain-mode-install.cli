@@ -142,6 +142,7 @@ connect
 /profile=ha/subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
 /profile=ha/subsystem=teiid/translator=delegator:add(module=org.jboss.teiid.api)
 /profile=ha/subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
+/profile=ha/subsystem=teiid/translator=amazon-s3:add(module=org.jboss.teiid.translator.amazon.s3)
 
 /profile=ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /profile=ha/subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -225,6 +226,7 @@ connect
 /profile=full-ha/subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
 /profile=full-ha/subsystem=teiid/translator=delegator:add(module=org.jboss.teiid.api)
 /profile=full-ha/subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
+/profile=full-ha/subsystem=teiid/translator=amazon-s3:add(module=org.jboss.teiid.translator.amazon.s3)
 
 /profile=full-ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /profile=full-ha/subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)

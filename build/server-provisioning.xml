@@ -9,7 +9,7 @@
         <feature-pack groupId="org.teiid.connectors" artifactId="feature-pack-ws" version="${project.version}" />
         <feature-pack groupId="org.teiid.connectors" artifactId="feature-pack-swagger" version="${project.version}" />
         <feature-pack groupId="org.teiid.connectors" artifactId="feature-pack-solr" version="${project.version}" />
-        <feature-pack groupId="org.teiid.connectors" artifactId="feature-pack-simpledb" version="${project.version}" />
+        <feature-pack groupId="org.teiid.connectors" artifactId="feature-pack-amazon" version="${project.version}" />
         <feature-pack groupId="org.teiid.connectors" artifactId="feature-pack-accumulo" version="${project.version}" />
         <feature-pack groupId="org.teiid.connectors" artifactId="feature-pack-cassandra" version="${project.version}" />
         <feature-pack groupId="org.teiid.connectors" artifactId="feature-pack-google" version="${project.version}" />

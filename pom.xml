@@ -1299,7 +1299,7 @@
 		<module>jboss-security</module>
 		<module>rest-service</module>
 		<module>teiid-feature-pack</module>
-        <module>connectors</module>
+	        <module>connectors</module>
 		<module>test-integration</module>
 		<module>saxon-xom</module>
 	</modules>
