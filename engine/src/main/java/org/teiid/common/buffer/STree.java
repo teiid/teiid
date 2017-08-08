@@ -40,6 +40,7 @@ import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
 
@@ -83,6 +84,7 @@ public class STree implements Cloneable {
             int leafSize,
             int keyLength,
             LobManager lobManager) {
+	    Assertion.assertTrue(pageSize > 1 && leafSize > 1);
 		randomSeed = seedGenerator.nextInt() | 0x00000100; // ensure nonzero
 		this.keyManager = manager;
 		manager.setPrefersMemory(true);
