@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.teiid</groupId>
+		<artifactId>connectors</artifactId>
+		<version>10.0.0.Alpha3-SNAPSHOT</version>
+	</parent>
+
+	<groupId>org.teiid.connectors</groupId>
+	<artifactId>amazon</artifactId>
+	<packaging>pom</packaging>
+	<name>Amazon Extensions</name>
+	<description />
+
+	<modules>
+		<module>connector-simpledb</module>
+		<module>translator-simpledb</module>
+		<module>simpledb-api</module>
+		<module>translator-amazon-s3</module>
+		<module>feature-pack-amazon</module>
+	</modules>
+
+</project>

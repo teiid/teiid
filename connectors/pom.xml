@@ -87,7 +87,7 @@
     <module>jdbc</module>
     <module>mongodb</module>
     <module>couchbase</module>
-    <module>simpledb</module>
+    <module>amazon</module>
     <module>webservice</module>
     <module>salesforce</module>
     <module>solr</module>
