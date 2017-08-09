@@ -366,8 +366,6 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
                     updateEstimates(sizeEstimate, true);
                 } catch (TeiidComponentException e) {
                 }
-			} else {
-			    System.out.println("missing update");
 			}
 		}
 
