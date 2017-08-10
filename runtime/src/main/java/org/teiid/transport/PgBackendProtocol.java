@@ -418,7 +418,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	public void flush() {
 		this.dataOut = null;
 		this.writer = null;
-		this.ctx.writeAndFlush(null);
+		this.ctx.flush();
 	}
 
 	@Override
@@ -427,7 +427,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	}
 	
 	private void terminate(Throwable t) {
-		trace("channel being terminated - ", t.getMessage());
+	    LogManager.logDetail(LogConstants.CTX_ODBC, "channel being terminated - ", t.getMessage());
 		this.ctx.channel().close();
 	}
 
