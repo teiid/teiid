@@ -143,7 +143,7 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor implements Metad
 			String runtimeType = getRuntimeType(type);
 
 			Column column = metadataFactory.addColumn(name, runtimeType, table);
-			column.setNameInSource(name);
+			column.setNameInSource(quoteName(name));
 			column.setUpdatable(true);
 		}
 		rs.close();

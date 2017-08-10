@@ -24,7 +24,7 @@ import java.util.List;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 
-public class Insert extends BaseLanguageObject implements BatchedCommand {
+public class Insert extends BaseLanguageObject implements BulkCommand {
 
     private NamedTable table;
     private List<ColumnReference> columns;

@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.BatchedCommand;
 import org.teiid.language.BatchedUpdates;
+import org.teiid.language.BulkCommand;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
@@ -55,7 +55,7 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
         executionCount++;
         commands.add(command);
         FakeExecution result = new FakeExecution(executionContext);
-        if (command instanceof BatchedUpdates || (command instanceof BatchedCommand && ((BatchedCommand)command).getParameterValues() != null)) {
+        if (command instanceof BatchedUpdates || (command instanceof BulkCommand && ((BulkCommand)command).getParameterValues() != null)) {
             result.batchOrBulk = true;
         } 
         return result;

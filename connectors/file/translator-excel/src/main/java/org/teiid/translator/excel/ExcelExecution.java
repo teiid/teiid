@@ -29,7 +29,6 @@ import java.sql.Clob;
 import java.sql.SQLXML;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +39,8 @@ import javax.resource.ResourceException;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -53,6 +54,7 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
@@ -78,6 +80,7 @@ public class ExcelExecution implements ResultSetExecution {
 	private FormulaEvaluator evaluator;
 	private FileInputStream xlsFileStream;
 	private Class<?>[] expectedColumnTypes;
+	private DataFormatter dataFormatter;
 
 	public ExcelExecution(Select query, ExecutionContext executionContext,
 			RuntimeMetadata metadata, FileConnection connection)
@@ -210,7 +213,7 @@ public class ExcelExecution implements ResultSetExecution {
      * @param neededColumns
      */
     List<Object> projectRow(Row row) throws TranslatorException {
-        ArrayList output = new ArrayList();
+        ArrayList<Object> output = new ArrayList<Object>(this.visitor.getProjectedColumns().size());
         
         int id = row.getRowNum()+1;
         
@@ -237,12 +240,7 @@ public class ExcelExecution implements ResultSetExecution {
                     output.add(convertFromExcelType(cell.getStringCellValue(), this.expectedColumnTypes[i]));
                     break;
                 case Cell.CELL_TYPE_BOOLEAN:
-                	if (this.expectedColumnTypes[i].isAssignableFrom(Boolean.class)) {
-                		output.add(Boolean.valueOf(cell.getBooleanCellValue()));
-                	}
-                	else {
-                		throw new TranslatorException(ExcelPlugin.Event.TEIID23001, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23001, this.expectedColumnTypes[i].getName()));
-                	}
+                    output.add(convertFromExcelType(cell.getBooleanCellValue(), this.expectedColumnTypes[i]));
                     break;
                 default:
                 	output.add(null);
@@ -253,8 +251,19 @@ public class ExcelExecution implements ResultSetExecution {
         return output;    
     }
 
+    Object convertFromExcelType(final boolean value, final Class<?> expectedType) throws TranslatorException {
+        if (expectedType.isAssignableFrom(Boolean.class)) {
+            return value;
+        }
+        
+        try {
+            return DataTypeManager.transformValue(value, expectedType);
+        } catch (TransformationException e) {
+            throw new TranslatorException(e);
+        }
+    }
     
-    static Object convertFromExcelType(final Double value, Cell cell, final Class<?> expectedType) throws TranslatorException {
+    Object convertFromExcelType(final Double value, Cell cell, final Class<?> expectedType) throws TranslatorException {
 		if (value == null) {
 			return null;
 		}
@@ -268,41 +277,29 @@ public class ExcelExecution implements ResultSetExecution {
 		}
 		else if (expectedType.isAssignableFrom(java.sql.Date.class)) {
 			Date date = cell.getDateCellValue();
-			return new java.sql.Date(date.getTime());
+			return TimestampWithTimezone.createDate(date);
 		}
 		else if (expectedType.isAssignableFrom(java.sql.Time.class)) {
 			Date date = cell.getDateCellValue();
-			Calendar calendar = Calendar.getInstance();
-			calendar.setTime(date);
-			StringBuilder sb = new StringBuilder();
-			sb.append(calendar.get(Calendar.HOUR_OF_DAY))
-				.append(":") //$NON-NLS-1$
-				.append(calendar.get(Calendar.MINUTE))
-				.append(":") //$NON-NLS-1$
-				.append(calendar.get(Calendar.SECOND));
-			return java.sql.Time.valueOf(sb.toString());
+			return TimestampWithTimezone.createTime(date);
 		}
 		
-		if (DataTypeManager.isTransformable(double.class, expectedType)) {
-			try {
-				return DataTypeManager.transformValue(value, expectedType);
-			} catch (TransformationException e) {
-				throw new TranslatorException(e);
-			}
+		if (expectedType == String.class && dataFormatter != null) {
+		    return dataFormatter.formatCellValue(cell);
 		}
-		throw new TranslatorException(ExcelPlugin.Event.TEIID23002, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23002, expectedType.getName()));		
-    }
-    
-    
-    static Object convertFromExcelType(final Boolean value, final Class<?> expectedType) throws TranslatorException {
-		if (value == null) {
-			return null;
+		
+		Object val = value;
+		
+		if (DateUtil.isCellDateFormatted(cell)) {
+		    Date date = cell.getDateCellValue();
+            val = new java.sql.Timestamp(date.getTime());
 		}
-
-		if (expectedType.isAssignableFrom(Boolean.class)) {
-			return value;
+		
+		try {
+			return DataTypeManager.transformValue(val, expectedType);
+		} catch (TransformationException e) {
+			throw new TranslatorException(e);
 		}
-		throw new TranslatorException(ExcelPlugin.Event.TEIID23001, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23001, expectedType.getName()));
     }
     
     static Object convertFromExcelType(final String value, final Class<?> expectedType) throws TranslatorException {
@@ -350,5 +347,9 @@ public class ExcelExecution implements ResultSetExecution {
     @Override
     public void cancel() throws TranslatorException {
 
+    }
+    
+    public void setDataFormatter(DataFormatter dataFormatter) {
+        this.dataFormatter = dataFormatter;
     }
 }

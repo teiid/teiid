@@ -29,8 +29,6 @@ public class ExcelPlugin {
 	
 	public static enum Event implements BundleUtil.Event{
 		TEIID23000,
-		TEIID23001,
-		TEIID23002,
 		TEIID23003,
 		TEIID23004,
 		TEIID23005,

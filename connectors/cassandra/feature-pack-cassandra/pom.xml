@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-      <groupId>org.jboss.teiid.connectors</groupId>
+      <groupId>org.teiid.connectors</groupId>
       <artifactId>cassandra</artifactId>
-      <version>10.0.0.Alpha2-SNAPSHOT</version>
+      <version>10.0.0.Alpha3-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-cassandra</artifactId>
     <name>Cassandra Feature Pack</name>
@@ -23,18 +23,18 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-client-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-cassandra</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>connector-cassandra</artifactId>
             <version>${project.version}</version>
         </dependency>

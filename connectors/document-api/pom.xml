@@ -1,12 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>connectors</artifactId>
-		<groupId>org.jboss.teiid</groupId>
-		<version>10.0.0.Alpha2-SNAPSHOT</version>
+		<groupId>org.teiid</groupId>
+		<version>10.0.0.Alpha3-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>document-api</artifactId>
-	<groupId>org.jboss.teiid.connectors</groupId>
+	<groupId>org.teiid.connectors</groupId>
 	<name>Document API</name>
 	<description>The java API for dealing with object types</description>
 	<packaging>bundle</packaging>
@@ -17,11 +17,11 @@
 			<artifactId>jboss-connector-api_1.7_spec</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>teiid-api</artifactId>
 		</dependency>
 	</dependencies>

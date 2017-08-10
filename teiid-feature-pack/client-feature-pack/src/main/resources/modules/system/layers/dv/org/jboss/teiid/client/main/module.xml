@@ -5,8 +5,8 @@
     </properties>
     
     <resources>
-		<artifact name="${org.jboss.teiid:teiid-client}"/>
-		<artifact name="${org.jboss.teiid:teiid-hibernate-dialect}"/>
+		<artifact name="${org.teiid:teiid-client}"/>
+		<artifact name="${org.teiid:teiid-hibernate-dialect}"/>
     </resources>
 
     <dependencies>

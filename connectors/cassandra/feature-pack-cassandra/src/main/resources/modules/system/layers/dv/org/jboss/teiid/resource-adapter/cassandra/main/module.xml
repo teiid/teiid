@@ -4,7 +4,7 @@
     </properties>
        
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:connector-cassandra}"/>
+        <artifact name="${org.teiid.connectors:connector-cassandra}"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>

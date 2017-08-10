@@ -184,7 +184,7 @@ public class TempTableStore {
 				try {
 					if (workingQp == null) {
 						recursive.reset();
-						workingQp = new QueryProcessor(recursive, this.queryProcessor.getContext(), 
+						workingQp = new QueryProcessor(recursive, this.queryProcessor.getContext().clone(), 
 								this.queryProcessor.getBufferManager(), this.queryProcessor.getProcessorDataManager());
 						this.iterator = new BatchProducerTupleSource(workingQp);
 					}

@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.translator.infinispan.hotrod;
+package org.teiid.infinispan.api;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -29,15 +30,13 @@ import org.infinispan.protostream.RawProtoStreamWriter;
 import org.infinispan.protostream.RawProtobufMarshaller;
 import org.infinispan.protostream.impl.ByteArrayOutputStreamEx;
 import org.infinispan.protostream.impl.RawProtoStreamWriterImpl;
-import org.teiid.infinispan.api.InfinispanDocument;
-import org.teiid.infinispan.api.ProtobufDataManager;
-import org.teiid.infinispan.api.TableWireFormat;
+import org.teiid.infinispan.api.DocumentFilter.Action;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.document.Document;
-import org.teiid.translator.infinispan.hotrod.DocumentFilter.Action;
 
-public class TeiidTableMarsheller implements RawProtobufMarshaller<InfinispanDocument> {
-    private String documentName;
+public class TeiidTableMarsheller implements RawProtobufMarshaller<InfinispanDocument>, Serializable {
+	private static final long serialVersionUID = 6540991524742624955L;
+	private String documentName;
     private TreeMap<Integer, TableWireFormat> wireMap = new TreeMap<>();
     private DocumentFilter docFilter;
 

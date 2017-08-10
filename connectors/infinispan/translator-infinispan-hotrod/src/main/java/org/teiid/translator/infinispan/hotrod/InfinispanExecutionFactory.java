@@ -287,4 +287,9 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsHaving() {
         return true;
     }
+    
+    @Override
+    public boolean supportsBulkUpdate() {
+    	return true;
+    }
 }

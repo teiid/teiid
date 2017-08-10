@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-        <groupId>org.jboss.teiid</groupId>
+        <groupId>org.teiid</groupId>
         <artifactId>teiid-feature-pack</artifactId>
-        <version>10.0.0.Alpha2-SNAPSHOT</version>
+        <version>10.0.0.Alpha3-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -24,7 +24,7 @@
             </exclusions>
         </dependency>
 		<dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-client-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
@@ -36,7 +36,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
+            <groupId>org.teiid.connectors</groupId>
             <artifactId>feature-pack-ws</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
@@ -48,15 +48,15 @@
             </exclusions>
         </dependency>        
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-jboss-integration</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-data-quality</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-jboss-security</artifactId>
         </dependency>        
     </dependencies>

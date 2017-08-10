@@ -22,10 +22,12 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -39,8 +41,13 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestExcelExecution {
 
-	private ArrayList helpExecute(String ddl, FileConnection connection, String query) throws Exception {
+    private ArrayList helpExecute(String ddl, FileConnection connection, String query) throws Exception {
+        return helpExecute(ddl, connection, query, false);
+    }
+    
+	private ArrayList helpExecute(String ddl, FileConnection connection, String query, boolean format) throws Exception {
 		ExcelExecutionFactory translator = new ExcelExecutionFactory();
+		translator.setFormatStrings(format);
     	translator.start();
     	
     	TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "vdb", "excel");
@@ -187,6 +194,9 @@ public class TestExcelExecution {
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
     	assertEquals("[[18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
+    	
+    	results = helpExecute(ddl, connection, "select * from Sheet1", true);
+        assertEquals("[[18, Rocky, Dog, 3], [19, Total, null, 110]]", results.toString());
 	}
 	
 	@Test
@@ -328,7 +338,25 @@ public class TestExcelExecution {
     	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xlsx"));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select \"time\" from Sheet1");
+    	//typed as time
     	assertEquals("[[10:12:14]]", results.toString());
+    	
+    	String ddl = commonDDL.replace("\"time\" time", "\"time\" string");
+        results = helpExecute(ddl, connection, "select \"time\" from Sheet1", true);
+        //typed as string with formatting - Excel format
+        assertEquals("[[10:12:14 AM]]", results.toString());
+        
+        
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New_York")); //$NON-NLS-1$
+        try {
+            results = helpExecute(ddl, connection, "select \"time\" from Sheet1", false);
+            //typed as string without formatting - SQL / Teiid format
+            //note this seems like an issue with poi - if the sheet is not using 1904 dates, then it will start the calendar at the 0 day, not the first.
+            //however this behavior is slightly better than the previous, which would have shown the numeric value instead
+            assertEquals("[[1899-12-31 10:12:14.0]]", results.toString());
+        } finally {
+            TimestampWithTimezone.resetCalendar(null);
+        }
 	}	
 	
 	@Test(expected=TranslatorException.class)

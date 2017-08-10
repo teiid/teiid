@@ -20,6 +20,7 @@ package org.teiid.translator.excel;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
@@ -30,10 +31,13 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 
 @Translator(name="excel", description="Excel file translator")
 public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, FileConnection> {
 
+    private boolean formatStrings;
+    
 	public ExcelExecutionFactory() {
 		setSourceRequiredForMetadata(true);
 		setTransactionSupport(TransactionSupport.NONE);
@@ -47,7 +51,11 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, F
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, FileConnection connection)
     		throws TranslatorException {
-    	return new ExcelExecution((Select)command, executionContext, metadata, connection);
+    	ExcelExecution ex = new ExcelExecution((Select)command, executionContext, metadata, connection);
+    	if (formatStrings) {
+    	    ex.setDataFormatter(new DataFormatter()); //assume default locale
+    	}
+    	return ex;
     }    
     	
     @Override
@@ -84,4 +92,13 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, F
 	public boolean supportsInCriteria() {
 		return true;
 	}
+	
+	@TranslatorProperty(display="Format Strings", description="Format non-string cell values in a string column according to the worksheet format.", advanced=true)
+	public boolean isFormatStrings() {
+        return formatStrings;
+    }
+	
+	public void setFormatStrings(boolean formatStrings) {
+        this.formatStrings = formatStrings;
+    }
 }

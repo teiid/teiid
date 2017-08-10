@@ -1589,6 +1589,14 @@ public class TestDependentJoins {
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
 
         TestProcessor.helpProcess(plan, dataManager, expected);
+        
+        dataManager.clearData();
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b', 'c') ORDER BY c_0", Arrays.asList("a"), Arrays.asList("c"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'c')", Arrays.asList("a"));
+        plan.reset();
+        
+        TestProcessor.helpProcess(plan, dataManager, expected);
+
     }
     
 }

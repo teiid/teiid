@@ -5,7 +5,7 @@
     </properties>
     
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:translator-phoenix}"/> 
+        <artifact name="${org.teiid.connectors:translator-phoenix}"/> 
         <!-- Insert resources here -->
     </resources>
 

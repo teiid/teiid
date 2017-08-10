@@ -460,4 +460,9 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 		return true;
 	}
 	
+	@Override
+	public boolean supportsSelectWithoutFrom() {
+	    return true;
+	}
+	
 }

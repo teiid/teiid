@@ -74,11 +74,13 @@ public final class TriggerActionPlanner {
 		for (Map.Entry<ElementSymbol, Expression> entry : mapping.entrySet()) {
 			entry.setValue(QueryRewriter.rewriteExpression(entry.getValue(), context, metadata));
 		}
+		boolean singleRow = false;
 		if (userCommand instanceof Insert) {
 			Insert insert = (Insert)userCommand;
 			if (insert.getQueryExpression() != null) {
 				query = insert.getQueryExpression();
 			} else {
+			    singleRow = true;
 				query = new Query();
 				((Query)query).setSelect(new Select(RuleChooseJoinStrategy.createExpressionSymbols(insert.getValues())));
 			}
@@ -102,6 +104,7 @@ public final class TriggerActionPlanner {
 			}
 		}
 		ForEachRowPlan result = new ForEachRowPlan();
+		result.setSingleRow(singleRow);
 		result.setParams(params);
 		ProcessorPlan queryPlan = QueryOptimizer.optimizePlan(query, metadata, idGenerator, capFinder, analysisRecord, context);
 		result.setQueryPlan(queryPlan);

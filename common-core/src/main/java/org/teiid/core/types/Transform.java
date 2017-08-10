@@ -18,7 +18,6 @@
 
 package org.teiid.core.types;
 
-import org.teiid.core.CorePlugin;
 
 /**
  * This interface represents the transformation from one data type to
@@ -100,13 +99,6 @@ public abstract class Transform {
 	 */
 	public String toString() {
 		return getDisplayName();
-	}
-
-	protected void checkValueRange(Object value, Number min, Number max)
-			throws TransformationException {
-		if (((Comparable)value).compareTo(DataTypeManager.transformValue(min, getSourceType())) < 0 || ((Comparable)value).compareTo(DataTypeManager.transformValue(max, getSourceType())) > 0) {
-			  throw new TransformationException(CorePlugin.Event.TEIID10058, CorePlugin.Util.gs(CorePlugin.Event.TEIID10058, value, getSourceType().getSimpleName(), getTargetType().getSimpleName()));
-		}
 	}
 
 }

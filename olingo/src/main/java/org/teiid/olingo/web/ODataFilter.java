@@ -233,7 +233,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         }
     }
     
-    private void registerVDBListener(Client client, Connection conn) {
+    protected void registerVDBListener(Client client, Connection conn) {
         if (!this.listenerRegistered) {
             synchronized (this) {
                 if (!this.listenerRegistered) {

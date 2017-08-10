@@ -2,11 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.jboss.teiid.connectors</groupId>
+		<groupId>org.teiid.connectors</groupId>
 		<artifactId>salesforce</artifactId>
-		<version>10.0.0.Alpha2-SNAPSHOT</version>
+		<version>10.0.0.Alpha3-SNAPSHOT</version>
 	</parent>
-	<groupId>org.jboss.teiid.connectors</groupId>
+	<groupId>org.teiid.connectors</groupId>
 	<artifactId>translator-salesforce-34</artifactId>
 	<name>Salesforce Translator 34</name>
 	<description>Integrates the query engine with Salesforce.com.</description>
@@ -38,11 +38,11 @@
 	</dependencyManagement>
 	<dependencies>
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>teiid-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
+			<groupId>org.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
 		</dependency>
 		<dependency>
@@ -54,7 +54,7 @@
 			<artifactId>force-wsc</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
+			<groupId>org.teiid.connectors</groupId>
 			<artifactId>translator-salesforce</artifactId>
 		</dependency>
 		<dependency>

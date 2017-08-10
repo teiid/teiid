@@ -25,8 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.types.BinaryType;
-import org.teiid.language.BatchedCommand;
 import org.teiid.language.BatchedUpdates;
+import org.teiid.language.BulkCommand;
 import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -90,8 +90,8 @@ public class CassandraUpdateExecution implements UpdateExecution {
 		String cql = visitor.getTranslatedSQL();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
 		this.executionContext.logCommand(cql);
-		if (this.command instanceof BatchedCommand) {
-			BatchedCommand bc = (BatchedCommand)this.command;
+		if (this.command instanceof BulkCommand) {
+		    BulkCommand bc = (BulkCommand)this.command;
 			if (bc.getParameterValues() != null) {
 				int count = 0;
 				List<Object[]> newValues = new ArrayList<Object[]>();

@@ -5,7 +5,7 @@
     </properties>
     
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:translator-prestodb}"/>
+        <artifact name="${org.teiid.connectors:translator-prestodb}"/>
         <!-- Insert resources here -->
     </resources>
 

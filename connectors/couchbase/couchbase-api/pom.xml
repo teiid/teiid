@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-      <groupId>org.jboss.teiid.connectors</groupId>
+      <groupId>org.teiid.connectors</groupId>
       <artifactId>couchbase</artifactId>
-      <version>10.0.0.Alpha2-SNAPSHOT</version>
+      <version>10.0.0.Alpha3-SNAPSHOT</version>
     </parent>
-    <groupId>org.jboss.teiid.connectors</groupId> 
+    <groupId>org.teiid.connectors</groupId> 
     <artifactId>couchbase-api</artifactId>
     <name>Couchbase API</name>
     <description>The java API for the Couchbase</description>

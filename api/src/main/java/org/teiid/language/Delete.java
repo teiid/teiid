@@ -26,7 +26,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 /**
  * Represents a DELETE command.
  */
-public class Delete extends BaseLanguageObject implements BatchedCommand {
+public class Delete extends BaseLanguageObject implements BulkCommand {
 
     private NamedTable table;
     private Condition where;

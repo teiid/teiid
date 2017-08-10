@@ -4,8 +4,8 @@
     </properties>
        
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:connector-salesforce-34}"/>
-        <artifact name="${org.jboss.teiid.connectors:connector-salesforce}"/>
+        <artifact name="${org.teiid.connectors:connector-salesforce-34}"/>
+        <artifact name="${org.teiid.connectors:connector-salesforce}"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
