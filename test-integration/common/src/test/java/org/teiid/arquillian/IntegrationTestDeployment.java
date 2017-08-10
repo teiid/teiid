@@ -541,6 +541,18 @@ public class IntegrationTestDeployment {
 	}
 	
 	@Test
+	public void testCreateGoogleSpreadSheetSource() throws AdminException {
+	    Properties p = new Properties();
+	    p.setProperty("ClientSecret", "a");
+        p.setProperty("ClientId", "b");
+        p.setProperty("RefreshToken", "c");
+        p.setProperty("class-name", "org.teiid.resource.adapter.google.SpreadsheetManagedConnectionFactory");
+        
+        admin.createDataSource("my-sheet", "google", p);
+        admin.deleteDataSource("my-sheet");
+	}
+	
+	@Test
 	public void testVDBRestart() throws Exception{
 		String vdbName = "test";
 		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 

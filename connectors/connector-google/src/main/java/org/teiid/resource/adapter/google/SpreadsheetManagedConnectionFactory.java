@@ -41,11 +41,11 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 
 	private String spreadsheetName;
 	
-	//Can be either ClientLogin or OAuth2
-	private String authMethod;
-	
-	//In case of OAuth2 authentiation user has to supply refreshToken
+	private String authMethod = SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN;
 	private String refreshToken;
+	
+	private String clientId;
+	private String clientSecret;
 	
 	private Boolean key = false;
 	
@@ -153,6 +153,22 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 	        key = false;
 	    }
         this.key = key;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+    
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+    
+    public String getClientSecret() {
+        return clientSecret;
+    }
+    
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
     }
 	
 }

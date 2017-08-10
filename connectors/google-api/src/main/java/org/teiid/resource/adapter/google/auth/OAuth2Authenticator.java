@@ -65,54 +65,16 @@ import org.teiid.resource.adapter.google.dataprotocol.GoogleJSONParser;
  *
  */
 public class OAuth2Authenticator {
-	private final String CLIENT_ID = "217138521084.apps.googleusercontent.com"; //$NON-NLS-1$
-	private final String CLIENT_SECRET = "gXQ6-lOkEjE1lVcz7giB4Poy"; //$NON-NLS-1$
-	private final String SCOPE_SPREADSHEET = "https://spreadsheets.google.com/feeds/"; //$NON-NLS-1$
+	final static String CLIENT_ID = "217138521084.apps.googleusercontent.com"; //$NON-NLS-1$
+	final static String CLIENT_SECRET = "gXQ6-lOkEjE1lVcz7giB4Poy"; //$NON-NLS-1$
 //	private final String SCOPE_DRIVE = "https://docs.google.com/feeds";
-	private final String SCOPE_DRIVE= " https://www.googleapis.com/auth/drive"; //$NON-NLS-1$
-	 
-	private final String AUTHORIZATION_SERVER_URL = "https://accounts.google.com/o/oauth2/device/code"; //$NON-NLS-1$
-	private final String GRANT_TYPE = "http://oauth.net/grant_type/device/1.0"; //$NON-NLS-1$
 	private final String TOKEN_URL = "https://accounts.google.com/o/oauth2/token"; //$NON-NLS-1$
 
 
-				
-	/**
-	 * AuthUrl is url that user has to type into his browser.
-	 * @return
-	 */
-	public AuthUrlResponse getAuthUrl() {
-		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-		nvps.add(new BasicNameValuePair("client_id", CLIENT_ID)); //$NON-NLS-1$
-		nvps.add(new BasicNameValuePair("scope", SCOPE_SPREADSHEET+ SCOPE_DRIVE)); //$NON-NLS-1$
-		Map<?, ?> json = jsonResponseHttpPost(AUTHORIZATION_SERVER_URL, nvps);
-		
-		return new AuthUrlResponse(json.get("device_code"), //$NON-NLS-1$
-				json.get("user_code"), json.get("verification_url"), //$NON-NLS-1$ //$NON-NLS-2$
-				json.get("expires_in"), json.get("interval")); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	/**
-	 * Use this method to retrieve access tokens when you think user has already authorized the
-	 * request.
-	 * 
-	 * @param deviceCode
-	 * @return
-	 */
-	public OAuth2Tokens getAccessGoogleTokens(String deviceCode) {
-		
-		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-		nvps.add(new BasicNameValuePair("client_id", CLIENT_ID)); //$NON-NLS-1$
-		nvps.add(new BasicNameValuePair("client_secret", CLIENT_SECRET)); //$NON-NLS-1$
-		nvps.add(new BasicNameValuePair("code", deviceCode)); //$NON-NLS-1$
-		nvps.add(new BasicNameValuePair("grant_type", GRANT_TYPE)); //$NON-NLS-1$
-		Map<?, ?> json = jsonResponseHttpPost(TOKEN_URL, nvps);
-		return new OAuth2Tokens(json.get("access_token"), //$NON-NLS-1$
-				json.get("refresh_token"), json.get("expires_in")); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
 	/**
 	 * 
+	 * @param clientSecret 
+	 * @param clientId 
 	 * @param new immutable instance of OAuth2Tokens
 	 * @return
 	 */
@@ -121,11 +83,11 @@ public class OAuth2Authenticator {
 //	--data-urlencode refresh_token=1/A6ifXgNxCYVGTkPUTnD6Y35v_GyfmuRAsKKL4eww8xs \
 //	--data-urlencode grant_type=refresh_token \
 //	https://accounts.google.com/o/oauth2/token
-	public OAuth2Tokens refreshToken(OAuth2Tokens at) {
+	public OAuth2Tokens refreshToken(OAuth2Tokens at, String clientId, String clientSecret) {
 		
 		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-		nvps.add(new BasicNameValuePair("client_id", CLIENT_ID)); //$NON-NLS-1$
-		nvps.add(new BasicNameValuePair("client_secret", CLIENT_SECRET)); //$NON-NLS-1$
+		nvps.add(new BasicNameValuePair("client_id", clientId)); //$NON-NLS-1$
+		nvps.add(new BasicNameValuePair("client_secret", clientSecret)); //$NON-NLS-1$
 		nvps.add(new BasicNameValuePair("refresh_token", at.getRefreshToken())); //$NON-NLS-1$
 		nvps.add(new BasicNameValuePair("grant_type", "refresh_token")); //$NON-NLS-1$ //$NON-NLS-2$
 		Map<?, ?> json = jsonResponseHttpPost(TOKEN_URL, nvps);
