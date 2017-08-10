@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
 import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
@@ -50,7 +49,11 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 	public SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory config, AtomicReference<SpreadsheetInfo> spreadsheetInfo) {
 		this.config = config;
 		this.spreadsheetInfo = spreadsheetInfo;
-		AuthHeaderFactory authHeaderFactory = new OAuth2HeaderFactory(config.getRefreshToken().trim());
+		OAuth2HeaderFactory authHeaderFactory = new OAuth2HeaderFactory(config.getRefreshToken().trim());
+		if (config.getClientId() != null) {
+    		authHeaderFactory.setClientId(config.getClientId());
+    		authHeaderFactory.setClientSecret(config.getClientSecret());
+		}
 		gdata=new GDataClientLoginAPI();
 		dataProtocol = new GoogleDataProtocolAPI();
 		authHeaderFactory.login();
