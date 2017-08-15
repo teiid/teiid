@@ -95,6 +95,7 @@
 /subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
 /subsystem=teiid/translator=couchbase:add(module=org.jboss.teiid.translator.couchbase)
 /subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
+/subsystem=teiid/translator=amazon-s3:add(module=org.jboss.teiid.translator.amazon.s3)
 
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
