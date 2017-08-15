@@ -120,6 +120,7 @@
     <module>translator-couchbase</module>
     <module>translator-prestodb</module>
     <module>translator-hbase</module>
+    <module>translator-amazon-s3</module>
 
     <module>connector-file</module>
     <module>connector-google</module>
