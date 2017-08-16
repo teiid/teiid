@@ -1341,7 +1341,11 @@ public class NewCalculateCostUtil {
 					//TODO: we need better handling for set op situations
 					continue;
 		        }
-				if (!rpsc.pushAcrossFrame(sourceNode, critNode, metadata)) {
+				if (!rpsc.pushAcrossFrame(sourceNode, critNode, metadata, capFinder, null)) {
+					if (target.hasBooleanProperty(Info.MAKE_NOT_DEP)) {
+			        	targets.clear();
+			        	break;
+			        }
 					targets.add(target);
 					DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
 					depExpressions.add(dsc.getExpression());
