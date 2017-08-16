@@ -230,7 +230,9 @@ public class RuleDecomposeJoin implements OptimizerRule {
 	    PlanNode view = RuleDecomposeJoin.createSource(group, newUnion, newSymbolMap);
 		
 		Map<Expression, ElementSymbol> inverseMap = newSymbolMap.inserseMapping();
-		toReplace.getParent().replaceChild(toReplace, view);
+		if (toReplace != null) {
+		    toReplace.getParent().replaceChild(toReplace, view);
+		}
 		Set<GroupSymbol> newGroups = Collections.singleton(group);
 		for (PlanNode node : toMap) {
 			FrameUtil.convertFrame(view, node.getGroups().iterator().next(), newGroups, inverseMap, metadata);
