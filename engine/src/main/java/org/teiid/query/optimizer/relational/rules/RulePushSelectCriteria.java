@@ -33,6 +33,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
@@ -124,7 +125,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 switch (sourceNode.getType()) {
                     case NodeConstants.Types.SOURCE:
                     {
-                        Boolean acrossFrame = pushAcrossFrame(sourceNode, critNode, metadata);
+                        Boolean acrossFrame = pushAcrossFrame(sourceNode, critNode, metadata, capFinder, context);
                         if (acrossFrame != null) {
                         	moved = acrossFrame;
                         } else {
@@ -600,7 +601,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		return crits;
 	}
 
-	Boolean pushAcrossFrame(PlanNode sourceNode, PlanNode critNode, QueryMetadataInterface metadata)
+	Boolean pushAcrossFrame(PlanNode sourceNode, PlanNode critNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context)
 		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         //ensure that the criteria can be pushed further
@@ -616,7 +617,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             	//only allow criteria without subqueires - node cloning doesn't allow for the proper creation of 
             	//multiple nodes with the same subqueries
                 if (child == sourceNode.getFirstChild() && critNode.getSubqueryContainers().isEmpty()) {
-                    return pushAcrossSetOp(critNode, child, metadata);
+                    return pushAcrossSetOp(critNode, child, metadata, capFinder, context);
                 } 
                 //this could be an access node in the middle of the source and set op,
                 //it is an odd case that is not supported for now
@@ -780,7 +781,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	    return copyNode;
 	}
 
-	boolean pushAcrossSetOp(PlanNode critNode, PlanNode setOp, QueryMetadataInterface metadata)
+	boolean pushAcrossSetOp(PlanNode critNode, PlanNode setOp, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context)
 		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         // Find source node above union and grab the symbol map
@@ -806,9 +807,50 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	        if (childMap == null) {
 	        	childMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), (List) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS));
 	        }
+	        
+	        //we cannot simply move the node in the case where placing above or below the access would be invalid
+	        boolean handleSetOp = false;
+            PlanNode accessNode = NodeEditor.findNodePreOrder(planNode, NodeConstants.Types.ACCESS, NodeConstants.Types.PROJECT);
+            if (accessNode != null 
+                    && NodeEditor.findParent(projectNode, NodeConstants.Types.SET_OP, NodeConstants.Types.ACCESS) != null) {
+                handleSetOp = true;
+            }
 		    
 			// Move the node
 			if(placeConvertedSelectNode(critNode, virtualGroup, projectNode, childMap, metadata)) {
+                if (handleSetOp) {
+                    PlanNode newSelect = projectNode.getFirstChild();
+                    projectNode.replaceChild(newSelect, newSelect.getFirstChild());
+                    
+                    Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+                    Criteria crit = (Criteria) newSelect.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+                    
+                    if(newSelect.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)
+                            && context != null && CapabilitiesUtil.supportsInlineView(modelID, metadata, capFinder)
+                            && CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, modelID, metadata, capFinder, null) ) { 
+                        accessNode.getFirstChild().addAsParent(newSelect);
+                        
+                        List<Expression> old = (List<Expression>) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
+                        
+                        //create a project node based upon the created group and add it as the parent of the select
+                        PlanNode project = RelationalPlanner.createProjectNode(LanguageObject.Util.deepClone(old, Expression.class));
+                        newSelect.addAsParent(project);
+                        
+                        PlanNode newSourceNode = RuleDecomposeJoin.rebuild(new GroupSymbol("intermediate"), null, newSelect.getFirstChild(), metadata, context, projectNode); //$NON-NLS-1$
+                        newSourceNode.setProperty(NodeConstants.Info.INLINE_VIEW, true);
+                        
+                        accessNode.addGroups(newSourceNode.getGroups());
+                        markDependent(newSelect, accessNode, metadata, capFinder);
+                    } else {
+                        //TODO: see if the predicate should be duplicated for each branch under the access node
+                        //or an inline view could be used similar to the above
+                        if (createdNodes != null) {
+                            createdNodes.remove(newSelect);
+                        }
+                        childMap = null;
+                        continue;
+                    }
+                }
                 movedCount++;
             }
 			
