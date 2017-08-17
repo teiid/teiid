@@ -23,7 +23,10 @@ import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Properties;
+
+import javax.net.ssl.SSLContext;
 
 import org.junit.After;
 import org.junit.Before;
@@ -194,6 +197,13 @@ public class TestCommSockets {
 	}
 
 	@Test public void testAnonSSLConnect() throws Exception {
+	    SSLContext context = SSLContext.getDefault();
+	    String[] ciphers = context.getServerSocketFactory().getSupportedCipherSuites();
+	    if (!Arrays.asList(ciphers).contains(SocketUtil.ANON_CIPHER_SUITE)) {
+	        //Cannot test anon if no cipher suite is available
+            return;
+        }
+	    
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
 		config.setEnabledCipherSuites("x"); //ensure that this cipher suite is not used
