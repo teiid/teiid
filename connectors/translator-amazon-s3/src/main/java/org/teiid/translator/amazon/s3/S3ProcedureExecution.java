@@ -33,11 +33,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
+//import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.teiid.core.util.Base64;
 
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -257,12 +259,14 @@ public class S3ProcedureExecution implements ProcedureExecution {
 			}
 			
 			if (encryption != null) {
+				
 				assert encryptionKey != null;
 				headers.put("x-amz-server-side​-encryption​-customer-algorithm", encryption);
 				headers.put("x-amz-server-side​-encryption​-customer-key", encryptionKey);
 				MessageDigest messageDigest = MessageDigest.getInstance("md5");
 				headers.put("x-amz-server-side​-encryption​-customer-key-MD5",
-						Base64.getEncoder().encodeToString(messageDigest.digest(encryptionKey.getBytes())));
+						Base64.encodeBytes(messageDigest.digest(encryptionKey.getBytes())));
+//						Base64.getEncoder().encodeToString(messageDigest.digest(encryptionKey.getBytes())));
 			}
 			
 			LogManager.logDetail(LogConstants.CTX_WS, "Getting", endpoint); //$NON-NLS-1$
