@@ -63,7 +63,6 @@
         <module name="com.vividsolutions.jts"/>
         <module name="org.osgeo.proj4j"/>
         <module name="org.wololo.jts2geojson"/>
-        <module name="org.jaxen" />
         <module name="org.jboss.dmr" /> <!-- Admin -->        
         <module name="org.jboss.as.cli"/> <!-- Admin -->
         <module name="org.jboss.as.controller-client"/> <!-- Admin -->

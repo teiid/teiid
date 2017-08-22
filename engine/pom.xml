@@ -151,11 +151,6 @@
               <groupId>com.io7m.xom</groupId>
               <artifactId>xom</artifactId>
         </dependency>
-
-        <dependency>
-              <groupId>jaxen</groupId>
-              <artifactId>jaxen</artifactId>    
-        </dependency>
                           
 	</dependencies>
 

@@ -33,10 +33,6 @@ import javax.script.Compilable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
-import net.sf.saxon.om.Name11Checker;
-import net.sf.saxon.om.QNameException;
-import net.sf.saxon.trans.XPathException;
-
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -311,7 +307,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	            Constant xpathConst = (Constant) obj.getArgs()[1];
                 try {
                     XMLSystemFunctions.validateXpath((String)xpathConst.getValue());
-                } catch(XPathException e) {
+                } catch(TeiidProcessingException e) {
                 	handleValidationError(QueryPlugin.Util.getString("QueryResolver.invalid_xpath", e.getMessage()), obj); //$NON-NLS-1$
                 }
 	        }
@@ -1087,8 +1083,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
 	private String[] validateQName(LanguageObject obj, String name) {
 		try {
-			return Name11Checker.getInstance().getQNameParts(name);
-		} catch (QNameException e) {
+			return XMLSystemFunctions.validateQName(name);
+		} catch (TeiidProcessingException e) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_invalid_qname", name), obj); //$NON-NLS-1$
 		}
 		return null;
@@ -1251,7 +1247,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			if (item.getPrefix() != null) {
 				if (item.getPrefix().equals("xml") || item.getPrefix().equals("xmlns")) { //$NON-NLS-1$ //$NON-NLS-2$
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_reserved"), obj); //$NON-NLS-1$
-				} else if (!Name11Checker.getInstance().isValidNCName(item.getPrefix())) {
+				} else if (!XMLSystemFunctions.isValidNCName(item.getPrefix())) {
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_invalid", item.getPrefix()), obj); //$NON-NLS-1$
 				}
 				if (item.getUri().length() == 0) {
