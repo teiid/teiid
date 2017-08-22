@@ -68,7 +68,7 @@ public class TestCompositeVDB {
     	cmr.addConnectorManager("source2", getConnectorManager("FakeTranslator2", "FakeConnection2", getFuncsTwo()));
     	
     	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metadataStore, null, null, RealMetadataFactory.SFM.getSystemFunctions(),cmr, null);
-    	cvdb.metadataLoadFinished();
+    	cvdb.metadataLoadFinished(true);
     	assertNotNull(cvdb.getVDB().getAttachment(Foo.class));
 		return cvdb;
 	}

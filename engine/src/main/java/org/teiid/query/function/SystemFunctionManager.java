@@ -30,17 +30,20 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.function.source.SystemSource;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.validator.ValidatorReport;
 
 
 public class SystemFunctionManager {
 
-	private FunctionTree systemFunctionTree;
-	private boolean allowEnvFunction = true;
-	private ClassLoader classLoader;
+	private static volatile FunctionTree systemFunctionTree;
 	private Map<String, Datatype> types;
 	
+	/**
+	 * Provide access to system functions - can only be used after SystemMetadata has been initialized
+	 */
 	public SystemFunctionManager() {
+	    this.types = SystemMetadata.getInstance().getRuntimeTypeMap();
 	}
 	
 	public SystemFunctionManager(Map<String, Datatype> typeMap) {
@@ -50,8 +53,7 @@ public class SystemFunctionManager {
 	public FunctionTree getSystemFunctions() {
     	if(systemFunctionTree == null) { 
 	    	// Create the system source and add it to the source list
-	    	SystemSource systemSource = new SystemSource(this.allowEnvFunction);
-	    	systemSource.setClassLoader(classLoader);
+	    	SystemSource systemSource = new SystemSource();
 			// Validate the system source - should never fail
 	    	ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
 	        Collection<FunctionMethod> functionMethods = systemSource.getFunctionMethods();
@@ -69,19 +71,4 @@ public class SystemFunctionManager {
     	return new FunctionLibrary(getSystemFunctions());
     }
     
-    public boolean isAllowEnvFunction() {
-		return allowEnvFunction;
-	}
-
-	public void setAllowEnvFunction(boolean allowEnvFunction) {
-		this.allowEnvFunction = allowEnvFunction;
-	}    
-	
-    public ClassLoader getClassLoader() {
-    	return this.classLoader;
-    }
-    
-    public void setClassloader(ClassLoader classloader) {
-    	this.classLoader = classloader;
-    }	
 }

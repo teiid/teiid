@@ -451,5 +451,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
             throws QueryMetadataException {
         return actualMetadata.getDataTypeClass(typeName);
     }
+    
+    @Override
+    public boolean isEnvAllowed() {
+        return actualMetadata.isEnvAllowed();
+    }
 	
 }

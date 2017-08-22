@@ -31,7 +31,7 @@ import org.teiid.query.validator.ValidatorReport;
 public class TestSystemSource {
 
 	@Test public void testValidate() {
-	    SystemSource source = new SystemSource(false);
+	    SystemSource source = new SystemSource();
 	    ValidatorReport report = new ValidatorReport("Test Report");	    	     //$NON-NLS-1$
 		FunctionMetadataValidator.validateFunctionMethods(source.getFunctionMethods(), report);
 

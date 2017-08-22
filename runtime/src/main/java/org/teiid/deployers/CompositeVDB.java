@@ -93,7 +93,7 @@ public class CompositeVDB {
 	
     private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb,
             LinkedHashMap<String, VDBResources.Resource> visibilityMap, MetadataStore store, UDFMetaData udf,
-            FunctionTree systemFunctions, MetadataStore[] additionalStores) {
+            FunctionTree systemFunctions, MetadataStore[] additionalStores, boolean allowEnv) {
 
         Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
 		if (udf != null) {			
@@ -133,6 +133,7 @@ public class CompositeVDB {
 		}
 		
 		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, systemFunctions, udfs);
+		metadata.setAllowENV(allowEnv);
 		metadata.setUseOutputNames(false);
 		metadata.setWidenComparisonToString(WIDEN_COMPARISON_TO_STRING);
 		return metadata;
@@ -278,7 +279,7 @@ public class CompositeVDB {
 		return originalVDB;
 	}
 	
-	public void metadataLoadFinished() {
+	public void metadataLoadFinished(boolean allowEnv) {
 		if (this.metadataloadFinished) {
 			return;
 		}
@@ -306,7 +307,7 @@ public class CompositeVDB {
 			}		
 		}
 		
-		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores);
+		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores, allowEnv);
 		QueryMetadataInterface qmi = metadata;
         Map<String, String> multiSourceModels = MultiSourceMetadataWrapper.getMultiSourceModels(mergedVDB);
         if(multiSourceModels != null && !multiSourceModels.isEmpty()) {

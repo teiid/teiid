@@ -594,4 +594,9 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	    return DataTypeManager.getDataTypeClass(typeName);
 	}
 	
+	@Override
+	public boolean isEnvAllowed() {
+	    return true;
+	}
+	
 }

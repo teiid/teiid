@@ -263,20 +263,20 @@ class TeiidAdd extends AbstractAddStepHandler {
         
     	// system function tree
 		SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
-		if (isDefined(ALLOW_ENV_FUNCTION_ELEMENT, operation, context)) {
-			systemFunctionManager.setAllowEnvFunction(asBoolean(ALLOW_ENV_FUNCTION_ELEMENT, operation, context));
-		}
-		else {
-			systemFunctionManager.setAllowEnvFunction(false);
-		}
-		systemFunctionManager.setClassloader(Thread.currentThread().getContextClassLoader()); 
-    	
+		
     	// VDB repository
     	final VDBRepository vdbRepository = new VDBRepository();
     	vdbRepository.setSystemFunctionManager(systemFunctionManager);
     	if (isDefined(DATA_ROLES_REQUIRED_ELEMENT, operation, context) && asBoolean(DATA_ROLES_REQUIRED_ELEMENT, operation, context)) {
     		vdbRepository.setDataRolesRequired(true);
     	}
+    	
+    	if (isDefined(ALLOW_ENV_FUNCTION_ELEMENT, operation, context)) {
+    	    vdbRepository.setAllowEnvFunction(asBoolean(ALLOW_ENV_FUNCTION_ELEMENT, operation, context));
+        }
+        else {
+            vdbRepository.setAllowEnvFunction(false);
+        }
 
     	VDBRepositoryService vdbRepositoryService = new VDBRepositoryService(vdbRepository);
     	ServiceBuilder<VDBRepository> vdbRepoService = target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService);
