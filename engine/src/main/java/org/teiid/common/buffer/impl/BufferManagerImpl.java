@@ -90,6 +90,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	private static final int MAX_READ_AGE = 1<<19;
 	private static final class Cleaner extends TimerTask {
 		WeakReference<BufferManagerImpl> bufferRef;
+		private volatile boolean canceled;
 		
 		public Cleaner(BufferManagerImpl bufferManagerImpl) {
 			this.bufferRef = new WeakReference<BufferManagerImpl>(bufferManagerImpl);
@@ -117,7 +118,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
                         }
 					}
 				} catch (Throwable t) {
+				    if (ExceptionUtil.getExceptionOfType(t, InterruptedException.class) != null) {
+				        return;
+				    }
 					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, t, "Exception during cleaning run"); //$NON-NLS-1$
+				}
+				if (canceled) {
+				    return;
 				}
 				synchronized (this) {
 					impl.cleaning.set(false);
@@ -128,6 +135,12 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					}
 				}
 			}
+		}
+		
+		@Override
+		public boolean cancel() {
+		    this.canceled = true;
+		    return super.cancel();
 		}
 	}
 	
@@ -475,17 +488,30 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	private AtomicLong writeCount = new AtomicLong();
 	private AtomicLong referenceHit = new AtomicLong();
 	
-	//TODO: this does not scale well with multiple embedded instances
-	private static final Timer timer = new Timer("BufferManager Cleaner", true); //$NON-NLS-1$
+	private static Timer SHARED_TIMER;
+	private Timer timer;
+	
 	private Cleaner cleaner;
 	private AtomicBoolean cleaning = new AtomicBoolean();
 
     private long maxFileStoreLength = Long.MAX_VALUE;
     private long maxBatchManagerSizeEstimate = Long.MAX_VALUE;
     private long maxSessionBatchManagerSizeEstimate = Long.MAX_VALUE;
-	
-	public BufferManagerImpl() {
+	    
+    public BufferManagerImpl() {
+        this(true);
+    }
+    
+	public BufferManagerImpl(boolean sharedTimer) {
 		this.cleaner = new Cleaner(this);
+		if (sharedTimer) {
+		    if (SHARED_TIMER == null) {
+		        SHARED_TIMER = new Timer("BufferManager Cleaner", true); //$NON-NLS-1$
+		    }
+		    timer = SHARED_TIMER;
+		} else {
+		    timer = new Timer("BufferManager Cleaner", true); //$NON-NLS-1$
+		}
 		timer.schedule(cleaner, 100);
 	}
 	
@@ -1186,6 +1212,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		this.evictionQueue.getEvictionQueue().clear();
 		this.initialEvictionQueue.getEvictionQueue().clear();
 		this.cleaner.cancel();
+		if (this.timer != SHARED_TIMER) {
+		    this.timer.cancel();
+		}
 	}
 
 	@Override

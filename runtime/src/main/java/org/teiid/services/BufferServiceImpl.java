@@ -85,7 +85,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public void start(){
     	try {
             // Construct and initialize the buffer manager
-            this.bufferMgr = new BufferManagerImpl();
+            this.bufferMgr = new BufferManagerImpl(false);
             this.bufferMgr.setProcessorBatchSize(processorBatchSize);
             this.bufferMgr.setMaxReserveKB(this.maxReserveKb);
             this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
