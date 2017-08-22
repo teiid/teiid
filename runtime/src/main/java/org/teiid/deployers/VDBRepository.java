@@ -89,6 +89,7 @@ public class VDBRepository implements Serializable{
     private BufferManager bufferManager;
     private ObjectReplicator objectReplictor;
     private DatabaseStore databaseStore;
+    private boolean allowEnv = true;
 	
     public void addVDB(VDBMetaData vdb, MetadataStore metadataStore,
             LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr)
@@ -326,7 +327,7 @@ public class VDBRepository implements Serializable{
 		synchronized (metadataAwareVDB) {
 			try {
 				try {
-					v.metadataLoadFinished();
+					v.metadataLoadFinished(allowEnv);
 				} catch (MetadataException e) {
 					LogManager.logWarning(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version, e.getMessage())); //$NON-NLS-1$
 					if (!metadataAwareVDB.isPreview()) {
@@ -488,6 +489,10 @@ public class VDBRepository implements Serializable{
 
 	NavigableMap<VDBKey, CompositeVDB> getVdbRepo() {
         return vdbRepo;
+    }
+
+    public void setAllowEnvFunction(boolean allowEnv) {
+        this.allowEnv = allowEnv;
     }
 	
 }

@@ -147,6 +147,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private Map<String, Collection<StoredProcedureInfo>> procedureCache = Collections.synchronizedMap(new LRUCache<String, Collection<StoredProcedureInfo>>(200));
 
 	private boolean widenComparisonToString = true;
+
+    private boolean allowEnv = true;
     /**
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadata.
@@ -1164,5 +1166,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
         throw new QueryMetadataException(QueryPlugin.Event.TEIID31254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31254, typeOrDomainName));
 	}
+	
+	@Override
+	public boolean isEnvAllowed() {
+	    return this.allowEnv;
+	}
+
+    public void setAllowENV(boolean b) {
+        this.allowEnv = b;
+    }
 	
 }

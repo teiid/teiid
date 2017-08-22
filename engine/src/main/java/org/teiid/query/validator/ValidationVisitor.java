@@ -290,7 +290,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	}
 
     public void visit(Function obj) {
-    	if(FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
+        if (!this.getMetadata().isEnvAllowed() && obj.getName().equalsIgnoreCase(FunctionLibrary.ENV)) {
+            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.env_not_allowed", obj, obj.getName()), obj); //$NON-NLS-1$
+        } else if(FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {
 				ResolverUtil.ResolvedLookup resolvedLookup = ResolverUtil.resolveLookup(obj, getMetadata());
 				if(ValidationVisitor.isNonComparable(resolvedLookup.getKeyElement())) {

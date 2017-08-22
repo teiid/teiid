@@ -54,6 +54,7 @@ public class SystemMetadata {
 	private List<Datatype> dataTypes = new ArrayList<Datatype>();
 	private Map<String, Datatype> typeMap = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
 	private MetadataStore systemStore;
+	private final SystemFunctionManager systemFunctionManager;
 	
 	public SystemMetadata() {
 		InputStream is = SystemMetadata.class.getClassLoader().getResourceAsStream("org/teiid/metadata/types.dat"); //$NON-NLS-1$
@@ -113,10 +114,11 @@ public class SystemMetadata {
 		vdb.setVersion(1);
 		Properties p = new Properties();
 		QueryParser parser = new QueryParser();
+		this.systemFunctionManager = new SystemFunctionManager(typeMap);
 		systemStore = loadSchema(vdb, p, "SYS", parser).asMetadataStore(); //$NON-NLS-1$
 		systemStore.addDataTypes(typeMap);
 		loadSchema(vdb, p, "SYSADMIN", parser).mergeInto(systemStore); //$NON-NLS-1$
-		TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(systemStore), null, new SystemFunctionManager(typeMap).getSystemFunctions(), null);
+		TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(systemStore), null, systemFunctionManager.getSystemFunctions(), null);
 		vdb.addAttchment(QueryMetadataInterface.class, tm);
 		MetadataValidator validator = new MetadataValidator(this.typeMap, parser);
 		ValidatorReport report = validator.validate(vdb, systemStore);
