@@ -74,6 +74,10 @@
 		    <artifactId>cxf-rt-transports-http-hc</artifactId>
 		</dependency>
 		<dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-databinding-jaxb</artifactId>
+        </dependency>
+		<dependency>
 		    <groupId>org.apache.httpcomponents</groupId>
 		    <artifactId>httpcore-nio</artifactId>
 		</dependency>
