@@ -193,7 +193,8 @@ public class RulePlanJoins implements OptimizerRule {
             CapabilitiesFinder capabilitiesFinder, CommandContext context,
             JoinRegion joinRegion) throws QueryMetadataException,
             TeiidComponentException, AssertionError {
-        if (joinRegion.getLeft() == null || joinRegion.getJoinRoot().getLastChild().getType() != NodeConstants.Types.ACCESS) {
+        if (joinRegion.getLeft() == null || joinRegion.getJoinRoot().getLastChild().getType() != NodeConstants.Types.ACCESS
+                || joinRegion.getJoinRoot().getFirstChild().getType() == NodeConstants.Types.ACCESS) {
             return;
         }
         
