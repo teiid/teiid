@@ -37,7 +37,7 @@ import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class TestMetadataValidator {
-	public static final SystemFunctionManager SFM = new SystemFunctionManager();
+	public static final SystemFunctionManager SFM = SystemMetadata.getInstance().getSystemFunctionManager();
 	private VDBMetaData vdb = new VDBMetaData();
 	private MetadataStore store = new MetadataStore();
 	

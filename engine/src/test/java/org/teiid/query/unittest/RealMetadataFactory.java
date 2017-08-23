@@ -57,7 +57,7 @@ import org.teiid.query.validator.ValidatorReport;
 @SuppressWarnings("nls")
 public class RealMetadataFactory {
 
-	public static final SystemFunctionManager SFM = new SystemFunctionManager();
+	public static final SystemFunctionManager SFM = SystemMetadata.getInstance().getSystemFunctionManager();
 
     private static TransformationMetadata CACHED_EXAMPLE1 = example1();
 	private static TransformationMetadata CACHED_BQT = exampleBQT();

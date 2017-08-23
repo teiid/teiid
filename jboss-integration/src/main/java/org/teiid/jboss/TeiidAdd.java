@@ -102,6 +102,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.runtime.NodeTracker;
@@ -258,7 +259,7 @@ class TeiidAdd extends AbstractAddStepHandler {
         final ConnectorManagerRepository connectorManagerRepo = buildConnectorManagerRepository(translatorRepo);
         
     	// system function tree
-		SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
+		SystemFunctionManager systemFunctionManager = SystemMetadata.getInstance().getSystemFunctionManager();
 		
     	// VDB repository
     	final VDBRepository vdbRepository = new VDBRepository();

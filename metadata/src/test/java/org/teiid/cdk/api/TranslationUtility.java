@@ -30,6 +30,7 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.BasicQueryMetadataWrapper;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SystemMetadata;
 
 
 /**
@@ -110,7 +111,7 @@ public class TranslationUtility {
     		return;
     	}
     	this.functions.add(new FunctionTree(schema, new UDFSource(methods)));
-		SystemFunctionManager sfm = new SystemFunctionManager();
+		SystemFunctionManager sfm = SystemMetadata.getInstance().getSystemFunctionManager();
 		functionLibrary = new FunctionLibrary(sfm.getSystemFunctions(), this.functions.toArray(new FunctionTree[this.functions.size()]));
     }
 
