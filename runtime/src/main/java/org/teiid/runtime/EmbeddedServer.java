@@ -115,9 +115,9 @@ import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.query.ObjectReplicator;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.PureZipFileSystem;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.sql.lang.Command;
@@ -566,7 +566,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			public void beforeRemove(String name, CompositeVDB vdb) {
 			}
 		});
-		this.repo.setSystemFunctionManager(new SystemFunctionManager());
+		this.repo.setSystemFunctionManager(SystemMetadata.getInstance().getSystemFunctionManager());
 		this.repo.start();
 	}
 

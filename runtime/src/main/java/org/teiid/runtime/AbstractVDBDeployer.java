@@ -58,7 +58,6 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.VDBResource;
 import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.*;
 import org.teiid.query.metadata.DatabaseStore.Mode;
 import org.teiid.query.parser.QueryParser;
@@ -194,10 +193,6 @@ public abstract class AbstractVDBDeployer {
 	            @Override
 	            public Map<String, Datatype> getRuntimeTypes() {
 	                return getVDBRepository().getRuntimeTypeMap();
-	            }
-	            @Override
-	            public SystemFunctionManager getSystemFunctionManager() {
-	                return getVDBRepository().getSystemFunctionManager();
 	            }
 	        }; 
 	        dbStore.startEditing(true);

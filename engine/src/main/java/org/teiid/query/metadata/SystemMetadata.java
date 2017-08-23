@@ -117,8 +117,8 @@ public class SystemMetadata {
 		vdb.setName("System");  //$NON-NLS-1$
 		vdb.setVersion(1);
 		Properties p = new Properties();
-		QueryParser parser = new QueryParser();
 		this.systemFunctionManager = new SystemFunctionManager(typeMap);
+        QueryParser parser = new QueryParser();
 		systemStore = loadSchema(vdb, p, "SYS", parser).asMetadataStore(); //$NON-NLS-1$
 		systemStore.addDataTypes(typeMap);
 		loadSchema(vdb, p, "SYSADMIN", parser).mergeInto(systemStore); //$NON-NLS-1$
@@ -179,4 +179,8 @@ public class SystemMetadata {
 	public MetadataStore getSystemStore() {
 		return systemStore;
 	}
+	
+	public SystemFunctionManager getSystemFunctionManager() {
+        return systemFunctionManager;
+    }
 }

@@ -801,10 +801,6 @@ public class TestDDLParser {
                 return dataTypes;
             }
 			@Override
-			public SystemFunctionManager getSystemFunctionManager() {
-				return new SystemFunctionManager();
-			}
-			@Override
 			protected TransformationMetadata getTransformationMetadata() {
 			    Database database = getCurrentDatabase();
 		        
@@ -812,7 +808,7 @@ public class TestDDLParser {
 		        //grants are already stored on the VDBMetaData
 		        store.getGrants().clear();
 		        return new TransformationMetadata(DatabaseUtil.convert(database), store, null,
-		                getSystemFunctionManager().getSystemFunctions(), null);
+		                null, null);
 			}
         }; 
         store.startEditing(true);

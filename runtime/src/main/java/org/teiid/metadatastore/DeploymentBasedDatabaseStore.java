@@ -33,7 +33,6 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.metadata.Database;
 import org.teiid.metadata.Datatype;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.parser.QueryParser;
@@ -57,11 +56,6 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
     	return false;
     }
     
-	@Override
-	public SystemFunctionManager getSystemFunctionManager() {
-		return vdbRepo.getSystemFunctionManager();
-	}
-	
     public VDBMetaData getVDBMetadata(String contents) {
     	StringReader reader = new StringReader(contents);
     	try {

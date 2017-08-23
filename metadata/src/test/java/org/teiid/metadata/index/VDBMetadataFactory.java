@@ -90,7 +90,7 @@ public class VDBMetadataFactory {
 				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
 				trees = Arrays.asList(new FunctionTree(schema, new UDFSource(methods), true));
 			}
-			SystemFunctionManager sfm = new SystemFunctionManager();
+			SystemFunctionManager sfm = SystemMetadata.getInstance().getSystemFunctionManager();
 			vdbmetadata = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(SystemMetadata.getInstance().getSystemStore(), imf.store)), imf.resources.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
