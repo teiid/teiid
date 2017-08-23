@@ -1511,4 +1511,21 @@ public class TestJoinOptimization {
         });
     }
 	
+	@Test public void testInnerOuterOptimizationCrossJoin() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select pm1.g2.e2, pm1.g3.e2, pm1.g4.e1, pm1.g4.e3 from ((pm1.g2 cross join pm1.g3) inner join pm1.g1 on pm1.g1.e1 = pm1.g2.e1) left outer join pm1.g4 on (pm1.g2.e4 = pm1.g4.e4)"; //$NON-NLS-1$
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+        TransformationMetadata tm = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", 1, tm);
+        RealMetadataFactory.setCardinality("pm1.g2", 1, tm);
+        RealMetadataFactory.setCardinality("pm1.g3", 1, tm);
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.e2, g_1.e2, g_3.e1, g_3.e3 FROM (pm1.g2 AS g_0 INNER JOIN (pm1.g3 AS g_1 CROSS JOIN pm1.g1 AS g_2) ON g_2.e1 = g_0.e1) LEFT OUTER JOIN pm1.g4 AS g_3 ON g_0.e4 = g_3.e4"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+	
 }
