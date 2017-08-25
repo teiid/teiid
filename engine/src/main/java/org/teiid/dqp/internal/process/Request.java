@@ -218,7 +218,8 @@ public class Request {
                 requestMsg.getExecutionPayload(),
                 workContext.getVdbName(), 
                 workContext.getVdbVersion(), 
-                this.requestMsg.getShowPlan() != ShowPlan.OFF);
+                this.requestMsg.getShowPlan() != ShowPlan.OFF 
+                || LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE));
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
         context.setExecutor(this.executor);
