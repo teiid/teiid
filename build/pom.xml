@@ -171,6 +171,7 @@
 		                <groupId>io.fabric8</groupId>
 		                <artifactId>docker-maven-plugin</artifactId>
 		                <configuration>
+		                    <registry>registry.hub.docker.com</registry>
 		                    <images>
 		                        <image>
 		                            <name>teiid/teiid:${project.version}</name>
