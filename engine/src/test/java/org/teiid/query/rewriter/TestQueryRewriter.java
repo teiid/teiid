@@ -1661,6 +1661,15 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria("pm1.g1.e3", "pm1.g1.e3 = true");
     }
     
+    @Test public void testRewriteExpressionCriteriaBooleanLiterals() {
+        helpTestRewriteCriteria("not(true)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(true)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(false)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(false)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(unknown)", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(unknown)", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     @Test public void testRewritePredicateOptimization() throws Exception {
     	helpTestRewriteCriteria("pm1.g1.e2 in (1, 2, 3) and pm1.g1.e2 in (2, 3, 4)", "pm1.g1.e2 in (2, 3)");
     }
