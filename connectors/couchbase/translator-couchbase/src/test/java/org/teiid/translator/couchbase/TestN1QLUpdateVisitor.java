@@ -45,7 +45,7 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
             N1QL.put(key.toString(), actual);
         }
         
-        assertEquals(key, N1QL.getProperty(key, ""), actual);
+        assertEquals(key, N1QL.get(key), actual);
     }
 
     private String helpTranslate(String sql) {
