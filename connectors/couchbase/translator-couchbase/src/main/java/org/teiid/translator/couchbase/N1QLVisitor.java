@@ -25,6 +25,7 @@ import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,49 +57,11 @@ public class N1QLVisitor extends SQLStringVisitor{
     private String topTableAlias;
     
     private int placeHolderIndex = 1;
-    
+
+    private Map<String, Expression> aliasedExpressions = new LinkedHashMap<String, Expression>();
+
     public N1QLVisitor(CouchbaseExecutionFactory ef) {
         this.ef = ef;
-    }
-    
-    @Override
-    public void visit(SetQuery obj) {
-        boolean nestLeft = obj.getLeftQuery().getOrderBy() != null || obj.getLeftQuery().getLimit() != null;
-        if (nestLeft) {
-            buffer.append(LPAREN);
-        }
-        append(obj.getLeftQuery());
-        if (nestLeft) {
-            buffer.append(RPAREN);
-        }
-        //because we hold a lot of state, it's easier to construct a new visitor for the right
-        N1QLVisitor rightVisitor = new N1QLVisitor(this.ef);
-        rightVisitor.append(obj.getRightQuery());
-        this.buffer.append(SPACE).append(obj.getOperation()).append(SPACE);
-        if (obj.isAll()) {
-            this.buffer.append(ALL).append(SPACE);
-        }
-        boolean nestRight = obj.getRightQuery().getOrderBy() != null || obj.getRightQuery().getLimit() != null;
-        if (nestRight) {
-            buffer.append(LPAREN);
-        }
-        this.buffer.append(rightVisitor.toString());
-        if (nestRight) {
-            buffer.append(RPAREN);
-        }        
-        appendQueryExpressionEnd(obj);
-    }
-
-    private void appendQueryExpressionEnd(QueryExpression obj) {
-        if (obj.getOrderBy() != null) {
-            buffer.append(Tokens.SPACE);
-            append(obj.getOrderBy());
-        }
-        
-        if (obj.getLimit() != null) {
-            buffer.append(Tokens.SPACE);
-            append(obj.getLimit());
-        }
     }
     
     @Override
@@ -130,7 +93,15 @@ public class N1QLVisitor extends SQLStringVisitor{
             append(obj.getHaving());
         }
         
-        appendQueryExpressionEnd(obj);
+        if (obj.getOrderBy() != null) {
+            buffer.append(Tokens.SPACE);
+            append(obj.getOrderBy());
+        }
+        
+        if (obj.getLimit() != null) {
+            buffer.append(Tokens.SPACE);
+            append(obj.getLimit());
+        }
     }
     
     private void appendLet(Select obj) {
@@ -382,9 +353,8 @@ public class N1QLVisitor extends SQLStringVisitor{
 
     @Override
     public void visit(DerivedColumn obj) {
-        String name = obj.getAlias();
-        if (name == null) {
-            name = "c" + placeHolderIndex++; //$NON-NLS-1$
+        if (obj.getAlias() != null) {
+            aliasedExpressions.put(obj.getAlias(), obj.getExpression());
         }
         
         if (obj.getExpression() instanceof ColumnReference) {
@@ -392,13 +362,18 @@ public class N1QLVisitor extends SQLStringVisitor{
             CBColumn column = defineColumn(columnReference);
             String aliasName = column.getNameReference();
             buffer.append(this.nameInSource(aliasName));
+            this.selectColumns.add(column.getNameReference());
         } else {
+            //this will be retrieved by a placeholder
+            this.selectColumns.add(nextPlaceholder());
             append(obj.getExpression());
         }
-        buffer.append(SPACE).append(name);
-        selectColumns.add(name);
     }
     
+    private String nextPlaceholder() {
+        return PLACEHOLDER + placeHolderIndex++; 
+    }
+
     private CBColumn defineColumn(ColumnReference columnReference) {
         retrieveTableProperty(columnReference.getTable());
 
@@ -419,7 +394,12 @@ public class N1QLVisitor extends SQLStringVisitor{
             String aliasName = column.getNameReference();
             buffer.append(this.nameInSource(aliasName));
         } else {
-            buffer.append(obj.getName());
+            Expression ex = aliasedExpressions.get(obj.getName());
+            if (ex != null) {
+                append(ex);
+            } else {
+                super.visit(obj);
+            }
         }
     }
 
@@ -511,14 +491,14 @@ public class N1QLVisitor extends SQLStringVisitor{
         return selectColumns;
     }
 
-    protected AliasGenerator getColumnAliasGenerator() {
+    public AliasGenerator getColumnAliasGenerator() {
         if(this.columnAliasGenerator == null) {
             this.columnAliasGenerator = new AliasGenerator(N1QL_COLUMN_ALIAS_PREFIX);
         }
         return columnAliasGenerator;
     }
 
-    protected AliasGenerator getTableAliasGenerator() {
+    public AliasGenerator getTableAliasGenerator() {
         if(this.tableAliasGenerator == null) {
             this.tableAliasGenerator = new AliasGenerator(N1QL_TABLE_ALIAS_PREFIX);
         }
