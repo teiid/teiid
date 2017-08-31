@@ -66,31 +66,23 @@ public class N1QLVisitor extends SQLStringVisitor{
     }
     
     @Override
-    public void visit(SetQuery obj) {
-        boolean nestLeft = obj.getLeftQuery().getOrderBy() != null || obj.getLeftQuery().getLimit() != null;
-        if (nestLeft) {
-            buffer.append(LPAREN);
+    protected void appendSetQuery(SetQuery parent, QueryExpression obj,
+            boolean right) {
+        if (right) {
+            //because we hold a lot of state, it's easier to construct a new visitor for the right
+            //if join is supported we need different behavior
+            N1QLVisitor rightVisitor = new N1QLVisitor(this.ef);
+            rightVisitor.append(obj);
+            if(shouldNestSetChild(parent, obj, right)) {
+                buffer.append(Tokens.LPAREN);
+                buffer.append(rightVisitor.toString());
+                buffer.append(Tokens.RPAREN);
+            } else {
+                buffer.append(rightVisitor.toString());
+            }
+            return;
         }
-        append(obj.getLeftQuery());
-        if (nestLeft) {
-            buffer.append(RPAREN);
-        }
-        //because we hold a lot of state, it's easier to construct a new visitor for the right
-        N1QLVisitor rightVisitor = new N1QLVisitor(this.ef);
-        rightVisitor.append(obj.getRightQuery());
-        this.buffer.append(SPACE).append(obj.getOperation()).append(SPACE);
-        if (obj.isAll()) {
-            this.buffer.append(ALL).append(SPACE);
-        }
-        boolean nestRight = obj.getRightQuery().getOrderBy() != null || obj.getRightQuery().getLimit() != null;
-        if (nestRight) {
-            buffer.append(LPAREN);
-        }
-        this.buffer.append(rightVisitor.toString());
-        if (nestRight) {
-            buffer.append(RPAREN);
-        }        
-        appendQueryExpressionEnd(obj);
+        super.appendSetQuery(parent, obj, right);
     }
 
     private void appendQueryExpressionEnd(QueryExpression obj) {
