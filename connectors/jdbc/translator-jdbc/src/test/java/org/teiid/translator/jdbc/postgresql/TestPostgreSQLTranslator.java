@@ -375,7 +375,7 @@ public class TestPostgreSQLTranslator {
     
     @Test public void testSubstringExpressionIndex() throws Exception {
         String input = "SELECT substring(PART_WEIGHT, cast(part_id as integer), 5) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT substring(PARTS.PART_WEIGHT from case sign(cast(PARTS.PART_ID AS integer)) when -1 then cast(null as int4) when 0 then 1 else cast(PARTS.PART_ID AS integer) end for 5) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT substring(PARTS.PART_WEIGHT from case sign(cast(PARTS.PART_ID AS integer)) when -1 then length(PARTS.PART_WEIGHT) + 1 + cast(PARTS.PART_ID AS integer) when 0 then 1 else cast(PARTS.PART_ID AS integer) end for 5) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 

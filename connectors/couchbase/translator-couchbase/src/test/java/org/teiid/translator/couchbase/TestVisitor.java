@@ -21,14 +21,7 @@
  */
 package org.teiid.translator.couchbase;
 
-import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.KEYSPACE;
-import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.KEYSPACE_SOURCE;
-import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.createTable;
-import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.formCustomer;
-import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.formDataTypeJson;
-import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.formOder;
-import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.nestedArray;
-import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.nestedJson;
+import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,7 +29,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Properties;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -77,10 +70,10 @@ public class TestVisitor {
     
     private static Path N1QL_PATH = Paths.get("src/test/resources", "N1QL.properties");
     
-    static Properties N1QL = new Properties();
+    static LinkedHashMap<String, String> N1QL = new LinkedHashMap<String, String>();
     
     static final Boolean PRINT_TO_CONSOLE = Boolean.FALSE;
-    static final Boolean REPLACE_EXPECTED = Boolean.FALSE;// do not set 'REPLACE_EXPECTED' unless replaceProperties() be enhanced, this current replace is replace all, but the expected is replace line
+    static final Boolean REPLACE_EXPECTED = Boolean.FALSE;
     
     private static TransformationMetadata queryMetadataInterface() {
         try {
@@ -155,9 +148,9 @@ public class TestVisitor {
                 DocumentBuilder db = dbf.newDocumentBuilder();
                 Document doc = db.newDocument();
                 Element properties =  (Element) doc.appendChild(doc.createElement("properties"));
-                for (Entry<Object, Object> e : N1QL.entrySet()) {
-                    final String key = (String) e.getKey();
-                    final String value = (String) e.getValue();
+                for (Entry<String, String> e : N1QL.entrySet()) {
+                    final String key = e.getKey();
+                    final String value = e.getValue();
                     if(key.startsWith("N1QL")){
                         Element entry = (Element)properties.appendChild(doc.createElement("entry"));
                         entry.setAttribute("key", key);

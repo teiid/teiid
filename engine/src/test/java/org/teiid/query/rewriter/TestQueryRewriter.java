@@ -1844,7 +1844,7 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteSubstringNegativeIndex() throws TeiidComponentException, TeiidProcessingException {
-        helpTestRewriteExpression("substring(pm1.g1.e1, -1, 5)", "null", RealMetadataFactory.example1Cached());
+        helpTestRewriteExpression("substring(pm1.g1.e1, -1, 5)", "substring(pm1.g1.e1, -1, 5)", RealMetadataFactory.example1Cached());
     }
 
 }

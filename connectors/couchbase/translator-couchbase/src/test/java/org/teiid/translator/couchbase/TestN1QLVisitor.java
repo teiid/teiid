@@ -30,13 +30,9 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestN1QLVisitor extends TestVisitor {
     
-    private void helpTest(String sql, String key) throws TranslatorException {
+    static void helpTest(String sql, String key) throws TranslatorException {
 
-        Command command = translationUtility.parseCommand(sql);
-
-        N1QLVisitor visitor = TRANSLATOR.getN1QLVisitor();
-        visitor.append(command);
-        String actual = visitor.toString();
+        String actual = helpTranslate(sql);
         
         if(PRINT_TO_CONSOLE.booleanValue()) {
             System.out.println(actual);
@@ -46,7 +42,16 @@ public class TestN1QLVisitor extends TestVisitor {
             N1QL.put(key.toString(), actual);
         }
         
-        assertEquals(key, N1QL.getProperty(key, ""), actual);
+        assertEquals(key, N1QL.get(key), actual);
+    }
+
+    static String helpTranslate(String sql) {
+        Command command = translationUtility.parseCommand(sql);
+
+        N1QLVisitor visitor = TRANSLATOR.getN1QLVisitor();
+        visitor.append(command);
+        String actual = visitor.toString();
+        return actual;
     }
     
     @Test
@@ -253,6 +258,9 @@ public class TestN1QLVisitor extends TestVisitor {
         
         sql = "SELECT substring(attr_string, 1, 2) FROM T2";
         helpTest(sql, "N1QL0910");
+        
+        sql = "SELECT substring(attr_string, -1, 2) FROM T2";
+        helpTest(sql, "N1QL0911");
     }
     
     @Test
@@ -321,5 +329,21 @@ public class TestN1QLVisitor extends TestVisitor {
         sql = "call getDocument('customer', 'test')";
         helpTest(sql, "N1QL1302");
     }
+    
+    @Test
+    public void testSetOperations() throws TranslatorException {
+        String sql = "select Name FROM Customer intersect select attr_string from T2";
+        helpTest(sql, "N1QL3001"); 
+        
+        sql = "select Name FROM Customer union all select attr_string from T2";
+        helpTest(sql, "N1QL3002");
+        
+        sql = "select Name FROM Customer union all select attr_string from T2 order by name limit 2";
+        helpTest(sql, "N1QL3003");
+        
+        sql = "select Name FROM Customer except (select attr_string from T2 order by name limit 2)";
+        helpTest(sql, "N1QL3004");
+    }
+
     
 }

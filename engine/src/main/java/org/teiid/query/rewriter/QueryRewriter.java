@@ -2534,8 +2534,6 @@ public class QueryRewriter {
                         int val = (Integer) c.getValue();
                         if (val == 0) {
                             function.getArgs()[1] = new Constant(1);
-                        } else if (val < 0) {
-                            return new Constant(null, function.getType());
                         }
                     }
                 }
