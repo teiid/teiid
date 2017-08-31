@@ -32,6 +32,7 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.N1qlQueryResult;
@@ -85,9 +86,29 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
         
         for(int i = 0 ; i < expectedTypes.length ; i ++){
             String columnName = this.visitor.getSelectColumns().get(i);
-            Object value = json.get(columnName);
+            Object value = null;
+            Class<?> type = expectedTypes[i];
+            //retrieve as the specific value type since couchbase can mix
+            //TODO: this could be moved into retrieve value if used in more than 1 place
+            if (type == TypeFacility.RUNTIME_TYPES.STRING) {
+                value = json.getString(columnName);
+            } else if (type == TypeFacility.RUNTIME_TYPES.INTEGER) {
+                value = json.getInt(columnName);
+            } else if (type == TypeFacility.RUNTIME_TYPES.LONG) {
+                value = json.getLong(columnName);
+            } else if (type == TypeFacility.RUNTIME_TYPES.DOUBLE) {
+                value = json.getDouble(columnName);
+            } else if (type == TypeFacility.RUNTIME_TYPES.BOOLEAN) {
+                value = json.getBoolean(columnName);
+            } else if (type == TypeFacility.RUNTIME_TYPES.BIG_INTEGER) {
+                value = json.getBigInteger(columnName);
+            } else if (type == TypeFacility.RUNTIME_TYPES.BIG_DECIMAL) {
+                value = json.getBigDecimal(columnName);
+            } else {
+                value = json.getObject(columnName);
+            }
             
-            row.add(this.executionFactory.retrieveValue(expectedTypes[i], value));
+            row.add(this.executionFactory.retrieveValue(type, value));
         }
         return row;
 	}
@@ -99,6 +120,5 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 
 	@Override
 	public void cancel() throws TranslatorException {
-		close();
 	}
 }

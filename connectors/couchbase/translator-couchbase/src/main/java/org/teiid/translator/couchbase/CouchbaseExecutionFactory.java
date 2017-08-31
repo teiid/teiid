@@ -66,7 +66,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("SUBSTR"));//$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier());
 		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("LOG"));//$NON-NLS-1$
@@ -144,7 +144,6 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	    supportedFunctions.add(SourceSystemFunctions.LENGTH);
 	    supportedFunctions.add(SourceSystemFunctions.LCASE);
 	    supportedFunctions.add(SourceSystemFunctions.REPEAT);
-	    supportedFunctions.add(SourceSystemFunctions.TRANSLATE);
 	    supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
 	    supportedFunctions.add(SourceSystemFunctions.UCASE);
 	    supportedFunctions.add(SourceSystemFunctions.REPLACE);
@@ -396,9 +395,19 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         if (toType == FunctionModifier.STRING || toType == FunctionModifier.INTEGER || toType == FunctionModifier.LONG
             || toType == FunctionModifier.DOUBLE || toType == FunctionModifier.BOOLEAN || toType == FunctionModifier.BIGINTEGER
             || toType == FunctionModifier.BIGDECIMAL || toType == FunctionModifier.OBJECT) {
-            return true;
+            return super.supportsConvert(fromType, toType);
         }
-        return super.supportsConvert(fromType, toType);
+        return false;
+    }
+    
+    @Override
+    public NullOrder getDefaultNullOrder() {
+        return NullOrder.LOW;
+    }
+    
+    @Override
+    public boolean supportsSearchedCaseExpressions() {
+        return true;
     }
 
 }

@@ -164,7 +164,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
                 if (!(index instanceof Literal)) {
                     parts.add("case sign("); //$NON-NLS-1$
                     parts.add(index);
-                    parts.add(") when -1 then cast(null as int4) when 0 then 1 else "); //$NON-NLS-1$
+                    parts.add(") when -1 then length("); //$NON-NLS-1$
+                    parts.add(function.getParameters().get(0));
+                    parts.add(") + 1 + "); //$NON-NLS-1$
+                    parts.add(index);
+                    parts.add(" when 0 then 1 else "); //$NON-NLS-1$
                     parts.add(index);
                     parts.add(" end"); //$NON-NLS-1$
                 } else {
