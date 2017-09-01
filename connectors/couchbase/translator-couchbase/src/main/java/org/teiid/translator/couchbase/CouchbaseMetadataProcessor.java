@@ -260,7 +260,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             if(columnType.equals(OBJECT)) {
                 JsonValue jsonValue = (JsonValue) columnValue;
                 String newKey = key + UNDERSCORE + columnName;
-                String newKeyInSource = keyInSource + SOURCE_SEPARATOR + this.nameInSource(columnName);
+                String newKeyInSource = keyInSource + SOURCE_SEPARATOR + nameInSource(columnName);
 
                 if(isObjectJsonType(columnValue)) { 
                     scanRow(newKey, newKeyInSource, jsonValue, mf, table, referenceTableName, true, dimension);
@@ -298,7 +298,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                                 scanRow(keyspace, keyInSource, jsonValue, mf, table, referenceTableName, true, dimension);
                             } else if (isArrayJsonType(jsonValue)) {
                                 String tableName = table.getName() + UNDERSCORE + name + UNDERSCORE + dimension.get();
-                                String tableNameInSrc = table.getNameInSource() + SOURCE_SEPARATOR + this.nameInSource(name) + SQUARE_BRACKETS;
+                                String tableNameInSrc = table.getNameInSource() + SOURCE_SEPARATOR + nameInSource(name) + SQUARE_BRACKETS;
                                 Dimension d = new Dimension();
                                 Table subTable = addTable(tableName, tableNameInSrc, true, referenceTableName, d, mf);
                                 scanRow(keyspace, keyInSource, jsonValue, mf, subTable, referenceTableName, true, d);
@@ -428,10 +428,10 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         for(String name : names) {
             if(isFirst) {
                 isFirst = false;
-                sb.append(this.trimWave(name));
+                sb.append(trimWave(name));
             } else {
                 sb.append(UNDERSCORE);
-                sb.append(this.trimWave(name));
+                sb.append(trimWave(name));
             }
         }
 
@@ -580,18 +580,18 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         return sb.toString();
     }
     
-    private String trimWave(String value) {
+    static String trimWave(String value) {
         String results = value;
-        if(results.startsWith(WAVE)) {
-            results = results.substring(1);
-        }
-        if(results.endsWith(WAVE)) {
-            results = results.substring(0, results.length() - 1);
+        if(results.startsWith(WAVE) && results.endsWith(WAVE)) {
+            results = results.substring(1, results.length() - 1);
         }
         return results;
     }
     
-    private String nameInSource(String path) {
+    static String nameInSource(String path) {
+        if(path.startsWith(WAVE) && path.endsWith(WAVE)) {
+            return path;
+        }
         return WAVE + path + WAVE; 
     }
 

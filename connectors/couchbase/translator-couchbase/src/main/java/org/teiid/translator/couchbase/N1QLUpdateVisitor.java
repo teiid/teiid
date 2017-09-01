@@ -24,6 +24,7 @@ package org.teiid.translator.couchbase;
 import static org.teiid.language.SQLConstants.NonReserved.*;
 import static org.teiid.language.SQLConstants.Reserved.*;
 import static org.teiid.language.SQLConstants.Tokens.*;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.*;
 import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.metadata.Column;
 import org.teiid.translator.TypeFacility;
 
 import com.couchbase.client.java.document.json.JsonArray;
@@ -42,6 +44,8 @@ import com.couchbase.client.java.document.json.JsonObject;
 
 public class N1QLUpdateVisitor extends N1QLVisitor {
     
+    private static final String ESCAPED_QUOTE = "\\u0027"; //$NON-NLS-1$
+
     private int dimension = 0;
     
     private String keyspace;
@@ -61,10 +65,15 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         
         List<CBColumnData> rowCache = new ArrayList<N1QLUpdateVisitor.CBColumnData>();
         
-        for (ColumnReference col : obj.getColumns()) {
+        Integer typeIndex = null;
+        for (int i = 0; i < obj.getColumns().size(); i++) {
+            ColumnReference col = obj.getColumns().get(i);
             CBColumn column = formCBColumn(col);
             CBColumnData cacheData = new CBColumnData(col.getType(), column);
             rowCache.add(cacheData);
+            if(typedName != null && typedName.equals(nameInSource(cacheData.getCBColumn().getLeafName()))) {
+                typeIndex = i;
+            }
         }
         
         List<Parameter> preparedValues = new ArrayList<>();
@@ -74,9 +83,36 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             if(exp instanceof Literal) {
                 Literal l = (Literal)exp;
                 rowCache.get(i).setValue(l.getValue());
+                if (typeIndex != null && typeIndex == i && !typedValue.equals(getValueString(l.getType(), l.getValue()))) {
+                    throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29022, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29022, typedValue));
+                }
             } else if(exp instanceof Parameter) {
                 Parameter p = (Parameter) exp;
                 preparedValues.add(p);
+                if (typeIndex != null && typeIndex == i) {
+                    throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29022, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29022, typedValue));
+                }
+            }
+        }
+        
+        if (typedName != null && typeIndex == null) {
+            //add type
+            boolean added = false;
+            for (Column c : obj.getTable().getMetadataObject().getColumns()) {
+                if (!nameInSource(c.getSourceName()).endsWith(typedName)) {
+                    continue;
+                }
+                ColumnReference cr = new ColumnReference(obj.getTable(), c.getName(), c, c.getJavaType());
+                CBColumn column = formCBColumn(cr);
+                CBColumnData cacheData = new CBColumnData(TypeFacility.RUNTIME_TYPES.STRING, column);
+                cacheData.setValue(getRawValue(typedValue));
+                rowCache.add(cacheData);
+                added = true;
+                break;
+            }
+            if (!added) {
+                //TODO: could support this without requiring a type column
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29023, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29023, typedName));
             }
         }
         
@@ -134,7 +170,10 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 CBColumnData columnData = rowCache.get(i);
                 
                 if(columnData.getCBColumn().isPK()) {
-                    documentID = (String)columnData.getValue();
+                    Object value = columnData.getValue();
+                    if (value != null) {
+                        documentID = value.toString();
+                    }
                 } else {
                     String attr = columnData.getCBColumn().getLeafName();
                     String path = columnData.getCBColumn().getNameInSource();
@@ -287,7 +326,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         
         retrieveTableProperty(obj);
         
-        String tableNameInSource = obj.getMetadataObject().getNameInSource();
+        String tableNameInSource = obj.getMetadataObject().getSourceName();
         
         if(isArrayTable) {    
             this.keyspace = tableNameInSource.substring(0, tableNameInSource.indexOf(SOURCE_SEPARATOR));
@@ -482,7 +521,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         }
         
         if(type.equals(TypeFacility.RUNTIME_TYPES.STRING)) {
-            return SQLConstants.Tokens.QUOTE + StringUtil.replace(value.toString(), SQLConstants.Tokens.QUOTE, "\\u0027") + SQLConstants.Tokens.QUOTE; //$NON-NLS-1$
+            return SQLConstants.Tokens.QUOTE + StringUtil.replace(value.toString(), SQLConstants.Tokens.QUOTE, ESCAPED_QUOTE) + SQLConstants.Tokens.QUOTE; 
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.INTEGER) || type.equals(TypeFacility.RUNTIME_TYPES.LONG) 
                 || type.equals(TypeFacility.RUNTIME_TYPES.DOUBLE) || type.equals(TypeFacility.RUNTIME_TYPES.DOUBLE)
                 || type.equals(TypeFacility.RUNTIME_TYPES.BOOLEAN) || type.equals(TypeFacility.RUNTIME_TYPES.BIG_INTEGER)
@@ -490,6 +529,13 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             return String.valueOf(value);
         }
         throw new AssertionError("Unknown literal type: " + type); //$NON-NLS-1$
+    }
+    
+    private String getRawValue(String value) {
+        if (value.startsWith(SQLConstants.Tokens.QUOTE) && value.endsWith(SQLConstants.Tokens.QUOTE)) {
+            return StringUtil.replace(value.substring(1, value.length() - 1), ESCAPED_QUOTE, SQLConstants.Tokens.QUOTE);
+        }
+        return value;
     }
     
     @Override
@@ -515,6 +561,12 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 Object value = clause.getValue();
                 if (clause.getValue() instanceof Literal) {
                     value = ((Literal)clause.getValue()).getValue();
+                }
+                if(typedName != null && typedName.equals(nameInSource(cacheData.getCBColumn().getLeafName()))) {
+                    if (!typedValue.equals(getValueString(cacheData.getColumnType(), value))) {
+                        throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29022, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29022, typedValue));
+                    }
+                    continue;
                 }
                 cacheData.setValue(value);
                 rowCache.add(cacheData);
@@ -626,13 +678,9 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
     
     
     private void appendClauses(List<CBColumnData> rowCache, List<Condition> otherConditions, List<SetClause> setClauses) {
-        if (rowCache.isEmpty() && otherConditions.isEmpty()) {
-            return;
-        }
-
         String useKey = this.getUsesKeyString(rowCache);
 
-        boolean isTypedInProjection = false;
+        boolean isTyped = false;
 
         if (useKey != null) {
             buffer.append(SPACE).append(useKey);
@@ -640,13 +688,29 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         
         if (setClauses != null) {
             buffer.append(SPACE).append(SET).append(SPACE);
+            for (SetClause clause : setClauses) {
+                ColumnReference col = clause.getSymbol();
+                CBColumn column = formCBColumn(col);
+                CBColumnData cacheData = new CBColumnData(col.getType(), column);
+                Object value = clause.getValue();
+                if (clause.getValue() instanceof Literal) {
+                    value = ((Literal)clause.getValue()).getValue();
+                }
+                if(typedName != null && typedName.equals(nameInSource(cacheData.getCBColumn().getLeafName())) 
+                        && (value == null || !typedValue.equals(getValueString(cacheData.getColumnType(), value)))) {
+                    throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29022, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29022, typedValue));
+                }
+            }
             append(setClauses);
         }
         
         boolean hasPredicate = false;
         for (CBColumnData columnData : rowCache) {
             if(typedName != null && typedName.equals(nameInSource(columnData.getCBColumn().getLeafName()))) {
-                isTypedInProjection = true;
+                if (typedValue.equals(getValueString(columnData.getColumnType(), columnData.getValue()))) {
+                    isTyped = true;
+                }
+                //else no rows affected
             }
             if (columnData.getCBColumn().isPK()) {
                 continue;
@@ -664,7 +728,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             buffer.append(getValueString(columnData.getColumnType(), columnData.getValue()));
         }
         
-        boolean hasTypedValue = !isTypedInProjection && typedName != null && typedValue != null;
+        boolean hasTypedValue = !isTyped && typedName != null && typedValue != null;
         if (!otherConditions.isEmpty()) {
             if (!hasPredicate) {
                 buffer.append(SPACE).append(WHERE);
@@ -693,7 +757,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         }
     }
     
-    private class CBColumnData {
+    private static class CBColumnData {
         
         private Class<?> columnType;
         private CBColumn column;

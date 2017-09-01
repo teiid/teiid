@@ -20,12 +20,12 @@ package org.teiid.translator.couchbase;
 
 import static org.junit.Assert.*;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
-@Ignore
+import com.couchbase.client.java.document.json.JsonArray;
+
 public class TestCouchbase {
     
     @Test public void testConvert() throws TranslatorException {
@@ -33,5 +33,12 @@ public class TestCouchbase {
         cef.start();
         assertFalse(cef.supportsConvert(TypeFacility.RUNTIME_CODES.STRING, TypeFacility.RUNTIME_CODES.DATE));
         assertTrue(cef.supportsConvert(TypeFacility.RUNTIME_CODES.STRING, TypeFacility.RUNTIME_CODES.DOUBLE));
+    }
+    
+    @Test(expected=IllegalArgumentException.class) public void testSetValue() {
+        CouchbaseExecutionFactory cef = new CouchbaseExecutionFactory();
+        JsonArray array = JsonArray.create();
+        cef.setValue(array, Float.class, 1.0f);
+        assertEquals(1.0f, array.get(0));
     }
 }
