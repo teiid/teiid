@@ -82,7 +82,7 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
             assertEquals(TeiidRuntimeException.class, e.getClass());
         }
         
-        sql = "INSERT INTO Customer (documentID) VALUES ('customer-1')"; // empty document
+        sql = "INSERT INTO Customer (documentID) VALUES ('customer-1')"; // empty document, type should be added though
         helpTest(sql, "N1QL1406");
         
         sql = "INSERT INTO Oder (CustomerID, type, CreditCard_CardNumber, CreditCard_Type, CreditCard_CVN, CreditCard_Expiry, Name) VALUES ('Customer_12345', 'Oder', '4111 1111 1111 111', 'Visa', 123, '12/12', 'Air Ticket')";
@@ -358,6 +358,11 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         
         sql = "UPDATE Customer SET Name = type WHERE ID = 'Customer_12345'";
         helpTest(sql, "N1QL1814");
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testUpdateTypeFails() throws TranslatorException {
+        String sql = "UPDATE Customer SET type = 'not customer'";
+        helpTest(sql, "N1QL2100");
     }
     
     @Test

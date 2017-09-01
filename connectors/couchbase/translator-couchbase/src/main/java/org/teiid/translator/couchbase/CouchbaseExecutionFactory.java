@@ -340,6 +340,8 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
             json.put(attr, (BigDecimal)attrValue);
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.NULL)) {
             json.putNull(attr);
+        } else {
+            json.put(attr, attrValue);
         }
     }
     
@@ -361,6 +363,8 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
             array.add((BigDecimal)attrValue);
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.NULL)) {
             array.addNull();
+        } else {
+            array.add(attrValue);
         }
     }
 

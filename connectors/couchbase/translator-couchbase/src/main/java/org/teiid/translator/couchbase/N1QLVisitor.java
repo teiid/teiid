@@ -153,7 +153,7 @@ public class N1QLVisitor extends SQLStringVisitor{
             } else if (column.isIdx()) {
                 //todo - handle unreleated column in idx conlumn
             } else {
-                letValueReference.append(this.nameInSource(column.getTableAlias()));
+                letValueReference.append(nameInSource(column.getTableAlias()));
                 String nameInSource = column.getNameInSource();
                 if(nameInSource != null) {
                     nameInSource = nameInSource.substring(nameInSource.indexOf(SOURCE_SEPARATOR) + 1, nameInSource.length());
@@ -263,7 +263,7 @@ public class N1QLVisitor extends SQLStringVisitor{
         
         retrieveTableProperty(obj);
         
-        String tableNameInSource = obj.getMetadataObject().getNameInSource();
+        String tableNameInSource = obj.getMetadataObject().getSourceName();
         String alias = getTableAliasGenerator().generate();
         this.topTableAlias = alias;
         if(this.isArrayTable) {
@@ -290,20 +290,20 @@ public class N1QLVisitor extends SQLStringVisitor{
                     baseName = baseName.substring(0, baseName.length() - SQUARE_BRACKETS.length());
                     StringBuilder unnestBuilder = new StringBuilder();
                     unnestBuilder.append(UNNEST).append(SPACE);
-                    unnestBuilder.append(this.nameInSource(newAlias));
+                    unnestBuilder.append(nameInSource(newAlias));
                     if(!baseName.endsWith(SQUARE_BRACKETS)) { // the dim 1 array has a attribute name under keyspace
                         String dimArrayAttrName = baseName.substring(baseName.lastIndexOf(SOURCE_SEPARATOR) + 1, baseName.length());
                         unnestBuilder.append(SOURCE_SEPARATOR).append(dimArrayAttrName);
                     }
-                    unnestBuilder.append(SPACE).append(this.nameInSource(alias));
+                    unnestBuilder.append(SPACE).append(nameInSource(alias));
                     column.setUnnest(unnestBuilder.toString());
                     alias = newAlias ;
                     continue;
                 }
                 
-                letValueReference.append(this.nameInSource(alias));
+                letValueReference.append(nameInSource(alias));
                 if(column.hasLeaf()) {
-                    letValueReference.append(SOURCE_SEPARATOR).append(this.nameInSource(column.getLeafName()));
+                    letValueReference.append(SOURCE_SEPARATOR).append(nameInSource(column.getLeafName()));
                 }
                 column.setValueReference(letValueReference.toString());
                 column.setTableAlias(alias);
@@ -336,7 +336,7 @@ public class N1QLVisitor extends SQLStringVisitor{
                     continue;
                 }
                 
-                letValueReference.append(this.nameInSource(alias));
+                letValueReference.append(nameInSource(alias));
                 String nameInSource = column.getNameInSource();
                 if(nameInSource != null) {
                     nameInSource = nameInSource.substring(nameInSource.indexOf(SOURCE_SEPARATOR) + 1, nameInSource.length());
@@ -354,7 +354,7 @@ public class N1QLVisitor extends SQLStringVisitor{
 
     private String buildEQ(String nameReference) {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.nameInSource(nameReference));
+        sb.append(nameInSource(nameReference));
         sb.append(SPACE).append(EQ).append(SPACE);
         return sb.toString();
     }
@@ -383,7 +383,7 @@ public class N1QLVisitor extends SQLStringVisitor{
             ColumnReference columnReference = (ColumnReference)obj.getExpression();
             CBColumn column = defineColumn(columnReference);
             String aliasName = column.getNameReference();
-            buffer.append(this.nameInSource(aliasName));
+            buffer.append(nameInSource(aliasName));
         } else {
             append(obj.getExpression());
         }
@@ -409,7 +409,7 @@ public class N1QLVisitor extends SQLStringVisitor{
                 column = defineColumn(obj);
             }
             String aliasName = column.getNameReference();
-            buffer.append(this.nameInSource(aliasName));
+            buffer.append(nameInSource(aliasName));
         } else {
             buffer.append(obj.getName());
         }
@@ -425,9 +425,9 @@ public class N1QLVisitor extends SQLStringVisitor{
         } else if(isIDXColumn(obj)) {
             isIdx = true;
         } else if(obj.getMetadataObject().getNameInSource() != null && !obj.getMetadataObject().getNameInSource().endsWith(SQUARE_BRACKETS)){
-            String nameInSource = obj.getMetadataObject().getNameInSource();
+            String nameInSource = obj.getMetadataObject().getSourceName();
             leafName = nameInSource.substring(nameInSource.lastIndexOf(SOURCE_SEPARATOR) + 1, nameInSource.length());
-            leafName = this.trimWave(leafName);
+            leafName = trimWave(leafName);
         }
         
         String colExpr = this.getColumnAliasGenerator().generate() + UNDERSCORE + obj.getName();
@@ -562,24 +562,6 @@ public class N1QLVisitor extends SQLStringVisitor{
         append(call.getArguments().get(0));
     }
     
-    protected String nameInSource(String path) {
-        if(path.startsWith(WAVE) && path.endsWith(WAVE)) {
-            return path;
-        }
-        return WAVE + path + WAVE; 
-    }
-    
-    protected String trimWave(String value) {
-        String results = value;
-        if(results.startsWith(WAVE)) {
-            results = results.substring(1);
-        }
-        if(results.endsWith(WAVE)) {
-            results = results.substring(0, results.length() - 1);
-        }
-        return results;
-    }
-    
     private class AliasGenerator {
         
         private final String prefix;
@@ -599,7 +581,7 @@ public class N1QLVisitor extends SQLStringVisitor{
         }
     }
     
-    protected class CBColumn {
+    protected static class CBColumn {
         
         private boolean isPK;
         private boolean isIdx;
