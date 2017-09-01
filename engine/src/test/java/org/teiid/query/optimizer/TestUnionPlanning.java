@@ -34,12 +34,10 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.processor.FakeDataManager;
-import org.teiid.query.processor.FakeDataStore;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.relational.LimitNode;
 import org.teiid.query.processor.TestProcessor;
+import org.teiid.query.processor.relational.LimitNode;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -338,7 +336,7 @@ public class TestUnionPlanning {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            0,      // Select
+            1,      // Select
             0,      // Sort
             2       // UnionAll
         });                                    
