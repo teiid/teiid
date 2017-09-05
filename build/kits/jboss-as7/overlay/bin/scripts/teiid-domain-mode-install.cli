@@ -141,7 +141,6 @@
 /profile=ha/subsystem=teiid/translator=ucanaccess:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
 /profile=ha/subsystem=teiid/translator=couchbase:add(module=org.jboss.teiid.translator.couchbase)
-/profile=ha/subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
 /profile=ha/subsystem=teiid/translator=amazon-s3:add(module=org.jboss.teiid.translator.amazon.s3)
 
 /profile=full-ha/subsystem=teiid/translator=jdbc-simple:add(module=org.jboss.teiid.translator.jdbc)
@@ -197,7 +196,6 @@
 /profile=full-ha/subsystem=teiid/translator=ucanaccess:add(module=org.jboss.teiid.translator.jdbc)
 /profile=full-ha/subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
 /profile=full-ha/subsystem=teiid/translator=couchbase:add(module=org.jboss.teiid.translator.couchbase)
-/profile=full-ha/subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
 /profile=full-ha/subsystem=teiid/translator=amazon-s3:add(module=org.jboss.teiid.translator.amazon.s3)
 
 /profile=ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -219,7 +217,6 @@
 /profile=ha/subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /profile=ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
 /profile=ha/subsystem=resource-adapters/resource-adapter=couchbase:add(module=org.jboss.teiid.resource-adapter.couchbase)
-/profile=ha/subsystem=resource-adapters/resource-adapter=infinispan-hotrod:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
 
 
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=file:add(module=org.jboss.teiid.resource-adapter.file)
@@ -234,7 +231,6 @@
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=couchbase:add(module=org.jboss.teiid.resource-adapter.couchbase)
-/profile=full-ha/subsystem=resource-adapters/resource-adapter=infinispan-hotrod:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
 
 
 /deployment=teiid-odata.war:add(runtime-name=teiid-odata.war,content=[{path=dataVirtualization/vdb/teiid-odata.war/,archive=false,relative-to=jboss.home.dir}])
