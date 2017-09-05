@@ -436,6 +436,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.services.setVDBRepository(this.repo);
 		this.materializationMgr = getMaterializationManager();		
 		this.repo.addListener(this.materializationMgr);
+		this.repo.setAllowEnvFunction(this.config.isAllowEnvFunction());
 		if (this.nodeTracker != null) {
 		    this.nodeTracker.addNodeListener(this.materializationMgr);
 		}
