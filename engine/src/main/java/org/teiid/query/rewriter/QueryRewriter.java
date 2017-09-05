@@ -102,13 +102,9 @@ import org.teiid.translator.SourceSystemFunctions;
 public class QueryRewriter {
 
     private static final Constant ZERO_CONSTANT = new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER);
-	public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
-    public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, ZERO_CONSTANT) {
-    	public void setOptional(Boolean isOptional) {};
-    };
-    public static final CompareCriteria UNKNOWN_CRITERIA = new CompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING)) {
-    	public void setOptional(Boolean isOptional) {};
-    };
+	public static final CompareCriteria TRUE_CRITERIA = new ImmutableCompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
+    public static final CompareCriteria FALSE_CRITERIA = new ImmutableCompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, ZERO_CONSTANT);
+    public static final CompareCriteria UNKNOWN_CRITERIA = new ImmutableCompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING));
     
     private static final Map<String, String> ALIASED_FUNCTIONS = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     private static final Set<String> PARSE_FORMAT_TYPES = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
@@ -1299,21 +1295,6 @@ public class QueryRewriter {
         	//reduce to only negation of predicates, so that the null/unknown handling criteria is applied appropriately
     		return rewriteCriteria(Criteria.applyDemorgan(innerCrit));
         } 
-        if (innerCrit instanceof Negatable) {
-        	((Negatable) innerCrit).negate();
-        	return rewriteCriteria(innerCrit);
-        }
-        if (innerCrit instanceof NotCriteria) {
-        	return rewriteCriteria(((NotCriteria)innerCrit).getCriteria());
-        }
-        innerCrit = rewriteCriteria(innerCrit);
-        if (innerCrit instanceof Negatable) {
-        	((Negatable) innerCrit).negate();
-        	return rewriteCriteria(innerCrit);
-        }
-        if (innerCrit instanceof NotCriteria) {
-        	return rewriteCriteria(((NotCriteria)innerCrit).getCriteria());
-        }
         if(innerCrit == TRUE_CRITERIA) {
             return FALSE_CRITERIA;
         } else if(innerCrit == FALSE_CRITERIA) {
@@ -1321,7 +1302,18 @@ public class QueryRewriter {
         } else if (innerCrit == UNKNOWN_CRITERIA) {
             return UNKNOWN_CRITERIA;
         }
-        criteria.setCriteria(innerCrit);
+        if (innerCrit instanceof Negatable) {
+        	((Negatable) innerCrit).negate();
+        	return rewriteCriteria(innerCrit);
+        }
+        if (innerCrit instanceof NotCriteria) {
+        	return rewriteCriteria(((NotCriteria)innerCrit).getCriteria());
+        }
+        Criteria newInnerCrit = rewriteCriteria(innerCrit);
+        if (!newInnerCrit.equals(innerCrit)) {
+            criteria.setCriteria(newInnerCrit);
+            return rewriteCriteria(criteria);
+        }
         return criteria;
 	}
 
@@ -1346,6 +1338,9 @@ public class QueryRewriter {
     }
 
 	private Criteria rewriteCriteria(CompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
+	    if (criteria == TRUE_CRITERIA || criteria == UNKNOWN_CRITERIA || criteria == FALSE_CRITERIA) {
+	        return criteria;
+	    }
 		Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
 		Expression rightExpr = rewriteExpressionDirect(criteria.getRightExpression());
 		criteria.setLeftExpression(leftExpr);
