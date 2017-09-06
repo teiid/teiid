@@ -1340,7 +1340,7 @@ Statement assignStatement(ParseInfo info) :
 
 /*
 name=assignment statement operand
-description=A value or command that can be used in an assignment.  {note}All assigments except for expression are deprecated.{note}
+description=A value or command that can be used in an assignment.  {note}All assignments except for expression are deprecated.{note}
 */
 LanguageObject assignStatementOperand(ParseInfo info) :
 {
