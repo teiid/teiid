@@ -72,7 +72,9 @@ public class TestSocketRemoting {
 		
 		ResultsFuture<Integer> asynchResult();
 		
-		String exceptionMethod() throws TeiidProcessingException;
+		ResultsFuture<Integer> delayedAsynchResult();
+
+        String exceptionMethod() throws TeiidProcessingException;
 		
 		int lobMethod(InputStream is, Reader r) throws IOException;
 		
@@ -101,6 +103,17 @@ public class TestSocketRemoting {
 		public Reader getReader() throws IOException {
 			return new StringReader("hello world"); //$NON-NLS-1$
 		}
+		
+		@Override
+        public ResultsFuture<Integer> delayedAsynchResult() {
+            ResultsFuture<Integer> result = new ResultsFuture<Integer>();
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+            }
+            result.getResultsReceiver().receiveResults(new Integer(5));
+            return result;
+        }
 		
 	}
 	

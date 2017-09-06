@@ -318,9 +318,10 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 				}
 			} 
 			if (reading) {
+			    Object message = null;
 				try {
 					if (!future.isDone()) {
-						receivedMessage(socketChannel.read());
+						message = socketChannel.read();
 					}
 				} catch (SocketTimeoutException e) {
 				} catch (Exception e) {
@@ -330,6 +331,10 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 						hasReader = false;
 						this.notifyAll();
 					}
+				}
+				if (message != null) {
+				    //process after reading to prevent recurrent reading with hasReader=true
+				    receivedMessage(message);
 				}
 			}
 			if (!future.isDone()) {
