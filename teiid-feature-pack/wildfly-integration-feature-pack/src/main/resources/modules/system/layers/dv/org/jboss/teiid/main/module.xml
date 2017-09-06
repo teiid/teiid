@@ -51,6 +51,7 @@
         <module name="org.jboss.metadata"/> 
         <module name="org.wildfly.clustering.jgroups.api"/>
         <module name="org.wildfly.clustering.jgroups.spi"/>
+        <module name="org.wildfly.clustering.infinispan.spi"/>
         
         <!-- These dependencies here for ra.xml description -->
         <module name="org.jboss.as.connector"/>
