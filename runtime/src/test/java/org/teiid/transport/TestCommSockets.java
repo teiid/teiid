@@ -25,6 +25,10 @@ import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
@@ -354,20 +358,32 @@ public class TestCommSockets {
 		helpEstablishConnection(true, config, p);
 	}
 	
-	@Test(timeout=19000) public void testAutoFailoverPing() throws Exception {
+	@Test public void testAutoFailoverPing() throws Exception {
 	    Properties p = new Properties();
 	    p.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, "true");
 	    p.setProperty("org.teiid.sockets.synchronousttl", "20000");
 	    SocketServerConnection conn = helpEstablishConnection(false, new SSLConfiguration(), p);
-        final FakeService fs = conn.getService(FakeService.class);
-        ResultsFuture<Integer> future = fs.delayedAsynchResult();
-        future.addCompletionListener(new CompletionListener<Integer>() {
+	    ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
+	    Future<?> future = exec.submit(new Runnable() {
+            
             @Override
-            public void onCompletion(ResultsFuture<Integer> future) {
-                fs.asynchResult(); //potentially recurrent;
+            public void run() {
+                final FakeService fs = conn.getService(FakeService.class);
+                ResultsFuture<Integer> f = fs.delayedAsynchResult();
+                f.addCompletionListener(new CompletionListener<Integer>() {
+                    @Override
+                    public void onCompletion(ResultsFuture<Integer> future) {
+                        fs.asynchResult(); //potentially recurrent;
+                    }
+                });
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
-        future.get();
+	    future.get(19, TimeUnit.SECONDS);
     }
 	
 }
