@@ -1571,7 +1571,7 @@ public final class FunctionMethods {
         return context.getConnectionId();
     }
     
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS, pushdown=PushDown.CANNOT_PUSHDOWN)
     public static String node_id() {
         return System.getProperty("jboss.node.name"); //$NON-NLS-1$
     }
@@ -1708,7 +1708,7 @@ public final class FunctionMethods {
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
 	
-	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC, pushdown=PushDown.CANNOT_PUSHDOWN)
 	public static int mvstatus(CommandContext context, String schemaName, String viewName) throws FunctionExecutionException, SQLException, QueryMetadataException, TeiidComponentException {
 	    Object id = context.getMetadata().getGroupID(schemaName + AbstractMetadataRecord.NAME_DELIM_CHAR + viewName);
         String statusTable = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);

@@ -1244,7 +1244,7 @@ public class XMLSystemFunctions {
 		return f;
 	}
     
-	@TeiidFunction(category=FunctionCategoryConstants.XML)
+	@TeiidFunction(category=FunctionCategoryConstants.XML, nullOnNull=true)
 	public static XMLType xmlText(String val) throws XMLStreamException, FactoryConfigurationError, IOException, TransformerException {
 		//TODO: see if there is a less involved way to escape
 		StringWriter writer = new StringWriter();

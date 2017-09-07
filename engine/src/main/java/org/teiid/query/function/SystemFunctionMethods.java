@@ -27,6 +27,7 @@ import java.util.Map;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.util.CommandContext;
@@ -35,12 +36,12 @@ public class SystemFunctionMethods {
 	
 	private static final int MAX_VARIABLES = 512;
 
-	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, nullOnNull=true, determinism=Determinism.COMMAND_DETERMINISTIC)
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, nullOnNull=true, determinism=Determinism.COMMAND_DETERMINISTIC, pushdown=PushDown.CANNOT_PUSHDOWN)
 	public static Object teiid_session_get(CommandContext context, String key) {
 		return context.getSessionVariable(key);
 	}
 	
-	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism=Determinism.COMMAND_DETERMINISTIC)
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism=Determinism.COMMAND_DETERMINISTIC, pushdown=PushDown.CANNOT_PUSHDOWN)
 	public static Object teiid_session_set(CommandContext context, String key, Object value) throws FunctionExecutionException {
 		SessionMetadata session = context.getSession();
 		Map<String, Object> variables = session.getSessionVariables();

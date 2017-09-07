@@ -41,6 +41,6 @@ public @interface TeiidFunction {
 	String category();
 	boolean nullOnNull() default false;
 	Determinism determinism() default Determinism.DETERMINISTIC;
-    PushDown pushdown() default PushDown.CANNOT_PUSHDOWN;
+    PushDown pushdown() default PushDown.CAN_PUSHDOWN;
 	String alias()  default "";
 }
