@@ -651,4 +651,13 @@ public class TestPostgreSQLTranslator {
                 "SELECT SmallA.StringKey FROM SmallA WHERE (SmallA.BooleanValue = TRUE AND SmallA.IntKey = 1) = TRUE"); //$NON-NLS-1$
     }
     
+    @Test public void testUUIDType() throws Exception {
+        String input = "SELECT id from t where id > 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'"; //$NON-NLS-1$
+        String output = "SELECT cast(t.id AS varchar) FROM t WHERE t.id > 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'";  //$NON-NLS-1$
+
+        helpTestVisitor("create foreign table t (id string options (native_type 'uuid'))",
+            input, 
+            output);
+    }
+    
 }
