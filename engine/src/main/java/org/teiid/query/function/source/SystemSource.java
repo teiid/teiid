@@ -120,7 +120,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addTimestampDiffFunction();
         addTimeZoneFunctions();
         addTimestampCreateFunction();
-        addUnixTimeFunctions();
 		                  
         // string
         addStringFunction(SourceSystemFunctions.LENGTH, QueryPlugin.Util.getString("SystemSource.Length_result"), "length", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -1097,13 +1096,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                                              new FunctionParameter("endTimeZone", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_param3"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 
-    }
-    
-    private void addUnixTimeFunctions() {
-        functions.add(new FunctionMethod(SourceSystemFunctions.FROM_UNIXTIME, QueryPlugin.Util.getString("SystemSource.from_unixtime_description"), DATETIME, FUNCTION_CLASS, "from_unixtime", //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter[]{
-                    new FunctionParameter("unix_timestamp", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.from_unixtime_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.from_unixtime_result")))); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addTypedNullIfFunction(String type) {

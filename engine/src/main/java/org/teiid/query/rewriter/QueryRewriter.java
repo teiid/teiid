@@ -2336,7 +2336,6 @@ public class QueryRewriter {
     
     static {
     	FUNCTION_MAP.put(FunctionLibrary.SPACE, 0);
-    	FUNCTION_MAP.put(FunctionLibrary.FROM_UNIXTIME, 1);
     	FUNCTION_MAP.put(FunctionLibrary.NULLIF, 2);
     	FUNCTION_MAP.put(FunctionLibrary.COALESCE, 3);
     	FUNCTION_MAP.put(FunctionLibrary.CONCAT2, 4);
