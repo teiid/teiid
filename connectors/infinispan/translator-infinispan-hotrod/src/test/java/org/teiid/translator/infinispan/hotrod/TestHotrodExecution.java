@@ -22,7 +22,18 @@
 package org.teiid.translator.infinispan.hotrod;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.List;
 
 import javax.resource.ResourceException;
 
@@ -42,6 +53,7 @@ import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanConnectionImpl;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory;
@@ -70,6 +82,9 @@ public class TestHotrodExecution {
         MetadataFactory mf = TestProtobufMetadataProcessor.protoMatadata("tables.proto");
         ef = new InfinispanExecutionFactory();
         TransformationMetadata tm = TestProtobufMetadataProcessor.getTransformationMetadata(mf, ef);
+        //String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        //System.out.println(ddl);
+        
         metadata = new RuntimeMetadataImpl(tm);
         utility = new TranslationUtility(tm);
     }
@@ -255,5 +270,49 @@ public class TestHotrodExecution {
         assertArrayEquals(new Object[] {new Integer(3), "two"}, exec.next().toArray());
         assertArrayEquals(new Object[] {new Integer(5), "upsert"}, exec.next().toArray());
         assertNull(exec.next());
+        
+        Timestamp timestamp = new Timestamp(1504889513361L);
+        Date date = new Date(1504889513361L);
+        Time time = new Time(1504889513361L);
+        
+        String sql = "UPSERT INTO G5 (e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18) "
+        		+ "values (512, 'one', convert(512.34, double), 512.25, 256, 1, 't', 1504889513361, convert(123445656.12313, bigdecimal), "
+        		+ "convert(1332434343, biginteger), "
+        		+ "{t '"+new SimpleDateFormat("HH:mm:ss").format(time)+"'}, "
+        		+ "{ts '"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(timestamp)+"'}, "
+        		+ "{d '"+new SimpleDateFormat("yyyy-MM-dd").format(date)+"'}, "
+        		+ "null, null, "
+        		+ "convert('clob contents', clob), xmlparse(CONTENT '<a>foo</a>'), null)";
+        System.out.println(sql);
+        command = utility.parseCommand(sql);
+        
+        
+        update = ef.createUpdateExecution(command,ec, metadata, connection);
+        update.execute();        
+        
+        command = utility.parseCommand("SELECT e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18 FROM G5");
+        exec = ef.createResultSetExecution((QueryExpression) command, ec, metadata, connection);
+        exec.execute();
+
+        List<?> results = exec.next();
+        assertEquals(new Integer(512), (Integer)results.get(0));
+        assertEquals("one", (String)results.get(1));
+        //assertEquals(512.34, (double)results.get(2));
+        //assertEquals(512.25, (float)results.get(3));
+        assertEquals(new Short("256"), results.get(4));
+        assertEquals(new Byte("1"), results.get(5));
+        assertEquals(new String("t"), results.get(6));
+        assertEquals(new Long(1504889513361L), results.get(7));
+        assertEquals(new BigDecimal("123445656.12313").toPlainString(), ((BigDecimal)results.get(8)).toPlainString());
+        assertEquals(new BigInteger("1332434343").toString(), ((BigInteger)results.get(9)).toString());
+        
+        
+        assertEquals(new Time(new SimpleDateFormat("HH:mm:ss").parse("11:51:53").getTime()), results.get(10));
+        assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-09-08 11:51:53").getTime()), results.get(11));
+        assertEquals(new Date(new SimpleDateFormat("yyyy-MM-dd").parse("2017-09-08").getTime()), results.get(12));
+        
+        assertEquals("clob contents", ObjectConverterUtil.convertToString(((Clob)results.get(15)).getCharacterStream()));
+        assertEquals("<a>foo</a>", ObjectConverterUtil.convertToString(((SQLXML)results.get(16)).getCharacterStream()));
+        assertNull(exec.next());        
     }
 }

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
@@ -309,7 +310,10 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
             }
             return null;
         } else {
-            teiidType = ProtobufDataManager.teiidType(type, isCollection(fieldElement), false);
+        	teiidType = findFromAnnotation(annotation, "type");
+            if (teiidType == null) {
+            	teiidType = ProtobufDataManager.teiidType(type, isCollection(fieldElement), false);
+            }
         }
 
         Column c = null;
@@ -322,7 +326,21 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         c.setUpdatable(true);
         c.setNullType(fieldElement.label() == Label.REQUIRED ? NullType.No_Nulls : NullType.Nullable);
         c.setProperty(TAG, Integer.toString(fieldElement.tag()));
+        
+        String length = findFromAnnotation(annotation, "length");
+        if (length != null) {
+        	c.setLength(Integer.parseInt(length));
+        }
 
+        String precision = findFromAnnotation(annotation, "precision");
+        if (precision != null) {
+        	c.setPrecision(Integer.parseInt(precision));
+        }
+        
+        String scale = findFromAnnotation(annotation, "scale");
+        if (scale != null) {
+        	c.setScale(Integer.parseInt(scale));
+        }        
         // process default value
         if (fieldElement.getDefault() != null) {
             if (isEnum(messageTypes, enumTypes, type)) {
@@ -344,7 +362,17 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         }
 
         if ( annotation != null && !annotation.isEmpty()) {
-            c.setAnnotation(annotation);
+
+        	// this is induced annotation already represented in Teiid metadata remove it.
+        	if(annotation.contains("@Teiid(")) {
+                int start = annotation.indexOf("@Teiid(");
+                int end = annotation.indexOf(")", start+7);
+                annotation = annotation.substring(0, start) + annotation.substring(end+1);
+            }
+            
+        	if (!annotation.isEmpty()) {
+        		c.setAnnotation(annotation);
+        	}
 
             if(annotation.contains("@IndexedField(index=false")) {
                 c.setSearchType(null);
@@ -360,6 +388,25 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         return c;
     }
 
+    private String findFromAnnotation(String annotation, String verb) {
+        if ( annotation != null && !annotation.isEmpty()) {
+            if(annotation.contains("@Teiid(")) {
+                int start = annotation.indexOf("@Teiid(");
+                int end = annotation.indexOf(")", start+7);
+                String teiidMetadata = annotation.substring(start+7, end);
+                StringTokenizer st = new StringTokenizer(teiidMetadata, ",");
+                while(st.hasMoreTokens()) {
+                	String token = st.nextToken();
+                	String[] values = token.split("=");
+                	if (values[0].equals(verb)) {
+                		return values[1];
+                	}
+                }
+            }
+        }
+        return null;
+    }
+    
     private boolean isCollection(FieldElement fieldElement) {
         return fieldElement.label() == Label.REPEATED;
     }
