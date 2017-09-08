@@ -174,7 +174,7 @@ public class TestIckleConversionVisitor {
         IckleConversionVisitor visitor = helpExecute("select * from model.G4 as p where p.G2_e1 = 2",
                 "FROM pm1.G2 g2_0 WHERE g2_0.e1 = 2");
         assertArrayEquals(new String[] { "pm1.G2/pm1.G4/e1", "pm1.G2/pm1.G4/e2", "e1" },
-                visitor.getProjectedDocumentAttributes().toArray(new String[2]));
+                visitor.getProjectedDocumentAttributes().keySet().toArray(new String[2]));
     }
 
     @Test

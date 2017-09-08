@@ -18,5 +18,21 @@ CREATE FOREIGN TABLE G2 (
 CREATE FOREIGN TABLE G4 (
 	e1 integer NOT NULL,
 	e2 string NOT NULL,
+	e3 double,
+	e4 float,
+	e5 short,
+	e6 byte,
+	e7 char(2),
+	e8 long,
+	e9 bigdecimal,
+	e10 biginteger,
+	e11 time,
+	e12 timestamp,
+	e13 date,
+	e14 object,
+	e15 blob,
+	e16 clob,
+	e17 xml,
+	e18 geometry,
 	CONSTRAINT FK_G2 FOREIGN KEY(e1) REFERENCES G2 (e1)
 );

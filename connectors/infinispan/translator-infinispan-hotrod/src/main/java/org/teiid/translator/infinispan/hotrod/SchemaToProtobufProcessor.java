@@ -17,15 +17,18 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.teiid.language.SQLConstants.Tokens.*;
+import static org.teiid.language.SQLConstants.Tokens.SEMICOLON;
+import static org.teiid.language.SQLConstants.Tokens.SPACE;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.infinispan.api.InfinispanConnection;
 import org.teiid.infinispan.api.ProtobufDataManager;
 import org.teiid.infinispan.api.ProtobufResource;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
@@ -120,17 +123,42 @@ public class SchemaToProtobufProcessor {
 
     private void visitColumn(Column column) {
         addTab();
+        
+        boolean array = column.getJavaType().isArray();
+        String type = getType(column, array);
+        
         if (column.getAnnotation() != null) {
             buffer.append("/* ").append(column.getAnnotation().replace('\n', ' ')).append(" */").append(NL);
             addTab();
         } else {
-            if (isPartOfPrimaryKey(column) || isPartOfUniqueKey(column)) {
-                buffer.append("/* @Id */").append(NL);
-                addTab();
-            }
-        }
+        	boolean needId = isPartOfPrimaryKey(column) || isPartOfUniqueKey(column);
+        	boolean needType =  ProtobufDataManager.shouldPreserveType(type, column.getRuntimeType());
 
-        boolean array = column.getJavaType().isArray();
+        	if (needId || needType) {
+	        	buffer.append("/* ");
+	            if (needId) {
+	                buffer.append("@Id ");                
+	            }
+	            if (needType) {
+	            	buffer.append("@Teiid(type=").append(column.getRuntimeType());
+					if (column.getLength() != 0 && 
+							(column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.STRING)
+							|| column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CHAR))) {
+						buffer.append(", length=").append(column.getLength());
+					}
+					if ((column.getScale() != column.getDatatype().getScale()
+							&& column.getScale() != BaseColumn.DEFAULT_SCALE)
+							|| (column.getPrecision() != column.getDatatype().getPrecision()
+									&& column.getPrecision() != BaseColumn.DEFAULT_PRECISION)) {
+						buffer.append(", precision=").append(column.getPrecision());
+						buffer.append(", scale=").append(column.getScale());
+					}
+	            	buffer.append(") ");
+	            }
+	            buffer.append("*/").append(NL);
+	            addTab();
+        	}
+        }
 
         if (column.getNullType().equals(NullType.No_Nulls)) {
             buffer.append("required ");
@@ -139,17 +167,8 @@ public class SchemaToProtobufProcessor {
         } else {
             buffer.append("optional ");
         }
-
-        if (column.getNativeType() != null) {
-            buffer.append(column.getNativeType()).append(SPACE);
-        } else {
-            Class<?> clazz = column.getJavaType();
-            if (array) {
-                clazz = clazz.getComponentType();
-            }
-            String type = ProtobufDataManager.getCompatibleProtobufType(clazz).toString().toLowerCase();
-            buffer.append(type).append(SPACE);
-        }
+        
+        buffer.append(type).append(SPACE);
 
         if (column.getNameInSource() != null) {
             buffer.append(column.getNameInSource()).append(SPACE);
@@ -164,6 +183,18 @@ public class SchemaToProtobufProcessor {
 
         buffer.append("= ").append(tag).append(SEMICOLON).append(NL);
     }
+
+	private String getType(Column column, boolean array) {
+		if (column.getNativeType() != null) {
+			return column.getNativeType();
+        } else {
+            Class<?> clazz = column.getJavaType();
+            if (array) {
+                clazz = clazz.getComponentType();
+            }
+            return ProtobufDataManager.getCompatibleProtobufType(clazz).toString().toLowerCase();                       
+        }
+	}
 
     private void processLater(Column column) {
         String messageName = ProtobufMetadataProcessor.getMessageName(column);

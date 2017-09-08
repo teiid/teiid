@@ -242,7 +242,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			throw new TranslatorException(
 					InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25005, previous.getName(), rowKey));
 		}
-		if (upsert) {
+		if (upsert && previous != null) {
 			previous.merge(row);
 			previous = (InfinispanDocument) cache.replace(rowKey, previous);
 		} else {
