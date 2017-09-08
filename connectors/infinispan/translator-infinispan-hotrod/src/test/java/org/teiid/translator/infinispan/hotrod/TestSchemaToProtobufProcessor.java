@@ -60,6 +60,7 @@ public class TestSchemaToProtobufProcessor {
                 "    optional G3 g3 = 5;\n" +
                 "    /* @IndexedField(index=false) */\n" +
                 "    optional bytes e5 = 7;\n" +
+                "    /* @Teiid(type=long) */\n" +
                 "    optional fixed64 e6 = 8;\n" +
                 "    repeated G4 g4 = 6;\n" +
                 "}\n" +
@@ -71,6 +72,42 @@ public class TestSchemaToProtobufProcessor {
                 "    optional int32 e1 = 3;\n" +
                 "}\n" +
                 "\n" +
+                "/* @Indexed */\n" + 
+                "message G5 {\n" + 
+                "    /* @Id */\n"+
+                "    required int32 e1 = 1;\n" + 
+                "    required string e2 = 2;\n" + 
+                "    optional double e3 = 3;\n" + 
+                "    optional float e4 = 4;\n" + 
+                "    /* @Teiid(type=short) */\n" + 
+                "    optional int32 e5 = 5;\n" + 
+                "    /* @Teiid(type=byte) */\n" + 
+                "    optional int32 e6 = 6;\n" + 
+                "    /* @Teiid(type=char, length=1) */\n" + 
+                "    optional string e7 = 7;\n" + 
+                "    optional int64 e8 = 8;\n" + 
+                "    /* @Teiid(type=bigdecimal) */\n" + 
+                "    optional string e9 = 9;\n" + 
+                "    /* @Teiid(type=biginteger) */\n" + 
+                "    optional string e10 = 10;\n" + 
+                "    /* @Teiid(type=time) */\n" + 
+                "    optional int64 e11 = 11;\n" + 
+                "    /* @Teiid(type=timestamp) */\n" + 
+                "    optional int64 e12 = 12;\n" + 
+                "    /* @Teiid(type=date) */\n" + 
+                "    optional int64 e13 = 13;\n" + 
+                "    /* @Teiid(type=object) */\n" + 
+                "    optional bytes e14 = 14;\n" + 
+                "    /* @Teiid(type=blob) */\n" + 
+                "    optional bytes e15 = 15;\n" + 
+                "    /* @Teiid(type=clob) */\n" + 
+                "    optional bytes e16 = 16;\n" + 
+                "    /* @Teiid(type=xml) */\n" + 
+                "    optional bytes e17 = 17;\n" + 
+                "    /* @Teiid(type=geometry) */\n" + 
+                "    optional bytes e18 = 18;\n" + 
+                "}\n" + 
+                "\n"+
                 "message pm1.G3 {\n" +
                 "    required int32 e1 = 1;\n" +
                 "    required string e2 = 2;\n" +
@@ -112,11 +149,40 @@ public class TestSchemaToProtobufProcessor {
                 "    repeated G4 g4 = 5;\n" +
                 "}\n" +
                 "\n" +
-                "/* @Indexed */\n"+
-                "message G4 {\n" +
-                "    required int32 e1 = 1;\n" +
-                "    required string e2 = 2;\n" +
-                "}\n\n";
+                "/* @Indexed */\n" + 
+                "message G4 {\n" + 
+                "    required int32 e1 = 1;\n" + 
+                "    required string e2 = 2;\n" + 
+                "    optional double e3 = 3;\n" + 
+                "    optional float e4 = 4;\n" + 
+                "    /* @Teiid(type=short) */\n" + 
+                "    optional int32 e5 = 5;\n" + 
+                "    /* @Teiid(type=byte) */\n" + 
+                "    optional int32 e6 = 6;\n" + 
+                "    /* @Teiid(type=char, length=2) */\n" + 
+                "    optional string e7 = 7;\n" + 
+                "    optional int64 e8 = 8;\n" + 
+                "    /* @Teiid(type=bigdecimal) */\n" + 
+                "    optional string e9 = 9;\n" + 
+                "    /* @Teiid(type=biginteger) */\n" + 
+                "    optional string e10 = 10;\n" + 
+                "    /* @Teiid(type=time) */\n" + 
+                "    optional int64 e11 = 11;\n" + 
+                "    /* @Teiid(type=timestamp) */\n" + 
+                "    optional int64 e12 = 12;\n" + 
+                "    /* @Teiid(type=date) */\n" + 
+                "    optional int64 e13 = 13;\n" + 
+                "    /* @Teiid(type=object) */\n" + 
+                "    optional bytes e14 = 14;\n" + 
+                "    /* @Teiid(type=blob) */\n" + 
+                "    optional bytes e15 = 15;\n" + 
+                "    /* @Teiid(type=clob) */\n" + 
+                "    optional bytes e16 = 16;\n" + 
+                "    /* @Teiid(type=xml) */\n" + 
+                "    optional bytes e17 = 17;\n" + 
+                "    /* @Teiid(type=geometry) */\n" + 
+                "    optional bytes e18 = 18;\n" + 
+                "}\n\n"; 
         assertEquals(expected, resource.getContents());
 
     }

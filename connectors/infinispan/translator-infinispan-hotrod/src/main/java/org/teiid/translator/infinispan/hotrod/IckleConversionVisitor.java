@@ -21,7 +21,9 @@ import static org.teiid.language.SQLConstants.Reserved.HAVING;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,7 +51,7 @@ public class IckleConversionVisitor extends SQLStringVisitor {
     protected boolean avoidProjection = false;
     private DocumentNode rootNode;
     private DocumentNode joinedNode;
-    private List<String> projectedDocumentAttributes = new ArrayList<>();
+    private LinkedHashMap<String, Class<?>> projectedDocumentAttributes = new LinkedHashMap<>();
     private AtomicInteger aliasCounter = new AtomicInteger();
     protected boolean nested;
 
@@ -286,7 +288,9 @@ public class IckleConversionVisitor extends SQLStringVisitor {
                 nested = true;
             }
             try {
-                this.projectedDocumentAttributes.add(MarshallerBuilder.getDocumentAttributeName(column, nested, this.metadata));
+				this.projectedDocumentAttributes.put(
+						MarshallerBuilder.getDocumentAttributeName(column, nested, this.metadata),
+						column.getJavaType());
             } catch (TranslatorException e) {
                 this.exceptions.add(e);
             }
@@ -390,7 +394,7 @@ public class IckleConversionVisitor extends SQLStringVisitor {
         return false;
     }
 
-    public List<String> getProjectedDocumentAttributes() throws TranslatorException {
+    public Map<String, Class<?>> getProjectedDocumentAttributes() throws TranslatorException {
         return projectedDocumentAttributes;
     }
 
