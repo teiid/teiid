@@ -107,7 +107,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				AutoCleanupUtil.doCleanup(false);
 				impl.cleaning.set(true);
 				try {
-					long evicted = impl.doEvictions(impl.maxProcessingBytes, true, impl.initialEvictionQueue);
+				    checkForOrphanedMemoryEntries(impl);
+	                long evicted = impl.doEvictions(impl.maxProcessingBytes, true, impl.initialEvictionQueue);
 					if (evicted != 0 && LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", evicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
 					}
@@ -124,6 +125,29 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				}
 			}
 		}
+
+        private void checkForOrphanedMemoryEntries(BufferManagerImpl impl) {
+            if (impl.memoryEntries.size() <= impl.evictionQueue.getSize() + impl.initialEvictionQueue.getSize() + CONCURRENCY_LEVEL) {
+                return;
+            }
+            int count = 0;
+            for (CacheEntry entry : impl.memoryEntries.values()) {
+                boolean added = false;
+                synchronized (entry) {
+                    if (entry.isPersistent()) {
+                        added = impl.evictionQueue.add(entry);
+                    } else {
+                        added = impl.initialEvictionQueue.add(entry);
+                    }
+                }
+                if (added) {
+                    count++;
+                }
+            }
+            if (count > CONCURRENCY_LEVEL) {
+                LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, "Detected an unexpected number of orphaned heap cache memory entries."); //$NON-NLS-1$
+            }
+        }		
 	}
 	
 	private final class Remover implements Removable {
@@ -884,7 +908,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					synchronized (ce) {
 						if (memoryEntries.remove(ce.getId()) != null) {
 							freed += ce.getSizeEstimate();
-							activeBatchBytes.addAndGet(-ce.getSizeEstimate());
+							long result = activeBatchBytes.addAndGet(-ce.getSizeEstimate());
+                            assert result >= 0 || !LrfuEvictionQueue.isSuspectSize(activeBatchBytes);
 							queue.remove(ce); //ensures that an intervening get will still be cleaned
 						}
 					}
@@ -1011,7 +1036,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
 	private void remove(CacheEntry ce, boolean inMemory) {
 		if (inMemory) {
-			activeBatchBytes.addAndGet(-ce.getSizeEstimate());
+		    long result = activeBatchBytes.addAndGet(-ce.getSizeEstimate());
+            assert result >= 0 || !LrfuEvictionQueue.isSuspectSize(activeBatchBytes);
 		}
 		assert activeBatchBytes.get() >= 0;
 		Serializer<?> s = ce.getSerializer();

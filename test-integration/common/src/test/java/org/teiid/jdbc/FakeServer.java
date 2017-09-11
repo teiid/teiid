@@ -24,6 +24,7 @@ package org.teiid.jdbc;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +79,7 @@ public class FakeServer extends EmbeddedServer {
 		public List<VDBImportMetadata> vdbImports;
 		public LinkedHashMap<String, Resource> vdbResources;
 		public boolean useVdbXml;
+		public boolean useDataRoles;
 
 		public DeployVDBParameter(Map<String, Collection<FunctionMethod>> udfs,
 				MetadataRepository<?, ?> metadataRepo) {
@@ -194,6 +196,9 @@ public class FakeServer extends EmbeddedServer {
 		        	}
 		        }
 			} else {
+			    if (!parameterObject.useDataRoles) {
+			        vdbMetaData.setDataPolicies(Collections.EMPTY_LIST);
+			    }
 				cmr.createConnectorManagers(vdbMetaData, this);
 			}
                         
