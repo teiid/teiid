@@ -45,9 +45,23 @@ public class TestLrfuEvictionQueue {
 	@Test public void testKeyCompare() {
 		CacheKey key = new CacheKey(-5600000000000000000l, 0l, 0l);
 		CacheKey key1 = new CacheKey(3831662765844904176l, 0l, 0l);
-		CacheKey key2 = new CacheKey(0l, 0l, 0l);
 		assertTrue(key.compareTo(key1) < 0);
 		assertTrue(key1.compareTo(key) > 0);
 	}
+	
+	@Test public void testTouch() {
+        AtomicLong clock = new AtomicLong();
+        LrfuEvictionQueue<BaseCacheEntry> q = new LrfuEvictionQueue<BaseCacheEntry>(clock);
+        CacheKey key = new CacheKey(0l, 0l, 0l);
+        BaseCacheEntry value = new BaseCacheEntry(key);
+        q.touch(value);
+        assertEquals(1, q.getSize());
+        assertNotNull(q.firstEntry(true));
+        //advance the clock to perform the remove/add
+        clock.set(LrfuEvictionQueue.MIN_INTERVAL);
+        q.touch(value);
+        assertEquals(1, q.getSize());
+        assertNotNull(q.firstEntry(true));
+    }
 	
 }

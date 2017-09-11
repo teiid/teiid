@@ -730,6 +730,7 @@ public class TempTable implements Cloneable, SearchableTable {
 				//existing tuples have been removed
 				//changeSet contains possible updates
 				if (primaryKeyChangePossible) {
+				    changeSet.close();
 					if (changeSetProcessor == null) {
 						changeSetProcessor = new InsertUpdateProcessor(changeSet.createIndexedTupleSource(true), false, null, true);
 					}

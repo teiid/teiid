@@ -190,4 +190,20 @@ public class TestSTree {
 		}
 	}
 	
+	@Test public void testTupleBrowserRemove() throws Exception {
+        BufferManagerImpl bm = BufferManagerFactory.getTestBufferManager(1, 1);
+        
+        ElementSymbol e1 = new ElementSymbol("x");
+        e1.setType(Integer.class);
+        ElementSymbol e2 = new ElementSymbol("x");
+        e2.setType(Integer.class);
+        List<ElementSymbol> elements = Arrays.asList(e1, e2);
+        STree map = bm.createSTree(elements, "1", 2);
+        map.insert(Arrays.asList(1, 1), InsertMode.NEW, -1);
+        TupleBrowser tb = new TupleBrowser(map, new CollectionTupleSource(Collections.singletonList(Arrays.asList(1)).iterator()), true, false);
+        assertNotNull(tb.nextTuple());
+        tb.removed();
+        assertEquals(Integer.valueOf(0), tb.getValueCount());
+	}
+	
 }

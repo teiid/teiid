@@ -74,8 +74,15 @@ import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestTextTable;
-import org.teiid.query.processor.relational.*;
+import org.teiid.query.processor.relational.BlockingFakeRelationalNode;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
+import org.teiid.query.processor.relational.FakeRelationalNode;
+import org.teiid.query.processor.relational.JoinNode;
+import org.teiid.query.processor.relational.JoinStrategy;
+import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
+import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.JoinType;
@@ -153,6 +160,8 @@ public class TestEnginePerformance {
 		for (Future<Void> future : result) {
 			future.get();
 		}
+		assertEquals(0, bm.getActiveBatchBytes());
+		assertEquals(0, bm.getMemoryCacheEntries());
 	}
 	
 	private void process(RelationalNode node, int expectedRows)
