@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>odata</artifactId>
-      <version>9.3.3</version>
+      <version>9.3.4-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-odata</artifactId>
     <name>Teiid Connector OData Feature Pack</name>
