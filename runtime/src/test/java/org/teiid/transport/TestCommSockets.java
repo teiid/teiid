@@ -367,7 +367,7 @@ public class TestCommSockets {
 	    Properties p = new Properties();
 	    p.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, "true");
 	    p.setProperty("org.teiid.sockets.synchronousttl", "20000");
-	    SocketServerConnection conn = helpEstablishConnection(false, new SSLConfiguration(), p);
+	    final SocketServerConnection conn = helpEstablishConnection(false, new SSLConfiguration(), p);
 	    ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
 	    Future<?> future = exec.submit(new Runnable() {
             
