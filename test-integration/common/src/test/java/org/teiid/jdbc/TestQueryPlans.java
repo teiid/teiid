@@ -93,6 +93,25 @@ public class TestQueryPlans {
 		assertTrue(rs.next());
 	}
 	
+	@Test public void testShowPlanMultibatch() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("set showplan debug");
+        ResultSet rs = s.executeQuery("with x as( select * from columns limit 50) select * from x t1, x t2");
+        int count = 0;
+        while (rs.next()) {
+            count++;
+        }
+        assertEquals(2500, count);
+        rs = s.executeQuery("show plan");
+        assertTrue(rs.next());
+        assertEquals(rs.getMetaData().getColumnType(2), Types.SQLXML);
+        String string = rs.getSQLXML(2).getString();
+        PlanNode node = PlanNode.fromXml(string);
+        
+        Property p = node.getProperty("Statistics");
+        assertTrue(p.getValues().contains("Node Output Rows: 2500"));
+    }
+	
 	@Test public void testShow() throws Exception {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("show all");

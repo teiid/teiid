@@ -426,6 +426,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	private Batch processBatch(
 			ResultsMessage currentResultMsg) throws TeiidSQLException {
+	    this.statement.setAnalysisInfo(currentResultMsg);
 		if (currentResultMsg.getException() != null) {
 		    throw TeiidSQLException.create(currentResultMsg.getException());
 		}
