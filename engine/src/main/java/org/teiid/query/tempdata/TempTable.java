@@ -40,11 +40,16 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.common.buffer.*;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
+import org.teiid.common.buffer.STree;
 import org.teiid.common.buffer.STree.InsertMode;
+import org.teiid.common.buffer.TupleBrowser;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleBuffer.TupleBufferTupleSource;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -791,6 +796,7 @@ public class TempTable implements Cloneable, SearchableTable {
 				//existing tuples have been removed
 				//changeSet contains possible updates
 				if (primaryKeyChangePossible) {
+				    changeSet.close();
 					if (changeSetProcessor == null) {
 						changeSetProcessor = new InsertUpdateProcessor(changeSet.createIndexedTupleSource(true), false, null, true, false);
 					}
