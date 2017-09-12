@@ -63,7 +63,30 @@ import org.teiid.util.Version;
 @Translator(name="sqlserver", description="A translator for Microsoft SQL Server Database")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
-	public static final String V_2000 = "2000"; //$NON-NLS-1$
+	private final class UpperLowerFunctionModifier
+            extends AliasModifier {
+        private UpperLowerFunctionModifier(String alias) {
+            super(alias);
+        }
+
+        @Override
+        public List<?> translate(Function function) {
+            if (function.getParameters().get(0) instanceof ColumnReference) {
+                ColumnReference cr = (ColumnReference)function.getParameters().get(0);
+                String nativeType = cr.getMetadataObject().getNativeType();
+                if (nativeType != null 
+                        && StringUtil.indexOfIgnoreCase(nativeType, "char") == -1) { //$NON-NLS-1$ 
+                    Function cast = ConvertModifier.createConvertFunction(getLanguageFactory(), cr, 
+                                    (StringUtil.startsWithIgnoreCase(nativeType.trim(), "n")?"n":"")+"varchar(max)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                    cast.setName("cast"); //$NON-NLS-1$
+                    function.getParameters().set(0, cast); 
+                }
+            }
+            return super.translate(function);
+        }
+    }
+
+    public static final String V_2000 = "2000"; //$NON-NLS-1$
 	public static final String V_2005 = "2005"; //$NON-NLS-1$
 	public static final String V_2008 = "2008"; //$NON-NLS-1$
 	public static final String V_2012 = "2012"; //$NON-NLS-1$
@@ -96,6 +119,8 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		registerFunctionModifier(SourceSystemFunctions.SHA1, new TemplateFunctionModifier("HASHBYTES('SHA1', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
 		registerFunctionModifier(SourceSystemFunctions.SHA2_256, new TemplateFunctionModifier("HASHBYTES('SHA2_256', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
 		registerFunctionModifier(SourceSystemFunctions.SHA2_512, new TemplateFunctionModifier("HASHBYTES('SHA2_512', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
+		registerFunctionModifier(SourceSystemFunctions.UCASE, new UpperLowerFunctionModifier("upper")); //$NON-NLS-1$ 
+		registerFunctionModifier(SourceSystemFunctions.LCASE, new UpperLowerFunctionModifier("lower")); //$NON-NLS-1$
 	}
 	
 	@Override

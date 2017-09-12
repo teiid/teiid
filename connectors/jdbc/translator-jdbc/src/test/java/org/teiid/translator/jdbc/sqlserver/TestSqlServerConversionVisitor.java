@@ -452,5 +452,13 @@ public class TestSqlServerConversionVisitor {
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
+    
+    @Test
+    public void testUpperLower() throws Exception {
+        String input = "select upper(txt), lower(ntxt), upper(str) from tbl"; //$NON-NLS-1$
+        String output = "SELECT upper(cast(tbl.txt AS varchar(max))), lower(cast(tbl.ntxt AS nvarchar(max))), upper(tbl.str) FROM tbl"; //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor("create foreign table tbl (txt string options (native_type 'text'), ntxt string options (native_type 'ntext'), str string)", input, output, trans);
+    }
        
 }
