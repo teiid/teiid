@@ -193,7 +193,9 @@ public class MetadataFactory extends NamespaceContainer {
 	public Column addColumn(String name, String type, ColumnSet<?> table) {
 		if (this.autoCorrectColumnNames) {
 			String newName = name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
-			LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60038, name, newName));
+			if (!newName.equals(name)) {
+			    LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60038, name, newName));
+			}
 			name = newName;
 		} else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
 			throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, table.getFullName(), name));
