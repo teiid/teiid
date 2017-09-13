@@ -28,6 +28,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.sql.SQLXML;
 import java.sql.Time;
@@ -370,6 +372,27 @@ public class ODataTypeManager {
         }
     }    
     
+    public static Object rationalizePrecision(Integer precision, Integer scale, Object value) {
+        if (precision == null || !(value instanceof BigDecimal)) {
+            return value;
+        }
+        BigDecimal bigDecimalValue = (BigDecimal)value;
+        //if precision is set, then try to set an appropriate scale to pass the facet check
+        final int digits = bigDecimalValue.scale() >= 0
+                  ? Math.max(bigDecimalValue.precision(), bigDecimalValue.scale())
+                      : bigDecimalValue.precision() - bigDecimalValue.scale();
+        
+        if (bigDecimalValue.scale() > (scale == null ? 0 : scale) || (digits > precision)) {
+            BigDecimal newBigDecimal = bigDecimalValue.setScale(Math.min(digits > precision ? bigDecimalValue.scale() - digits + precision : bigDecimalValue.scale(), scale == null ? 0 : scale), RoundingMode.HALF_UP);
+            //only allow for trimming trailing zeros
+            if (newBigDecimal.compareTo(bigDecimalValue) == 0) {
+                bigDecimalValue = newBigDecimal;
+            }
+        }
+
+        return bigDecimalValue;
+    }
+    
     public static String convertToODataURIValue(Object val, String odataType) throws EdmPrimitiveTypeException {
         if (val == null) {
             return "null"; // is this correct? //$NON-NLS-1$
@@ -377,7 +400,7 @@ public class ODataTypeManager {
         if(odataType.startsWith("Edm.")) { //$NON-NLS-1$
             odataType = odataType.substring(4);
         }
-        if (odataType.startsWith("Geometry") && val instanceof GeometryType) { //$NON-NLS-1$
+        if (val instanceof GeometryType) {
         	Geometry g;
 			try {
 				g = GeometryUtils.getGeometry((GeometryType)val);
@@ -399,7 +422,7 @@ public class ODataTypeManager {
         }
         EdmPrimitiveTypeKind kind = EdmPrimitiveTypeKind.valueOf(odataType);
         String value =  EdmPrimitiveTypeFactory.getInstance(kind).valueToString(
-                val, true, DataTypeManager.MAX_STRING_LENGTH, 0, 0, true);
+                val, true, null, null, Integer.MAX_VALUE, true);
         if (kind == EdmPrimitiveTypeKind.String) {
             return EdmString.getInstance().toUriLiteral(value);
         }

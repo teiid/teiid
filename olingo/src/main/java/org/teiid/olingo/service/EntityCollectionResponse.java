@@ -25,8 +25,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Array;
@@ -336,34 +334,6 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 ValueType.COLLECTION_PRIMITIVE, values);
     }
 
-/*    static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
-            Object value, String invalidCharacterReplacement)
-            throws TransformationException, SQLException, IOException {
-        if (value == null) {
-            return null;
-        }
-                
-        Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
-        Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType, isArray));
-        if (sourceType != targetType) {
-            Transform t = DataTypeManager.getTransform(sourceType, targetType);
-            if (t == null && BlobType.class == targetType) {
-                if (sourceType == ClobType.class) {
-                    return ClobType.getString((Clob) value).getBytes();
-                }
-                if (sourceType == SQLXML.class) {
-                    return ((SQLXML) value).getString().getBytes();
-                }
-            }
-            value = t != null ? t.transform(value, targetType) : value;
-            value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
-            return value;
-        }
-        value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
-        return value;
-    }
-*/
-
     static Object getPropertyValue(SingletonPrimitiveType expectedType, Integer precision, Integer scale, boolean isArray,
             Object value)
             throws TransformationException, SQLException, IOException {
@@ -371,22 +341,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     		return null;
     	}
     	value = getPropertyValueInternal(expectedType, isArray, value);
-    	if (value instanceof BigDecimal) {
-    		BigDecimal bigDecimalValue = (BigDecimal)value;
-    		
-    		//if precision is set, then try to set an appropriate scale to pass the facet check
-    		if (precision != null) {
-	    		final int digits = bigDecimalValue.scale() >= 0
-	    		          ? Math.max(bigDecimalValue.precision(), bigDecimalValue.scale())
-	    		              : bigDecimalValue.precision() - bigDecimalValue.scale();
-	    		
-	            if (bigDecimalValue.scale() > (scale == null ? 0 : scale) || (digits > precision)) {
-	            	bigDecimalValue = bigDecimalValue.setScale(Math.min(digits > precision ? bigDecimalValue.scale() - digits + precision : bigDecimalValue.scale(), scale == null ? 0 : scale), RoundingMode.HALF_UP);
-	            }
-    		}
-
-    		value = bigDecimalValue;
-    	}
+		value = ODataTypeManager.rationalizePrecision(precision, scale, value);
     	return value;
     }
     
