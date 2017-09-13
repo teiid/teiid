@@ -76,7 +76,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         return null;
     }
     
-    private String getQueryParameters(Call obj) throws EdmPrimitiveTypeException {
+    static String getQueryParameters(Call obj) throws EdmPrimitiveTypeException {
         StringBuilder sb = new StringBuilder();
         final List<Argument> params = obj.getArguments();
         if (params != null && params.size() != 0) {

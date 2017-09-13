@@ -21,12 +21,13 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.net.URLDecoder;
 
 import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.language.Call;
 import org.teiid.language.Select;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.TranslatorException;
@@ -78,7 +79,23 @@ public class TestODataSQLVistor {
     public void testMultiKeyKeyBasedFilter() throws Exception {
     	helpExecute("select Price from PurchaseDetails where ItemId = 1 and SaleId = 12 and Quantity = 2", 
     	        "PurchaseDetails?$select=Price&$filter=ItemId eq 1 and SaleId eq 12 and Quantity eq 2");
-    }    
+    }
+    
+    @Test
+    public void testBigDecimalLiteral() throws Exception {
+        helpExecute("select ItemId from PurchaseDetails where price > 12.0", 
+                "PurchaseDetails?$select=ItemId&$filter=Price gt 12.0");
+    }
+    
+    @Test
+    public void testBigDecimalParameter() throws Exception {
+        ODataExecutionFactory ef = new ODataExecutionFactory();
+        TranslationUtility utility = new TranslationUtility(TestODataMetadataProcessor.getTransformationMetadata(TestODataMetadataProcessor.tripPinMetadata(), ef));
+        
+        Call cmd = (Call)utility.parseCommand("call GetNearestAirport(1.1, 1.2, 2.0)");
+        String params = ODataProcedureExecution.getQueryParameters(cmd);
+        assertEquals("lat=1.1&lon=1.2&within=2.0", params);
+    }
     
     @Test
     public void testAddFilter() throws Exception {
@@ -186,6 +203,9 @@ public class TestODataSQLVistor {
     public void testUseAirthmaticFunction() throws Exception {
     	helpExecute("SELECT UserName FROM People WHERE Concurrency/10 > Concurrency", 
     	        "People?$select=UserName&$filter=(Concurrency div 10) gt Concurrency");
+    	
+    	helpExecute("SELECT UserName FROM People WHERE 10/Concurrency > Concurrency", 
+                "People?$select=UserName&$filter=(10 div Concurrency) gt Concurrency");
     }  
     
     @Test

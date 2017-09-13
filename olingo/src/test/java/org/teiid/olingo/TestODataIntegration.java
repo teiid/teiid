@@ -2820,7 +2820,7 @@ public class TestODataIntegration {
             mmd.setName("vw");
             mmd.addSourceMetadata("ddl", "CREATE VIEW SimpleTable(\n" + 
                     "    intkey integer PRIMARY KEY,\n" + 
-                    "    decimalval decimal(3, 1)) as select 1,12.31 union all select 2, 1.0001 union all select 3, 123.1;");
+                    "    decimalval decimal(3, 1)) as select 1,12.30 union all select 2, 1.000 union all select 3, 123.0;");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
