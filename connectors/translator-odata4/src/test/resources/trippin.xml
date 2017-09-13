@@ -49,7 +49,7 @@
                 </Key>
                 <Property Name="ItemId" Type="Edm.Int64" Nullable="false"/>
                 <Property Name="SaleId" Type="Edm.Int64" Nullable="false"/>
-                <Property Name="Price" Type="Edm.Double" />
+                <Property Name="Price" Type="Edm.Decimal" Precision="8" Scale="2" />
                 <Property Name="Quantity" Type="Edm.Int32" />
             </EntityType>            
             <EntityType Name="Photo" HasStream="true">
@@ -181,6 +181,7 @@
             <Function Name="GetNearestAirport" IsComposable="true">
                 <Parameter Name="lat" Type="Edm.Double" Nullable="false" />
                 <Parameter Name="lon" Type="Edm.Double" Nullable="false" />
+                <Parameter Name="within" Type="Edm.Decimal" Nullable="true" Precision="6" Scale="3" />
                 <ReturnType Type="Microsoft.OData.SampleService.Models.TripPin.Airport" Nullable="false" />
             </Function>
             <Action Name="ResetDataSource" />
