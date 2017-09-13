@@ -1423,4 +1423,17 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsSelectExpressionArrayType(boolean value) {
         supportsSelectExpressionArrayType = value;
     }
+    
+    Boolean supportsSetQueryLimitOffset;
+    @TranslatorProperty(display="Supports SET Query OFFSET/LIMIT", advanced=true)
+    @Override
+    public boolean supportsSetQueryLimitOffset() {
+        if (supportsSetQueryLimitOffset != null) {
+            return supportsSetQueryLimitOffset;
+        }
+        return delegate.supportsSetQueryLimitOffset();
+    }
+    public void setSupportsSetQueryLimitOffset(boolean value) {
+        supportsSetQueryLimitOffset = value;
+    }
 }

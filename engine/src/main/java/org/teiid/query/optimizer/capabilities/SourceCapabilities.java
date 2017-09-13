@@ -276,6 +276,7 @@ public interface SourceCapabilities {
          * @since 4.2
          */
         QUERY_SET_ORDER_BY,
+        QUERY_SET_LIMIT_OFFSET,
         /**
          * Support indicates connector can accept GROUP BY with functions in it.
          * 

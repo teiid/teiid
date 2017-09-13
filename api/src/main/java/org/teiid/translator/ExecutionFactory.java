@@ -759,6 +759,14 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
+     * Support indicates that the connector supports an LIMIT/OFFSET on a SetQuery.
+     * @since 10.0
+     */
+    public boolean supportsSetQueryLimitOffset() {
+        return supportsRowLimit() || supportsRowOffset();
+    }
+    
+    /**
      * Support indicates that the connector supports the INTERSECT of two queries. 
      * @since 5.6
      */
