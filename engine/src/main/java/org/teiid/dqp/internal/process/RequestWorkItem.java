@@ -53,6 +53,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.dqp.internal.datamgr.ThreadCpuTimer;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
@@ -197,6 +198,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     private volatile boolean doneProducingBatches;
     private volatile boolean isClosed;
     private volatile boolean isCanceled;
+    private String cancelReason;
     private volatile boolean closeRequested;
 
 	//results request
@@ -284,7 +286,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						wait();
 					} catch (InterruptedException e) {
 						try {
-							requestCancel();
+							requestCancel("Interrupted"); //$NON-NLS-1$
 						} catch (TeiidComponentException e1) {
 							 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30543, e1);
 						}
@@ -374,7 +376,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     }
 
 	private void setCanceledException() {
-		this.processingException = new TeiidProcessingException(QueryPlugin.Event.TEIID30563, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30563, this.requestID));
+		this.processingException = new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, this.requestID));
 	}
 
 	private void handleThrowable(Throwable e) {
@@ -1118,13 +1120,18 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     }
 
 	private Throwable addCancelCode(Throwable exception) {
+	    String reason = null; 
+	    synchronized (this) {
+	        reason = this.cancelReason;
+        }
 		if (exception instanceof TeiidException) {
 			TeiidException te = (TeiidException)exception;
-			if (SQLStates.QUERY_CANCELED.equals(te.getCode())) {
+			if (SQLStates.QUERY_CANCELED.equals(te.getCode()) && EquivalenceUtil.areEqual(reason, te.getMessage())) {
 				return exception;
 			}
 		}
-		TeiidProcessingException tpe = new TeiidProcessingException(exception);
+		TeiidProcessingException tpe = new TeiidProcessingException(reason);
+		tpe.initCause(exception);
 		tpe.setCode(SQLStates.QUERY_CANCELED);
 		return tpe;
 	}
@@ -1161,14 +1168,17 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         this.lobStreams.remove(streamRequestId);
     } 
     
-    public boolean requestCancel() throws TeiidComponentException {
+    public boolean requestCancel(String reason) throws TeiidComponentException {
     	synchronized (this) {
         	if (this.isCanceled || this.closeRequested) {
+        	    LogManager.logDetail(LogConstants.CTX_DQP, "Ignoring cancel for", requestID, "since request is already cancelled/closed"); //$NON-NLS-1$ //$NON-NLS-2$
         		return false;
         	}
         	this.isCanceled = true;
+        	this.cancelReason = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30563, requestID, reason);
 		}
-    	if (this.processor != null) {
+    	LogManager.logDetail(LogConstants.CTX_DQP, cancelReason);
+        if (this.processor != null) {
     		this.processor.requestCanceled();
     	}
     	
@@ -1193,23 +1203,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         return true;
     }
     
-    public boolean requestAtomicRequestCancel(AtomicRequestID ari) throws TeiidComponentException {
-    	// in the case that this does not support partial results; cancel
-        // the original processor request.
-        if(!requestMsg.supportsPartialResults()) {
-        	return requestCancel();
-        }
-        
-        DataTierTupleSource connectorRequest = this.connectorInfo.get(ari);
-        if (connectorRequest != null) {
-	        connectorRequest.cancelRequest();
-        	return true;
-        }
-        
-		LogManager.logDetail(LogConstants.CTX_DQP, "Connector request not found. AtomicRequestID=", ari); //$NON-NLS-1$ 
-        return false;
-    }
-    
     public void requestClose() throws TeiidComponentException {
     	if (this.state == ProcessingState.CLOSE || this.closeRequested) {
     		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -1218,7 +1211,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     		return;
     	}
     	if (!this.doneProducingBatches) {
-    		this.requestCancel(); //pending work should be canceled for fastest clean up
+    		this.requestCancel("To immediately halt work as close was called"); //$NON-NLS-1$ //pending work should be canceled for fastest clean up
     	} else {
     	    //it's safe to transition directly to close
     	    this.state = ProcessingState.CLOSE;
@@ -1294,7 +1287,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	@Override
 	public void release() {
 		try {
-			requestCancel();
+			requestCancel("WorkManager requested release"); //$NON-NLS-1$
 		} catch (TeiidComponentException e) {
 			LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30026,requestID));
 		}

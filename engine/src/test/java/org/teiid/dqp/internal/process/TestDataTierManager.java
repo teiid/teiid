@@ -343,7 +343,7 @@ public class TestDataTierManager {
     	TupleSource ts = dtm.registerRequest(context, command, "foo", rrp);
     	assertTrue(ts instanceof CachingTupleSource);
     	assertEquals(4, pullTuples(ts, 4));
-    	((CachingTupleSource)ts).item.requestCancel();
+    	((CachingTupleSource)ts).item.requestCancel("");
     	assertEquals(1, connectorManager.getExecuteCount().get());
     	assertFalse(rrp.doNotCache);
     	ts.closeSource(); //should force read all
