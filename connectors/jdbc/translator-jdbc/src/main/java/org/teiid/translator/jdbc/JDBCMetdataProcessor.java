@@ -34,12 +34,20 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
@@ -104,6 +112,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	private String columnNamePattern;
 	
 	private boolean importRowIdAsBinary;
+    private boolean importLargeAsLob;
 	
 	public void process(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
     	try {
@@ -492,7 +501,15 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			type = Types.BINARY;
 		}
 		type = checkForUnsigned(type, typeName);
-		return TypeFacility.getDataTypeNameFromSQLType(type);
+		String result = TypeFacility.getDataTypeNameFromSQLType(type);
+        if (importLargeAsLob) {
+            if (result.equals(TypeFacility.RUNTIME_NAMES.STRING) && precision > DataTypeManager.MAX_STRING_LENGTH) {
+                result = TypeFacility.RUNTIME_NAMES.CLOB;
+            } else if (result.equals(TypeFacility.RUNTIME_NAMES.VARBINARY) && precision > DataTypeManager.MAX_VARBINARY_BYTES) {
+                result = TypeFacility.RUNTIME_NAMES.BLOB;
+            }
+        }
+        return result;
 	}
 	
 	protected String quoteName(String name) {
@@ -1015,5 +1032,14 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
     public void setImportRowIdAsBinary(boolean importRowIdAsBinary) {
 		this.importRowIdAsBinary = importRowIdAsBinary;
 	}
+    
+    @TranslatorProperty(display="Import Large as LOB", category=PropertyType.IMPORT, description="Import character and binary types larger than the Teiid max as clob or blob respectively.")
+    public boolean isImportLargeAsLob() {
+        return importLargeAsLob;
+    }
+    
+    public void setImportLargeAsLob(boolean importLargeAsLob) {
+        this.importLargeAsLob = importLargeAsLob;
+    }
     
 }
