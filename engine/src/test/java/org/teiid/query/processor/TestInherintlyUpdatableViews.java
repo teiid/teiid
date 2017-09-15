@@ -36,6 +36,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
@@ -168,5 +169,27 @@ public class TestInherintlyUpdatableViews {
 		dataManager.addData("UPDATE b SET custid = 3, field1 = 'a' WHERE custid = 2", new List<?>[] {Arrays.asList(1)});
 		TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(2)});
 	}
+	
+    @Test public void testUpdatesWithProjectedFunction() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE SmallA (IntValue string, StringKey string PRIMARY KEY) OPTIONS(UPDATABLE true);"
+                + "CREATE VIEW ViewA(x integer, y string PRIMARY KEY) OPTIONS (UPDATABLE true) AS\n" + 
+                "           SELECT CONVERT(source.IntValue,integer) as x, source.StringKey as y FROM SmallA as source;", "x", "y");
+        
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan("DELETE FROM ViewA WHERE x=13", metadata, new DefaultCapabilitiesFinder(caps));
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT y.SmallA.StringKey FROM y.SmallA WHERE CONVERT(y.SmallA.IntValue, integer) = 13", new List<?>[] {Arrays.asList("a")});
+        dataManager.addData("DELETE FROM y.SmallA WHERE y.SmallA.StringKey = 'a'", new List<?>[] {Arrays.asList(1)});
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)});
+                
+        plan = TestProcessor.helpGetPlan("Update ViewA Set y='b' WHERE x=12", metadata, new DefaultCapabilitiesFinder(caps));
+        dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT y.SmallA.StringKey FROM y.SmallA WHERE CONVERT(y.SmallA.IntValue, integer) = 12", new List<?>[] {Arrays.asList("a")});
+        dataManager.addData("UPDATE y.SmallA SET StringKey = 'b' WHERE y.SmallA.StringKey = 'a'", new List<?>[] {Arrays.asList(1)});
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)});
+    }
 
 }
