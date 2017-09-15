@@ -42,7 +42,7 @@ public class JDBCURL {
     private static final String UTF_8 = "UTF-8"; //$NON-NLS-1$
     public static final String JDBC_PROTOCOL = "jdbc:teiid:"; //$NON-NLS-1$
     
-    static final String URL_PATTERN = JDBC_PROTOCOL + "([\\w-\\.]+)(?:@([^;]*))?(;.*)?"; //$NON-NLS-1$
+    static final String URL_PATTERN = JDBC_PROTOCOL + "([\\p{L}\\p{N}-_\\.]+)(?:@([^;]*))?(;.*)?"; //$NON-NLS-1$
     static Pattern urlPattern = Pattern.compile(URL_PATTERN);
 
 	public static final Map<String, String> EXECUTION_PROPERTIES = Collections.unmodifiableMap(buildProps());
