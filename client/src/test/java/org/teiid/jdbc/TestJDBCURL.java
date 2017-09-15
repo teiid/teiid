@@ -22,11 +22,12 @@
 
 package org.teiid.jdbc;
 
+import static org.junit.Assert.*;
+
 import java.net.URLEncoder;
 import java.util.Properties;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.net.TeiidURL;
 
 
@@ -34,17 +35,17 @@ import org.teiid.net.TeiidURL;
 /** 
  * @since 4.3
  */
-public class TestJDBCURL extends TestCase {
+public class TestJDBCURL {
 
     // Need to allow embedded spaces and ='s within optional properties
-    public final void testCredentials() throws Exception {
+    @Test public final void testCredentials() throws Exception {
         String credentials = URLEncoder.encode("defaultToLogon,(system=BQT1 SQL Server 2000 Simple Cap,user=xyz,password=xyz)", "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
         JDBCURL url = new JDBCURL("jdbc:teiid:QT_sqls2kds@mm://slwxp136:43100;credentials="+credentials); //$NON-NLS-1$
         Properties p = url.getProperties();
         assertEquals("defaultToLogon,(system=BQT1 SQL Server 2000 Simple Cap,user=xyz,password=xyz)", p.getProperty("credentials"));  //$NON-NLS-1$//$NON-NLS-2$        
     }
        
-    public void testJDBCURLWithProperties() {
+    @Test public void testJDBCURLWithProperties() {
         String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=%25xyz;password=***;logLevel=1;configFile=testdata/bqt/dqp_stmt_e2e.xmi;disableLocalTxn=true;autoFailover=false"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
@@ -62,7 +63,7 @@ public class TestJDBCURL extends TestCase {
         assertTrue(url.getJDBCURL().contains("user=%25xyz"));
     }
     
-    public void testJDBCURLWithoutProperties() {
+    @Test public void testJDBCURLWithoutProperties() {
         String URL = "jdbc:teiid:bqt@mm://localhost:12345"; //$NON-NLS-1$
         
         JDBCURL url = new JDBCURL(URL); 
@@ -71,7 +72,7 @@ public class TestJDBCURL extends TestCase {
         assertEquals(new Properties(), url.getProperties());
     }
     
-    public void testCaseConversion() {
+    @Test public void testCaseConversion() {
         // Different case ------------------------------------HERE -v  ----------------and HERE  -v
         String URL = "jdbc:teiid:bqt@mm://localhost:12345;VERSION=1;user=xyz;password=***;configFile=testdata/bqt/dqp_stmt_e2e.xmi"; //$NON-NLS-1$
         
@@ -86,7 +87,7 @@ public class TestJDBCURL extends TestCase {
         assertEquals(expectedProperties, url.getProperties());
     }
     
-    public void testWithExtraSemicolons() {
+    @Test public void testWithExtraSemicolons() {
         String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1;;;configFile=testdata/bqt/dqp_stmt_e2e.xmi;;"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
@@ -101,7 +102,7 @@ public class TestJDBCURL extends TestCase {
         assertEquals(expectedProperties, url.getProperties());
     }
     
-    public void testWithWhitespace() {
+    @Test public void testWithWhitespace() {
         String URL = "jdbc:teiid:bqt@mm://localhost:12345; version =1;user= xyz ;password=***; logLevel = 1 ; configFile=testdata/bqt/dqp_stmt_e2e.xmi ;"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
@@ -116,7 +117,7 @@ public class TestJDBCURL extends TestCase {
         assertEquals(expectedProperties, url.getProperties());
     }
     
-    public void testNoPropertyValue() {
+    @Test public void testNoPropertyValue() {
         String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=;configFile="; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
@@ -131,7 +132,7 @@ public class TestJDBCURL extends TestCase {
         assertEquals(expectedProperties, url.getProperties());
     }
     
-    public void testInvalidProtocol() {
+    @Test public void testInvalidProtocol() {
         String URL = "jdbc:monkeymatrix:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
@@ -141,7 +142,7 @@ public class TestJDBCURL extends TestCase {
         }
     }
     
-    public void testNoVDBName() {
+    @Test public void testNoVDBName() {
         String URL = "jdbc:teiid:@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
@@ -151,7 +152,7 @@ public class TestJDBCURL extends TestCase {
         }        
     }
     
-    public void testNoAtSignInURL() {
+    @Test public void testNoAtSignInURL() {
         String URL = "jdbc:teiid:bqt!mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
@@ -163,7 +164,7 @@ public class TestJDBCURL extends TestCase {
         }
     }
     
-    public void testMoreThanOneAtSign() {
+    @Test public void testMoreThanOneAtSign() {
         String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xy@;password=***;logLevel=1"; //$NON-NLS-1$
         try {
             // this allowed as customer properties can have @ in their properties
@@ -173,7 +174,7 @@ public class TestJDBCURL extends TestCase {
         }
     }
     
-    public void testNoEqualsInProperty() {
+    @Test public void testNoEqualsInProperty() {
         String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
@@ -183,7 +184,7 @@ public class TestJDBCURL extends TestCase {
         }
     }
     
-    public void testMoreThanOneEqualsInProperty() {
+    @Test public void testMoreThanOneEqualsInProperty() {
         String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password==***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
@@ -207,7 +208,7 @@ public class TestJDBCURL extends TestCase {
         }
     }
     
-    public void testNoKeyInProperty() {
+    @Test public void testNoKeyInProperty() {
         String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;=***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
@@ -217,7 +218,7 @@ public class TestJDBCURL extends TestCase {
         }
     }
     
-    public void testConstructor() {
+    @Test public void testConstructor() {
         JDBCURL url = new JDBCURL("myVDB", "mm://myhost:12345",null); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("jdbc:teiid:myVDB@mm://myhost:12345", url.getJDBCURL()); //$NON-NLS-1$
         
@@ -229,7 +230,7 @@ public class TestJDBCURL extends TestCase {
         assertEquals("jdbc:teiid:myVDB@mm://myhost:12345;user=myuser;password=mypassword", url.getJDBCURL()); //$NON-NLS-1$
     }
     
-    public void testConstructor_Exception() {
+    @Test public void testConstructor_Exception() {
         try {
             new JDBCURL(null, "myhost", null); //$NON-NLS-1$
             fail("Should have failed."); //$NON-NLS-1$
@@ -251,7 +252,7 @@ public class TestJDBCURL extends TestCase {
         }
     }
     
-    public void testNormalize() {
+    @Test public void testNormalize() {
         Properties props = new Properties();
         props.setProperty("UsEr", "myuser"); //$NON-NLS-1$ //$NON-NLS-2$
         props.setProperty("pAssWOrD", "mypassword"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -261,7 +262,7 @@ public class TestJDBCURL extends TestCase {
         assertEquals("mypassword", props.getProperty(BaseDataSource.PASSWORD)); //$NON-NLS-1$
     }
     
-    public final void testEncodedPropertyProperties() throws Exception {
+    @Test public final void testEncodedPropertyProperties() throws Exception {
         String password = "=@#^&*()+!%$^%@#_-)_~{}||\\`':;,./<>?password has = & %"; //$NON-NLS-1$
         Properties props = new Properties();
         props.setProperty("UsEr", "foo"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -272,7 +273,7 @@ public class TestJDBCURL extends TestCase {
         assertEquals("foo", props.getProperty("user"));  //$NON-NLS-1$//$NON-NLS-2$
     }    
    
-    public final void testEncodedPropertyInURL() throws Exception {
+    @Test public final void testEncodedPropertyInURL() throws Exception {
         String password = "=@#^&*()+!%$^%@#_-)_~{}||\\`':;,./<>?password has = & %"; //$NON-NLS-1$
         String encPassword = URLEncoder.encode(password, "UTF-8"); //$NON-NLS-1$
         JDBCURL url = new JDBCURL("jdbc:teiid:QT_sqls2kds@mm://slwxp136:43100;PASswoRd="+encPassword); //$NON-NLS-1$
@@ -281,12 +282,12 @@ public class TestJDBCURL extends TestCase {
     }   
     
     
-    public void testGetServerURL_NoProperties() {        
+    @Test public void testGetServerURL_NoProperties() {        
         String result = new JDBCURL("jdbc:teiid:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
         assertEquals("mm://slwxp172:44401", result);         //$NON-NLS-1$
     }
 
-    public void testGetServerURL_Properties() {        
+    @Test public void testGetServerURL_Properties() {        
         String result = new JDBCURL("jdbc:teiid:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
         assertEquals("mm://slwxp172:44401", result);         //$NON-NLS-1$
     }
@@ -297,7 +298,7 @@ public class TestJDBCURL extends TestCase {
      *
      * @since 5.0.2
      */
-    public void testGetServerURL_PasswordProperties() throws Exception {        
+    @Test public void testGetServerURL_PasswordProperties() throws Exception {        
         String result = null;
         String srcURL = "jdbc:teiid:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password="; //$NON-NLS-1$
         String password = null;
@@ -315,12 +316,12 @@ public class TestJDBCURL extends TestCase {
         	
     }
     
-    public void testGetServerURL_2Servers() {       
+    @Test public void testGetServerURL_2Servers() {       
         String result = new JDBCURL("jdbc:teiid:designtimecatalog@mm://slwxp172:44401,slabc123:12345;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
         assertEquals("mm://slwxp172:44401,slabc123:12345", result);         //$NON-NLS-1$
     }
 
-    public void testBuildEmbeedURL() {
+    @Test public void testBuildEmbeedURL() {
     	JDBCURL url = new JDBCURL("vdb", "/home/foo/deploy.properties", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
     	assertEquals("jdbc:teiid:vdb@/home/foo/deploy.properties", url.getJDBCURL()); //$NON-NLS-1$
     	
@@ -337,4 +338,19 @@ public class TestJDBCURL extends TestCase {
     	assertTrue(url.getJDBCURL().indexOf("autoFailover=true")!=-1); //$NON-NLS-1$
     	
     }
+    
+    @Test public void testUnicodeName() {
+        String result = new JDBCURL("jdbc:teiid:%E4%BD%A0%E5%A5%BD").getVDBName(); //$NON-NLS-1$
+        assertEquals("你好", result);         //$NON-NLS-1$
+        result = new JDBCURL("jdbc:teiid:你好").getVDBName(); //$NON-NLS-1$
+        assertEquals("你好", result);         //$NON-NLS-1$
+    }
+    
+    @Test public void testEncoding() {
+        JDBCURL url = new JDBCURL("jdbc:teiid:a%40b@mm://%50;%55=a"); //$NON-NLS-1$
+        assertEquals("a@b", url.getVDBName());         //$NON-NLS-1$
+        assertEquals("mm://P", url.getConnectionURL());         //$NON-NLS-1$
+        assertEquals("U", url.getProperties().entrySet().iterator().next().getKey());         //$NON-NLS-1$
+    }
+
 }
