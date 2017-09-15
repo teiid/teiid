@@ -199,7 +199,7 @@ public class JDBCURL {
         if(value.indexOf('=') >= 0) {
             throw new IllegalArgumentException();
         }        
-        addNormalizedProperty(key, getValidValue(value), p);
+        addNormalizedProperty(getValidValue(key), getValidValue(value), p);
     }
     
     public String getJDBCURL() {
