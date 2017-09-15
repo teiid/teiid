@@ -425,26 +425,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         return DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(symbol.getType()));
     }
 
-    private void validateXMLQuery(Query obj) {
-        if(obj.getGroupBy() != null) {
-            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0031"), obj); //$NON-NLS-1$
-        }
-        if(obj.getHaving() != null) {
-            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0032"), obj); //$NON-NLS-1$
-        }
-        if(obj.getLimit() != null) {
-            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.limit_not_valid_for_xml"), obj); //$NON-NLS-1$
-        }
-        if (obj.getOrderBy() != null) {
-        	OrderBy orderBy = obj.getOrderBy();
-        	for (OrderByItem item : orderBy.getOrderByItems()) {
-				if (!(item.getSymbol() instanceof ElementSymbol)) {
-					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.orderby_expression_xml"), obj); //$NON-NLS-1$
-				}
-			}
-         }
-    }
-    
     protected void validateGroupSupportsUpdate(GroupSymbol groupSymbol) {
     	try {
 	    	if(! getMetadata().groupSupports(groupSymbol.getMetadataID(), SupportConstants.Group.UPDATE)) {
