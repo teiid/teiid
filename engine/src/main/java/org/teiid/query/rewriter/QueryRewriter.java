@@ -44,6 +44,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.Transform;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.Like.MatchMode;
@@ -3265,18 +3266,23 @@ public class QueryRewriter {
 		}
 		Map<ElementSymbol, ElementSymbol> symbolMap = mapping.getUpdatableViewSymbols();
 		if (info.isSimple()) {
-			update.setGroup(mapping.getGroup().clone());
-			for (SetClause clause : update.getChangeList().getClauses()) {
-				clause.setSymbol(symbolMap.get(clause.getSymbol()));
-			}
-			//TODO: properly handle correlated references
-			DeepPostOrderNavigator.doVisit(update, new ExpressionMappingVisitor(symbolMap, true));
-			if (info.getViewDefinition().getCriteria() != null) {
-				update.setCriteria(Criteria.combineCriteria(update.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
-			}
-			//resolve
-			update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata, Command.TYPE_UPDATE, true));
-			return rewriteUpdate(update);
+		    Collection<ElementSymbol> elements = getAllElementsUsed(update, update.getGroup());
+		    
+		    UpdateMapping fullMapping = info.findUpdateMapping(elements, false);
+		    if (fullMapping != null) {
+    			update.setGroup(mapping.getGroup().clone());
+    			for (SetClause clause : update.getChangeList().getClauses()) {
+    				clause.setSymbol(symbolMap.get(clause.getSymbol()));
+    			}
+    			//TODO: properly handle correlated references
+    			DeepPostOrderNavigator.doVisit(update, new ExpressionMappingVisitor(symbolMap, true));
+    			if (info.getViewDefinition().getCriteria() != null) {
+    				update.setCriteria(Criteria.combineCriteria(update.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
+    			}
+    			//resolve
+    			update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata, Command.TYPE_UPDATE, true));
+    			return rewriteUpdate(update);
+		    }
 		} 
 		Query query = (Query)info.getViewDefinition().clone();
 		query.setOrderBy(null);
@@ -3428,14 +3434,18 @@ public class QueryRewriter {
 			QueryResolverException, TeiidProcessingException {
 		UpdateMapping mapping = info.getDeleteTarget();
 		if (info.isSimple()) {
-			delete.setGroup(mapping.getGroup().clone());
-			//TODO: properly handle correlated references
-			DeepPostOrderNavigator.doVisit(delete, new ExpressionMappingVisitor(mapping.getUpdatableViewSymbols(), true));
-			delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata, Command.TYPE_DELETE, true));
-			if (info.getViewDefinition().getCriteria() != null) {
-				delete.setCriteria(Criteria.combineCriteria(delete.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
-			}
-			return rewriteDelete(delete);
+		    Collection<ElementSymbol> elements = getAllElementsUsed(delete, delete.getGroup());
+            UpdateMapping fullMapping = info.findUpdateMapping(elements, false);
+            if (fullMapping != null) {
+    			delete.setGroup(mapping.getGroup().clone());
+    			//TODO: properly handle correlated references
+    			DeepPostOrderNavigator.doVisit(delete, new ExpressionMappingVisitor(mapping.getUpdatableViewSymbols(), true));
+    			delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata, Command.TYPE_DELETE, true));
+    			if (info.getViewDefinition().getCriteria() != null) {
+    				delete.setCriteria(Criteria.combineCriteria(delete.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
+    			}
+    			return rewriteDelete(delete);
+            }
 		}
 		
 		Query query = (Query)info.getViewDefinition().clone();
@@ -3454,6 +3464,17 @@ public class QueryRewriter {
 		String correlationName = mapping.getCorrelatedName().getName();
 		return createDeleteProcedure(delete, query, group, correlationName);
 	}
+
+    private Collection<ElementSymbol> getAllElementsUsed(Command cmd, GroupSymbol group) {
+        Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(cmd, false, true);
+        for (Iterator<ElementSymbol> iter = elements.iterator(); iter.hasNext();) {
+            ElementSymbol es = iter.next();
+            if (!EquivalenceUtil.areEqual(group, es.getGroupSymbol())) {
+                iter.remove();
+            }
+        }
+        return elements;
+    }
 	
 	public static Command createDeleteProcedure(Delete delete, QueryMetadataInterface metadata, CommandContext context) throws QueryResolverException, QueryMetadataException, TeiidComponentException, TeiidProcessingException {
 		QueryRewriter rewriter = new QueryRewriter(metadata, context);
