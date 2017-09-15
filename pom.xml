@@ -24,16 +24,16 @@
 	    <version.release.plugin>2.5</version.release.plugin>
 	    
 	    <!-- WildFly AS based dependencies -->
-	    <version.org.wildfly>10.0.0.Final</version.org.wildfly>
-	    <version.org.wildfly.core>2.0.10.Final</version.org.wildfly.core>
-	    <version.org.wildfly.arquillian>1.0.2.Final</version.org.wildfly.arquillian>
-	    <version.org.jboss.narayana>5.2.12.Final</version.org.jboss.narayana>
+	    <version.org.wildfly>11.0.0.CR1</version.org.wildfly>
+	    <version.org.wildfly.core>3.0.1.Final</version.org.wildfly.core>
+	    <version.org.wildfly.arquillian>2.1.0.Final</version.org.wildfly.arquillian>
+	    <version.org.jboss.narayana>5.5.30.Final</version.org.jboss.narayana>
         <version.sun.jaxb>2.2.11.jbossorg-1</version.sun.jaxb>	    
 	    <version.commons-codec>1.10</version.commons-codec>
-        <version.com.google.guava>18.0</version.com.google.guava>
+        <version.com.google.guava>20.0</version.com.google.guava>
         <version.dom4j>1.6.1</version.dom4j>
-        <version.org.hibernate.search>5.6.0.Alpha2</version.org.hibernate.search> <!-- 5.5.1.Final -->
-        <version.org.hibernate>5.0.9.Final</version.org.hibernate> <!-- 5.0.7.Final -->
+        <version.org.hibernate.search>5.5.8.Final</version.org.hibernate.search> <!-- 5.5.1.Final -->
+        <version.org.hibernate>5.1.10.Final</version.org.hibernate> <!-- 5.0.7.Final -->
         
         <!--  with wildfly parent version 2.5.4 the build is failing -->
         <version.bundle.plugin>2.5.0</version.bundle.plugin>

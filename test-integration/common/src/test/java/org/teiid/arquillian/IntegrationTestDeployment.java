@@ -612,6 +612,7 @@ public class IntegrationTestDeployment {
 	    p.setProperty("ClientSecret", "a");
         p.setProperty("ClientId", "b");
         p.setProperty("RefreshToken", "c");
+        p.setProperty("SpreadsheetName", "d");
         p.setProperty("class-name", "org.teiid.resource.adapter.google.SpreadsheetManagedConnectionFactory");
         
         admin.createDataSource("my-sheet", "google", p);
