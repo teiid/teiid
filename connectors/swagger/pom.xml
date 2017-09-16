@@ -4,7 +4,7 @@
   <parent>
       <groupId>org.teiid</groupId>
       <artifactId>connectors</artifactId>
-      <version>10.0.0.Beta2-SNAPSHOT</version>
+      <version>10.0.0.Beta2</version>
   </parent>
   <groupId>org.teiid.connectors</groupId>
   <artifactId>swagger</artifactId>
