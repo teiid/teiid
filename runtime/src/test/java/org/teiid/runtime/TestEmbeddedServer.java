@@ -1460,7 +1460,36 @@ public class TestEmbeddedServer {
 		PreparedStatement ps = c.prepareStatement("select * from texttable(? columns a string) as x");
 		ps.setCharacterStream(1, new StringReader("a\nb"));
 		assertTrue(ps.execute());
+		ResultSet rs = ps.getResultSet();
+		rs.next();
+		assertEquals("a", rs.getString(1));
 	}
+	
+   @Test public void testPreparedLobUsage() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        es.start(ec);
+        
+        ModelMetaData mmd1 = new ModelMetaData();
+        mmd1.setName("b");
+        mmd1.setModelType(Type.VIRTUAL);
+        mmd1.addSourceMetadata("ddl", "create view v (i integer) as select 1; "
+                + "CREATE VIRTUAL function clobfunction(p1 clob) RETURNS clob as return concat(p1, p1);"
+                + "CREATE VIRTUAL function blobfunction(p1 blob) RETURNS clob as return concat(to_chars(p1, 'ascii'), to_chars(p1, 'utf-8'));");
+        
+        es.deployVDB("vdb", mmd1);
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+        //should expect a clob
+        PreparedStatement ps = c.prepareStatement("select clobfunction(?), blobfunction(?)");
+        ps.setCharacterStream(1, new StringReader("abc"));
+        ps.setBinaryStream(2, new ByteArrayInputStream("cba".getBytes("UTF-8")));
+        assertTrue(ps.execute());
+        ResultSet rs = ps.getResultSet();
+        rs.next();
+        assertEquals("abcabc", rs.getString(1));
+        assertEquals("cbacba", rs.getString(2));
+    }
 	
 	@Test public void testGeometrySelect() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
