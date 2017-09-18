@@ -605,10 +605,11 @@ public class MetadataValidator {
     			else {
     				addCacheHint = true;
     			}
+
+    			// this seems to parse, resolve and validate.
+    			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);
     			
     			if (addCacheHint && t.isMaterialized()) {
-        			// this seems to parse, resolve and validate.
-        			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);
         			CacheHint cacheHint = node.getCommand().getCacheHint();
     				Long ttl = -1L;
     				if (cacheHint != null) {
