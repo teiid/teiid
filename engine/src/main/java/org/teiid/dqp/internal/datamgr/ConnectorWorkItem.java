@@ -616,12 +616,28 @@ public class ConnectorWorkItem implements ConnectorWork {
 				return new BlobType(new BlobImpl((InputStreamFactory)value));
 			}
 			if (value instanceof DataSource) {
-				FileStore fs = bm.createFileStore("bytes"); //$NON-NLS-1$
-				//TODO: guess at the encoding from the content type
-				FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+			    final DataSource ds = (DataSource)value;
+			    try {
+			        //Teiid uses the datasource interface in a degenerate way that 
+			        //reuses the stream, so we test for that here
+                    InputStream initial = ds.getInputStream();
+                    InputStream other = ds.getInputStream();
+                    if (initial != other) {
+                        initial.close();
+                        other.close();
+                        return new BlobType(new BlobImpl(new InputStreamFactory() {
+                            
+                            @Override
+                            public InputStream getInputStream() throws IOException {
+                                return ds.getInputStream();
+                            }
+                        }));
+                    }
+    				FileStore fs = bm.createFileStore("bytes"); //$NON-NLS-1$
+    				//TODO: guess at the encoding from the content type
+    				FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
 	
-				try {
-					SaveOnReadInputStream is = new SaveOnReadInputStream(((DataSource)value).getInputStream(), fsisf);
+					SaveOnReadInputStream is = new SaveOnReadInputStream(initial, fsisf);
 					if (context != null) {
 						context.addCreatedLob(fsisf);
 					}
