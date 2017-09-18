@@ -79,6 +79,9 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
                 Expression param = function.getParameters().get(0);
                 int targetCode = getCode(function.getType());
                 if(targetCode == BYTE || targetCode == SHORT || targetCode == INTEGER || targetCode == LONG || targetCode == FLOAT || targetCode == DOUBLE || targetCode == BIGINTEGER || targetCode == BIGDECIMAL) {
+                    if ((Number.class.isAssignableFrom(param.getType()))) {
+                        return Arrays.asList(param);
+                    }
                     return Arrays.asList("TONUMBER" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else if(targetCode == STRING || targetCode == CHAR) {
                     return Arrays.asList("TOSTRING" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
@@ -317,6 +320,21 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         if(columnType.equals(ClobType.class)) {
             ClobImpl clob = new ClobImpl(value.toString());
             return new ClobType(clob);
+        }
+        
+        if (columnType.equals(BigInteger.class)) {
+            if (value instanceof BigDecimal) {
+                return ((BigDecimal)value).toBigInteger();
+            }
+            return BigInteger.valueOf(((Number)value).longValue());
+        }
+        
+        if (columnType.equals(BigDecimal.class)) {
+            if (value instanceof BigInteger) {
+                value = new BigDecimal((BigInteger)value);
+            } else {
+                value = BigDecimal.valueOf(((Number)value).doubleValue());
+            }
         }
         
         return value;
