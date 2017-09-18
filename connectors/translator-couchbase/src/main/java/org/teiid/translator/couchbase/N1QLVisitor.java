@@ -471,21 +471,23 @@ public class N1QLVisitor extends SQLStringVisitor{
     public void visit(Function obj) {
         
         String functionName = obj.getName();
-        if(functionName.equalsIgnoreCase(CONVERT) || functionName.equalsIgnoreCase(CAST)) {
-            List<?> parts =  this.ef.getFunctionModifiers().get(functionName).translate(obj);
-            buffer.append(parts.get(0));
-            super.append(obj.getParameters().get(0));
-            buffer.append(parts.get(2));
-            return;
-        } else if (functionName.equalsIgnoreCase(NonReserved.TRIM)){
+        if (functionName.equalsIgnoreCase(NonReserved.TRIM)){
             buffer.append(obj.getName()).append(LPAREN);
             append(obj.getParameters());
             buffer.append(RPAREN);
             return;
-        } else if (this.ef.getFunctionModifiers().containsKey(functionName)) {
+        }
+        if (this.ef.getFunctionModifiers().containsKey(functionName)) {
             List<?> parts =  this.ef.getFunctionModifiers().get(functionName).translate(obj);
             if (parts != null) {
-                obj = (Function)parts.get(0);
+                for (Object part : parts) {
+                    if (part instanceof LanguageObject) {
+                        append((LanguageObject)part);
+                    } else {
+                        buffer.append(part);
+                    }
+                }
+                return;
             }
         } 
         super.visit(obj);
