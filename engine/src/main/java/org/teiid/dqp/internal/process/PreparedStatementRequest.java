@@ -18,6 +18,9 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -28,9 +31,14 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BaseLob;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.Streamable;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.logging.LogConstants;
@@ -237,7 +245,9 @@ public class PreparedStatementRequest extends Request {
 	        String msg = QueryPlugin.Util.getString("QueryUtil.wrong_number_of_values", new Object[] {new Integer(values.size()), new Integer(params.size())}); //$NON-NLS-1$
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30556, msg);
 	    }
-	
+	    
+	    boolean embedded = context != null && context.getSession() != null && context.getSession().isEmbedded();
+	    
 	    //the type must be the same, or the type of the value can be implicitly converted
 	    //to that of the reference
 	    for (int i = 0; i < params.size(); i++) {
@@ -245,6 +255,9 @@ public class PreparedStatementRequest extends Request {
 	        Object value = values.get(i);
 	        
         	if(value != null) {
+                if (embedded && value instanceof BaseLob) {
+    	            createStreamCopy(context, i, param, value);
+        	    }
                 try {
                     String targetTypeName = DataTypeManager.getDataTypeName(param.getType());
                     Expression expr = ResolverUtil.convertExpression(new Constant(DataTypeManager.convertToRuntimeType(value, param.getType() != DataTypeManager.DefaultDataClasses.OBJECT)), targetTypeName, metadata);
@@ -267,6 +280,42 @@ public class PreparedStatementRequest extends Request {
 	    
 	    context.setVariableContext(result);
 	}
+
+	/**
+	 * embedded lobs can be sent with just a reference to a stream, 
+	 * create a copy instead
+	 * @param context
+	 * @param i
+	 * @param param
+	 * @param value
+	 * @throws QueryResolverException
+	 */
+    private static void createStreamCopy(CommandContext context, int i,
+            Reference param, Object value) throws QueryResolverException {
+        try {
+            InputStreamFactory isf = ((BaseLob)value).getStreamFactory();
+            InputStream initial = isf.getInputStream();
+            InputStream other = isf.getInputStream();
+            if (initial == other) {
+                //this violates the expectation that the inputstream is a new instance,
+                FileStore fs = context.getBufferManager().createFileStore("bytes"); //$NON-NLS-1$
+                FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+         
+                SaveOnReadInputStream is = new SaveOnReadInputStream(initial, fsisf);
+                context.addCreatedLob(fsisf);
+                ((BaseLob) value).setStreamFactory(is.getInputStreamFactory());
+            } else {
+                initial.close();
+                other.close();
+            }
+        } catch (SQLException e) {
+            String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", i + 1, value, value.getClass(), DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
+            throw new QueryResolverException(QueryPlugin.Event.TEIID30557, e, msg);
+        } catch (IOException e) {
+            String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", i + 1, value, value.getClass(), DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
+            throw new QueryResolverException(QueryPlugin.Event.TEIID30557, e, msg);
+        }
+    }
 	
 	@Override
 	public boolean isReturingParams() {
