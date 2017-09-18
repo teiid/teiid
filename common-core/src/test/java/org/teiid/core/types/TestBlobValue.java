@@ -40,20 +40,6 @@ public class TestBlobValue extends TestCase {
         assertEquals(testString, new String(bv.getBytes(1L, (int)bv.length())));
     }
 
-    public void testBlobImplInputStream() throws Exception{
-
-        final String testString = "this is test blob";
-        final ByteArrayInputStream inputStream = new ByteArrayInputStream(testString.getBytes());
-        BlobImpl blob = new BlobImpl(new InputStreamFactory() {
-            @Override
-            public InputStream getInputStream() throws IOException {
-                return inputStream;
-            }
-        });
-        BlobType bv = new BlobType(blob);
-        assertEquals(testString, new String(bv.getBytes(1L, (int)bv.length())));
-    }
-
     public void testBlobValuePersistence() throws Exception {
         String testString = "this is test clob"; //$NON-NLS-1$
         SerialBlob blob = new SerialBlob(testString.getBytes());

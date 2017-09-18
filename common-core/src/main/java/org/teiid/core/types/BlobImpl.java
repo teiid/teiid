@@ -87,7 +87,6 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
         }
         InputStream in = getBinaryStream();
         try {
-			in.reset();
         	long skipped = 0;
         	while (pos > 0) {
         		skipped = in.skip(pos);
