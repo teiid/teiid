@@ -17,8 +17,6 @@
  */
 package org.teiid.translator.couchbase;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -107,7 +105,7 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
             } else if (type == TypeFacility.RUNTIME_TYPES.BIG_DECIMAL) {
                 value = json.getNumber(columnName);
             } else {
-                value = json.getObject(columnName);
+                value = json.get(columnName);
             }
             
             row.add(this.executionFactory.retrieveValue(type, value));
