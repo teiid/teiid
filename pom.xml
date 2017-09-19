@@ -3,7 +3,7 @@
     <parent>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-parent</artifactId>
-      <version>19</version>
+      <version>24</version>
     </parent>  
     
     <modelVersion>4.0.0</modelVersion>
@@ -87,7 +87,7 @@
 	    <version.swagger-parser>1.0.10</version.swagger-parser>
 	    <version.io.swagger>1.5.8</version.io.swagger>
         <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>
-        <version.org.apache.cxf>3.1.4</version.org.apache.cxf>
+        <version.org.apache.cxf>3.1.12</version.org.apache.cxf>
         <version.org.codehaus.woodstox>4.4.1</version.org.codehaus.woodstox>
         <version.ant-contrib>1.0b3</version.ant-contrib>
         <version.org.dbunit>2.2</version.org.dbunit>
