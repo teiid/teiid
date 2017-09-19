@@ -133,6 +133,16 @@ public class TestMetadataValidator {
 		assertTrue(printError(report), report.hasItems());			
 	}
 	
+    @Test
+    public void testInvalidView() throws Exception {
+        String ddl = "create view g1 (e1 integer, e2 varchar(12)) AS select 'a';";
+        buildModel("vm1", false, this.vdb, this.store, ddl);
+        buildTransformationMetadata();
+        ValidatorReport report = new ValidatorReport();
+        new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
+        assertTrue(printError(report), report.hasItems());          
+    }
+	
 	@Test
 	public void testCreateTrigger() throws Exception {
 		String ddl = "create view g1 options (updatable true) AS select * from pm1.g1; " +

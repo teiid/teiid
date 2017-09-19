@@ -544,6 +544,7 @@ public class MetadataValidator {
     			GroupSymbol symbol = new GroupSymbol(t.getFullName());
     			ResolverUtil.resolveGroup(symbol, metadata);    			
     			String selectTransformation = t.getSelectTransformation();
+    			QueryNode node = null;
 				if (t.isVirtual()) {
     				QueryCommand command = (QueryCommand)parser.parseCommand(selectTransformation);
     				QueryResolver.resolveCommand(command, metadata);
@@ -558,6 +559,9 @@ public class MetadataValidator {
 							}
     					}
 					}
+    				
+                    node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);
+    				
     				if (t.getColumns() != null && !t.getColumns().isEmpty()) { 
 	    				determineDependencies(t, command);
 	    				if (t.getInsertPlan() != null && t.isInsertPlanEnabled()) {
@@ -573,7 +577,7 @@ public class MetadataValidator {
     			}
     			
     			boolean addCacheHint = false;
-    			if (t.isMaterialized() && t.getMaterializedTable() == null) {
+    			if (t.isVirtual() && t.isMaterialized() && t.getMaterializedTable() == null) {
 	    			List<KeyRecord> fbis = t.getFunctionBasedIndexes();
 	    			List<GroupSymbol> groups = Arrays.asList(symbol);
 					if (fbis != null && !fbis.isEmpty()) {
@@ -606,10 +610,7 @@ public class MetadataValidator {
     				addCacheHint = true;
     			}
 
-    			// this seems to parse, resolve and validate.
-    			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);
-    			
-    			if (addCacheHint && t.isMaterialized()) {
+    			if (node != null && addCacheHint && t.isMaterialized()) {
         			CacheHint cacheHint = node.getCommand().getCacheHint();
     				Long ttl = -1L;
     				if (cacheHint != null) {
