@@ -33,6 +33,7 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
+import org.teiid.core.types.ClobType.Type;
 import org.teiid.core.util.Assertion;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.Argument;
@@ -49,6 +50,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.document.json.JsonValue;
 
 @Translator(name="couchbase", description="Couchbase Translator, reads and writes the data to Couchbase")
 public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactory, CouchbaseConnection> {
@@ -92,7 +94,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
                 } else if(targetCode == BOOLEAN) {
                     return Arrays.asList("TOBOOLEAN" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else {
-                    return Arrays.asList("TOATOM" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                    return Arrays.asList(param); 
                 }
             }});
 		
@@ -322,8 +324,14 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         }
         
         if(columnType.equals(ClobType.class)) {
+            boolean json = false;
+            if (value instanceof JsonValue) {
+                json = true;
+            }
             ClobImpl clob = new ClobImpl(value.toString());
-            return new ClobType(clob);
+            ClobType result = new ClobType(clob);
+            result.setType(json?Type.JSON:Type.TEXT);
+            return result;
         }
         
         if (columnType.equals(BigInteger.class)) {
