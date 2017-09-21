@@ -45,6 +45,8 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
@@ -62,6 +64,7 @@ import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.resolver.command.InsertResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
@@ -2855,6 +2858,15 @@ public class QueryRewriter {
 	            || !Boolean.valueOf(metadata.getExtensionProperty(insert.getGroup().getMetadataID(), MaterializationMetadataRepository.MATVIEW_WRITE_THROUGH, false))) {
             return null;
         }
+        List<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
+        insertElmnts.removeAll(insert.getVariables());
+        //TODO: what about the explicit null case
+        if (InsertResolver.getAutoIncrementKey(insert.getGroup().getMetadataID(), insertElmnts, metadata) != null) {
+            //TODO: this may be possible, but we aren't guaranteed that we'll determine the key from the view insert
+            LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, "Write-trough insert is not possible as the primary key will be generated and was not specified"); //$NON-NLS-1$
+            return null;
+        }
+        
         //create a block to save the insert values, then insert them into both the view and the materialization
         //it would be better to combine this with project into, but there are several paths we have to account for:
         //- upserts

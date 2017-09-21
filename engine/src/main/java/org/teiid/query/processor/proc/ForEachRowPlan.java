@@ -18,10 +18,13 @@
 
 package org.teiid.query.processor.proc;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.GeneratedKeys;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -32,6 +35,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.dqp.service.TransactionService;
+import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.BatchCollector;
@@ -41,6 +45,7 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
 
 public class ForEachRowPlan extends ProcessorPlan {
@@ -50,6 +55,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 	private Map<ElementSymbol, Expression> params;
 	private Map<Expression, Integer> lookupMap;
 	private boolean singleRow;
+	private boolean insert;
 	
 	private ProcessorDataManager dataMgr;
     private BufferManager bufferMgr;
@@ -106,6 +112,12 @@ public class ForEachRowPlan extends ProcessorPlan {
 		setContext(context);
 		this.dataMgr = dataMgr;
 		this.bufferMgr = bufferMgr;
+		for (ElementSymbol elem : this.params.keySet()) {
+		    if (elem.getGroupSymbol().getName().equalsIgnoreCase(SQLConstants.NonReserved.KEY)) {
+		        this.insert = true;
+		        break;
+		    }
+		}
 	}
 
 	@Override
@@ -169,8 +181,13 @@ public class ForEachRowPlan extends ProcessorPlan {
 						}
 					}
 				}
-				//just getting the next batch is enough
+				//save the variable context to get the key information
+				VariableContext vc = rowProcedure.getCurrentVariableContext();
+                //just getting the next batch is enough
 				this.rowProcessor.nextBatch();
+				if (insert) {
+				    assignGeneratedKey(vc);
+				}
 				this.rowProcessor.closeProcessing();
 				this.rowProcessor = null;
 				this.currentTuple = null;
@@ -183,7 +200,40 @@ public class ForEachRowPlan extends ProcessorPlan {
 		}
 	}
 
-	@Override
+	private void assignGeneratedKey(VariableContext vc) {
+	    LinkedHashMap<ElementSymbol, Object> key = null;
+        for (Map.Entry<Object, Object> entry : vc.getVariableMap().entrySet()) {
+            if (!(entry.getKey() instanceof ElementSymbol)) {
+                continue;
+            }
+            ElementSymbol es = (ElementSymbol)entry.getKey();
+            if (!es.getGroupSymbol().getName().equalsIgnoreCase(SQLConstants.NonReserved.KEY)) {
+                continue;
+            }
+            Object value = entry.getValue();
+            if (value == null) {
+                return;
+            }
+            if (key == null) {
+                key = new LinkedHashMap<ElementSymbol, Object>();
+            }
+            key.put(es, value);
+        }
+        if (key != null) {
+            String[] names = new String[key.size()];
+            Class<?>[] types = new Class<?>[key.size()];
+            List<Object> values = new ArrayList<Object>(key.size());
+            for (Map.Entry<ElementSymbol, Object> entry : key.entrySet()) {
+                names[values.size()] = entry.getKey().getShortName();
+                types[values.size()] = entry.getKey().getType();
+                values.add(entry.getValue());
+            }
+            GeneratedKeys generatedKeys = getContext().returnGeneratedKeys(names, types);
+            generatedKeys.addKey(values);
+        }        
+    }
+
+    @Override
 	public void open() throws TeiidComponentException, TeiidProcessingException {
     	TransactionContext tc = this.getContext().getTransactionContext();
     	if (tc != null && tc.getTransactionType() == Scope.NONE && queryPlan != null

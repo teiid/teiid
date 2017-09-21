@@ -790,7 +790,10 @@ public class TestEmbeddedServer {
         mmd1.addSourceMapping("b", "t", null);
         mmd1.addSourceMetadata("ddl", 
                 "create foreign table tbl (x integer, y integer auto_increment primary key) OPTIONS (UPDATABLE true);" +
-                "create view v (i integer, k integer auto_increment primary key) OPTIONS (UPDATABLE true) as select x, y from tbl;");
+                "create view v (i integer, k integer auto_increment primary key) OPTIONS (UPDATABLE true) as select x, y from tbl;"+
+                "create view v1 (i integer, k integer not null auto_increment primary key) OPTIONS (UPDATABLE true) as select x, y from tbl;"+
+                "create trigger on v1 instead of insert as for each row begin atomic "
+                + "insert into tbl (x) values (new.i); key.k = cast(generated_key('y') as integer); end;");
         
         es.deployVDB("vdb", mmd1);
         
@@ -798,6 +801,12 @@ public class TestEmbeddedServer {
         PreparedStatement ps = c.prepareStatement("insert into v (i) values (1)", Statement.RETURN_GENERATED_KEYS);
         assertEquals(1, ps.executeUpdate());
         ResultSet rs = ps.getGeneratedKeys();
+        assertTrue(rs.next());
+        assertEquals("k", rs.getMetaData().getColumnLabel(1));
+        
+        ps = c.prepareStatement("insert into v1 (i) values (1)", Statement.RETURN_GENERATED_KEYS);
+        assertEquals(1, ps.executeUpdate());
+        rs = ps.getGeneratedKeys();
         assertTrue(rs.next());
         assertEquals("k", rs.getMetaData().getColumnLabel(1));
     }

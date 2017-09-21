@@ -27,6 +27,7 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.GeneratedKeysImpl;
 
 public class SystemFunctionMethods {
 	
@@ -46,5 +47,20 @@ public class SystemFunctionMethods {
 		}
 		return context.setSessionVariable(key, value);
 	}
+	
+    @TeiidFunction(category=FunctionCategoryConstants.SYSTEM, pushdown=PushDown.CANNOT_PUSHDOWN, nullOnNull=true, determinism=Determinism.COMMAND_DETERMINISTIC)
+    public static Object generated_key(CommandContext context, String column) {
+        GeneratedKeysImpl keys = context.getGeneratedKeys();
+        if (keys == null || keys.getKeys().isEmpty()) {
+            return null;
+        }
+        for (int i = 0; i < keys.getColumnNames().length; i++) {
+            String col = keys.getColumnNames()[i];
+            if (col.equalsIgnoreCase(column)) {
+                return keys.getKeys().get(0).get(i);
+            }
+        }
+        return null;
+    }
 
 }
