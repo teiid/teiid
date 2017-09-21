@@ -28,8 +28,10 @@ import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.*;
 import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.teiid.core.TeiidRuntimeException;
@@ -76,7 +78,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             }
         }
         
-        List<Parameter> preparedValues = new ArrayList<>();
+        Map<Integer, Parameter> preparedValues = new HashMap<Integer, Parameter>();
         ExpressionValueSource evs = (ExpressionValueSource)obj.getValueSource();
         for (int i = 0; i < evs.getValues().size(); i++) {
             Expression exp = evs.getValues().get(i);
@@ -88,7 +90,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 }
             } else if(exp instanceof Parameter) {
                 Parameter p = (Parameter) exp;
-                preparedValues.add(p);
+                preparedValues.put(i, p);
                 if (typeIndex != null && typeIndex == i) {
                     throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29022, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29022, typedValue));
                 }
@@ -193,11 +195,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         appendRetuning();
     }
     
-    private void appendBulkValues(List<Parameter> preparedValues, List<CBColumnData> rowCache, Insert command) {
-        
-        if(preparedValues.size() != rowCache.size()) {
-            throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29007, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29007, command));
-        }
+    private void appendBulkValues(Map<Integer, Parameter> preparedValues, List<CBColumnData> rowCache, Insert command) {
         
         BatchedCommand batchCommand = (BatchedCommand)command;
         Iterator<? extends List<?>> vi = batchCommand.getParameterValues();
@@ -220,13 +218,22 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             JsonObject json = JsonObject.create();
             for(int i = 0 ; i < rowCache.size() ; i ++) {
                 CBColumnData columnData = rowCache.get(i);
+                Parameter p = preparedValues.get(i);
+                Object value = null;
+                if (p != null) {
+                    value = row.get(p.getValueIndex());
+                } else {
+                    value = columnData.getValue();
+                }
                 if(columnData.getCBColumn().isPK()) {
-                    documentID = (String)row.get(i); 
+                    if (value != null) {
+                        documentID = value.toString();  
+                    }
                 } else {
                     String attr = columnData.getCBColumn().getLeafName();
                     String path = columnData.getCBColumn().getNameInSource();
                     JsonObject nestedObj = findObject(json, path);
-                    ef.setValue(nestedObj, attr, columnData.getColumnType(), row.get(i));
+                    ef.setValue(nestedObj, attr, columnData.getColumnType(), value);
                 }
             }
             

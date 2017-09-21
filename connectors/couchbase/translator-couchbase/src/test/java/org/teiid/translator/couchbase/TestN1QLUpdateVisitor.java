@@ -24,12 +24,16 @@ package org.teiid.translator.couchbase;
 import static org.junit.Assert.*;
 import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Test;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.Command;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.Parameter;
 import org.teiid.translator.TranslatorException;
 
 import com.couchbase.client.java.document.json.JsonArray;
@@ -111,6 +115,23 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         json.put("Quantity", 5);
         json.put("ItemID", 92312);
         assertEquals("UPDATE `test` USE KEYS 'order-1' SET `Items` = ARRAY_CONCAT(IFMISSINGORNULL(`Items`, []), ["+json+"]) RETURNING META(`test`).id AS PK", translated);
+    }
+    
+    @Test
+    public void testInsertBulk()  {
+        
+        String sql = "INSERT INTO Customer (documentID) VALUES ('customer-1')";
+        Insert insert = (Insert)translationUtility.parseCommand(sql);
+        Parameter p = new Parameter();
+        p.setType(String.class);
+        p.setValueIndex(0);
+        ((ExpressionValueSource)insert.getValueSource()).getValues().set(0, p);
+        insert.setParameterValues(Arrays.asList(Arrays.asList("customer-1"), Arrays.asList("customer-2")).iterator());
+        
+        N1QLUpdateVisitor visitor = TRANSLATOR.getN1QLUpdateVisitor();
+        visitor.append(insert);
+        String actual = visitor.getBulkCommands()[0];
+        assertEquals("INSERT INTO `test` (KEY, VALUE) VALUES ('customer-1', {\"type\":\"Customer\"}), VALUES ('customer-2', {\"type\":\"Customer\"}) RETURNING META(`test`).id AS PK", actual);
     }
     
     @Test
