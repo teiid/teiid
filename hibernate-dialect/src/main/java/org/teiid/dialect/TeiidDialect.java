@@ -33,7 +33,20 @@ import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.type.*;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.BigIntegerType;
+import org.hibernate.type.BlobType;
+import org.hibernate.type.CharacterType;
+import org.hibernate.type.ClobType;
+import org.hibernate.type.DateType;
+import org.hibernate.type.DoubleType;
+import org.hibernate.type.FloatType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.ObjectType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.TimeType;
+import org.hibernate.type.TimestampType;
 
 public class TeiidDialect extends Dialect {
 	private static DoubleType DOUBLE = DoubleType.INSTANCE;
@@ -274,7 +287,27 @@ public class TeiidDialect extends Dialect {
 	public String getSelectGUIDString() {
 		return "select uuid()"; //$NON-NLS-1$
 	}
-   
+	
+	@Override
+	public boolean supportsSequences() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsPooledSequences() {
+		return true;
+	}
+	
+	@Override
+	public String getSequenceNextValString(String sequenceName) {
+		return "select __x.return from (call " + getSelectSequenceNextValString( sequenceName ) +"()) as __x";
+	}
+
+	@Override
+	public String getSelectSequenceNextValString(String sequenceName) {
+		return sequenceName;
+	}
+
     public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
         return new LocalTemporaryTableBulkIdStrategy(
             new IdTableSupportStandardImpl() {
