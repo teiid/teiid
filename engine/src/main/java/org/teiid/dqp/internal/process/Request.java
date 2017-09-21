@@ -506,7 +506,8 @@ public class Request {
 		        int colCount = 0;
 	            for (Iterator<ElementSymbol> iter = variables.iterator(); iter.hasNext();) {
 	                ElementSymbol variable = iter.next();
-	                if (!metadata.elementSupports(variable.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)
+	                if (!(metadata.elementSupports(variable.getMetadataID(), SupportConstants.Element.NULL) ||
+	                        metadata.elementSupports(variable.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT))
 	                        || !cols.contains(variable.getMetadataID())) { 
 	                    iter.remove();
 	                }
