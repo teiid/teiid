@@ -55,6 +55,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.teiid.CommandContext;
+import org.teiid.GeneratedKeys;
 import org.teiid.PreParser;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -736,7 +737,7 @@ public class TestEmbeddedServer {
 		assertEquals(1, ps.executeUpdate());
 	}
 	
-	@Test public void testGeneratedKeysVirtual() throws Exception {
+	@Test public void testGeneratedKeysVirtualNone() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		MockTransactionManager tm = new MockTransactionManager();
 		ec.setTransactionManager(tm);
@@ -748,7 +749,7 @@ public class TestEmbeddedServer {
 		ModelMetaData mmd1 = new ModelMetaData();
 		mmd1.setName("b");
 		mmd1.setModelType(Type.VIRTUAL);
-		mmd1.addSourceMetadata("ddl", "create view v (i integer, k integer auto_increment) OPTIONS (UPDATABLE true) as select 1, 2; " +
+		mmd1.addSourceMetadata("ddl", "create view v (i integer, k integer auto_increment primary key) OPTIONS (UPDATABLE true) as select 1, 2; " +
 				"create trigger on v instead of insert as for each row begin atomic " +
 				"\ncreate local temporary table x (y serial, z integer, primary key (y));"
 				+ "\ninsert into x (z) values (1);" +
@@ -762,6 +763,44 @@ public class TestEmbeddedServer {
 		ResultSet rs = ps.getGeneratedKeys();
 		assertFalse(rs.next());
 	}
+	
+    @Test public void testGeneratedKeysVirtual() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        MockTransactionManager tm = new MockTransactionManager();
+        ec.setTransactionManager(tm);
+        ec.setUseDisk(false);
+        es.start(ec);
+        
+        HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
+            @Override
+            public UpdateExecution createUpdateExecution(Command command,
+                    ExecutionContext executionContext, RuntimeMetadata metadata,
+                    Object connection) throws TranslatorException {
+                UpdateExecution ue = super.createUpdateExecution(command, executionContext, metadata, connection);
+                GeneratedKeys keys = executionContext.getCommandContext().returnGeneratedKeys(new String[] {"y"}, new Class<?>[] {Integer.class});
+                keys.addKey(Arrays.asList(1));
+                return ue;
+            }
+        };
+        hcef.addUpdate("INSERT INTO tbl (x) VALUES (1)", new int[] {1});
+        es.addTranslator("t", hcef);
+        
+        ModelMetaData mmd1 = new ModelMetaData();
+        mmd1.setName("b");
+        mmd1.addSourceMapping("b", "t", null);
+        mmd1.addSourceMetadata("ddl", 
+                "create foreign table tbl (x integer, y integer auto_increment primary key) OPTIONS (UPDATABLE true);" +
+                "create view v (i integer, k integer auto_increment primary key) OPTIONS (UPDATABLE true) as select x, y from tbl;");
+        
+        es.deployVDB("vdb", mmd1);
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+        PreparedStatement ps = c.prepareStatement("insert into v (i) values (1)", Statement.RETURN_GENERATED_KEYS);
+        assertEquals(1, ps.executeUpdate());
+        ResultSet rs = ps.getGeneratedKeys();
+        assertTrue(rs.next());
+        assertEquals("k", rs.getMetaData().getColumnLabel(1));
+    }
 	
 	@Test public void testGeneratedKeysTemp() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
