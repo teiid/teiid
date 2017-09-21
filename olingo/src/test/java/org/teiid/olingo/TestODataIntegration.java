@@ -774,7 +774,7 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("m");
-            mmd.addSourceMetadata("ddl", "create foreign table x (a string auto_increment, b string, c integer, "
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, "
                     + "primary key (a)) options (updatable true);");
             mmd.addSourceMapping("x", "x", null);
             teiid.deployVDB("northwind", mmd);
