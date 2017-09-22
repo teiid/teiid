@@ -6119,7 +6119,7 @@ void alterTable(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
         {
       		table = (Table)dbStore.getSchemaRecord(objectName, Database.ResourceType.TABLE);
         }
-	    <AS> { comment = getToken(1).specialToken; } command = queryExpression(info)
+	    (<AS> { comment = getToken(1).specialToken; } command = queryExpression(info)
 	    {
 	        if (comment != null) {
 	            command.setCacheHint(getQueryCacheOption(comment.image));
@@ -6129,6 +6129,7 @@ void alterTable(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
 	    [LOOKAHEAD(2) (alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) |
 	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore))
 	    ]
+	    | <RENAME> alterRenameTable(objectName, Database.ResourceType.TABLE, dbStore))
 	 ) | (
 	 	<TABLE> objectName = id(null)
 	 	{
@@ -6137,13 +6138,34 @@ void alterTable(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
 	                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31238));                                    	 		
 	 		}
 	 	}
-	    [LOOKAHEAD(2) (alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) | 
+	    [LOOKAHEAD(2) (alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) |	    	
 	    	alterAddColumn(objectName, Database.ResourceType.TABLE, dbStore) |
 	    	alterDropColumn(objectName, Database.ResourceType.TABLE, dbStore) |
 	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore) |
-	    	alterRenameColumn(objectName, Database.ResourceType.TABLE, dbStore))
+	    	<RENAME> (alterRenameTable(objectName, Database.ResourceType.TABLE, dbStore) | 
+			alterRenameColumn(objectName, Database.ResourceType.TABLE, dbStore)))
 	    ]	 	
 	 ))    
+}
+
+/*
+name=RENAME Table
+description=alters table name
+example=[source,sql]\n----\nALTER TABLE foo RENAME TO BAR;\n----\n
+*/
+void alterRenameTable(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
+{
+	MetadataFactory factory = null;
+	Table table = null;
+	String id = null;
+}
+{ 
+	<TO> id = id(null)
+	{
+		factory = DatabaseStore.createMF(dbStore);
+		table = (Table)dbStore.getSchemaRecord(objectName, type);
+		dbStore.modifyTableName(table, id);
+	}
 }
 
 /*
@@ -6277,7 +6299,7 @@ void alterRenameColumn(String objectName, Database.ResourceType type, DatabaseSt
     MetadataFactory factory = null;
 }
 { 
-    <RENAME> (<COLUMN>|<PARAMETER>{childType = Database.ResourceType.PARAMETER;})
+    (<COLUMN>|<PARAMETER>{childType = Database.ResourceType.PARAMETER;})
     oldName = id(null)
     <TO>
     newName = id(null)
@@ -6330,7 +6352,7 @@ void alterProcedure(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
     ]     
     [LOOKAHEAD(2) (alterOptionsList(objectName, Database.ResourceType.PROCEDURE, dbStore) |   
     	alterColumn(objectName, Database.ResourceType.PROCEDURE, dbStore)   |
-    	alterRenameColumn(objectName, Database.ResourceType.PROCEDURE, dbStore))]     
+    	<RENAME> alterRenameColumn(objectName, Database.ResourceType.PROCEDURE, dbStore))]     
 }
 
 /*

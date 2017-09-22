@@ -170,6 +170,17 @@ public class TestDDLParser {
 		mf.mergeInto(mds);
 	}
 	
+	@Test 
+	public void testRenameTable() throws Exception {
+		QueryParser parser = new QueryParser();
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer auto_increment primary key, e2 varchar);"
+				+ "ALTER TABLE G1 RENAME TO G2";
+		MetadataStore mds = new MetadataStore();
+		MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
+		parser.parseDDL(mf, ddl);
+		mf.mergeInto(mds);
+	}	
+	
 	@Test
 	public void testUDT() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar OPTIONS (UDT 'NMTOKENS(12,13,11)'))";
@@ -404,6 +415,15 @@ public class TestDDLParser {
 		parser.parseDDL(mf,"CREATE VIEW V1 AS SELECT * FROM PM1.G1");			
 		mf.mergeInto(mds);
 	}	
+	
+	@Test
+	public void testRenameView() throws Exception {
+		QueryParser parser = new QueryParser();
+		MetadataStore mds = new MetadataStore();			
+		MetadataFactory mf = new MetadataFactory("x", 1, "VM1", getDataTypes(), new Properties(), null); 
+		parser.parseDDL(mf,"CREATE VIEW V1 AS SELECT * FROM PM1.G1;ALTER VIEW V1 RENAME TO V2");			
+		mf.mergeInto(mds);
+	}
 	
 	@Test
 	public void testMultipleCommands() throws Exception {
