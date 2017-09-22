@@ -815,8 +815,11 @@ public class DDLStringVisitor {
 	}
 
 	private void buildOptions(AbstractMetadataRecord record, StringBuilder options) {
-		if (!record.getProperties().isEmpty()) {
+		if (!record.getProperties().isEmpty()) {			
 			for (Map.Entry<String, String> entry:record.getProperties().entrySet()) {
+				if (record instanceof Database && entry.getKey().equals("full-ddl")) {
+					continue;
+				}
 				addOption(options, entry.getKey(), entry.getValue());
 			}
 		}

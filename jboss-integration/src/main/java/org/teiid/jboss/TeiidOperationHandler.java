@@ -17,7 +17,12 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -92,9 +97,11 @@ import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Database;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.runtime.EmbeddedAdminFactory;
 import org.teiid.translator.TranslatorProperty.PropertyType;
@@ -929,9 +936,16 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		if (operation.hasDefined(OperationsConstants.ENTITY_PATTERN.getName())) {
 			regEx = operation.get(OperationsConstants.ENTITY_PATTERN.getName()).asString();
 		}
+		
+		String ddl = null;
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
-		Schema schema = metadataStore.getSchema(modelName);
-		String ddl = DDLStringVisitor.getDDLString(schema, schemaTypes, regEx);
+		if (modelName != null) {
+			Schema schema = metadataStore.getSchema(modelName);
+			ddl = DDLStringVisitor.getDDLString(schema, schemaTypes, regEx);
+		} else {
+			Database db = DatabaseUtil.convert(vdb, metadataStore);
+			ddl = DDLStringVisitor.getDDLString(db);
+		}
 		result.set(ddl);
 	}
 
