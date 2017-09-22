@@ -17,11 +17,7 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -35,30 +31,9 @@ import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.client.core.edm.ClientCsdlXMLMetadata;
 import org.apache.olingo.client.core.edm.xml.ClientCsdlEdmx;
 import org.apache.olingo.client.core.serialization.ClientODataDeserializerImpl;
-import org.apache.olingo.commons.api.edm.EdmComplexType;
-import org.apache.olingo.commons.api.edm.EdmEntitySet;
-import org.apache.olingo.commons.api.edm.EdmEntityType;
-import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
-import org.apache.olingo.commons.api.edm.EdmProperty;
-import org.apache.olingo.commons.api.edm.EdmReferentialConstraint;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
-import org.apache.olingo.commons.api.edm.provider.CsdlAction;
-import org.apache.olingo.commons.api.edm.provider.CsdlActionImport;
-import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
-import org.apache.olingo.commons.api.edm.provider.CsdlEntityContainer;
-import org.apache.olingo.commons.api.edm.provider.CsdlEntitySet;
-import org.apache.olingo.commons.api.edm.provider.CsdlEntityType;
-import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
-import org.apache.olingo.commons.api.edm.provider.CsdlFunctionImport;
-import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
-import org.apache.olingo.commons.api.edm.provider.CsdlNavigationPropertyBinding;
-import org.apache.olingo.commons.api.edm.provider.CsdlParameter;
-import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
-import org.apache.olingo.commons.api.edm.provider.CsdlPropertyRef;
-import org.apache.olingo.commons.api.edm.provider.CsdlReferentialConstraint;
-import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
-import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
+import org.apache.olingo.commons.api.edm.provider.*;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
@@ -66,11 +41,9 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.KeyRecord.Type;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.UDFSource;
@@ -83,8 +56,6 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
-import org.teiid.translator.odata4.ODataExecutionFactory;
-import org.teiid.translator.odata4.ODataMetadataProcessor;
 import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 
 @SuppressWarnings({"nls", "unused"})
@@ -101,28 +72,44 @@ public class TestODataMetadataProcessor {
     }
 	
     static MetadataFactory tripPinMetadata() throws TranslatorException {
+        String file = "trippin.xml";
+        String schema = "trippin";
+        String schemaNamespace = "Microsoft.OData.SampleService.Models.TripPin";
+        return createMetadata(file, schema, schemaNamespace);
+    }
+
+    private static MetadataFactory createMetadata(final String file, final String schema,
+            final String schemaNamespace) throws TranslatorException {
         ODataMetadataProcessor processor = new ODataMetadataProcessor() {
             protected XMLMetadata getSchema(WSConnection conn) throws TranslatorException {
                 try {
                     ClientODataDeserializerImpl deserializer = new ClientODataDeserializerImpl(
                             false, ContentType.APPLICATION_XML);
                     XMLMetadata metadata = deserializer.toMetadata(
-                            new FileInputStream(UnitTestUtil.getTestDataFile("trippin.xml")));
+                            new FileInputStream(UnitTestUtil.getTestDataFile(file)));
                     return metadata;
                 } catch (FileNotFoundException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
-                return null;
             }           
         };
         Properties props = new Properties();
-        props.setProperty("schemaNamespace", "Microsoft.OData.SampleService.Models.TripPin");
-        MetadataFactory mf = new MetadataFactory("vdb", 1, "trippin", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
+        props.setProperty("schemaNamespace", schemaNamespace);
+        MetadataFactory mf = new MetadataFactory("vdb", 1, schema, SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         processor.process(mf, null);
 //        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
 //        System.out.println(ddl);    
         
         return mf;
+    }
+    
+    @Test(expected=TranslatorException.class)
+    public void testOlderSchema() throws Exception {
+        translator = new ODataExecutionFactory();
+        translator.start();
+        
+        MetadataFactory mf = createMetadata("northwind_v2.xml", "northwind", "NorthwindModel");
+        getTransformationMetadata(mf, this.translator);
     }
     
 	@Test
