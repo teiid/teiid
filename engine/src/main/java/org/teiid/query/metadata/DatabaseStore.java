@@ -437,7 +437,17 @@ public abstract class DatabaseStore {
         assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
         
         verifyTableExists(table.getName());
-    }    
+    }  
+    
+    public void modifyTableName(Table table, String newName) {
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
+        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        
+        verifyTableExists(table.getName());
+        table.setName(newName);
+    }     
     
     public void tableDropped(String tableName) {
         if (!assertInEditMode(Mode.SCHEMA)) {
