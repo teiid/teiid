@@ -2066,10 +2066,17 @@ public class AdminFactory {
 			ArrayList<String> params = new ArrayList<String>();
 			params.add("vdb-name");
 			params.add(vdbName);
+			
+			if (vdbVersion == null) {
+				vdbVersion = "1";
+			}
 			params.add("vdb-version");
 			params.add(vdbVersion);
-			params.add("model-name");
-			params.add(modelName);
+			
+			if (modelName != null) {
+				params.add("model-name");
+				params.add(modelName);
+			}
 			
 			if (allowedTypes != null) {
 				params.add("entity-type");
