@@ -114,6 +114,15 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	public void setCriteriaQuery(String criteriaQuery) {
 		this.criteriaQuery = criteriaQuery;
 	}
+	public void translateWhere(Condition condition) {
+	    if (condition != null) {
+	        StringBuilder temp = this.buffer;
+	        this.buffer = new StringBuilder();
+	        append(condition);
+	        criteriaQuery = buffer.toString();
+	        this.buffer = temp;
+	    }
+	}
 	
 	public boolean isHeaderEnabled() {
 		return headerEnabled;
@@ -125,16 +134,6 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 
 	public String getWorksheetTitle() {
 		return worksheetTitle;
-	}
-	
-	public void translateWhere(Condition condition) {
-	    if (condition != null) {
-	        StringBuilder temp = this.buffer;
-	        this.buffer = new StringBuilder();
-	        append(condition);
-	        criteriaQuery = buffer.toString();
-	        this.buffer = temp;
-	    }
 	}
 	
 	public void visit(Comparison obj) {
