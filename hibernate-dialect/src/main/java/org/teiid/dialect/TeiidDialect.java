@@ -300,12 +300,12 @@ public class TeiidDialect extends Dialect {
 	
 	@Override
 	public String getSequenceNextValString(String sequenceName) {
-		return "select __x.return from (call " + getSelectSequenceNextValString( sequenceName ) +"()) as __x";
+		return "select __x.return from (" + getSelectSequenceNextValString( sequenceName ) +") as __x";
 	}
 
 	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName;
+		return "call "+sequenceName+"()";
 	}
 
     public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
