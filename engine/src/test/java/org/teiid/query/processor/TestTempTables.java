@@ -671,6 +671,23 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("delete from #tmp_dates where datum < (select cast(starttime as date) from #tmp_params)", new List[] {Arrays.asList(1)});
 		execute("select count(*) from #tmp_dates", new List[] {Arrays.asList(1)});
     }
+    @Test public void testDeleteRemovingPageSmallPartialKey() throws Exception {
+        execute("create temporary table #temp (c1 integer, c2 integer, primary key (c1, c2))", new List[] {Arrays.asList(0)});
+        execute("insert into #temp (c1, c2) values (1, 1)", new List[] {Arrays.asList(1)});
+        execute("delete from #temp where c1 = 1", new List[] {Arrays.asList(1)});
+    }
+    
+    @Test public void testUpdateSmallPartialKey() throws Exception {
+        execute("create temporary table #temp (c1 integer, c2 integer, primary key (c1, c2))", new List[] {Arrays.asList(0)});
+        execute("insert into #temp (c1, c2) values (1, 1)", new List[] {Arrays.asList(1)});
+        execute("update #temp set c2 = 2 where c1 = 1", new List[] {Arrays.asList(1)});
+    }
+    
+    @Test public void testUpdateSmallNoKey() throws Exception {
+        execute("create temporary table #temp (c1 integer, c2 integer)", new List[] {Arrays.asList(0)});
+        execute("insert into #temp (c1, c2) values (1, 1)", new List[] {Arrays.asList(1)});
+        execute("update #temp set c2 = 2 where c1 = 1", new List[] {Arrays.asList(1)});
+    }
 	
 	@Test public void testImplicitResolvingWithoutColumns() throws Exception {
 		execute("insert into #tmp_dates "

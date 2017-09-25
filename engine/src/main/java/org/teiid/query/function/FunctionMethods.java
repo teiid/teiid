@@ -71,10 +71,17 @@ import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.crypto.CryptoException;
 import org.teiid.core.crypto.SymmetricCryptor;
-import org.teiid.core.types.*;
+import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReaderInputStream;
@@ -85,6 +92,7 @@ import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
@@ -624,11 +632,31 @@ public final class FunctionMethods {
 		}
 		return Integer.valueOf(month/3 + 1);
 	}
-	
-	public static Object from_unixtime(Integer count) {
-	    return timestampAdd(NonReserved.SQL_TSI_SECOND, count, new Timestamp(0));
-	}
 
+	@TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
+ 	public static String from_unixtime(long count) throws FunctionExecutionException {
+	    if (count > Long.MAX_VALUE/1000 || count < Long.MIN_VALUE/1000) {
+	        throw new FunctionExecutionException(QueryPlugin.Event.TEIID31264, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31264));
+	    }
+	    String string = new Timestamp(count*1000l).toString();
+        return string.substring(0, string.length()-2);
+	}
+	
+	@TeiidFunction(category=FunctionCategoryConstants.DATETIME, nullOnNull=true, pushdown=PushDown.CAN_PUSHDOWN)
+	public static Long unix_timestamp(String date) {
+	    return Timestamp.valueOf(date).getTime()/1000;
+	}
+	
+	@TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
+	public static Timestamp from_millis(long millis) {
+        return new Timestamp(millis);
+    }
+	
+	@TeiidFunction(category=FunctionCategoryConstants.DATETIME, nullOnNull=true, pushdown=PushDown.CAN_PUSHDOWN)
+	public static Long to_millis(Timestamp date) {
+	    return date.getTime();
+    }
+	
 	//	================== Function = timestampadd =====================
 
 	public static Object timestampAdd(String intervalType, Integer count, Timestamp timestamp) {
@@ -1523,7 +1551,7 @@ public final class FunctionMethods {
         return context.getConnectionId();
     }
     
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS, pushdown=PushDown.CANNOT_PUSHDOWN)
     public static String node_id() {
         return System.getProperty("jboss.node.name"); //$NON-NLS-1$
     }
@@ -1660,7 +1688,7 @@ public final class FunctionMethods {
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
 	
-	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC, pushdown=PushDown.CANNOT_PUSHDOWN)
 	public static int mvstatus(CommandContext context, String schemaName, String viewName) throws FunctionExecutionException, SQLException, QueryMetadataException, TeiidComponentException {
 	    Object id = context.getMetadata().getGroupID(schemaName + AbstractMetadataRecord.NAME_DELIM_CHAR + viewName);
         String statusTable = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);

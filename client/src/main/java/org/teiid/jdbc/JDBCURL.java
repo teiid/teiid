@@ -42,7 +42,7 @@ public class JDBCURL {
     private static final String UTF_8 = "UTF-8"; //$NON-NLS-1$
     public static final String JDBC_PROTOCOL = "jdbc:teiid:"; //$NON-NLS-1$
     
-    static final String URL_PATTERN = JDBC_PROTOCOL + "([\\w-\\.]+)(?:@([^;]*))?(;.*)?"; //$NON-NLS-1$
+    static final String URL_PATTERN = JDBC_PROTOCOL + "([^@^;]+)(?:@([^;]*))?(;.*)?"; //$NON-NLS-1$
     static Pattern urlPattern = Pattern.compile(URL_PATTERN);
 
 	public static final Map<String, String> EXECUTION_PROPERTIES = Collections.unmodifiableMap(buildProps());
@@ -157,10 +157,10 @@ public class JDBCURL {
         if (!m.matches()) {
         	throw new IllegalArgumentException();
         }
-        vdbName = m.group(1);
+        vdbName = getValidValue(m.group(1));
         connectionURL = m.group(2);
         if (connectionURL != null) {
-        	connectionURL = connectionURL.trim();
+        	connectionURL = getValidValue(connectionURL.trim());
         }
         String props = m.group(3);
         if (props != null) {
@@ -195,13 +195,13 @@ public class JDBCURL {
         if(value.indexOf('=') >= 0) {
             throw new IllegalArgumentException();
         }        
-        addNormalizedProperty(key, getValidValue(value), p);
+        addNormalizedProperty(getValidValue(key), getValidValue(value), p);
     }
     
     public String getJDBCURL() {
         if (urlString == null) {
             StringBuffer buf = new StringBuffer(JDBC_PROTOCOL)
-                .append(vdbName);
+                .append(safeEncode(vdbName));
             	if (this.connectionURL != null) {
             		buf.append('@').append(connectionURL);
             	}
@@ -209,14 +209,10 @@ public class JDBCURL {
                 Map.Entry entry = (Map.Entry)i.next();
                 if (entry.getValue() instanceof String) {
                     // get only the string properties, because a non-string property could not have been set on the url.
-                    try {
-						buf.append(';')
-						   .append(entry.getKey())
-						   .append('=')
-						   .append(URLEncoder.encode((String)entry.getValue(), "UTF-8")); //$NON-NLS-1$
-					} catch (UnsupportedEncodingException e) {
-						buf.append(entry.getValue());
-					}
+					buf.append(';')
+					   .append(entry.getKey())
+					   .append('=')
+					   .append(safeEncode((String)entry.getValue())); 
                 }
             }
             urlString = buf.toString();
@@ -305,15 +301,22 @@ public class JDBCURL {
     	return key;
     }
     
-    private static Object getValidValue(Object value) {
-        if (value instanceof String) {
-            try {
-                // Decode the value of the property if incase they were encoded.
-                return URLDecoder.decode((String)value, UTF_8);
-            } catch (UnsupportedEncodingException e) {
-                // use the original value
-            }            
-        }
+    private static String getValidValue(String value) {
+        try {
+            // Decode the value of the property if incase they were encoded.
+            return URLDecoder.decode(value, UTF_8);
+        } catch (UnsupportedEncodingException e) {
+            // use the original value
+        }            
+        return value;
+    }
+    
+    private static String safeEncode(String value) {
+        try {
+            return URLEncoder.encode(value, UTF_8);
+        } catch (UnsupportedEncodingException e) {
+            // use the original value
+        }            
         return value;
     }
     

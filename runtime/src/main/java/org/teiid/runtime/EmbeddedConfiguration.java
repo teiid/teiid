@@ -58,6 +58,8 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
 	
+	private boolean allowEnvFunction;
+	
 	private int processorBatchSize ;
 	private int maxReserveKb ;
 	private int maxProcessingKb ;
@@ -350,5 +352,13 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public boolean isAllowEnvFunction() {
+        return allowEnvFunction;
+    }
+    
+    public void setAllowEnvFunction(boolean allowEnvFunction) {
+        this.allowEnvFunction = allowEnvFunction;
     }
 }

@@ -762,11 +762,12 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 			this.setObject(parameterIndex, null);
 			return;
 		}
+		final ReaderInputStream readerInputStream = new ReaderInputStream(reader, Charset.forName(Streamable.ENCODING));
 		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory() {
 			
 			@Override
 			public InputStream getInputStream() throws IOException {
-				return new ReaderInputStream(reader, Charset.forName(Streamable.ENCODING));
+				return readerInputStream;
 			}
 		}, -1));
 	}

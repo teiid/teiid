@@ -62,7 +62,7 @@ public class TeiidODataJsonSerializer extends ODataJsonSerializer {
                   } 
                   else {
                     json.writeFieldName(type.getName());                      
-                    writeEntity(metadata, type.getEdmEntityType(), type.getEntity(), null, null, null, null, false, null, json);
+                    writeEntity(metadata, type.getEdmEntityType(), type.getEntity(), null, null, null, null, false, null, type.getName(), json);
                   }
                 }
                 json.writeEndObject();

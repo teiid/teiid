@@ -21,6 +21,8 @@ package org.teiid.arquillian;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.sql.SQLException;
 
 import org.jboss.arquillian.junit.Arquillian;
@@ -28,12 +30,15 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.jboss.AdminFactory;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.TeiidDriver;
 
@@ -89,6 +94,11 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
     	execute("SELECT * FROM test.G2"); //$NON-NLS-1$
         assertRowCount(1);
         printResults();
+        
+        String exportedDdl = admin.getSchema("foo", "1", null, null, null);
+		Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("exported-vdb.ddl")),
+				exportedDdl);
+        
         closeConnection();
         admin.undeploy("foo-vdb.ddl");
 	}

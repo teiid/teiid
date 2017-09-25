@@ -135,7 +135,7 @@ public class DQPCore implements DQP {
         shutdown = true;
         for (RequestID request : requests.keySet()) {
             try {
-                cancelRequest(request);
+                cancelRequest(request, "server shutdown"); //$NON-NLS-1$
             } catch (TeiidComponentException e) {
             }
         }
@@ -314,8 +314,8 @@ public class DQPCore implements DQP {
 					try {
 						RequestWorkItem wi = workItemRef.get();
 						if (wi != null) {
-							LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31096, wi.requestID, finalTimeout));
-							wi.requestCancel();
+						    String reason = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31096, finalTimeout);
+							wi.requestCancel(reason);
 						}
 					} catch (TeiidComponentException e) {
 						LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30018));
@@ -488,7 +488,7 @@ public class DQPCore implements DQP {
         if (state != null) {
 	        for (RequestID reqId : state.getRequests()) {
 	            try {
-	                cancelRequest(reqId);
+	                cancelRequest(reqId, "session terminated"); //$NON-NLS-1$
 	            } catch (TeiidComponentException err) {
 	                LogManager.logWarning(LogConstants.CTX_DQP, err, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30026,reqId));
 				}
@@ -515,7 +515,7 @@ public class DQPCore implements DQP {
 
     public boolean cancelRequest(String sessionId, long executionId) throws TeiidComponentException {
     	RequestID requestID = new RequestID(sessionId, executionId);
-    	return cancelRequest(requestID);
+    	return cancelRequest(requestID, "by an admin operation"); //$NON-NLS-1$
     }
     
     public PlanNode getPlan(String sessionId, long executionId) {
@@ -534,16 +534,12 @@ public class DQPCore implements DQP {
         return qp.getProcessorPlan().getDescriptionProperties();
     }
     
-    private boolean cancelRequest(RequestID requestID) throws TeiidComponentException {
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "cancelQuery for requestID=" + requestID); //$NON-NLS-1$
-        }
-        
+    private boolean cancelRequest(RequestID requestID, String reason) throws TeiidComponentException {
         boolean markCancelled = false;
         
         RequestWorkItem workItem = safeGetWorkItem(requestID);
         if (workItem != null) {
-        	markCancelled = workItem.requestCancel();
+        	markCancelled = workItem.requestCancel(reason); 
         }
     	if (markCancelled) {
             logMMCommand(workItem, Event.CANCEL, null, null);
@@ -729,7 +725,7 @@ public class DQPCore implements DQP {
 	public boolean cancelRequest(long requestID)
 			throws TeiidProcessingException, TeiidComponentException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		return this.cancelRequest(workContext.getRequestID(requestID));
+		return this.cancelRequest(workContext.getRequestID(requestID), "by the client"); //$NON-NLS-1$
 	}
 	
 	// local txn

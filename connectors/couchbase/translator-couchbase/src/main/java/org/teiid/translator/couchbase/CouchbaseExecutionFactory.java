@@ -29,6 +29,7 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
+import org.teiid.core.types.ClobType.Type;
 import org.teiid.core.util.Assertion;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.Argument;
@@ -45,6 +46,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.document.json.JsonValue;
 
 @Translator(name="couchbase", description="Couchbase Translator, reads and writes the data to Couchbase")
 public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactory, CouchbaseConnection> {
@@ -66,7 +68,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("SUBSTR"));//$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier());
 		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("LOG"));//$NON-NLS-1$
@@ -79,13 +81,16 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
                 Expression param = function.getParameters().get(0);
                 int targetCode = getCode(function.getType());
                 if(targetCode == BYTE || targetCode == SHORT || targetCode == INTEGER || targetCode == LONG || targetCode == FLOAT || targetCode == DOUBLE || targetCode == BIGINTEGER || targetCode == BIGDECIMAL) {
+                    if ((Number.class.isAssignableFrom(param.getType()))) {
+                        return Arrays.asList(param);
+                    }
                     return Arrays.asList("TONUMBER" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else if(targetCode == STRING || targetCode == CHAR) {
                     return Arrays.asList("TOSTRING" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else if(targetCode == BOOLEAN) {
                     return Arrays.asList("TOBOOLEAN" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else {
-                    return Arrays.asList("TOATOM" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                    return Arrays.asList(param); 
                 }
             }});
 		
@@ -144,7 +149,6 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	    supportedFunctions.add(SourceSystemFunctions.LENGTH);
 	    supportedFunctions.add(SourceSystemFunctions.LCASE);
 	    supportedFunctions.add(SourceSystemFunctions.REPEAT);
-	    supportedFunctions.add(SourceSystemFunctions.TRANSLATE);
 	    supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
 	    supportedFunctions.add(SourceSystemFunctions.UCASE);
 	    supportedFunctions.add(SourceSystemFunctions.REPLACE);
@@ -316,8 +320,29 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         }
         
         if(columnType.equals(ClobType.class)) {
+            boolean json = false;
+            if (value instanceof JsonValue) {
+                json = true;
+            }
             ClobImpl clob = new ClobImpl(value.toString());
-            return new ClobType(clob);
+            ClobType result = new ClobType(clob);
+            result.setType(json?Type.JSON:Type.TEXT);
+            return result;
+        }
+        
+        if (columnType.equals(BigInteger.class)) {
+            if (value instanceof BigDecimal) {
+                return ((BigDecimal)value).toBigInteger();
+            }
+            return BigInteger.valueOf(((Number)value).longValue());
+        }
+        
+        if (columnType.equals(BigDecimal.class)) {
+            if (value instanceof BigInteger) {
+                value = new BigDecimal((BigInteger)value);
+            } else {
+                value = BigDecimal.valueOf(((Number)value).doubleValue());
+            }
         }
         
         return value;
@@ -341,6 +366,8 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
             json.put(attr, (BigDecimal)attrValue);
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.NULL)) {
             json.putNull(attr);
+        } else {
+            json.put(attr, attrValue);
         }
     }
     
@@ -362,6 +389,8 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
             array.add((BigDecimal)attrValue);
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.NULL)) {
             array.addNull();
+        } else {
+            array.add(attrValue);
         }
     }
 
@@ -396,9 +425,19 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         if (toType == FunctionModifier.STRING || toType == FunctionModifier.INTEGER || toType == FunctionModifier.LONG
             || toType == FunctionModifier.DOUBLE || toType == FunctionModifier.BOOLEAN || toType == FunctionModifier.BIGINTEGER
             || toType == FunctionModifier.BIGDECIMAL || toType == FunctionModifier.OBJECT) {
-            return true;
+            return super.supportsConvert(fromType, toType);
         }
-        return super.supportsConvert(fromType, toType);
+        return false;
+    }
+    
+    @Override
+    public NullOrder getDefaultNullOrder() {
+        return NullOrder.LOW;
+    }
+    
+    @Override
+    public boolean supportsSearchedCaseExpressions() {
+        return true;
     }
 
 }

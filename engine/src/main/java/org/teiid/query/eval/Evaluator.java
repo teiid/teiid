@@ -37,17 +37,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-
-import net.sf.saxon.Configuration;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.query.QueryResult;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.type.ValidationException;
-import net.sf.saxon.value.StringValue;
-
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -56,7 +45,6 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.*;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
@@ -69,10 +57,8 @@ import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.JSONFunctionMethods.JSONBuilder;
 import org.teiid.query.function.source.XMLSystemFunctions;
-import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.relational.XMLTableNode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.proc.ExceptionExpression;
@@ -83,46 +69,11 @@ import org.teiid.query.sql.util.ValueIteratorSource;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.WSConnection.Util;
 
 public class Evaluator {
-
-    private final class XMLQueryRowProcessor implements RowProcessor {
-		XmlConcat concat; //just used to get a writer
-		Type type;
-		private javax.xml.transform.Result result;
-		boolean hasItem;
-		
-		private XMLQueryRowProcessor(boolean exists) throws TeiidProcessingException {
-			if (!exists) {
-				concat = new XmlConcat(context.getBufferManager());
-				result = new StreamResult(concat.getWriter());
-			}
-		}
-
-		@Override
-		public void processRow(NodeInfo row) {
-			if (concat == null) {
-				hasItem = true;
-				return;
-			}
-			if (type == null) {
-				type = SaxonXQueryExpression.getType(row);
-			} else {
-				type = Type.CONTENT;
-			}
-			try {
-				QueryResult.serialize(row, result, SaxonXQueryExpression.DEFAULT_OUTPUT_PROPERTIES);
-			} catch (XPathException e) {
-				 throw new TeiidRuntimeException(e);
-			}
-		}
-	}
 
 	private final class SequenceReader extends Reader {
 		private LinkedList<Reader> readers;
@@ -245,7 +196,7 @@ public class Evaluator {
         } else if (criteria instanceof ExpressionCriteria) {
         	return (Boolean)evaluate(((ExpressionCriteria)criteria).getExpression(), tuple);
         } else if (criteria instanceof XMLExists) {
-        	return (Boolean) evaluateXMLQuery(tuple, ((XMLExists)criteria).getXmlQuery(), true);
+            return (Boolean) evaluateXMLQuery(tuple, ((XMLExists)criteria).getXmlQuery(), true);
         } else if (criteria instanceof IsDistinctCriteria) {
         	IsDistinctCriteria idc = (IsDistinctCriteria)criteria;
         	TempMetadataID left = (TempMetadataID)idc.getLeftRowValue().getMetadataID();
@@ -747,7 +698,11 @@ public class Evaluator {
 	       return getContext(expression).getFromContext(expression);
 	   } 
 	   if(expression instanceof Constant) {
-	       return ((Constant) expression).getValue();
+	       Constant c = (Constant) expression;
+	       if (c.isMultiValued()) {
+	           throw new AssertionError("Multi-valued constant not allowed to be directly evaluated"); //$NON-NLS-1$
+	       }
+	       return c.getValue();
 	   } else if(expression instanceof Function) {
 	       return evaluate((Function) expression, tuple);
 	   } else if(expression instanceof CaseExpression) {
@@ -816,50 +771,7 @@ public class Evaluator {
 		if (val == null) {
 			return new Constant(null, expression.getType());
 		}
-		Configuration config = new Configuration();
-		XMLType value = (XMLType)val;
-		Type t = value.getType();
-		try {
-			Item i = null;
-			switch (t) {
-				case CONTENT: 
-					//content could map to an array value, but we aren't handling that case here yet - only in xmltable
-				case COMMENT:
-				case PI:
-					throw new FunctionExecutionException();
-				case TEXT:
-					i = new StringValue(value.getString());
-					break;
-				case UNKNOWN:
-				case DOCUMENT:
-				case ELEMENT:
-					StreamSource ss = value.getSource(StreamSource.class);
-					try {
-						i = config.buildDocument(ss);
-					} finally {
-						if (ss.getInputStream() != null) {
-							ss.getInputStream().close();
-						}
-						if (ss.getReader() != null) {
-							ss.getReader().close();
-						}
-					}
-					break;
-				default:
-					throw new AssertionError("Unknown xml value type " + t); //$NON-NLS-1$
-			}
-			return XMLTableNode.getValue(expression.getType(), i, config, context);
-		} catch (IOException e) {
-			throw new FunctionExecutionException(e);
-		} catch (ValidationException e) {
-			throw new FunctionExecutionException(e);
-		} catch (TransformationException e) {
-			throw new FunctionExecutionException(e);
-		} catch (XPathException e) {
-			throw new FunctionExecutionException(e);
-		} catch (SQLException e) {
-			throw new FunctionExecutionException(e);
-		}
+		return XQueryEvaluator.evaluate((XMLType)val, expression, context);
 	}
 
 	private Object evaluate(List<?> tuple, ExceptionExpression ee)
@@ -1006,55 +918,13 @@ public class Evaluator {
 	private Object evaluateXMLQuery(List<?> tuple, XMLQuery xmlQuery, boolean exists)
 			throws BlockedException, TeiidComponentException,
 			FunctionExecutionException {
-		boolean emptyOnEmpty = xmlQuery.getEmptyOnEmpty() == null || xmlQuery.getEmptyOnEmpty();
-		Result result = null;
-		try {
-			XMLQueryRowProcessor rp = null;
-			if (xmlQuery.getXQueryExpression().isStreaming()) {
-				rp = new XMLQueryRowProcessor(exists);
-			}
-			try {
-				result = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple, rp);
-				if (result == null) {
-					return null;
-				}
-				if (exists) {
-					if (result.iter.next() == null) {
-						return false;
-					}
-					return true;
-				}
-			} catch (TeiidRuntimeException e) {
-				if (e.getCause() instanceof XPathException) {
-					throw (XPathException)e.getCause();
-				}
-				throw e;
-			}
-			if (rp != null) {
-				if (exists) {
-					return rp.hasItem;
-				}
-				XMLType.Type type = rp.type;
-				if (type == null) {
-					if (!emptyOnEmpty) {
-						return null;
-					}
-					type = Type.CONTENT;
-				}
-				XMLType val = rp.concat.close(context);
-				val.setType(rp.type);
-				return val;
-			}
-			return xmlQuery.getXQueryExpression().createXMLType(result.iter, this.context.getBufferManager(), emptyOnEmpty, context);
-		} catch (TeiidProcessingException e) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30333, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30333, e.getMessage()));
-		} catch (XPathException e) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30333, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30333, e.getMessage()));
-		} finally {
-			if (result != null) {
-				result.close();
-			}
-		}
+	    Map<String, Object> parameters = new HashMap<String, Object>();
+        try {
+            evaluateParameters(xmlQuery.getPassing(), tuple, parameters);
+        } catch (ExpressionEvaluationException e) {
+            throw new FunctionExecutionException(QueryPlugin.Event.TEIID30333, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30333, e.getMessage()));
+        }
+        return XQueryEvaluator.evaluateXMLQuery(tuple, xmlQuery, exists, parameters, context);
 	}
 	
 	private Object evaluateXMLSerialize(List<?> tuple, XMLSerialize xs)
@@ -1229,20 +1099,6 @@ public class Evaluator {
 		}
 	}
 	
-	private Result evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple, RowProcessor processor) 
-	throws BlockedException, TeiidComponentException, TeiidProcessingException {
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		evaluateParameters(cols, tuple, parameters);
-		Object contextItem = null;
-		if (parameters.containsKey(null)) {
-			contextItem = parameters.remove(null);
-			if (contextItem == null) {
-				return null;
-			}
-		}
-		return XQueryEvaluator.evaluateXQuery(xquery, contextItem, parameters, processor, context);
-	}
-
 	/**
 	 * Evaluate the parameters and return the context item if it exists
 	 */
@@ -1376,6 +1232,10 @@ public class Evaluator {
 	    
 	    for(int i=0; i < args.length; i++) {
 	        values[i+start] = internalEvaluate(args[i], tuple);
+	        if (values[i+start] instanceof Constant) {
+	            //leaked a multivalued constant
+	            throw new AssertionError("Multi-valued constant not allowed to be directly evaluated"); //$NON-NLS-1$
+	        }
 	    }            
 	    
 	    if (fd.getPushdown() == PushDown.MUST_PUSHDOWN) {

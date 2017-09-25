@@ -23,16 +23,17 @@ import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.OperationEntry;
 
 public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 	protected static final PathElement PATH_SUBSYSTEM = PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM);
 	private boolean server;
 	
 	public TeiidSubsytemResourceDefinition(boolean server) {
-        super(PATH_SUBSYSTEM,
-              TeiidExtension.getResourceDescriptionResolver(TeiidExtension.TEIID_SUBSYSTEM),
-              TeiidAdd.INSTANCE, 
-              TeiidRemove.INSTANCE);
+        super(new Parameters(PATH_SUBSYSTEM, TeiidExtension.getResourceDescriptionResolver(TeiidExtension.TEIID_SUBSYSTEM))
+              .setAddHandler(TeiidAdd.INSTANCE).setRemoveHandler(TeiidRemove.INSTANCE)
+              .setAddRestartLevel(OperationEntry.Flag.RESTART_ALL_SERVICES)
+              .setRemoveRestartLevel(OperationEntry.Flag.RESTART_ALL_SERVICES));
 		this.server = server;
 	}
 
@@ -95,6 +96,4 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
     	resourceRegistration.registerSubModel(new TranslatorResourceDefinition());
     	resourceRegistration.registerSubModel(new TransportResourceDefinition());
     }
-    
-    
 }

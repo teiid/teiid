@@ -1,6 +1,6 @@
 <config>
    <extension-module>org.jboss.as.connector</extension-module>
-   <subsystem xmlns="urn:jboss:domain:resource-adapters:4.0">
+   <subsystem xmlns="urn:jboss:domain:resource-adapters:5.0">
 	   <resource-adapters>
 	       <resource-adapter id="file">
 	           <module slot="main" id="org.jboss.teiid.resource-adapter.file"/>

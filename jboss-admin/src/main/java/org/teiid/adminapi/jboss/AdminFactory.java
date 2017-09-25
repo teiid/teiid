@@ -36,6 +36,9 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 
+import org.jboss.as.cli.CliInitializationException;
+import org.jboss.as.cli.CommandContext;
+import org.jboss.as.cli.CommandContextFactory;
 import org.jboss.as.cli.Util;
 import org.jboss.as.cli.batch.impl.DefaultBatch;
 import org.jboss.as.cli.batch.impl.DefaultBatchedCommand;
@@ -209,7 +212,7 @@ public class AdminFactory {
         private static final long CACHE_TIME = 5*1000;
     	private static final String CLASS_NAME = "class-name";
 		private static final String JAVA_CONTEXT = "java:/";
-		private ModelControllerClient connection;
+		ModelControllerClient connection;
     	private boolean domainMode = false;
     	private String profileName = "ha";
     	
@@ -530,24 +533,28 @@ public class AdminFactory {
         	parameters.add(addJavaContext(deploymentName));
         	parameters.add("driver-name");
         	parameters.add(stripXA(templateName));
-        	parameters.add("pool-name");
-        	parameters.add(deploymentName);
 
         	DefaultBatch batch = new DefaultBatch();
         	try {
+        		DMRCommandContext cmdContext = new DMRCommandContext(CommandContextFactory.getInstance().newCommandContext());
+        		cmdContext.setModelControllerClient(this.connection);
                 if (isXA(templateName)) {
-                    batch.add(new DefaultBatchedCommand("add", 
+                    batch.add(new DefaultBatchedCommand(cmdContext, "add", 
                             buildRequest("add", new String[] { "subsystem", "datasources","xa-data-source", deploymentName },
-                            parameters.toArray(new String[parameters.size()]))));
+                            parameters.toArray(new String[parameters.size()])), null));
                     
                     if (properties.getProperty("connection-url") != null) {
-                        batch.add(new DefaultBatchedCommand("add", addXADatasourceProperty(deploymentName, "connection-url", properties.getProperty("connection-url"))));
+						batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
+								"connection-url", properties.getProperty("connection-url")), null));
                     } else {
-                        batch.add(new DefaultBatchedCommand("add", addXADatasourceProperty(deploymentName, "DatabaseName", properties.getProperty("DatabaseName"))));
+						batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
+								"DatabaseName", properties.getProperty("DatabaseName")), null));
                         if (properties.getProperty("PortNumber") != null) {
-                            batch.add(new DefaultBatchedCommand("add", addXADatasourceProperty(deploymentName, "PortNumber", properties.getProperty("PortNumber"))));
+							batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
+									"PortNumber", properties.getProperty("PortNumber")), null));
                         }
-                        batch.add(new DefaultBatchedCommand("add", addXADatasourceProperty(deploymentName, "ServerName", properties.getProperty("ServerName"))));
+						batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
+								"ServerName", properties.getProperty("ServerName")), null));
                     }
                     
                     // add connection properties that are specific to driver
@@ -558,15 +565,17 @@ public class AdminFactory {
                             String prop = st.nextToken();
                             String key = prop.substring(0, prop.indexOf('='));
                             String value = prop.substring(prop.indexOf('=')+1);
-                            batch.add(new DefaultBatchedCommand("add", addXADatasourceProperty(deploymentName, key, value)));
+							batch.add(new DefaultBatchedCommand(cmdContext, "add",
+									addXADatasourceProperty(deploymentName, key, value), null));
                         }
                     }                        	    
                 } else {
                 	// add data source
-                    batch.add(new DefaultBatchedCommand("add", 
-                            buildRequest("add", new String[] { "subsystem", "datasources","data-source", deploymentName },
-                			parameters.toArray(new String[parameters.size()]))));
-   
+					batch.add(new DefaultBatchedCommand(cmdContext, "add",
+							buildRequest("add",
+									new String[] { "subsystem", "datasources", "data-source", deploymentName },
+									parameters.toArray(new String[parameters.size()])),
+							null));
                     // add connection properties that are specific to driver
                     String cp = properties.getProperty("connection-properties");
                     if (cp != null) {
@@ -575,14 +584,18 @@ public class AdminFactory {
                     		String prop = st.nextToken();
                     		String key = prop.substring(0, prop.indexOf('='));
                     		String value = prop.substring(prop.indexOf('=')+1);
-                    		batch.add(new DefaultBatchedCommand("add", addConnectionProperty(deploymentName, key, value)));
+							batch.add(new DefaultBatchedCommand(cmdContext, "add",
+									addConnectionProperty(deploymentName, key, value), null));
                     	}
                     }
                 }
             } catch (OperationFormatException e) {
                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70057, 
                         AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70057, batch.toRequest()));                
-            }
+            } catch (CliInitializationException e) {
+                throw new AdminProcessingException(AdminPlugin.Event.TEIID70057, 
+                        AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70057, batch.toRequest()));                
+			}
         	cliCall(batch.toRequest(), new ResultCallback());
 			flush();
 		}
@@ -2053,10 +2066,17 @@ public class AdminFactory {
 			ArrayList<String> params = new ArrayList<String>();
 			params.add("vdb-name");
 			params.add(vdbName);
+			
+			if (vdbVersion == null) {
+				vdbVersion = "1";
+			}
 			params.add("vdb-version");
 			params.add(vdbVersion);
-			params.add("model-name");
-			params.add(modelName);
+			
+			if (modelName != null) {
+				params.add("model-name");
+				params.add(modelName);
+			}
 			
 			if (allowedTypes != null) {
 				params.add("entity-type");

@@ -67,6 +67,14 @@ public class TestFunctionMethods {
 		assertEquals(2, FunctionMethods.dayOfWeek(TimestampUtil.createDate(111, 10, 28)));
 	}
 	
+	@Test public void testFromUnixTime() throws Exception {
+        assertEquals("2361-03-21 13:15:01", FunctionMethods.from_unixtime(12345678901l));
+    }
+	
+	@Test public void testUnixTimestamp() throws Exception {
+        assertEquals(Long.valueOf(123456789), FunctionMethods.unix_timestamp(FunctionMethods.from_unixtime(123456789)));
+    }
+	
 	@Test public void testTimestampDiffTimeStamp_ErrorUsingEndDate2304() throws Exception {
 		assertEquals(Long.valueOf(106753), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_DAY, 
 				new Timestamp(TimestampUtil.createDate(112, 0, 1).getTime()),

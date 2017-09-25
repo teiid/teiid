@@ -41,6 +41,7 @@ import org.teiid.util.Version;
 public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
 
     public static String IMPALA = "impala"; //$NON-NLS-1$
+    public static final Version TWO_2 = Version.getVersion("2.2"); //$NON-NLS-1$
     public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
     public static final Version ONE_2_1 = Version.getVersion("1.2.1"); //$NON-NLS-1$
 
@@ -205,7 +206,10 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.DAYNAME);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
-        supportedFunctions.add(SourceSystemFunctions.FROM_UNIXTIME);
+        if (getVersion().compareTo(TWO_2) >= 0) {
+            supportedFunctions.add(SourceSystemFunctions.FROM_UNIXTIME);
+            supportedFunctions.add(SourceSystemFunctions.UNIX_TIMESTAMP);
+        }
         supportedFunctions.add(SourceSystemFunctions.EXP);
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
         supportedFunctions.add(SourceSystemFunctions.HOUR);

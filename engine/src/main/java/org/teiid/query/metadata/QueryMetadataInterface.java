@@ -671,4 +671,6 @@ public interface QueryMetadataInterface {
 	 * @throws QueryMetadataException
 	 */
     Class<?> getDataTypeClass(String typeOrDomainName) throws QueryMetadataException;
+
+    boolean isEnvAllowed();
 }

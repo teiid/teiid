@@ -85,4 +85,9 @@ public class TestVDBKey {
     	new VDBKey("a.1", "1");  //$NON-NLS-1$
     }
     
+    @Test public void testUnicode() {
+        VDBKey key = new VDBKey("你好.1", null); 
+        assertEquals("你好", key.getName());
+    }
+    
 }

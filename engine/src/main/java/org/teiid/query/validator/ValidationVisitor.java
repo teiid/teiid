@@ -33,10 +33,6 @@ import javax.script.Compilable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
-import net.sf.saxon.om.Name11Checker;
-import net.sf.saxon.om.QNameException;
-import net.sf.saxon.trans.XPathException;
-
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -294,7 +290,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	}
 
     public void visit(Function obj) {
-    	if(FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
+        if (!this.getMetadata().isEnvAllowed() && obj.getName().equalsIgnoreCase(FunctionLibrary.ENV)) {
+            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.env_not_allowed", obj, obj.getName()), obj); //$NON-NLS-1$
+        } else if(FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {
 				ResolverUtil.ResolvedLookup resolvedLookup = ResolverUtil.resolveLookup(obj, getMetadata());
 				if(ValidationVisitor.isNonComparable(resolvedLookup.getKeyElement())) {
@@ -311,7 +309,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	            Constant xpathConst = (Constant) obj.getArgs()[1];
                 try {
                     XMLSystemFunctions.validateXpath((String)xpathConst.getValue());
-                } catch(XPathException e) {
+                } catch(TeiidProcessingException e) {
                 	handleValidationError(QueryPlugin.Util.getString("QueryResolver.invalid_xpath", e.getMessage()), obj); //$NON-NLS-1$
                 }
 	        }
@@ -427,26 +425,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         return DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(symbol.getType()));
     }
 
-    private void validateXMLQuery(Query obj) {
-        if(obj.getGroupBy() != null) {
-            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0031"), obj); //$NON-NLS-1$
-        }
-        if(obj.getHaving() != null) {
-            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0032"), obj); //$NON-NLS-1$
-        }
-        if(obj.getLimit() != null) {
-            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.limit_not_valid_for_xml"), obj); //$NON-NLS-1$
-        }
-        if (obj.getOrderBy() != null) {
-        	OrderBy orderBy = obj.getOrderBy();
-        	for (OrderByItem item : orderBy.getOrderByItems()) {
-				if (!(item.getSymbol() instanceof ElementSymbol)) {
-					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.orderby_expression_xml"), obj); //$NON-NLS-1$
-				}
-			}
-         }
-    }
-    
     protected void validateGroupSupportsUpdate(GroupSymbol groupSymbol) {
     	try {
 	    	if(! getMetadata().groupSupports(groupSymbol.getMetadataID(), SupportConstants.Group.UPDATE)) {
@@ -1087,8 +1065,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
 	private String[] validateQName(LanguageObject obj, String name) {
 		try {
-			return Name11Checker.getInstance().getQNameParts(name);
-		} catch (QNameException e) {
+			return XMLSystemFunctions.validateQName(name);
+		} catch (TeiidProcessingException e) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_invalid_qname", name), obj); //$NON-NLS-1$
 		}
 		return null;
@@ -1251,7 +1229,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			if (item.getPrefix() != null) {
 				if (item.getPrefix().equals("xml") || item.getPrefix().equals("xmlns")) { //$NON-NLS-1$ //$NON-NLS-2$
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_reserved"), obj); //$NON-NLS-1$
-				} else if (!Name11Checker.getInstance().isValidNCName(item.getPrefix())) {
+				} else if (!XMLSystemFunctions.isValidNCName(item.getPrefix())) {
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_invalid", item.getPrefix()), obj); //$NON-NLS-1$
 				}
 				if (item.getUri().length() == 0) {

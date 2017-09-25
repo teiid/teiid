@@ -187,7 +187,11 @@ public final class TriggerActionPlanner {
 		DeepPostOrderNavigator.doVisit(select, visitor);
 		values.clear();
 		for (Expression ex : select.getSymbols()) {
-			values.add(SymbolMap.getExpression(ex));
+			try {
+                values.add(QueryRewriter.rewriteExpression(SymbolMap.getExpression(ex), context, metadata));
+            } catch (TeiidProcessingException e) {
+                throw new QueryPlannerException(e);
+            }
 		}
 		return QueryOptimizer.optimizePlan(mapped, metadata, idGenerator, capFinder, analysisRecord, context);
 	}

@@ -559,7 +559,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         Expression expr = SymbolMap.getExpression(symbol);
         
         // Do the normal checks
-        if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(expr, modelID, metadata, capFinder, record, false, inSelectClause)) {
+        if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(expr, modelID, metadata, capFinder, record, false, inSelectClause, false)) {
             return false;
         }
         
@@ -949,7 +949,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     static boolean isSupportedJoinCriteria(SupportedJoinCriteria sjc, Criteria crit, Object accessModelID, 
     		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) 
     throws QueryMetadataException, TeiidComponentException {
-    	if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder, record, true, false) ) { 
+    	if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder, record, true, false, false) ) { 
             return false;                        
         } 
         if (sjc == SupportedJoinCriteria.ANY) {

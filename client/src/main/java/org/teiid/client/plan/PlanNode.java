@@ -254,15 +254,15 @@ public class PlanNode implements Externalizable {
 			   ArrayList<String> values = new ArrayList<String>();
 			   while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
 				   String valueNode = reader.getLocalName();
-				   if (valueNode.equals("value")) {//$NON-NLS-1$
-					   values.add(reader.getElementText());					   
+				   if (values != null && valueNode.equals("value")) {//$NON-NLS-1$
+					   values.add(reader.getElementText());
 				   }
 				   else if (valueNode.equals("node")) {//$NON-NLS-1$
 					   values = null;
 					   Properties nodeProps = getAttributes(reader);
 					   PlanNode childNode = new PlanNode(nodeProps.getProperty("name"));//$NON-NLS-1$
 					   node.addProperty(props.getProperty("name"), buildNode(reader, childNode));//$NON-NLS-1$
-					   break;
+					   continue;
 				   }
 				   else {
 					   throw new XMLStreamException(JDBCPlugin.Util.gs("unexpected_element", reader.getName(), "value"), reader.getLocation());//$NON-NLS-1$ //$NON-NLS-2$

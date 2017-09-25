@@ -37,7 +37,7 @@ import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class TestMetadataValidator {
-	public static final SystemFunctionManager SFM = new SystemFunctionManager();
+	public static final SystemFunctionManager SFM = SystemMetadata.getInstance().getSystemFunctionManager();
 	private VDBMetaData vdb = new VDBMetaData();
 	private MetadataStore store = new MetadataStore();
 	
@@ -128,6 +128,16 @@ public class TestMetadataValidator {
 		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
 		assertTrue(printError(report), report.hasItems());			
 	}
+	
+    @Test
+    public void testInvalidView() throws Exception {
+        String ddl = "create view g1 (e1 integer, e2 varchar(12)) AS select 'a';";
+        buildModel("vm1", false, this.vdb, this.store, ddl);
+        buildTransformationMetadata();
+        ValidatorReport report = new ValidatorReport();
+        new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
+        assertTrue(printError(report), report.hasItems());          
+    }
 	
 	@Test
 	public void testCreateTrigger() throws Exception {

@@ -23,12 +23,21 @@ import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
+import org.teiid.client.util.ResultsFuture;
+import org.teiid.client.util.ResultsFuture.CompletionListener;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.core.crypto.NullCryptor;
@@ -169,7 +178,7 @@ public class TestCommSockets {
 			assertEquals(0, stats.sockets);
 		}
 
-		Properties p = new Properties();
+		Properties p = new Properties(socketConfig);
 		String url = new TeiidURL(addr.getHostName(), listener.getPort(), clientSecure).getAppServerURL();
 		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); 
 		p.setProperty(TeiidURL.CONNECTION.APP_NAME, "test");
@@ -194,6 +203,13 @@ public class TestCommSockets {
 	}
 
 	@Test public void testAnonSSLConnect() throws Exception {
+	    SSLContext context = SSLContext.getDefault();
+	    String[] ciphers = context.getServerSocketFactory().getSupportedCipherSuites();
+	    if (!Arrays.asList(ciphers).contains(SocketUtil.ANON_CIPHER_SUITE)) {
+	        //Cannot test anon if no cipher suite is available
+            return;
+        }
+	    
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
 		config.setEnabledCipherSuites("x"); //ensure that this cipher suite is not used
@@ -341,5 +357,33 @@ public class TestCommSockets {
 		p.setProperty("org.teiid.ssl.checkExpired", "true");
 		helpEstablishConnection(true, config, p);
 	}
+	
+	@Test public void testAutoFailoverPing() throws Exception {
+	    Properties p = new Properties();
+	    p.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, "true");
+	    p.setProperty("org.teiid.sockets.synchronousttl", "20000");
+	    SocketServerConnection conn = helpEstablishConnection(false, new SSLConfiguration(), p);
+	    ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
+	    Future<?> future = exec.submit(new Runnable() {
+            
+            @Override
+            public void run() {
+                final FakeService fs = conn.getService(FakeService.class);
+                ResultsFuture<Integer> f = fs.delayedAsynchResult();
+                f.addCompletionListener(new CompletionListener<Integer>() {
+                    @Override
+                    public void onCompletion(ResultsFuture<Integer> future) {
+                        fs.asynchResult(); //potentially recurrent;
+                    }
+                });
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+	    future.get(19, TimeUnit.SECONDS);
+    }
 	
 }

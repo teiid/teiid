@@ -55,6 +55,8 @@ public class TupleBrowser implements TupleSource {
 
     private boolean readOnly = true;
 
+    private boolean atBound;
+
     /**
      * Construct a value based browser.  The {@link TupleSource} should already be in the
      * proper direction.
@@ -99,6 +101,7 @@ public class TupleBrowser implements TupleSource {
 	private void init(List<Object> lowerBound,
 			List<?> upperBound, boolean isPartialKey)
 			throws TeiidComponentException {
+	    atBound = false;
 		if (lowerBound != null) {
 			lowerBound.addAll(Collections.nCopies(tree.getKeyLength() - lowerBound.size(), null));
 			setPage(lowerBound);
@@ -238,14 +241,12 @@ public class TupleBrowser implements TupleSource {
 					index = values.size() - 1;
 				}
 			}
-			if (index >= 0 && index < values.size()) {
+			if (index >= 0 && index < values.size() && !atBound) {
 				List<?> result = values.get(index);
 				if (page == bound && index == boundIndex) {
-					resetState();
-					page = null; //terminate
-				} else {
-					index+=getOffset();
+					atBound = true;
 				}
+				index+=getOffset();
 				return result;
 			}
 			resetState();
@@ -254,6 +255,9 @@ public class TupleBrowser implements TupleSource {
 			} else {
 				page = page.prev;
 			}
+			if (atBound) {
+                page = null;
+            }
 		}
 	}
 	
@@ -303,8 +307,7 @@ public class TupleBrowser implements TupleSource {
 	    List<?> lowerBound = values.remove(index);
 		//check if the page has been removed
 		if (page != null && page.managedBatch == null && page.values == null) {
-		    //navigate to the current position
-		    setPage(lowerBound);
+		    setPageAfterRemove(lowerBound);
 		}
 		if (index == values.size() && page != null) {
 		    boolean search = false;
@@ -314,10 +317,21 @@ public class TupleBrowser implements TupleSource {
 	            search = page.prev == null;
 	        }
 		    if (search) {
-		        setPage(lowerBound);
+		        setPageAfterRemove(lowerBound);
 		    }
 		}
 	}
+
+    private void setPageAfterRemove(List<?> lowerBound)
+            throws TeiidComponentException, AssertionError {
+        //navigate to the current position
+        if (!setPage(lowerBound)) {
+            throw new AssertionError("Expected lowerBound to still exist"); //$NON-NLS-1$
+        }
+        //remove the tuple from the iteration set, it will be removed from the tree by
+        //an external call
+        values.remove(index);
+    }
 	
 	@Override
 	public void closeSource() {
@@ -338,6 +352,17 @@ public class TupleBrowser implements TupleSource {
             //so that the tree can rebalance
             this.values = new LightWeightCopyOnWriteList<List<?>>(values);
         }
+    }
+    
+    /**
+     * For testing
+     * @return
+     */
+    Integer getValueCount() {
+        if (values == null) {
+            return null;
+        }
+        return values.size();
     }
     
 }

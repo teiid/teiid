@@ -1422,32 +1422,12 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("concat2('a', pm1.g1.e1) = 'xyz'", "concat2('a', pm1.g1.e1) = 'xyz'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testRewriteFromUnixTime() throws Exception {
-    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
-    	try {
-    		helpTestRewriteCriteria("from_unixtime(pm1.g1.e2) = '1992-12-01 07:00:00'", "from_unixtime(pm1.g1.e2) = {ts'1992-12-01 07:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
-    	} finally {
-    		TimestampWithTimezone.resetCalendar(null);
-    	}
-    }
-    
-    @Test
-    public void testRewriteFromUnixTime_1() throws Exception {
-        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
-        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
-        try {
-            helpTestRewriteExpression("from_unixtime(pm1.g1.e2)", "from_unixtime(pm1.g1.e2)", metadata); //$NON-NLS-1$ //$NON-NLS-2$
-        } finally {
-            TimestampWithTimezone.resetCalendar(null);
-        }
-    }
-    
     @Test
     public void testRewriteFromUnixTime_2() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
         try {
-            helpTestRewriteExpression("from_unixtime(1500000000)", "{ts'2017-07-13 20:40:00.0'}", metadata); //$NON-NLS-1$ //$NON-NLS-2$
+            helpTestRewriteExpression("from_unixtime(1500000000)", "'2017-07-13 20:40:00'", metadata); //$NON-NLS-1$ //$NON-NLS-2$
         } finally {
             TimestampWithTimezone.resetCalendar(null);
         }
@@ -1645,6 +1625,15 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria("pm1.g1.e3", "pm1.g1.e3 = true");
     }
     
+    @Test public void testRewriteExpressionCriteriaBooleanLiterals() {
+        helpTestRewriteCriteria("not(true)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(true)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(false)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(false)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(unknown)", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(unknown)", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     @Test public void testRewritePredicateOptimization() throws Exception {
     	helpTestRewriteCriteria("pm1.g1.e2 in (1, 2, 3) and pm1.g1.e2 in (2, 3, 4)", "pm1.g1.e2 in (2, 3)");
     }
@@ -1819,7 +1808,7 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteSubstringNegativeIndex() throws TeiidComponentException, TeiidProcessingException {
-        helpTestRewriteExpression("substring(pm1.g1.e1, -1, 5)", "null", RealMetadataFactory.example1Cached());
+        helpTestRewriteExpression("substring(pm1.g1.e1, -1, 5)", "substring(pm1.g1.e1, -1, 5)", RealMetadataFactory.example1Cached());
     }
 
 }

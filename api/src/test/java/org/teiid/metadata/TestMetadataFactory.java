@@ -70,6 +70,22 @@ public class TestMetadataFactory {
         assertEquals("a_b", c.getName());
     }
 	
+	@Test public void testDuplicateColumns() {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("foo");
+        mmd.addProperty("importer.renameDuplicateColumns", "true");
+        HashMap<String, Datatype> types = new HashMap<String, Datatype>();
+        Datatype value = new Datatype();
+        value.setName("string");
+        types.put("string", value);
+        MetadataFactory factory = new MetadataFactory("x", 1, types, mmd);
+        Table x = factory.addTable("x");
+        Column c = factory.addColumn("a_b", "string", x);
+        assertEquals("a_b", c.getName());
+        c = factory.addColumn("a_B", "string", x);
+        assertEquals("a_B_1", c.getName());
+    }
+	
 	public static boolean someFunction() {
 		return true;
 	}

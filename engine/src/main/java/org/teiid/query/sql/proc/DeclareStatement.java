@@ -106,10 +106,10 @@ public class DeclareStatement extends AssignmentStatement {
 	 * @return Deep clone 
 	 */
 	public Object clone() {		
-        if (getValue() == null) {
+        if (getExpression() == null) {
             return new DeclareStatement(this.getVariable().clone(), this.varType);
         }
-        return new DeclareStatement(this.getVariable().clone(), this.varType, (Expression)getValue().clone());
+        return new DeclareStatement(this.getVariable().clone(), this.varType, (Expression)getExpression().clone());
 	}
 	
     /**

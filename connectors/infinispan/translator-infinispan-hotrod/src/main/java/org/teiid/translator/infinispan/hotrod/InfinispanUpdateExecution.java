@@ -158,8 +158,9 @@ public class InfinispanUpdateExecution implements UpdateExecution {
                     @Override
                     public void run(Object row) throws TranslatorException {
                         InfinispanDocument previous = (InfinispanDocument)row;
+                        Object key = previous.getProperties().get(PK);
                         int count = previous.merge(visitor.getInsertPayload());
-                        cache.replace(previous.getProperties().get(PK), previous);
+                        cache.replace(key, previous);
                         updateCount = updateCount + count;
                     }
                 }, this.executionContext.getBatchSize());
@@ -206,10 +207,12 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				insertRow(cache, visitor.getIdentity(), visitor.getInsertPayload(), upsert);
 				this.updateCount++;			    
 			} else {
+				
 				boolean putAll = false;
-				if (cache.isEmpty()) {
-					putAll = true;
+				if (this.executionContext.getSourceHint() != null) {
+					putAll = this.executionContext.getSourceHint().indexOf("use-putall") != -1; 
 				}
+				
 				// bulk insert
 				int batchSize = this.executionContext.getBatchSize();
 				Iterator<? extends List<Expression>> args = (Iterator<? extends List<Expression>>) insert
@@ -240,7 +243,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			throw new TranslatorException(
 					InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25005, previous.getName(), rowKey));
 		}
-		if (upsert) {
+		if (upsert && previous != null) {
 			previous.merge(row);
 			previous = (InfinispanDocument) cache.replace(rowKey, previous);
 		} else {

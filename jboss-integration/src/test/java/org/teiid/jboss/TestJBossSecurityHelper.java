@@ -26,8 +26,6 @@ import java.util.Properties;
 
 import javax.security.auth.Subject;
 
-import junit.framework.TestCase;
-
 import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.jboss.security.AuthenticationManager;
 import org.jboss.security.SimplePrincipal;
@@ -42,6 +40,8 @@ import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.vdb.runtime.VDBKey;
+
+import junit.framework.TestCase;
 
 @SuppressWarnings("nls")
 public class TestJBossSecurityHelper extends TestCase {
@@ -79,9 +79,6 @@ public class TestJBossSecurityHelper extends TestCase {
     	Credentials credentials = new Credentials("pass1".toCharArray());
 
     	String domains = "testFile";
-        final SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
-        
-    	JBossSecurityHelper ms = buildSecurityHelper(domains, securityContext);
         
         AuthenticationManager authManager = new AuthenticationManager() {
 			public String getSecurityDomain() {
@@ -105,8 +102,9 @@ public class TestJBossSecurityHelper extends TestCase {
             public void logout(Principal arg0, Subject arg1) {
             }
 		};
+        final SecurityDomainContext securityContext = new SecurityDomainContext(authManager, null, null, null, null, null);
         
-        Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
+    	JBossSecurityHelper ms = buildSecurityHelper(domains, securityContext);
         
         Object c = ms.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$ 
         assertTrue(c instanceof JBossSecurityContext); //$NON-NLS-1$
@@ -116,14 +114,12 @@ public class TestJBossSecurityHelper extends TestCase {
 	public void validateSession(boolean securityEnabled) throws Exception {
 		final ArrayList<String> domains = new ArrayList<String>();
 		domains.add("somedomain");				
-	
-        final SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
-        
+	        
         AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
         Mockito.stub(authManager.isValid(new SimplePrincipal("steve"), "pass1", new Subject())).toReturn(true);
         
-        Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
-		
+        final SecurityDomainContext securityContext = new SecurityDomainContext(authManager, null, null, null, null, null);
+        
         SessionServiceImpl jss = new SessionServiceImpl() {
         	@Override
         	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion)

@@ -41,6 +41,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
@@ -71,7 +72,8 @@ import org.teiid.util.Version;
 @Translator(name="postgresql", description="A translator for postgreSQL Database")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
-	private static final String INTEGER_TYPE = "integer"; //$NON-NLS-1$
+	private static final String UUID_TYPE = "uuid"; //$NON-NLS-1$
+    private static final String INTEGER_TYPE = "integer"; //$NON-NLS-1$
 
 	private static final class NonIntegralNumberToBoolean extends
 			FunctionModifier {
@@ -164,7 +166,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
                 if (!(index instanceof Literal)) {
                     parts.add("case sign("); //$NON-NLS-1$
                     parts.add(index);
-                    parts.add(") when -1 then cast(null as int4) when 0 then 1 else "); //$NON-NLS-1$
+                    parts.add(") when -1 then length("); //$NON-NLS-1$
+                    parts.add(function.getParameters().get(0));
+                    parts.add(") + 1 + "); //$NON-NLS-1$
+                    parts.add(index);
+                    parts.add(" when 0 then 1 else "); //$NON-NLS-1$
                     parts.add(index);
                     parts.add(" end"); //$NON-NLS-1$
                 } else {
@@ -882,10 +888,23 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	    			}
 	    			if (castType != null) {
 	    				obj.setExpression(getLanguageFactory().createFunction("cast", //$NON-NLS-1$ 
-	    						new Expression[] {obj.getExpression(),  getLanguageFactory().createLiteral(castType, TypeFacility.RUNTIME_TYPES.STRING)}, //$NON-NLS-1$
+	    						new Expression[] {obj.getExpression(),  getLanguageFactory().createLiteral(castType, TypeFacility.RUNTIME_TYPES.STRING)},
 	    						TypeFacility.RUNTIME_TYPES.STRING));
 	    			}
-    			}
+    			} else if (obj.isProjected() && obj.getExpression() instanceof ColumnReference) {
+                    ColumnReference elem = (ColumnReference)obj.getExpression();
+                    if (elem.getMetadataObject() != null) {
+                        String nativeType = elem.getMetadataObject().getNativeType();
+                        if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType())
+                                && elem.getMetadataObject() != null
+                                && nativeType != null
+                                && nativeType.equalsIgnoreCase(UUID_TYPE)) { 
+                            obj.setExpression(getLanguageFactory().createFunction("cast", //$NON-NLS-1$ 
+                                    new Expression[] {obj.getExpression(),  getLanguageFactory().createLiteral("varchar", TypeFacility.RUNTIME_TYPES.STRING)}, //$NON-NLS-1$
+                                    TypeFacility.RUNTIME_TYPES.STRING));
+                        }
+                    }
+                }
     			super.visit(obj);
     		}
     	};
@@ -918,7 +937,22 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
             	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
                     return TypeFacility.RUNTIME_NAMES.GEOMETRY;
                 }                
+            	if (UUID_TYPE.equalsIgnoreCase(typeName)) { 
+            	    return TypeFacility.RUNTIME_NAMES.STRING;
+            	}
                 return super.getRuntimeType(type, typeName, precision);                    
+            }
+            
+            @Override
+            protected Column addColumn(ResultSet columns, Table table,
+                    MetadataFactory metadataFactory, int rsColumns)
+                    throws SQLException {
+                Column result = super.addColumn(columns, table, metadataFactory, rsColumns);
+                if (UUID_TYPE.equalsIgnoreCase(result.getNativeType())) { 
+                    result.setLength(36); //pg reports max int
+                    result.setCaseSensitive(false);
+                }
+                return result;
             }
             
             @Override

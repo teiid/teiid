@@ -40,6 +40,7 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataID.Type;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.command.InsertResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -265,6 +266,12 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		    if (type == Command.TYPE_UPDATE || type == Command.TYPE_INSERT) {
 		    	ProcedureContainerResolver.addChanging(tma.getMetadataStore(), externalGroups, viewElements);
 		    	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.NEW, tma.getMetadataStore(), externalGroups, viewElements, false);
+	            if (type == Command.TYPE_INSERT) {
+                    List<ElementSymbol> key = InsertResolver.getAutoIncrementKey(ta.getView().getMetadataID(), viewElements, metadata);
+                    if (key != null) {
+                        ProcedureContainerResolver.addScalarGroup(SQLConstants.NonReserved.KEY, tma.getMetadataStore(), externalGroups, key, true);
+                    }
+                }
 		    }
 		    if (type == Command.TYPE_UPDATE || type == Command.TYPE_DELETE) {
 		    	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements, false);

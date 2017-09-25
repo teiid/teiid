@@ -32,32 +32,24 @@ import org.teiid.query.validator.ValidatorReport;
 public class SystemFunctionManager {
 
 	private FunctionTree systemFunctionTree;
-	private boolean allowEnvFunction = true;
-	private ClassLoader classLoader;
 	private Map<String, Datatype> types;
-	
-	public SystemFunctionManager() {
-	}
 	
 	public SystemFunctionManager(Map<String, Datatype> typeMap) {
 		this.types = typeMap;
+		// Create the system source and add it to the source list
+        SystemSource systemSource = new SystemSource();
+        // Validate the system source - should never fail
+        ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
+        Collection<FunctionMethod> functionMethods = systemSource.getFunctionMethods();
+        FunctionMetadataValidator.validateFunctionMethods(functionMethods,report, types);
+        if(report.hasItems()) {
+            // Should never happen as SystemSourcTe doesn't change
+            System.err.println(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
+        }
+        systemFunctionTree = new FunctionTree(CoreConstants.SYSTEM_MODEL, systemSource, true);
 	}
 	
 	public FunctionTree getSystemFunctions() {
-    	if(systemFunctionTree == null) { 
-	    	// Create the system source and add it to the source list
-	    	SystemSource systemSource = new SystemSource(this.allowEnvFunction);
-	    	systemSource.setClassLoader(classLoader);
-			// Validate the system source - should never fail
-	    	ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
-	        Collection<FunctionMethod> functionMethods = systemSource.getFunctionMethods();
-	    	FunctionMetadataValidator.validateFunctionMethods(functionMethods,report, types);
-			if(report.hasItems()) {
-			    // Should never happen as SystemSourcTe doesn't change
-			    System.err.println(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
-			}
-			systemFunctionTree = new FunctionTree(CoreConstants.SYSTEM_MODEL, systemSource, true);
-    	}
     	return systemFunctionTree;
     }
     
@@ -65,19 +57,4 @@ public class SystemFunctionManager {
     	return new FunctionLibrary(getSystemFunctions());
     }
     
-    public boolean isAllowEnvFunction() {
-		return allowEnvFunction;
-	}
-
-	public void setAllowEnvFunction(boolean allowEnvFunction) {
-		this.allowEnvFunction = allowEnvFunction;
-	}    
-	
-    public ClassLoader getClassLoader() {
-    	return this.classLoader;
-    }
-    
-    public void setClassloader(ClassLoader classloader) {
-    	this.classLoader = classloader;
-    }	
 }

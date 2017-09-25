@@ -87,22 +87,6 @@ public class AssignmentStatement extends Statement implements ExpressionStatemen
 		this.command = command;
 	}
  
-    /**
-     * @see #getExpression()
-     */
-    @Deprecated
-    public Expression getValue() {
-		return value;
-	}
-
-    /**
-     * @see #setExpression(Expression)
-     */
-    @Deprecated
-    public void setValue(Expression value) {
-		this.value = value;
-	}
-
     public Expression getExpression() {
     	return this.value;
     }
