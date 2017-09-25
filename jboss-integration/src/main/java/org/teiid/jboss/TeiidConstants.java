@@ -497,9 +497,16 @@ public class TeiidConstants {
          .setAllowExpression(true)
          .setAllowNull(true)
          .setRequires(Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE.getModelName())
-         .addAccessConstraint(SensitiveTargetAccessConstraintDefinition.CREDENTIAL)
-         .addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)
-         .build();	
+         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.CREDENTIAL)
+         .addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
+         .build();
+	
+	public static SimpleAttributeDefinition SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+	    .setXmlName(Element.SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE.getXMLName())
+	    .setAllowExpression(false)
+	    .setAllowNull(true)
+	    .setDefaultValue(new ModelNode(false))
+	    .build();	
 
 	// Translator
 	// TRANSLATOR_ELEMENT("translator"),

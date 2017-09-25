@@ -21,34 +21,8 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.SSL_AUTH_MODE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_ALIAS_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_PASSWORD_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_TYPE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_MODE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_SSL_PROTOCOL_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_TRUSTSTORE_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_PROTOCOL_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_SOCKET_BINDING_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.asInt;
-import static org.teiid.jboss.TeiidConstants.asLong;
-import static org.teiid.jboss.TeiidConstants.asString;
-import static org.teiid.jboss.TeiidConstants.isDefined;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.teiid.jboss.TeiidConstants.*;
 
 import java.util.List;
 
@@ -110,7 +84,8 @@ class TransportAdd extends AbstractAddStepHandler {
 		TeiidConstants.SSL_TRUSTSTORE_NAME_ATTRIBUTE,
 		TeiidConstants.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE,
 		TeiidConstants.SSL_KETSTORE_ALIAS_ATTRIBUTE,
-		TeiidConstants.SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE
+		TeiidConstants.SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE,
+		TeiidConstants.SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE
 	};
 	
 	@Override
@@ -281,6 +256,9 @@ class TransportAdd extends AbstractAddStepHandler {
     	}
     	if (isDefined(SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE, node, context)) {
     		ssl.setTruststorePassword(asString(SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE, node, context));
+    	}
+    	if (isDefined(SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE, node, context)) {
+    		ssl.setTruststoreCheckExpired(asBoolean(SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE, node, context));
     	}
 		socket.setSSLConfiguration(ssl);
 		return socket;

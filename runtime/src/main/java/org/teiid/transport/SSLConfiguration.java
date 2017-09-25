@@ -62,6 +62,7 @@ public class SSLConfiguration {
     private String[] enabledCipherSuites;
     private String keyAlias; 
     private String keyPassword;
+    private boolean truststoreCheckExpired;
 
 	public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
         if (!isSslEnabled()) {
@@ -83,7 +84,8 @@ public class SSLConfiguration {
                                     sslProtocol,
                                     keyAlias,
                                     keyPassword,
-                                    false);
+                                    false,
+                                    truststoreCheckExpired);
         } 
 
         SSLEngine result = context.createSSLEngine();
@@ -168,5 +170,13 @@ public class SSLConfiguration {
 	
 	public void setKeystoreKeyPassword(String keyPassword) {
 		this.keyPassword = keyPassword;
+	}
+	
+	public boolean isTruststoreCheckExpired() {
+		return truststoreCheckExpired;
+	}
+	
+	public void setTruststoreCheckExpired(boolean checkExpired) {
+		this.truststoreCheckExpired = checkExpired;
 	}
 }

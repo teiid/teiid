@@ -355,6 +355,11 @@
                                         <xs:documentation>Truststore Password</xs:documentation>
                                     </xs:annotation>                    
                                 </xs:attribute>
+                                <xs:attribute name="check-expired" type="xs:boolean">
+                                    <xs:annotation>
+                                        <xs:documentation>Check for valid certificate dates.</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>
                             </xs:complexType>                        
                         </xs:element>                                                
                     </xs:sequence>

@@ -36,6 +36,7 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -66,6 +67,7 @@ public class SocketUtil {
     static final String KEYSTORE_ALIAS = "org.teiid.ssl.keyAlias"; //$NON-NLS-1$
     static final String KEY_PASSWORD = "org.teiid.ssl.keyPassword"; //$NON-NLS-1$
     static final String TRUST_ALL = "org.teiid.ssl.trustAll"; //$NON-NLS-1$
+    static final String CHECK_EXPIRED = "org.teiid.ssl.checkExpired"; //$NON-NLS-1$
     
     static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
     
@@ -125,6 +127,7 @@ public class SocketUtil {
         
         boolean anon = PropertiesUtils.getBooleanProperty(props, ALLOW_ANON, true);
         boolean trustAll = PropertiesUtils.getBooleanProperty(props, TRUST_ALL, false);
+        boolean checkExpired = PropertiesUtils.getBooleanProperty(props, CHECK_EXPIRED, false);
         
         SSLContext result = null;
         // 1) keystore != null = 2 way SSL (can define a separate truststore too)
@@ -132,8 +135,8 @@ public class SocketUtil {
         //    client like a appserver have to define multiple certs without importing 
         //    all the certificates into one single certificate
         // 3) else = javax properties; this is default way to define the SSL anywhere.
-        if (keystore != null || truststore != null || trustAll) {
-        	result = getSSLContext(keystore, keystorePassword, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol, keyAlias, keyPassword, trustAll);
+        if (keystore != null || truststore != null || trustAll || checkExpired) {
+        	result = getSSLContext(keystore, keystorePassword, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol, keyAlias, keyPassword, trustAll, checkExpired);
         } else {
         	result = SSLContext.getDefault();
         }
@@ -158,7 +161,7 @@ public class SocketUtil {
     }
 
     public static SSLContext getAnonSSLContext() throws IOException, GeneralSecurityException {
-        return getSSLContext(null, null, null, null, null, null, DEFAULT_PROTOCOL, null, null, false);
+        return getSSLContext(null, null, null, null, null, null, DEFAULT_PROTOCOL, null, null, false, false);
     }
     
     public static SSLContext getSSLContext(String keystore,
@@ -170,7 +173,8 @@ public class SocketUtil {
                                             String protocol,
                                             String keyAlias, 
                                             String keyPassword,
-                                            boolean trustAll) throws IOException, GeneralSecurityException {
+                                            boolean trustAll,
+                                            boolean checkExpired) throws IOException, GeneralSecurityException {
         
     	if (algorithm == null) {
     		algorithm = KeyManagerFactory.getDefaultAlgorithm();
@@ -207,12 +211,18 @@ public class SocketUtil {
         TrustManager[] trustManagers = null;
         if (trustAll) {
         	trustManagers = TRUST_ALL_MANAGER;
-        } else if (truststore != null) {
-            KeyStore ks = loadKeyStore(truststore, truststorePassword, keystoreType);
-            if (ks != null) {
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
-                tmf.init(ks);
-                trustManagers = tmf.getTrustManagers();
+        } else {
+        	if (truststore != null) {
+	            KeyStore ks = loadKeyStore(truststore, truststorePassword, keystoreType);
+	            if (ks != null) {
+	                TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+	                tmf.init(ks);
+	                trustManagers = tmf.getTrustManagers();
+	            }
+        	}
+        	
+            if (checkExpired) {
+            	trustManagers = getCheckExpiredTrustManager(algorithm, trustManagers);
             }
         } 
 
@@ -221,6 +231,53 @@ public class SocketUtil {
         sslc.init(keyManagers, trustManagers, null);
         return sslc;
     }
+
+	private static TrustManager[] getCheckExpiredTrustManager(String algorithm,
+			TrustManager[] trustManagers) throws NoSuchAlgorithmException,
+			KeyStoreException {
+		if (trustManagers == null) {
+			//use the default
+			TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+			tmf.init((KeyStore)null);
+		    trustManagers = tmf.getTrustManagers();
+		}
+		//this should always be the case, but we'll check
+		if (trustManagers.length > 0 && trustManagers[0] instanceof X509TrustManager) {
+			final X509TrustManager tm = (X509TrustManager)trustManagers[0];
+			trustManagers[0] = new X509TrustManager() {
+				
+				@Override
+				public X509Certificate[] getAcceptedIssuers() {
+					return tm.getAcceptedIssuers();
+				}
+				
+				@Override
+				public void checkServerTrusted(X509Certificate[] chain, String authType)
+						throws CertificateException {
+					tm.checkServerTrusted(chain, authType);
+					Date date = new Date();
+					for (X509Certificate cert : chain) {
+						if (cert.getNotBefore().after(date) || cert.getNotAfter().before(date)) {
+							throw new CertificateException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20038));
+						}
+					}
+				}
+				
+				@Override
+				public void checkClientTrusted(X509Certificate[] chain, String authType)
+						throws CertificateException {
+					tm.checkClientTrusted(chain, authType);
+					Date date = new Date();
+					for (X509Certificate cert : chain) {
+						if (cert.getNotBefore().after(date) || cert.getNotAfter().before(date)) {
+							throw new CertificateException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20038));
+						}
+					}
+				}
+			};
+		}
+		return trustManagers;
+	}
     
     /**
      * Load any defined keystore file, by first looking in the classpath

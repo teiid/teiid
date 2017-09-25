@@ -120,6 +120,7 @@ enum Element {
 	SSL_TRUSTSTORE_ELEMENT("truststore"),
 	SSL_TRUSTSTORE_NAME_ATTRIBUTE("name", "truststore-name"),
 	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password"),	
+	SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE("check-expired", "truststore-check-expired"),
 
 	// Translator
     TRANSLATOR_ELEMENT("translator"),
