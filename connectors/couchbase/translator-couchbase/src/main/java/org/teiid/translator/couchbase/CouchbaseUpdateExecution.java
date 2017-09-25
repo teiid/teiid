@@ -53,14 +53,14 @@ public class CouchbaseUpdateExecution extends CouchbaseExecution implements Upda
             for(String n1ql : visitor.getBulkCommands()) {
                 results = executeDirect(n1ql);
                 if(results != null) {
-                    count += results.allRows().size();
+                    count += results.info().mutationCount();
                 }
             }
             
         } else {
             results = executeDirect(visitor.toString());
             if(results != null) {
-                count = results.allRows().size();
+                count = results.info().mutationCount();
             }
         } 
         
