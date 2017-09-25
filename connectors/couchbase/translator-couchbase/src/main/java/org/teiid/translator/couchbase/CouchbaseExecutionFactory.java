@@ -443,5 +443,10 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     public boolean supportsSearchedCaseExpressions() {
         return true;
     }
+    
+    @Override
+    public boolean returnsSingleUpdateCount() {
+        return true;
+    }
 
 }
