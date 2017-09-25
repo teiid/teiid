@@ -48,6 +48,7 @@ import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.TestUpdateValidator;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**
@@ -109,6 +110,7 @@ public class TestPreparedStatementBatchedUpdate {
 		// Source capabilities must support batched updates
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
         caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
@@ -128,6 +130,42 @@ public class TestPreparedStatementBatchedUpdate {
     	assertEquals(0, p.getValueIndex());
     	assertEquals(Arrays.asList(3), insert.getParameterValues().next());
     	assertTrue(insert.getParameterValues().hasNext());
+    }
+    
+    /**
+     * Test batch handling when a function cannot be pushed
+     */
+    @Test public void testBatchedUpdatePushdown2() throws Exception {
+        //TODO: just use straight ddl
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String preparedSql = "insert into pm1.g1 (e1) values (? + 1)"; //$NON-NLS-1$
+        
+        // Create a testable prepared plan cache
+        SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
+        
+        // Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        dataManager.addData("INSERT INTO g1 (e1) VALUES ('4')", Arrays.asList(1));
+        dataManager.addData("INSERT INTO g1 (e1) VALUES ('6')", Arrays.asList(1));
+        // Source capabilities must support batched updates
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, false);
+        caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        // batch with two commands
+        ArrayList<ArrayList<Object>> values = new ArrayList<ArrayList<Object>>(2);
+        values.add(new ArrayList<Object>(Arrays.asList(3)));  //$NON-NLS-1$
+        values.add(new ArrayList<Object>(Arrays.asList(5)));
+        
+        List<?>[] expected = new List[] { 
+                Arrays.asList(1), Arrays.asList(1)
+        };
+        
+        // Create the plan and process the query
+        TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
     }
     
     @Test public void testBatchedUpdateNotPushdown() throws Exception {
