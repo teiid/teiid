@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -40,6 +41,7 @@ import javax.security.auth.login.LoginException;
 import org.jboss.security.SimpleGroup;
 import org.jboss.security.SimplePrincipal;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -219,6 +221,10 @@ public class TestDDLMetadataStore {
         String expected = ObjectConverterUtil
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "first-vdb.xml"));
         assertEquals(expected, new String(out.toByteArray()));
+        
+        String exportedDdl = admin.getSchema("empty", "2", null, null, null);
+		Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("first-vdb.ddl")),
+				exportedDdl);        
     }
     
     @Test
