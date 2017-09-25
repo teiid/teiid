@@ -30,7 +30,6 @@ import org.teiid.metadata.*;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.parser.OptionsUtil;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -53,7 +52,6 @@ public abstract class DatabaseStore {
     private boolean strict;
    
     public abstract Map<String, Datatype> getRuntimeTypes();
-    public abstract SystemFunctionManager getSystemFunctionManager();
     
     public void startEditing(boolean persist) {
         if (this.persist) {
@@ -439,7 +437,17 @@ public abstract class DatabaseStore {
         assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
         
         verifyTableExists(table.getName());
-    }    
+    }  
+    
+    public void modifyTableName(Table table, String newName) {
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
+        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        
+        verifyTableExists(table.getName());
+        table.setName(newName);
+    }     
     
     public void tableDropped(String tableName) {
         if (!assertInEditMode(Mode.SCHEMA)) {

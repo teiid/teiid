@@ -43,3 +43,39 @@ message G4 {
    required int32 e1 = 1;
    required string e2 = 2;
 }
+
+/* @Indexed */
+message G5 {
+    /*@Id*/
+    required int32 e1 = 1;
+    required string e2 = 2;
+    optional double e3 = 3;
+    optional float e4 = 4;
+    /* @Teiid(type=short) */
+    optional int32 e5 = 5;
+    /* @Teiid(type=byte) */
+    optional int32 e6 = 6;
+    /* @Teiid(type=char, length=1) */
+    optional string e7 = 7;
+    optional int64 e8 = 8;
+    /* @Teiid(type=bigdecimal) */
+    optional string e9 = 9;
+    /* @Teiid(type=biginteger) */
+    optional string e10 = 10;
+    /* @Teiid(type=time) */
+    optional int64 e11 = 11;
+    /* @Teiid(type=timestamp) */
+    optional int64 e12 = 12;
+    /* @Teiid(type=date) */
+    optional int64 e13 = 13;
+    /* @Teiid(type=object) */
+    optional bytes e14 = 14;
+    /* @Teiid(type=blob) */
+    optional bytes e15 = 15;
+    /* @Teiid(type=clob) */
+    optional bytes e16 = 16;
+    /* @Teiid(type=xml) */
+    optional bytes e17 = 17;
+    /* @Teiid(type=geometry) */
+    optional bytes e18 = 18;
+}

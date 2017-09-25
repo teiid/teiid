@@ -111,10 +111,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     private OperationParameterValueProvider parameters;
         
     class URLParseService {
-        public Query parse(String rawPath) throws TeiidException {
+        public Query parse(String rawPath, String baseUri) throws TeiidException {
             try {
                 rawPath = rawPath.replace("$root", "");
-                UriInfo uriInfo = new Parser(serviceMetadata.getEdm(), odata).parseUri(rawPath, null, null);                
+                UriInfo uriInfo = new Parser(serviceMetadata.getEdm(), odata).parseUri(rawPath, null, null, baseUri);                
                 ODataSQLBuilder visitor = new ODataSQLBuilder(odata, metadata,
                         prepared, aliasedGroups, baseURI, serviceMetadata,
                         nameGenerator) {
@@ -898,7 +898,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         } else {
           rawPath = rawPath.substring(e+path.length());
         }
-        return new Parser(serviceMetadata.getEdm(), odata).parseUri(rawPath, uri.getQuery(), null);           
+        return new Parser(serviceMetadata.getEdm(), odata).parseUri(rawPath, uri.getQuery(), null, baseUri);           
     }
     
     @Override

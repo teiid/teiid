@@ -213,7 +213,11 @@ public class SocketServerConnection implements ServerConnection {
 		String address = addr.getHostAddress();
 		Object old = connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, address);
 		if (old == null || !address.equals(old)) {
-			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
+		    if (addr.isLoopbackAddress()) {
+		        connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
+		    } else {
+		        connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, "localhost"); //$NON-NLS-1$
+		    }
 			if (setMac) {
 				try {
 					NetworkInterface ni = NetworkInterface.getByInetAddress(addr);

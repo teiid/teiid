@@ -831,11 +831,9 @@ public class RelationalPlanner {
                     appliedHint = applyHint(nodes, groupName, hintProperty, val);
                 }
                 
-                if(! appliedHint) {
-                	String msg = QueryPlugin.Util.getString("ERR.015.004.0010", groupName); //$NON-NLS-1$
-                	if (this.analysisRecord.recordAnnotations()) {
-                		this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, msg, "ignoring hint", Priority.MEDIUM)); //$NON-NLS-1$
-                	}
+                if(! appliedHint && this.analysisRecord.recordAnnotations()) {
+            	    String msg = QueryPlugin.Util.getString("ERR.015.004.0010", groupName); //$NON-NLS-1$
+                    this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, msg, "ignoring hint", Priority.MEDIUM)); //$NON-NLS-1$
                 }
             }
         }
@@ -865,22 +863,23 @@ public class RelationalPlanner {
 		boolean found = true;
 		for (int i = 0; i < nameParts.size() && found; i++) {
 			String part = nameParts.get(i);
-			List<PlanNode> targets = NodeEditor.findAllNodes(root.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE);
 			boolean leaf = i == nameParts.size() - 1;
 			found = false;
-			for (PlanNode planNode : targets) {
-				if (part.equalsIgnoreCase(planNode.getGroups().iterator().next().getShortName())) {
-					if (leaf) {
-						planNode.setProperty(hintProperty, value);
-		                return true;
-					} else if (planNode.getChildren().isEmpty()) {
-						return false;
-					}
-					root = planNode;
-					found = true;
-					break;
-				}
-			}
+			for (PlanNode child : root.getChildren()) {
+    			for (PlanNode planNode : NodeEditor.findAllNodes(child, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE)) {
+    				if (part.equalsIgnoreCase(planNode.getGroups().iterator().next().getShortName())) {
+    					if (leaf) {
+    						planNode.setProperty(hintProperty, value);
+    		                return true;
+    					} else if (planNode.getChildren().isEmpty()) {
+    						return false;
+    					}
+    					root = planNode;
+    					found = true;
+    					break;
+    				}
+    			}
+		    }
 		}
 		return false;
 	}
@@ -938,6 +937,7 @@ public class RelationalPlanner {
         if(hints.hasJoin) {
             rules.push(RuleConstants.CLEAN_CRITERIA);
             rules.push(RuleConstants.COPY_CRITERIA);
+            rules.push(RuleConstants.PLAN_OUTER_JOINS);
         }
         rules.push(RuleConstants.RAISE_ACCESS);
         if (hints.hasFunctionBasedColumns) {

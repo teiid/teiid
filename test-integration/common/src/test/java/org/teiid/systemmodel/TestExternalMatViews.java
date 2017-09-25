@@ -753,6 +753,14 @@ public class TestExternalMatViews {
         rs.next();
         assertEquals(4, rs.getInt(1));
         
+        //check that not specifying the pk doesn't update the mat view
+        //TODO: this may be addressed in some cases eventually
+        hcef.addUpdate("INSERT INTO physicalTbl (col1) VALUES ('continent')", new int[] {1});
+        s.execute("insert into v1 (col1) values ('continent')");
+        rs = s.executeQuery("select count(*) from v1");
+        rs.next();
+        assertEquals(4, rs.getInt(1));
+        
         hcef.addUpdate("DELETE FROM physicalTbl WHERE physicalTbl.col1 = 'continent'", new int[] {1});
         s.execute("delete from v1 where v1.col1 = 'continent'");
         assertEquals(1, s.getUpdateCount());

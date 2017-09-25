@@ -40,10 +40,13 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.Transform;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
@@ -61,6 +64,7 @@ import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.resolver.command.InsertResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
@@ -102,13 +106,9 @@ public class QueryRewriter {
     private static final String WRITE_THROUGH = "write-through"; //$NON-NLS-1$
     
     private static final Constant ZERO_CONSTANT = new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER);
-	public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
-    public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, ZERO_CONSTANT) {
-    	public void setOptional(Boolean isOptional) {};
-    };
-    public static final CompareCriteria UNKNOWN_CRITERIA = new CompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING)) {
-    	public void setOptional(Boolean isOptional) {};
-    };
+	public static final CompareCriteria TRUE_CRITERIA = new ImmutableCompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
+    public static final CompareCriteria FALSE_CRITERIA = new ImmutableCompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, ZERO_CONSTANT);
+    public static final CompareCriteria UNKNOWN_CRITERIA = new ImmutableCompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING));
     
     private static final Map<String, String> ALIASED_FUNCTIONS = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     private static final Set<String> PARSE_FORMAT_TYPES = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
@@ -1344,21 +1344,6 @@ public class QueryRewriter {
         	//reduce to only negation of predicates, so that the null/unknown handling criteria is applied appropriately
     		return rewriteCriteria(Criteria.applyDemorgan(innerCrit));
         } 
-        if (innerCrit instanceof Negatable) {
-        	((Negatable) innerCrit).negate();
-        	return rewriteCriteria(innerCrit);
-        }
-        if (innerCrit instanceof NotCriteria) {
-        	return rewriteCriteria(((NotCriteria)innerCrit).getCriteria());
-        }
-        innerCrit = rewriteCriteria(innerCrit);
-        if (innerCrit instanceof Negatable) {
-        	((Negatable) innerCrit).negate();
-        	return rewriteCriteria(innerCrit);
-        }
-        if (innerCrit instanceof NotCriteria) {
-        	return rewriteCriteria(((NotCriteria)innerCrit).getCriteria());
-        }
         if(innerCrit == TRUE_CRITERIA) {
             return FALSE_CRITERIA;
         } else if(innerCrit == FALSE_CRITERIA) {
@@ -1366,7 +1351,18 @@ public class QueryRewriter {
         } else if (innerCrit == UNKNOWN_CRITERIA) {
             return UNKNOWN_CRITERIA;
         }
-        criteria.setCriteria(innerCrit);
+        if (innerCrit instanceof Negatable) {
+        	((Negatable) innerCrit).negate();
+        	return rewriteCriteria(innerCrit);
+        }
+        if (innerCrit instanceof NotCriteria) {
+        	return rewriteCriteria(((NotCriteria)innerCrit).getCriteria());
+        }
+        Criteria newInnerCrit = rewriteCriteria(innerCrit);
+        if (!newInnerCrit.equals(innerCrit)) {
+            criteria.setCriteria(newInnerCrit);
+            return rewriteCriteria(criteria);
+        }
         return criteria;
 	}
 
@@ -1391,6 +1387,9 @@ public class QueryRewriter {
     }
 
 	private Criteria rewriteCriteria(CompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
+	    if (criteria == TRUE_CRITERIA || criteria == UNKNOWN_CRITERIA || criteria == FALSE_CRITERIA) {
+	        return criteria;
+	    }
 		Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
 		Expression rightExpr = rewriteExpressionDirect(criteria.getRightExpression());
 		criteria.setLeftExpression(leftExpr);
@@ -2341,7 +2340,6 @@ public class QueryRewriter {
     
     static {
     	FUNCTION_MAP.put(FunctionLibrary.SPACE, 0);
-    	FUNCTION_MAP.put(FunctionLibrary.FROM_UNIXTIME, 1);
     	FUNCTION_MAP.put(FunctionLibrary.NULLIF, 2);
     	FUNCTION_MAP.put(FunctionLibrary.COALESCE, 3);
     	FUNCTION_MAP.put(FunctionLibrary.CONCAT2, 4);
@@ -2525,8 +2523,6 @@ public class QueryRewriter {
                         int val = (Integer) c.getValue();
                         if (val == 0) {
                             function.getArgs()[1] = new Constant(1);
-                        } else if (val < 0) {
-                            return new Constant(null, function.getType());
                         }
                     }
                 }
@@ -2862,6 +2858,15 @@ public class QueryRewriter {
 	            || !Boolean.valueOf(metadata.getExtensionProperty(insert.getGroup().getMetadataID(), MaterializationMetadataRepository.MATVIEW_WRITE_THROUGH, false))) {
             return null;
         }
+        List<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
+        insertElmnts.removeAll(insert.getVariables());
+        //TODO: what about the explicit null case
+        if (InsertResolver.getAutoIncrementKey(insert.getGroup().getMetadataID(), insertElmnts, metadata) != null) {
+            //TODO: this may be possible, but we aren't guaranteed that we'll determine the key from the view insert
+            LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, "Write-trough insert is not possible as the primary key will be generated and was not specified"); //$NON-NLS-1$
+            return null;
+        }
+        
         //create a block to save the insert values, then insert them into both the view and the materialization
         //it would be better to combine this with project into, but there are several paths we have to account for:
         //- upserts
@@ -3258,18 +3263,23 @@ public class QueryRewriter {
 		}
 		Map<ElementSymbol, ElementSymbol> symbolMap = mapping.getUpdatableViewSymbols();
 		if (info.isSimple()) {
-			update.setGroup(mapping.getGroup().clone());
-			for (SetClause clause : update.getChangeList().getClauses()) {
-				clause.setSymbol(symbolMap.get(clause.getSymbol()));
-			}
-			//TODO: properly handle correlated references
-			DeepPostOrderNavigator.doVisit(update, new ExpressionMappingVisitor(symbolMap, true));
-			if (info.getViewDefinition().getCriteria() != null) {
-				update.setCriteria(Criteria.combineCriteria(update.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
-			}
-			//resolve
-			update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata, Command.TYPE_UPDATE, true));
-			return rewriteUpdate(update);
+		    Collection<ElementSymbol> elements = getAllElementsUsed(update, update.getGroup());
+		    
+		    UpdateMapping fullMapping = info.findUpdateMapping(elements, false);
+		    if (fullMapping != null) {
+    			update.setGroup(mapping.getGroup().clone());
+    			for (SetClause clause : update.getChangeList().getClauses()) {
+    				clause.setSymbol(symbolMap.get(clause.getSymbol()));
+    			}
+    			//TODO: properly handle correlated references
+    			DeepPostOrderNavigator.doVisit(update, new ExpressionMappingVisitor(symbolMap, true));
+    			if (info.getViewDefinition().getCriteria() != null) {
+    				update.setCriteria(Criteria.combineCriteria(update.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
+    			}
+    			//resolve
+    			update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata, Command.TYPE_UPDATE, true));
+    			return rewriteUpdate(update);
+		    }
 		} 
 		Query query = (Query)info.getViewDefinition().clone();
 		query.setOrderBy(null);
@@ -3421,14 +3431,18 @@ public class QueryRewriter {
 			QueryResolverException, TeiidProcessingException {
 		UpdateMapping mapping = info.getDeleteTarget();
 		if (info.isSimple()) {
-			delete.setGroup(mapping.getGroup().clone());
-			//TODO: properly handle correlated references
-			DeepPostOrderNavigator.doVisit(delete, new ExpressionMappingVisitor(mapping.getUpdatableViewSymbols(), true));
-			delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata, Command.TYPE_DELETE, true));
-			if (info.getViewDefinition().getCriteria() != null) {
-				delete.setCriteria(Criteria.combineCriteria(delete.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
-			}
-			return rewriteDelete(delete);
+		    Collection<ElementSymbol> elements = getAllElementsUsed(delete, delete.getGroup());
+            UpdateMapping fullMapping = info.findUpdateMapping(elements, false);
+            if (fullMapping != null) {
+    			delete.setGroup(mapping.getGroup().clone());
+    			//TODO: properly handle correlated references
+    			DeepPostOrderNavigator.doVisit(delete, new ExpressionMappingVisitor(mapping.getUpdatableViewSymbols(), true));
+    			delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata, Command.TYPE_DELETE, true));
+    			if (info.getViewDefinition().getCriteria() != null) {
+    				delete.setCriteria(Criteria.combineCriteria(delete.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
+    			}
+    			return rewriteDelete(delete);
+            }
 		}
 		
 		Query query = (Query)info.getViewDefinition().clone();
@@ -3447,6 +3461,17 @@ public class QueryRewriter {
 		String correlationName = mapping.getCorrelatedName().getName();
 		return createDeleteProcedure(delete, query, group, correlationName);
 	}
+
+    private Collection<ElementSymbol> getAllElementsUsed(Command cmd, GroupSymbol group) {
+        Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(cmd, false, true);
+        for (Iterator<ElementSymbol> iter = elements.iterator(); iter.hasNext();) {
+            ElementSymbol es = iter.next();
+            if (!EquivalenceUtil.areEqual(group, es.getGroupSymbol())) {
+                iter.remove();
+            }
+        }
+        return elements;
+    }
 	
 	public static Command createDeleteProcedure(Delete delete, QueryMetadataInterface metadata, CommandContext context) throws QueryResolverException, QueryMetadataException, TeiidComponentException, TeiidProcessingException {
 		QueryRewriter rewriter = new QueryRewriter(metadata, context);

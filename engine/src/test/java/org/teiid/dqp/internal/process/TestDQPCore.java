@@ -695,6 +695,7 @@ public class TestDQPCore {
         this.config.setQueryTimeout(1);
         ResultsMessage rm = execute("A", 1, reqMsg);
         assertNotNull(rm.getException());
+        assertEquals("57014 TEIID30563 The request 1.0 has been cancelled: TEIID31096 Query has exceeded the VDB/engine timeout of 1 milliseconds.", rm.getException().getMessage());
     }
     
     @Test public void testLongRunningQuery() throws Exception {

@@ -37,6 +37,7 @@ import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
@@ -514,6 +515,11 @@ public class RulePushLimit implements OptimizerRule {
                                                               TeiidComponentException {
         Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
         if (modelID == null) {
+            return null;
+        }
+        
+        if (NodeEditor.findNodePreOrder(accessNode.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE) != null
+                && !CapabilitiesUtil.supports(Capability.QUERY_SET_LIMIT_OFFSET, modelID, metadata, capFinder)) {
             return null;
         }
         

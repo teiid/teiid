@@ -20,12 +20,16 @@ package org.teiid.translator.couchbase;
 import static org.junit.Assert.*;
 import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Test;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.Command;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.Parameter;
 import org.teiid.translator.TranslatorException;
 
 import com.couchbase.client.java.document.json.JsonArray;
@@ -45,7 +49,7 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
             N1QL.put(key.toString(), actual);
         }
         
-        assertEquals(key, N1QL.getProperty(key, ""), actual);
+        assertEquals(key, N1QL.get(key), actual);
     }
 
     private String helpTranslate(String sql) {
@@ -82,7 +86,7 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
             assertEquals(TeiidRuntimeException.class, e.getClass());
         }
         
-        sql = "INSERT INTO Customer (documentID) VALUES ('customer-1')"; // empty document
+        sql = "INSERT INTO Customer (documentID) VALUES ('customer-1')"; // empty document, type should be added though
         helpTest(sql, "N1QL1406");
         
         sql = "INSERT INTO Oder (CustomerID, type, CreditCard_CardNumber, CreditCard_Type, CreditCard_CVN, CreditCard_Expiry, Name) VALUES ('Customer_12345', 'Oder', '4111 1111 1111 111', 'Visa', 123, '12/12', 'Air Ticket')";
@@ -107,6 +111,23 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         json.put("Quantity", 5);
         json.put("ItemID", 92312);
         assertEquals("UPDATE `test` USE KEYS 'order-1' SET `Items` = ARRAY_CONCAT(IFMISSINGORNULL(`Items`, []), ["+json+"]) RETURNING META(`test`).id AS PK", translated);
+    }
+    
+    @Test
+    public void testInsertBulk()  {
+        
+        String sql = "INSERT INTO Customer (documentID) VALUES ('customer-1')";
+        Insert insert = (Insert)translationUtility.parseCommand(sql);
+        Parameter p = new Parameter();
+        p.setType(String.class);
+        p.setValueIndex(0);
+        ((ExpressionValueSource)insert.getValueSource()).getValues().set(0, p);
+        insert.setParameterValues(Arrays.asList(Arrays.asList("customer-1"), Arrays.asList("customer-2")).iterator());
+        
+        N1QLUpdateVisitor visitor = TRANSLATOR.getN1QLUpdateVisitor();
+        visitor.append(insert);
+        String actual = visitor.getBulkCommands()[0];
+        assertEquals("INSERT INTO `test` (KEY, VALUE) VALUES ('customer-1', {\"type\":\"Customer\"}), VALUES ('customer-2', {\"type\":\"Customer\"}) RETURNING META(`test`).id AS PK", actual);
     }
     
     @Test
@@ -358,6 +379,11 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         
         sql = "UPDATE Customer SET Name = type WHERE ID = 'Customer_12345'";
         helpTest(sql, "N1QL1814");
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testUpdateTypeFails() throws TranslatorException {
+        String sql = "UPDATE Customer SET type = 'not customer'";
+        helpTest(sql, "N1QL2100");
     }
     
     @Test

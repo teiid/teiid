@@ -26,6 +26,8 @@ import java.util.Comparator;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeometryType;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -58,8 +60,9 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     /**
      * Construct a source of system metadata.
      */
-    public SystemSource(boolean allowEnvFunction) {
+    public SystemSource() {
     	super(new ArrayList<FunctionMethod>());
+    	setClassLoader(Thread.currentThread().getContextClassLoader());
 		// +, -, *, /
         addArithmeticFunction(SourceSystemFunctions.ADD_OP, QueryPlugin.Util.getString("SystemSource.Add_desc"), "plus", QueryPlugin.Util.getString("SystemSource.Add_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         addArithmeticFunction(SourceSystemFunctions.SUBTRACT_OP, QueryPlugin.Util.getString("SystemSource.Subtract_desc"), "minus", QueryPlugin.Util.getString("SystemSource.Subtract_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
@@ -117,7 +120,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addTimestampDiffFunction();
         addTimeZoneFunctions();
         addTimestampCreateFunction();
-        addUnixTimeFunctions();
 		                  
         // string
         addStringFunction(SourceSystemFunctions.LENGTH, QueryPlugin.Util.getString("SystemSource.Length_result"), "length", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -159,9 +161,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addLookupFunctions();
         addUserFunction();
         addCurrentDatabaseFunction();
-        if (allowEnvFunction) {
-        	addEnvFunction();
-        }
+    	addEnvFunction();
         addSessionIdFunction();
         addCommandPayloadFunctions();
 		addIfNullFunctions();
@@ -173,14 +173,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 		// parse
 		addParseTimestampFunction();
 		addParseNumberFunctions();
-        
-        // xml functions
-        addXpathValueFunction();
-        addXslTransformFunction();
-        addXmlConcat();
-        addXmlComment();
-        addXmlPi();
-        addJsonToXml();
         
         addSecurityFunctions();
         
@@ -198,11 +190,19 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addTrimFunction();
 
         addFunctions(JSONFunctionMethods.class);
-        addFunctions(GeometryFunctionMethods.class);
+        addLibrary(GeometryFunctionMethods.class.getName(), null);
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
-        addFunctions(XMLSystemFunctions.class);
-        addOSDQLibrary();
+        if (addLibrary(XMLSystemFunctions.class.getName(), null)) {
+            // xml functions
+            addXpathValueFunction();
+            addXslTransformFunction();
+            addXmlConcat();
+            addXmlComment();
+            addXmlPi();
+            addJsonToXml();
+        }
+        addLibrary("org.teiid.dataquality.OSDQFunctions", "osdq."); //$NON-NLS-1$ //$NON-NLS-2$
         
 		try {
 			FunctionMethod fm = MetadataFactory.createFunctionFromMethod("st_extent", GeometryUtils.Extent.class.getMethod("addInput", GeometryType.class)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -214,15 +214,17 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 		}
     }
     
-    private void addOSDQLibrary() {
+    private boolean addLibrary(String className, String prefix) {
         try {
-            Class<?> osdqFunctions = Class.forName(
-                    "org.teiid.dataquality.OSDQFunctions", false, //$NON-NLS-1$
+            Class<?> osdqFunctions = Class.forName(className, false, 
                     this.getClass().getClassLoader());
-            addFunctions(osdqFunctions, "osdq."); //$NON-NLS-1$
-        } catch (ClassNotFoundException e) {
+            addFunctions(osdqFunctions, prefix);
+            return true;
+        } catch (ClassNotFoundException|NoClassDefFoundError e) {
             // ignore the add
+            LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31263, className, e.getMessage()));
         }
+        return false;
     }
     
     private void addFunctions(Class<?> clazz) {
@@ -1094,13 +1096,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                                              new FunctionParameter("endTimeZone", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_param3"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 
-    }
-    
-    private void addUnixTimeFunctions() {
-        functions.add(new FunctionMethod(SourceSystemFunctions.FROM_UNIXTIME, QueryPlugin.Util.getString("SystemSource.from_unixtime_description"), DATETIME, FUNCTION_CLASS, "from_unixtime", //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter[]{
-                    new FunctionParameter("unix_timestamp", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.from_unixtime_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.from_unixtime_result")))); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addTypedNullIfFunction(String type) {

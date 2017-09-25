@@ -17,6 +17,7 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -28,6 +29,7 @@ import org.infinispan.client.hotrod.Search;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.infinispan.api.InfinispanDocument;
+import org.teiid.infinispan.api.ProtobufDataManager;
 import org.teiid.translator.document.DocumentNode;
 
 public class InfinispanResponse {
@@ -37,12 +39,12 @@ public class InfinispanResponse {
     private Integer limit;
     private boolean lastBatch = false;
     private Iterator<Object> responseIter;
-    private List<String> projected;
+    private Map<String, Class<?>> projected;
     private DocumentNode documentNode;
     private List<Map<String, Object>> currentDocumentRows;
 
-    public InfinispanResponse(RemoteCache<Object, Object> cache, String queryStr, int batchSize, Integer limit,
-            Integer offset, List<String> projected, DocumentNode documentNode) {
+	public InfinispanResponse(RemoteCache<Object, Object> cache, String queryStr, int batchSize, Integer limit,
+			Integer offset, Map<String, Class<?>> projected, DocumentNode documentNode) {
         this.batchSize = batchSize;
         this.offset = offset == null?0:offset;
         this.limit = limit;
@@ -77,7 +79,7 @@ public class InfinispanResponse {
         offset = offset + nextBatch;
     }
 
-    public List<Object> getNextRow(){
+    public List<Object> getNextRow() throws IOException {
         if (this.currentDocumentRows != null && !this.currentDocumentRows.isEmpty()) {
             return buildRow(this.currentDocumentRows.remove(0));
         }
@@ -89,7 +91,7 @@ public class InfinispanResponse {
         if (responseIter != null && responseIter.hasNext()){
             Object row = this.responseIter.next();
             if (row instanceof Object[]) {
-                return Arrays.asList((Object[])row);
+                return buildRow((Object[])row);
             }
             this.currentDocumentRows = this.documentNode.tuples((InfinispanDocument)row);
         } else {
@@ -107,11 +109,21 @@ public class InfinispanResponse {
         return getNextRow();
     }
 
-    private List<Object> buildRow(Map<String, Object> row) {
+    private List<Object> buildRow(Map<String, Object> row) throws IOException {
         ArrayList<Object> result = new ArrayList<>();
-        for (String attr : this.projected) {
-            result.add(row.get(attr));
+        for (Map.Entry<String, Class<?>> attr : this.projected.entrySet()) {
+            result.add(ProtobufDataManager.convertToRuntime(attr.getValue(), row.get(attr.getKey())));
         }
         return result;
+    }
+    
+    private List<Object> buildRow(Object[] values) throws IOException {
+    	ArrayList<Object> result = new ArrayList<>();
+    	int i = 0;
+    	for (Map.Entry<String, Class<?>> attr : this.projected.entrySet()) {
+    		result.add(ProtobufDataManager.convertToRuntime(attr.getValue(), values[i]));
+    		i++;
+    	}
+    	return result;
     }
 }

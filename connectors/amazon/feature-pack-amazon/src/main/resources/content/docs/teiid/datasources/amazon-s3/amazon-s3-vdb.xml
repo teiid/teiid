@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="Portfolio" version="1">
+
+    <description>The Portfolio Dynamic VDB</description>
+    <model name="MarketData">
+        <source name="web-connector" translator-name="s3" connection-jndi-name="java:/amazon-s3"/>
+    </model>
+
+    <model name="Stocks" type="VIRTUAL">
+        <metadata type="DDL"><![CDATA[
+        CREATE VIEW G2 (
+            e1 integer,
+	    e2 string,
+            e3 double,
+            PRIMARY KEY (e1))
+            AS  
+               SELECT SP.e1, SP.e2,SP.e3
+                FROM (EXEC MarketData.getTextFile(name=>'g2.txt')) AS f, 
+                    TEXTTABLE(f.file COLUMNS e1 integer, e2 string, e3 double HEADER) AS SP;                                 
+        ]]> </metadata>
+    </model>
+    <translator name="s3" type="amazon-s3">
+        <property name="accesskey" value="xxxxxx"/>
+        <property name="secretkey" value="xxxxx"/>
+		<property name="region" value="us-east-1"/>
+		<property name="bucket" value="teiidbucket"/>
+    </translator>	
+</vdb>
+
+<!--
+<resource-adapter id="AmazonS3">
+    <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
+    <transaction-support>NoTransaction</transaction-support>
+    <connection-definitions>
+        <connection-definition class-name="org.teiid.resource.adapter.ws.WSManagedConnectionFactory" 
+                jndi-name="java:/amazon-s3" 
+                enabled="true" 
+                use-java-context="true" 
+                pool-name="amz-ws-ds">
+        </connection-definition>
+    </connection-definitions>
+</resource-adapter>
+-->

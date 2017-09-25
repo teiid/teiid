@@ -40,7 +40,6 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Parser;
 import org.teiid.metadata.Server;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseStore.Mode;
@@ -62,22 +61,15 @@ public class QueryParser implements Parser {
     
     private static final class SingleSchemaDatabaseStore extends DatabaseStore {
         private final MetadataFactory factory;
-        private SystemFunctionManager systemFunctionManager;
         private TransformationMetadata transformationMetadata;
 
-        private SingleSchemaDatabaseStore(MetadataFactory factory, SystemFunctionManager systemFunctionManager) {
+        private SingleSchemaDatabaseStore(MetadataFactory factory) {
             this.factory = factory;
-            this.systemFunctionManager = systemFunctionManager;
         }
 
         @Override
         public Map<String, Datatype> getRuntimeTypes() {
             return factory.getDataTypes();
-        }
-
-        @Override
-        public SystemFunctionManager getSystemFunctionManager() {
-        	return systemFunctionManager;
         }
 
         @Override
@@ -509,7 +501,7 @@ public class QueryParser implements Parser {
     }
     
     public void parseDDL(final MetadataFactory factory, Reader ddl) {
-        SingleSchemaDatabaseStore store = new SingleSchemaDatabaseStore(factory, new SystemFunctionManager(factory.getDataTypes()));
+        SingleSchemaDatabaseStore store = new SingleSchemaDatabaseStore(factory);
 
         store.startEditing(true);        
         Database db = new Database(factory.getVdbName(), factory.getVdbVersion());
@@ -531,8 +523,7 @@ public class QueryParser implements Parser {
         
         //with the schema created, create the TransformationMetadata
         CompositeMetadataStore cms = new CompositeMetadataStore(db.getMetadataStore());
-        TransformationMetadata qmi = new TransformationMetadata(DatabaseUtil.convert(db), cms, null,
-                store.getSystemFunctionManager().getSystemFunctions(), null);
+        TransformationMetadata qmi = new TransformationMetadata(DatabaseUtil.convert(db), cms, null, null, null);
 
         store.setTransformationMetadata(qmi);
         

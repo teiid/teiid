@@ -18,14 +18,6 @@
 package org.teiid.transport;
 
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufOutputStream;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
-import io.netty.handler.stream.ChunkedStream;
-
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -33,6 +25,15 @@ import java.io.ObjectInputStream;
 import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.netty.handler.codec.serialization.CompactObjectOutputStream;
 import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
+import io.netty.handler.stream.ChunkedStream;
 
 
 /**
@@ -151,10 +152,10 @@ public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
 		public AnonymousChunkedStream(InputStream in) {
 			super(in, CHUNK_SIZE);
 		}
-    	
+		
 		@Override
-		public ByteBuf readChunk(ChannelHandlerContext ctx) throws Exception {
-		    ByteBuf cb = (ByteBuf)super.readChunk(ctx);
+		public ByteBuf readChunk(ByteBufAllocator allocator) throws Exception {
+		    ByteBuf cb = super.readChunk(allocator);
 			int length = cb.capacity();
 			ByteBuf prefix = Unpooled.wrappedBuffer(new byte[2]);
 			prefix.setShort(0, (short)length);

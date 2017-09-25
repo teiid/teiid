@@ -488,6 +488,7 @@ public class TestLimit {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        caps.setCapabilitySupport(Capability.QUERY_SET_LIMIT_OFFSET, true);
         // pm1 model supports order by
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -498,7 +499,14 @@ public class TestLimit {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
+        
+        caps.setCapabilitySupport(Capability.QUERY_SET_LIMIT_OFFSET, false);
+        expectedSql = new String[] {
+                "SELECT pm1.g2.e2 AS c_0 FROM pm1.g2 UNION ALL SELECT pm1.g2.e2 AS c_0 FROM pm1.g2" //$NON-NLS-1$
+                };
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
+                                                        null, capFinder, expectedSql, true);
     }
     
     @Test public void testLimitNotPushedWithDupRemove() {
@@ -1257,6 +1265,7 @@ public class TestLimit {
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, false);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_SET_LIMIT_OFFSET, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);

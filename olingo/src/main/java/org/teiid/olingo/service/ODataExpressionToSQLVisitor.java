@@ -125,7 +125,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 this.stack.add(new Constant(null));
             }
             else if (strValue.startsWith("$root")) {
-                this.stack.add(new ScalarSubquery(this.parseService.parse(strValue)));
+                this.stack.add(new ScalarSubquery(this.parseService.parse(strValue, null)));
             }
             else {
                 String type = "Edm.String";

@@ -122,7 +122,7 @@ public class TestXMLSystemFunctions {
         XMLSystemFunctions.xpathValue(doc, xpath);
     }
     
-    @Test(expected=XPathException.class) public void testValidateXpath_Defect15088() throws Exception {
+    @Test(expected=TeiidProcessingException.class) public void testValidateXpath_Defect15088() throws Exception {
         // Mismatched tick and quote
         final String xpath = "//*[local-name()='bookName\"]"; //$NON-NLS-1$       
     	XMLSystemFunctions.validateXpath(xpath);

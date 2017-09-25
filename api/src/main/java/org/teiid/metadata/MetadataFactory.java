@@ -38,6 +38,9 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.PropertiesUtils;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -59,6 +62,7 @@ public class MetadataFactory extends NamespaceContainer {
 	private String vdbVersion;
 	private Map<String, Datatype> dataTypes;
 	private boolean autoCorrectColumnNames = true;
+    private boolean renameDuplicateColumns;
 	private String rawMetadata;
 	private Properties modelProperties;
 	private Schema schema = new Schema();
@@ -96,6 +100,8 @@ public class MetadataFactory extends NamespaceContainer {
 					this.schema.setProperty(resolvePropertyKey(this, (String) entry.getKey()), (String) entry.getValue());
 				}
 			}
+		    this.autoCorrectColumnNames = PropertiesUtils.getBooleanProperty(modelProperties, "importer.autoCorrectColumnNames", this.autoCorrectColumnNames); //$NON-NLS-1$
+		    this.renameDuplicateColumns = PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameDuplicateColumns", this.renameDuplicateColumns); //$NON-NLS-1$
 		}
 		this.modelProperties = modelProperties;
 		this.rawMetadata = rawMetadata;
@@ -186,12 +192,25 @@ public class MetadataFactory extends NamespaceContainer {
 	 */
 	public Column addColumn(String name, String type, ColumnSet<?> table) {
 		if (this.autoCorrectColumnNames) {
-			name = name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
+			String newName = name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
+			if (!newName.equals(name)) {
+			    LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60038, name, newName));
+			}
+			name = newName;
 		} else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
 			throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, table.getFullName(), name));
 		}
 		if (table.getColumnByName(name) != null) {
-			throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
+		    if (!renameDuplicateColumns) {
+		        throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
+		    }
+		    int suffix = 1;
+		    String newName = name + "_" + suffix; //$NON-NLS-1$
+            while (table.getColumnByName(newName) != null) {
+		        suffix++;
+		    }
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60039, newName, name));
+            name = newName;
 		}
 		Column column = new Column();
 		column.setName(name);

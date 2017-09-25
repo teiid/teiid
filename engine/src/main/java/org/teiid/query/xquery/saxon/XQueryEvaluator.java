@@ -20,13 +20,17 @@ package org.teiid.query.xquery.saxon;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stax.StAXSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.FilterFactory;
@@ -36,11 +40,15 @@ import net.sf.saxon.evpull.PullEventSource;
 import net.sf.saxon.evpull.StaxToEventBridge;
 import net.sf.saxon.lib.AugmentedSource;
 import net.sf.saxon.om.DocumentInfo;
+import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.option.xom.XOMDocumentWrapper;
 import net.sf.saxon.query.DynamicQueryContext;
+import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.ValidationException;
 import net.sf.saxon.value.HexBinaryValue;
+import net.sf.saxon.value.StringValue;
 import nu.xom.Builder;
 import nu.xom.DocType;
 import nu.xom.Element;
@@ -50,17 +58,28 @@ import nu.xom.ParsingException;
 import nux.xom.xquery.StreamingPathFilter;
 import nux.xom.xquery.StreamingTransform;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.XMLType;
+import org.teiid.core.types.XMLType.Type;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
 import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.XMLTableNode;
+import org.teiid.query.sql.symbol.XMLCast;
+import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 
 /**
@@ -214,5 +233,154 @@ public class XQueryEvaluator {
 		
 		return docWrapper.wrap(node);
 	}
+	
+    static final class XMLQueryRowProcessor implements RowProcessor {
+        XmlConcat concat; //just used to get a writer
+        Type type;
+        private javax.xml.transform.Result result;
+        boolean hasItem;
+        
+        XMLQueryRowProcessor(boolean exists, CommandContext context) throws TeiidProcessingException {
+            if (!exists) {
+                concat = new XmlConcat(context.getBufferManager());
+                result = new StreamResult(concat.getWriter());
+            }
+        }
+
+        @Override
+        public void processRow(NodeInfo row) {
+            if (concat == null) {
+                hasItem = true;
+                return;
+            }
+            if (type == null) {
+                type = SaxonXQueryExpression.getType(row);
+            } else {
+                type = Type.CONTENT;
+            }
+            try {
+                QueryResult.serialize(row, result, SaxonXQueryExpression.DEFAULT_OUTPUT_PROPERTIES);
+            } catch (XPathException e) {
+                 throw new TeiidRuntimeException(e);
+            }
+        }
+     }
+    
+    /**
+     * 
+     * @param tuple
+     * @param xmlQuery
+     * @param exists - check only for the existence of a non-empty result
+     * @return Boolean if exists is true, otherwise an XMLType value
+     * @throws BlockedException
+     * @throws TeiidComponentException
+     * @throws FunctionExecutionException
+     */
+    public static Object evaluateXMLQuery(List<?> tuple, XMLQuery xmlQuery, boolean exists, Map<String, Object> parameters, CommandContext context)
+            throws BlockedException, TeiidComponentException,
+            FunctionExecutionException {
+        boolean emptyOnEmpty = xmlQuery.getEmptyOnEmpty() == null || xmlQuery.getEmptyOnEmpty();
+        Result result = null;
+        try {
+            XMLQueryRowProcessor rp = null;
+            if (xmlQuery.getXQueryExpression().isStreaming()) {
+                rp = new XMLQueryRowProcessor(exists, context);
+            }
+            try {
+                Object contextItem = null;
+                if (parameters.containsKey(null)) {
+                    contextItem = parameters.remove(null);
+                    if (contextItem == null) {
+                        return null;
+                    }
+                }
+                result = evaluateXQuery(xmlQuery.getXQueryExpression(), contextItem, parameters, rp, context);
+                if (result == null) {
+                    return null;
+                }
+                if (exists) {
+                    if (result.iter.next() == null) {
+                        return false;
+                    }
+                    return true;
+                }
+            } catch (TeiidRuntimeException e) {
+                if (e.getCause() instanceof XPathException) {
+                    throw (XPathException)e.getCause();
+                }
+                throw e;
+            }
+            if (rp != null) {
+                if (exists) {
+                    return rp.hasItem;
+                }
+                XMLType.Type type = rp.type;
+                if (type == null) {
+                    if (!emptyOnEmpty) {
+                        return null;
+                    }
+                    type = Type.CONTENT;
+                }
+                XMLType val = rp.concat.close(context);
+                val.setType(rp.type);
+                return val;
+            }
+            return xmlQuery.getXQueryExpression().createXMLType(result.iter, context.getBufferManager(), emptyOnEmpty, context);
+        } catch (TeiidProcessingException e) {
+             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30333, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30333, e.getMessage()));
+        } catch (XPathException e) {
+             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30333, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30333, e.getMessage()));
+        } finally {
+            if (result != null) {
+                result.close();
+            }
+        }
+    }
+	    
+    public static Object evaluate(XMLType value, XMLCast expression, CommandContext context) throws ExpressionEvaluationException {
+        Configuration config = new Configuration();
+        Type t = value.getType();
+        try {
+            Item i = null;
+            switch (t) {
+                case CONTENT: 
+                    //content could map to an array value, but we aren't handling that case here yet - only in xmltable
+                case COMMENT:
+                case PI:
+                    throw new FunctionExecutionException();
+                case TEXT:
+                    i = new StringValue(value.getString());
+                    break;
+                case UNKNOWN:
+                case DOCUMENT:
+                case ELEMENT:
+                    StreamSource ss = value.getSource(StreamSource.class);
+                    try {
+                        i = config.buildDocument(ss);
+                    } finally {
+                        if (ss.getInputStream() != null) {
+                            ss.getInputStream().close();
+                        }
+                        if (ss.getReader() != null) {
+                            ss.getReader().close();
+                        }
+                    }
+                    break;
+                default:
+                    throw new AssertionError("Unknown xml value type " + t); //$NON-NLS-1$
+            }
+            return XMLTableNode.getValue(expression.getType(), i, config, context);
+        } catch (IOException e) {
+            throw new FunctionExecutionException(e);
+        } catch (ValidationException e) {
+            throw new FunctionExecutionException(e);
+        } catch (TransformationException e) {
+            throw new FunctionExecutionException(e);
+        } catch (XPathException e) {
+            throw new FunctionExecutionException(e);
+        } catch (SQLException e) {
+            throw new FunctionExecutionException(e);
+        }
+    }
 
 }

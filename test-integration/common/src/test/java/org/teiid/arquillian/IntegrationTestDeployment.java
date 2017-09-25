@@ -192,7 +192,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 58, translators.size());
+		assertEquals(translators.toString(), 59, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -605,6 +605,19 @@ public class IntegrationTestDeployment {
         
         //admin.deleteDataSource(deployedName);
     }	
+	
+	@Test
+	public void testCreateGoogleSpreadSheetSource() throws AdminException {
+	    Properties p = new Properties();
+	    p.setProperty("ClientSecret", "a");
+        p.setProperty("ClientId", "b");
+        p.setProperty("RefreshToken", "c");
+        p.setProperty("SpreadsheetName", "d");
+        p.setProperty("class-name", "org.teiid.resource.adapter.google.SpreadsheetManagedConnectionFactory");
+        
+        admin.createDataSource("my-sheet", "google", p);
+        admin.deleteDataSource("my-sheet");
+	}
 	
 	@Test
 	public void testVDBRestart() throws Exception{

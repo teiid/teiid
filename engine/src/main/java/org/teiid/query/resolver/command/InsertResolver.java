@@ -35,6 +35,7 @@ import org.teiid.core.util.Assertion;
 import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
@@ -275,9 +276,15 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             }
         }
         
-        Collection<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
+        List<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
 
         insertElmnts.removeAll(insert.getVariables());
+        
+        List<ElementSymbol> pkCols = null;
+        if (!changingOnly) {
+            //TODO: what about the explicit null case
+            pkCols = getAutoIncrementKey(insert.getGroup().getMetadataID(), insertElmnts, metadata);
+        }
 
         Iterator<ElementSymbol> defaultIter = insertElmnts.iterator();
         while(defaultIter.hasNext()) {
@@ -288,6 +295,13 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             result.put(varSymbol, new Constant(Boolean.FALSE));
             if (!changingOnly) {
             	varSymbol = next.clone();
+            	if (pkCols != null && pkCols.contains(varSymbol)) {
+            	    varSymbol.getGroupSymbol().setName(SQLConstants.NonReserved.KEY);
+                    result.put(varSymbol, new Constant(null, varSymbol.getType()));
+                    if (!metadata.elementSupports(varSymbol.getMetadataID(), SupportConstants.Element.NULL)) {
+                        continue;
+                    }
+                }
             	Expression value = ResolverUtil.getDefault(varSymbol, metadata);
             	varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
             	result.put(varSymbol, value);
@@ -295,6 +309,28 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         }
         
         return result;
+    }
+    
+    public static List<ElementSymbol> getAutoIncrementKey(Object metadataId, List<ElementSymbol> columns, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+        Object pk = metadata.getPrimaryKey(metadataId);
+        if (pk == null) {
+            return null;
+        }
+        List<?> cols = metadata.getElementIDsInKey(pk);
+        List<ElementSymbol> key = null;
+        for (ElementSymbol es : columns) {
+            if (cols.contains(es.getMetadataID())) {
+                if (!metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)
+                        && !metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.NULL)) {
+                    return null;
+                }
+                if (key == null) {
+                    key = new ArrayList<ElementSymbol>();
+                }
+                key.add(es);
+            }
+        }
+        return key;
     }
     
 }

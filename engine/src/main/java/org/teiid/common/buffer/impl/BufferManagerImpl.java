@@ -86,6 +86,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	private static final int MAX_READ_AGE = 1<<19;
 	private static final class Cleaner extends TimerTask {
 		WeakReference<BufferManagerImpl> bufferRef;
+		private volatile boolean canceled;
 		
 		public Cleaner(BufferManagerImpl bufferManagerImpl) {
 			this.bufferRef = new WeakReference<BufferManagerImpl>(bufferManagerImpl);
@@ -102,7 +103,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				AutoCleanupUtil.doCleanup(false);
 				impl.cleaning.set(true);
 				try {
-					long evicted = impl.doEvictions(impl.maxProcessingBytes, true, impl.initialEvictionQueue);
+				    checkForOrphanedMemoryEntries(impl);
+	                long evicted = impl.doEvictions(impl.maxProcessingBytes, true, impl.initialEvictionQueue);
 					if (evicted != 0 && LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", evicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
 					}
@@ -113,7 +115,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
                         }
 					}
 				} catch (Throwable t) {
+				    if (ExceptionUtil.getExceptionOfType(t, InterruptedException.class) != null) {
+				        return;
+				    }
 					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, t, "Exception during cleaning run"); //$NON-NLS-1$
+				}
+				if (canceled) {
+				    return;
 				}
 				synchronized (this) {
 					impl.cleaning.set(false);
@@ -124,6 +132,35 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					}
 				}
 			}
+		}
+
+        private void checkForOrphanedMemoryEntries(BufferManagerImpl impl) {
+            if (impl.memoryEntries.size() <= impl.evictionQueue.getSize() + impl.initialEvictionQueue.getSize() + CONCURRENCY_LEVEL) {
+                return;
+            }
+            int count = 0;
+            for (CacheEntry entry : impl.memoryEntries.values()) {
+                boolean added = false;
+                synchronized (entry) {
+                    if (entry.isPersistent()) {
+                        added = impl.evictionQueue.add(entry);
+                    } else {
+                        added = impl.initialEvictionQueue.add(entry);
+                    }
+                }
+                if (added) {
+                    count++;
+                }
+            }
+            if (count > CONCURRENCY_LEVEL) {
+                LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, "Detected an unexpected number of orphaned heap cache memory entries."); //$NON-NLS-1$
+            }
+        }
+		
+		@Override
+		public boolean cancel() {
+		    this.canceled = true;
+		    return super.cancel();
 		}
 	}
 	
@@ -471,17 +508,30 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	private AtomicLong writeCount = new AtomicLong();
 	private AtomicLong referenceHit = new AtomicLong();
 	
-	//TODO: this does not scale well with multiple embedded instances
-	private static final Timer timer = new Timer("BufferManager Cleaner", true); //$NON-NLS-1$
+	private static Timer SHARED_TIMER;
+	private Timer timer;
+	
 	private Cleaner cleaner;
 	private AtomicBoolean cleaning = new AtomicBoolean();
 
     private long maxFileStoreLength = Long.MAX_VALUE;
     private long maxBatchManagerSizeEstimate = Long.MAX_VALUE;
     private long maxSessionBatchManagerSizeEstimate = Long.MAX_VALUE;
-	
-	public BufferManagerImpl() {
+	    
+    public BufferManagerImpl() {
+        this(true);
+    }
+    
+	public BufferManagerImpl(boolean sharedTimer) {
 		this.cleaner = new Cleaner(this);
+		if (sharedTimer) {
+		    if (SHARED_TIMER == null) {
+		        SHARED_TIMER = new Timer("BufferManager Cleaner", true); //$NON-NLS-1$
+		    }
+		    timer = SHARED_TIMER;
+		} else {
+		    timer = new Timer("BufferManager Cleaner", true); //$NON-NLS-1$
+		}
 		timer.schedule(cleaner, 100);
 	}
 	
@@ -952,7 +1002,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					synchronized (ce) {
 						if (memoryEntries.remove(ce.getId()) != null) {
 							freed += ce.getSizeEstimate();
-							activeBatchBytes.addAndGet(-ce.getSizeEstimate());
+							long result = activeBatchBytes.addAndGet(-ce.getSizeEstimate());
+                            assert result >= 0 || !LrfuEvictionQueue.isSuspectSize(activeBatchBytes);
 							queue.remove(ce); //ensures that an intervening get will still be cleaned
 						}
 					}
@@ -1079,7 +1130,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
 	private void remove(CacheEntry ce, boolean inMemory) {
 		if (inMemory) {
-			activeBatchBytes.addAndGet(-ce.getSizeEstimate());
+		    long result = activeBatchBytes.addAndGet(-ce.getSizeEstimate());
+            assert result >= 0 || !LrfuEvictionQueue.isSuspectSize(activeBatchBytes);
 		}
 		assert activeBatchBytes.get() >= 0;
 		Serializer<?> s = ce.getSerializer();
@@ -1182,6 +1234,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		this.evictionQueue.getEvictionQueue().clear();
 		this.initialEvictionQueue.getEvictionQueue().clear();
 		this.cleaner.cancel();
+		if (this.timer != SHARED_TIMER) {
+		    this.timer.cancel();
+		}
 	}
 
 	@Override

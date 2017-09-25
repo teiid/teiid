@@ -20,13 +20,13 @@ package org.teiid.common.buffer.impl;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.common.buffer.BaseCacheEntry;
 import org.teiid.common.buffer.CacheKey;
+import org.teiid.core.TeiidRuntimeException;
 
 /**
  * A Concurrent LRFU eviction queue.  Has assumptions that match buffermanager usage.
@@ -34,14 +34,35 @@ import org.teiid.common.buffer.CacheKey;
  * @param <V>
  */
 public class LrfuEvictionQueue<V extends BaseCacheEntry> {
+    
+    /**
+     * For testing, should only be used from asserts.
+     * Waits for convergence of a value if needed
+     */
+    static boolean isSuspectSize(Number num) throws AssertionError {
+        for (int i = 0; i < 500; i++) {
+            try {
+                if (num.longValue() >= 0) {
+                    return false;
+                }
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                Thread.interrupted();
+                throw new TeiidRuntimeException(e);
+            } catch (Exception e) {
+                throw new AssertionError(e);
+            }
+        }
+        return true;
+    }
 	
 	private static final long DEFAULT_HALF_LIFE = 1<<16;
-	private static final long MIN_INTERVAL = 1<<9;
+	static final long MIN_INTERVAL = 1<<9;
 	//TODO: until Java 7 ConcurrentSkipListMap has a scaling bug in that
 	//the level function limits the effective map size to ~ 2^16
 	//above which it performs comparably under multi-threaded load to a synchronized LinkedHashMap
 	//just with more CPU overhead vs. wait time.
-	protected NavigableMap<CacheKey, V> evictionQueue = new ConcurrentSkipListMap<CacheKey, V>();
+	protected ConcurrentSkipListMap<CacheKey, V> evictionQueue = new ConcurrentSkipListMap<CacheKey, V>();
 	protected AtomicLong clock;
 	protected long maxInterval;
 	protected long halfLife;
@@ -54,14 +75,15 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 
 	public boolean remove(V value) {
 		if (evictionQueue.remove(value.getKey()) != null) {
-			size.addAndGet(-1);
+			int result = size.addAndGet(-1);
+			assert result >=0 || !isSuspectSize(size);
 			return true;
 		}
 		return false;
 	}
 	
 	public boolean add(V value) {
-		if (evictionQueue.put(value.getKey(), value) == null) {
+		if (evictionQueue.putIfAbsent(value.getKey(), value) == null) {
 			size.addAndGet(1);
 			return true;
 		}
@@ -71,11 +93,12 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	public void touch(V value) {
 		long tick = clock.get();
 		if (tick - MIN_INTERVAL < value.getKey().getLastAccess()) {
-			return;
+		    add(value);	
+		    return;
 		}
-		evictionQueue.remove(value.getKey());
+		remove(value);
 		recordAccess(value);
-		evictionQueue.put(value.getKey(), value);
+		add(value);
 	}
 		
 	public Collection<V> getEvictionQueue() {
@@ -87,7 +110,8 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		if (poll) {
 			entry = evictionQueue.pollFirstEntry();
 			if (entry != null) {
-				size.addAndGet(-1);
+			    int result = size.addAndGet(-1);
+			    assert result >=0 || !isSuspectSize(size);
 			}
 		} else {
 			entry = evictionQueue.firstEntry();
@@ -97,7 +121,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		}
 		return null;
 	}
-	
+
 	/**
      * Callers should be synchronized on value
      */

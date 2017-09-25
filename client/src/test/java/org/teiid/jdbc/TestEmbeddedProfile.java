@@ -38,7 +38,7 @@ public class TestEmbeddedProfile {
         assertFalse(ConnectionType.Embedded == JDBCURL.acceptsUrl("jdbc:teiid:BQT@classpath:/dqp.properties;partialResultsMode=true")); //$NON-NLS-1$
         
         assertEquals(ConnectionType.Embedded, JDBCURL.acceptsUrl("jdbc:teiid:BQT")); //$NON-NLS-1$
-        assertNull(JDBCURL.acceptsUrl("jdbc:teiid:BQT!/path/foo.properties")); //$NON-NLS-1$
+        assertEquals(ConnectionType.Embedded, JDBCURL.acceptsUrl("jdbc:teiid:BQT!/path/foo.properties")); //$NON-NLS-1$
         assertEquals(ConnectionType.Embedded, JDBCURL.acceptsUrl("jdbc:teiid:BQT;")); //$NON-NLS-1$
         assertEquals(ConnectionType.Embedded, JDBCURL.acceptsUrl("jdbc:teiid:BQT;version=1;logFile=foo.txt")); //$NON-NLS-1$
         assertEquals(ConnectionType.Embedded, JDBCURL.acceptsUrl("jdbc:teiid:BQT.1;version=1;logFile=foo.txt")); //$NON-NLS-1$

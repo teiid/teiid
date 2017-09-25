@@ -32,9 +32,11 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.metadata.Database;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.translator.TranslatorProperty.PropertyType;
@@ -529,10 +531,18 @@ public class EmbeddedAdminImpl implements Admin {
     @Override
     public String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes,
             String typeNamePattern) throws AdminException {
+    	if (vdbVersion == null) {
+    		vdbVersion = "1";
+    	}
 		VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
-    	Schema schema = metadataStore.getSchema(modelName);
-    	return DDLStringVisitor.getDDLString(schema, allowedTypes, typeNamePattern);
+		if (modelName != null) {
+	    	Schema schema = metadataStore.getSchema(modelName);
+	    	return DDLStringVisitor.getDDLString(schema, allowedTypes, typeNamePattern);
+		} else {
+			Database db = DatabaseUtil.convert(vdb, metadataStore);
+			return DDLStringVisitor.getDDLString(db);
+		}
 	}
 
     public static String prettyFormat(String input) throws TransformerException {

@@ -3,13 +3,12 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
 	<TITLE>Teiid ${project.version} Release Notes</TITLE>
-	<META NAME="CHANGEDBY" CONTENT="Steve Hawkins">
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid-banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds performance features, microservice enablement, and removes legacy features. 
+<P>Teiid ${project.version} adds performance features, microservice enablement, the upgrade to WildFly 11, and removes legacy features. 
 
 <H2>Overview</H2>
 <UL>
@@ -25,6 +24,8 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
+  <li><a href="https://issues.jboss.org/browse/TEIID-4981">TEIID-4981</a> Amazon S3 translator support, now read the objects directly from Amazon S3 with security</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5026">TEIID-5026</a> The behavior of the FROM_UNIXTIME function was corrected and the related datetime functions UNIX_TIMESTAMP, TO_MILLIS, and FROM_MILLIS were added.</li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -43,6 +44,7 @@
 <ul>
   <li><a href="https://issues.jboss.org/browse/TEIID-4894">TEIID-4894</a> The XML document model feature has been removed. You must use OData or SQL/XML to create XML documents.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-4924">TEIID-4924</a> Maven coordinates for Teiid artifacts have changed.  They will now be pushed directly to Maven Central and will use the org.teiid group instead of org.jboss.teiid.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5026">TEIID-5026</a> The FROM_UNIXTIME function now returns a string rather than a timestamp value and no longer is rewritten to the timestampadd function.  The functionality now matches that of HIVE/IMPALA.  See also the to_millis and from_millis functions.</li>
 </ul>
 
 <h4>from 9.2</h4>

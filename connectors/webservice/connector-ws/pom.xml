@@ -3,7 +3,7 @@
     <parent>
         <artifactId>webservice</artifactId>
         <groupId>org.teiid.connectors</groupId>
-        <version>10.0.0.Alpha3-SNAPSHOT</version>
+        <version>10.0.0.Beta3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-ws</artifactId>
@@ -73,6 +73,10 @@
 		    <groupId>org.apache.cxf</groupId>
 		    <artifactId>cxf-rt-transports-http-hc</artifactId>
 		</dependency>
+		<dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-databinding-jaxb</artifactId>
+        </dependency>
 		<dependency>
 		    <groupId>org.apache.httpcomponents</groupId>
 		    <artifactId>httpcore-nio</artifactId>

@@ -120,6 +120,8 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addNumericBooleanConversions();
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+    	
+    	addPushDownFunction("mysql", "SUBSTRING_INDEX", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
     }  
 	
 	@Override

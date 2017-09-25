@@ -74,7 +74,7 @@ import org.teiid.translator.accumulo.AccumuloMetadataProcessor.ValueIn;
  * flag after calling deep copy not supported", this is copy of WholeRowIterator
  */
 public class EvaluatorIterator extends WrappingIterator {
-    private static final SystemFunctionManager SFM = new SystemFunctionManager();
+    private static final SystemFunctionManager SFM = SystemMetadata.getInstance().getSystemFunctionManager();
 	public static final String QUERYSTRING = "QUERYSTRING"; //$NON-NLS-1$
 	public static final String TABLE = "TABLE";//$NON-NLS-1$
 	public static final String DDL = "DDL";//$NON-NLS-1$

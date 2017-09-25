@@ -1,0 +1,18 @@
+<!-- If subsystem is already defined, only copy the contents under it and edit to suit your needs -->
+<!-- this is web services resource adapter, provided here for document purpose  -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+		<resource-adapter id="AmazonS3">
+		    <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
+		    <transaction-support>NoTransaction</transaction-support>
+		    <connection-definitions>
+		        <connection-definition class-name="org.teiid.resource.adapter.ws.WSManagedConnectionFactory" 
+		                jndi-name="java:/amazon-s3" 
+		                enabled="true" 
+		                use-java-context="true" 
+		                pool-name="amz-ws-ds">
+		        </connection-definition>
+		    </connection-definitions>
+		</resource-adapter>
+    </resource-adapters>
+</subsystem>

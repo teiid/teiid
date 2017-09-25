@@ -47,7 +47,7 @@ public class TestFunctionTree {
      * each one up by signature
      */
     @Test public void testWalkTree() {
-        SystemSource source = new SystemSource(false);
+        SystemSource source = new SystemSource();
         FunctionTree ft = new FunctionTree("foo", source);
         
         Collection<String> categories = ft.getCategories();

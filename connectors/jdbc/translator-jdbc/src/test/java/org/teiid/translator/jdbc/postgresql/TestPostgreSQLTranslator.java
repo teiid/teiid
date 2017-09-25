@@ -371,7 +371,7 @@ public class TestPostgreSQLTranslator {
     
     @Test public void testSubstringExpressionIndex() throws Exception {
         String input = "SELECT substring(PART_WEIGHT, cast(part_id as integer), 5) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT substring(PARTS.PART_WEIGHT from case sign(cast(PARTS.PART_ID AS integer)) when -1 then cast(null as int4) when 0 then 1 else cast(PARTS.PART_ID AS integer) end for 5) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT substring(PARTS.PART_WEIGHT from case sign(cast(PARTS.PART_ID AS integer)) when -1 then length(PARTS.PART_WEIGHT) + 1 + cast(PARTS.PART_ID AS integer) when 0 then 1 else cast(PARTS.PART_ID AS integer) end for 5) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -649,6 +649,15 @@ public class TestPostgreSQLTranslator {
         helpTestVisitor(TranslationHelper.BQT_VDB,
                 "select SmallA.StringKey from BQT1.SmallA where ((BooleanValue=true) and (IntKey=1)) = true", //$NON-NLS-1$
                 "SELECT SmallA.StringKey FROM SmallA WHERE (SmallA.BooleanValue = TRUE AND SmallA.IntKey = 1) = TRUE"); //$NON-NLS-1$
+    }
+    
+    @Test public void testUUIDType() throws Exception {
+        String input = "SELECT id from t where id > 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'"; //$NON-NLS-1$
+        String output = "SELECT cast(t.id AS varchar) FROM t WHERE t.id > 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'";  //$NON-NLS-1$
+
+        helpTestVisitor("create foreign table t (id string options (native_type 'uuid'))",
+            input, 
+            output);
     }
     
 }

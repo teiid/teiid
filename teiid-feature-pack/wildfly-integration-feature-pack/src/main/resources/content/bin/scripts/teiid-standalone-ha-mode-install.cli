@@ -12,7 +12,7 @@ connect
 /subsystem=logging/logger=org.teiid.AUDIT_LOG:add 
 /subsystem=logging/logger=org.teiid.AUDIT_LOG:write-attribute(name="level", value="WARN")
 
-/subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
+/subsystem=infinispan/cache-container=teiid-cache:add()
 /subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000)
 /subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC, batching=true)
 /subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/locking=LOCKING:add(isolation=READ_COMMITTED)
@@ -30,6 +30,7 @@ connect
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/locking=LOCKING:add(isolation=READ_COMMITTED)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/expiration=EXPIRATION:add(lifespan=28800)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/eviction=EVICTION:add(max-entries=512, strategy=LIRS)
+/subsystem=infinispan/cache-container=teiid-cache:write-attribute(name=default-cache, value=resultset)
 
 /subsystem=security/security-domain=teiid-security:add(cache-type=default)
 /subsystem=security/security-domain=teiid-security/authentication=classic:add()
@@ -99,6 +100,7 @@ connect
 /subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
 /subsystem=teiid/translator=delegator:add(module=org.jboss.teiid.api)
 /subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
+/subsystem=teiid/translator=amazon-s3:add(module=org.jboss.teiid.translator.amazon.s3)
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)

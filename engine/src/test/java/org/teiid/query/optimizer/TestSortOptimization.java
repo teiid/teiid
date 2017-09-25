@@ -479,6 +479,7 @@ public class TestSortOptimization {
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_SET_LIMIT_OFFSET, true);
         
         helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(caps), 
                 new String[] {"SELECT 'X' AS c_0, g_1.item_id AS c_1 FROM y.items AS g_1 GROUP BY g_1.item_id UNION ALL SELECT 'Y' AS c_0, g_0.item_id AS c_1 FROM y.items AS g_0 ORDER BY c_1 DESC LIMIT 50"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$

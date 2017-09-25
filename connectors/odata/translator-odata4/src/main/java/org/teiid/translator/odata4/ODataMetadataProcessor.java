@@ -26,9 +26,16 @@ import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.commons.api.edm.provider.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Table;
 import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
@@ -94,8 +101,12 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     
     public void process(MetadataFactory mf, WSConnection conn)
             throws TranslatorException {
-        XMLMetadata serviceMetadata = getSchema(conn);    
-        getMetadata(mf, serviceMetadata);
+        XMLMetadata serviceMetadata = getSchema(conn); 
+        try {
+            getMetadata(mf, serviceMetadata);
+        } catch (NullPointerException e) {
+            throw new TranslatorException(e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17034));
+        }
     }
 
     protected XMLMetadata getSchema(WSConnection conn) throws TranslatorException {
@@ -353,9 +364,10 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         
         if (name.contains(".")) {
             int idx = name.lastIndexOf('.');
-            CsdlSchema schema = metadata.getSchema(name.substring(0, idx));
+            String schemaName = name.substring(0, idx);
+            CsdlSchema schema = metadata.getSchema(schemaName);
             if (schema == null) {
-                throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17021, name));
+                throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17021, schemaName));
             }
             return schema.getEntityType(name.substring(idx+1));
         }

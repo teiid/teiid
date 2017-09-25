@@ -54,7 +54,12 @@ public class RulePlanOuterJoins implements OptimizerRule {
 			AnalysisRecord analysisRecord, CommandContext context)
 			throws QueryPlannerException, QueryMetadataException,
 			TeiidComponentException {
-		while (planLeftOuterJoinAssociativity(plan, metadata, capabilitiesFinder, analysisRecord, context)) {
+	    
+	    boolean beforeJoinPlanning = rules.contains(RuleConstants.PLAN_JOINS);
+	    
+		while (beforeJoinPlanning?
+		        planLeftOuterJoinAssociativityWithoutPushdown(plan, metadata):
+		        planLeftOuterJoinAssociativity(plan, metadata, capabilitiesFinder, analysisRecord, context)) {
 			//repeat
 		}
 		return plan;
@@ -106,7 +111,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
     			continue;
     		}
     		
-    		//there are three forms we can take
+    		//there are 4 forms we can take
     		// (a b) c -> a (b c) or (a c) b
     		// c (b a) -> (c b) a or (c a) b
     		Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(joinCriteria);
@@ -214,6 +219,74 @@ public class RulePlanOuterJoins implements OptimizerRule {
 			}
 		}
     	return true;
+    }
+    
+    /**
+     * Similar to {@link #planLeftOuterJoinAssociativity(PlanNode, QueryMetadataInterface, CapabilitiesFinder, AnalysisRecord, CommandContext)},
+     * but only looks for the creation of inner joins
+     * @param plan
+     * @param metadata
+     * @return
+     */
+    private boolean planLeftOuterJoinAssociativityWithoutPushdown(PlanNode plan,
+            QueryMetadataInterface metadata) {
+        
+        boolean changedAny = false;
+        LinkedHashSet<PlanNode> joins = new LinkedHashSet<PlanNode>(NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)); 
+        while (!joins.isEmpty()) {
+            Iterator<PlanNode> i = joins.iterator();
+            PlanNode join = i.next();
+            i.remove();
+            if (!join.getProperty(Info.JOIN_TYPE).equals(JoinType.JOIN_LEFT_OUTER)) {
+                continue;
+            }
+            
+            PlanNode childJoin = null;
+            PlanNode other = null;
+            PlanNode left = join.getFirstChild();
+            PlanNode right = join.getLastChild();
+
+            if (left.getType() == NodeConstants.Types.JOIN && left.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER) {
+                childJoin = left;
+                other = right;
+            } else {
+                continue;
+            }
+            
+            List<Criteria> joinCriteria = (List<Criteria>) join.getProperty(Info.JOIN_CRITERIA);
+            if (!isCriteriaValid(joinCriteria, metadata, join)) {
+                continue;
+            }
+            
+            List<Criteria> childJoinCriteria = (List<Criteria>) childJoin.getProperty(Info.JOIN_CRITERIA);
+            if (!isCriteriaValid(childJoinCriteria, metadata, childJoin)) {
+                continue;
+            }
+            
+            //there are 1 form we can take
+            // (a b) c -> a (b c)
+            Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(joinCriteria);
+            if (Collections.disjoint(groups, FrameUtil.findJoinSourceNode(childJoin.getFirstChild()).getGroups())) {
+                //rearrange
+                PlanNode newParent = RulePlanJoins.createJoinNode();
+                newParent.setProperty(Info.JOIN_TYPE, JoinType.JOIN_LEFT_OUTER);
+                PlanNode newChild = RulePlanJoins.createJoinNode();
+                newChild.setProperty(Info.JOIN_TYPE, JoinType.JOIN_LEFT_OUTER);
+                joins.remove(childJoin);
+                //a (b c)
+                newChild.addFirstChild(childJoin.getLastChild());
+                newChild.addLastChild(other);
+                newChild.setProperty(Info.JOIN_CRITERIA, joinCriteria);
+                newParent.addFirstChild(childJoin.getFirstChild());
+                newParent.addLastChild(newChild);
+                newParent.setProperty(Info.JOIN_CRITERIA, childJoinCriteria);
+                updateGroups(newChild);
+                updateGroups(newParent);
+                join.getParent().replaceChild(join, newParent);
+                changedAny = true;
+            }
+        }
+        return changedAny;
     }
     
     @Override

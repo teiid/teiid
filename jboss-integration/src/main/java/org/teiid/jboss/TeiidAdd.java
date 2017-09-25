@@ -18,8 +18,64 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.teiid.jboss.TeiidConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CONTENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ENABLED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.PERSISTENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.URL;
+import static org.teiid.jboss.TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.ASYNC_THREAD_POOL_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.DATA_ROLES_REQUIRED_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.DC_STACK_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.DETECTING_CHANGE_EVENTS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.ENCRYPT_FILES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.INLINE_LOBS;
+import static org.teiid.jboss.TeiidConstants.LOB_CHUNK_SIZE_IN_KB_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_BUFFER_SPACE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_FILE_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_OPEN_FILES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_PROCESSING_KB_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_RESERVED_KB_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_ROWS_FETCH_SIZE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_SOURCE_ROWS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_THREADS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.POLICY_DECIDER_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.PPC_CONTAINER_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PPC_ENABLE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PPC_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PREPARSER_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.PROCESSOR_BATCH_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.QUERY_THRESHOLD_IN_SECS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.QUERY_TIMEOUT;
+import static org.teiid.jboss.TeiidConstants.RSC_CONTAINER_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_ENABLE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_MAX_STALENESS_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.THREAD_COUNT_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TIME_SLICE_IN_MILLI_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.USE_DISK_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.WORKMANAGER;
+import static org.teiid.jboss.TeiidConstants.asBoolean;
+import static org.teiid.jboss.TeiidConstants.asInt;
+import static org.teiid.jboss.TeiidConstants.asLong;
+import static org.teiid.jboss.TeiidConstants.asString;
+import static org.teiid.jboss.TeiidConstants.isDefined;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -70,8 +126,16 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
-import org.jboss.msc.service.*;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
+import org.jboss.msc.service.ValueService;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.CommandContext;
 import org.teiid.PolicyDecider;
@@ -102,14 +166,17 @@ import org.teiid.logging.LogManager;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.runtime.NodeTracker;
 import org.teiid.services.InternalEventDistributorFactory;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.ExecutionFactory;
+import org.wildfly.clustering.infinispan.spi.InfinispanCacheRequirement;
+import org.wildfly.clustering.infinispan.spi.InfinispanRequirement;
 import org.wildfly.clustering.jgroups.ChannelFactory;
-import org.wildfly.clustering.jgroups.spi.service.ProtocolStackServiceName;
+import org.wildfly.clustering.jgroups.spi.JGroupsRequirement;
 
 class TeiidAdd extends AbstractAddStepHandler {
 	
@@ -258,21 +325,21 @@ class TeiidAdd extends AbstractAddStepHandler {
         final ConnectorManagerRepository connectorManagerRepo = buildConnectorManagerRepository(translatorRepo);
         
     	// system function tree
-		SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
-		if (isDefined(ALLOW_ENV_FUNCTION_ELEMENT, operation, context)) {
-			systemFunctionManager.setAllowEnvFunction(asBoolean(ALLOW_ENV_FUNCTION_ELEMENT, operation, context));
-		}
-		else {
-			systemFunctionManager.setAllowEnvFunction(false);
-		}
-		systemFunctionManager.setClassloader(Thread.currentThread().getContextClassLoader()); 
-    	
+		SystemFunctionManager systemFunctionManager = SystemMetadata.getInstance().getSystemFunctionManager();
+		
     	// VDB repository
     	final VDBRepository vdbRepository = new VDBRepository();
     	vdbRepository.setSystemFunctionManager(systemFunctionManager);
     	if (isDefined(DATA_ROLES_REQUIRED_ELEMENT, operation, context) && asBoolean(DATA_ROLES_REQUIRED_ELEMENT, operation, context)) {
     		vdbRepository.setDataRolesRequired(true);
     	}
+    	
+    	if (isDefined(ALLOW_ENV_FUNCTION_ELEMENT, operation, context)) {
+    	    vdbRepository.setAllowEnvFunction(asBoolean(ALLOW_ENV_FUNCTION_ELEMENT, operation, context));
+        }
+        else {
+            vdbRepository.setAllowEnvFunction(false);
+        }
 
     	VDBRepositoryService vdbRepositoryService = new VDBRepositoryService(vdbRepository);
     	ServiceBuilder<VDBRepository> vdbRepoService = target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService);
@@ -307,14 +374,14 @@ class TeiidAdd extends AbstractAddStepHandler {
     		replicatorAvailable = true;
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService();
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
-			serviceBuilder.addDependency(ProtocolStackServiceName.CHANNEL_FACTORY.getServiceName(stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
+			serviceBuilder.addDependency(JGroupsRequirement.CHANNEL_FACTORY.getServiceName(context, stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
 			serviceBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  replicatorService.executorInjector);
 			serviceBuilder.install();
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003));
 			
 			NodeTrackerService trackerService = new NodeTrackerService(nodeName, scheduler);
 			ServiceBuilder<NodeTracker> nodeTrackerBuilder = target.addService(TeiidServiceNames.NODE_TRACKER_SERVICE, trackerService);
-			nodeTrackerBuilder.addDependency(ProtocolStackServiceName.CHANNEL_FACTORY.getServiceName(stack), ChannelFactory.class, trackerService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
+			nodeTrackerBuilder.addDependency(JGroupsRequirement.CHANNEL_FACTORY.getServiceName(context, stack), ChannelFactory.class, trackerService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
 			nodeTrackerBuilder.install();
     	} else {
 			LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("distributed_cache_not_enabled")); //$NON-NLS-1$
@@ -398,7 +465,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	ServiceBuilder<CacheFactory> cacheFactoryBuilder = target.addService(TeiidServiceNames.RESULTSET_CACHE_FACTORY, cfs);
 	    	
 	    	String ispnName = asString(RSC_CONTAINER_NAME_ATTRIBUTE, operation, context);
-	    	cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
+			cacheFactoryBuilder.addDependency(InfinispanRequirement.CONTAINER.getServiceName(context, ispnName),
+					EmbeddedCacheManager.class, cfs.cacheContainerInjector); // $NON-NLS-1$
 	    	cacheFactoryBuilder.install();
 	    	
 	    	int maxStaleness = DQPConfiguration.DEFAULT_MAX_STALENESS_SECONDS;
@@ -410,9 +478,11 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	ServiceBuilder<SessionAwareCache<CachedResults>> resultsCacheBuilder = target.addService(TeiidServiceNames.CACHE_RESULTSET, resultSetService);
 	    	resultsCacheBuilder.addDependency(TeiidServiceNames.TUPLE_BUFFER, TupleBufferCache.class, resultSetService.tupleBufferCacheInjector);
 	    	resultsCacheBuilder.addDependency(TeiidServiceNames.RESULTSET_CACHE_FACTORY, CacheFactory.class, resultSetService.cacheFactoryInjector);
-	    	resultsCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName)); //$NON-NLS-1$
-	    	resultsCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName + SessionAwareCache.REPL)); //$NON-NLS-1$
+	    	resultsCacheBuilder.addDependency(InfinispanCacheRequirement.CACHE.getServiceName(context, ispnName, cacheName)); //$NON-NLS-1$
+	    	resultsCacheBuilder.addDependency(InfinispanCacheRequirement.CACHE.getServiceName(context, ispnName, cacheName+SessionAwareCache.REPL)); //$NON-NLS-1$
 	    	resultsCacheBuilder.install();
+	    	
+	    	
     	}
     	
     	// prepared-plan cache
@@ -435,13 +505,14 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	ServiceBuilder<CacheFactory> cacheFactoryBuilder = target.addService(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY, cfs);
 	    	
 	    	String ispnName = asString(PPC_CONTAINER_NAME_ATTRIBUTE, operation, context);
-    		cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
+			cacheFactoryBuilder.addDependency(InfinispanRequirement.CONTAINER.getServiceName(context, ispnName),
+					EmbeddedCacheManager.class, cfs.cacheContainerInjector); // $NON-NLS-1$
     		cacheFactoryBuilder.install();
 	    	
 	    	CacheService<PreparedPlan> preparedPlanService = new CacheService<PreparedPlan>(cacheName, SessionAwareCache.Type.PREPAREDPLAN, 0);
 	    	ServiceBuilder<SessionAwareCache<PreparedPlan>> preparedPlanCacheBuilder = target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService);
 	    	preparedPlanCacheBuilder.addDependency(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY, CacheFactory.class, preparedPlanService.cacheFactoryInjector);
-	    	preparedPlanCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName)); //$NON-NLS-1$
+	    	preparedPlanCacheBuilder.addDependency(InfinispanCacheRequirement.CACHE.getServiceName(context, ispnName, cacheName)); // $NON-NLS-1$
 	    	preparedPlanCacheBuilder.install();
     	}
     	

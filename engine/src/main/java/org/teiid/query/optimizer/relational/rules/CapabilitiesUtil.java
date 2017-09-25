@@ -257,6 +257,9 @@ public class CapabilitiesUtil {
                 } else if(SourceSystemFunctions.FROM_UNIXTIME.equalsIgnoreCase(fullName)) {
                     return (schema == null 
                             && caps.supportsFunction(SourceSystemFunctions.TIMESTAMPADD));
+                } else if(SourceSystemFunctions.FROM_UNIXTIME.equalsIgnoreCase(fullName)) {
+                    return (schema == null 
+                            && caps.supportsFunction(SourceSystemFunctions.TIMESTAMPDIFF));
                 } else {
                     return false ;
                 }

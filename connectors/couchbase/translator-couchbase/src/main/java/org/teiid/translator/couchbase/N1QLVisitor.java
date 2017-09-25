@@ -25,7 +25,6 @@ import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,11 +56,41 @@ public class N1QLVisitor extends SQLStringVisitor{
     private String topTableAlias;
     
     private int placeHolderIndex = 1;
-
-    private Map<String, Expression> aliasedExpressions = new LinkedHashMap<String, Expression>();
-
+    
     public N1QLVisitor(CouchbaseExecutionFactory ef) {
         this.ef = ef;
+    }
+    
+    @Override
+    protected void appendSetQuery(SetQuery parent, QueryExpression obj,
+            boolean right) {
+        if (right) {
+            //because we hold a lot of state, it's easier to construct a new visitor for the right
+            //if join is supported we need different behavior
+            N1QLVisitor rightVisitor = new N1QLVisitor(this.ef);
+            rightVisitor.append(obj);
+            if(shouldNestSetChild(parent, obj, right)) {
+                buffer.append(Tokens.LPAREN);
+                buffer.append(rightVisitor.toString());
+                buffer.append(Tokens.RPAREN);
+            } else {
+                buffer.append(rightVisitor.toString());
+            }
+            return;
+        }
+        super.appendSetQuery(parent, obj, right);
+    }
+
+    private void appendQueryExpressionEnd(QueryExpression obj) {
+        if (obj.getOrderBy() != null) {
+            buffer.append(Tokens.SPACE);
+            append(obj.getOrderBy());
+        }
+        
+        if (obj.getLimit() != null) {
+            buffer.append(Tokens.SPACE);
+            append(obj.getLimit());
+        }
     }
     
     @Override
@@ -93,15 +122,7 @@ public class N1QLVisitor extends SQLStringVisitor{
             append(obj.getHaving());
         }
         
-        if (obj.getOrderBy() != null) {
-            buffer.append(Tokens.SPACE);
-            append(obj.getOrderBy());
-        }
-        
-        if (obj.getLimit() != null) {
-            buffer.append(Tokens.SPACE);
-            append(obj.getLimit());
-        }
+        appendQueryExpressionEnd(obj);
     }
     
     private void appendLet(Select obj) {
@@ -132,7 +153,7 @@ public class N1QLVisitor extends SQLStringVisitor{
             } else if (column.isIdx()) {
                 //todo - handle unreleated column in idx conlumn
             } else {
-                letValueReference.append(this.nameInSource(column.getTableAlias()));
+                letValueReference.append(nameInSource(column.getTableAlias()));
                 String nameInSource = column.getNameInSource();
                 if(nameInSource != null) {
                     nameInSource = nameInSource.substring(nameInSource.indexOf(SOURCE_SEPARATOR) + 1, nameInSource.length());
@@ -242,7 +263,7 @@ public class N1QLVisitor extends SQLStringVisitor{
         
         retrieveTableProperty(obj);
         
-        String tableNameInSource = obj.getMetadataObject().getNameInSource();
+        String tableNameInSource = obj.getMetadataObject().getSourceName();
         String alias = getTableAliasGenerator().generate();
         this.topTableAlias = alias;
         if(this.isArrayTable) {
@@ -269,20 +290,20 @@ public class N1QLVisitor extends SQLStringVisitor{
                     baseName = baseName.substring(0, baseName.length() - SQUARE_BRACKETS.length());
                     StringBuilder unnestBuilder = new StringBuilder();
                     unnestBuilder.append(UNNEST).append(SPACE);
-                    unnestBuilder.append(this.nameInSource(newAlias));
+                    unnestBuilder.append(nameInSource(newAlias));
                     if(!baseName.endsWith(SQUARE_BRACKETS)) { // the dim 1 array has a attribute name under keyspace
                         String dimArrayAttrName = baseName.substring(baseName.lastIndexOf(SOURCE_SEPARATOR) + 1, baseName.length());
                         unnestBuilder.append(SOURCE_SEPARATOR).append(dimArrayAttrName);
                     }
-                    unnestBuilder.append(SPACE).append(this.nameInSource(alias));
+                    unnestBuilder.append(SPACE).append(nameInSource(alias));
                     column.setUnnest(unnestBuilder.toString());
                     alias = newAlias ;
                     continue;
                 }
                 
-                letValueReference.append(this.nameInSource(alias));
+                letValueReference.append(nameInSource(alias));
                 if(column.hasLeaf()) {
-                    letValueReference.append(SOURCE_SEPARATOR).append(this.nameInSource(column.getLeafName()));
+                    letValueReference.append(SOURCE_SEPARATOR).append(nameInSource(column.getLeafName()));
                 }
                 column.setValueReference(letValueReference.toString());
                 column.setTableAlias(alias);
@@ -315,7 +336,7 @@ public class N1QLVisitor extends SQLStringVisitor{
                     continue;
                 }
                 
-                letValueReference.append(this.nameInSource(alias));
+                letValueReference.append(nameInSource(alias));
                 String nameInSource = column.getNameInSource();
                 if(nameInSource != null) {
                     nameInSource = nameInSource.substring(nameInSource.indexOf(SOURCE_SEPARATOR) + 1, nameInSource.length());
@@ -333,7 +354,7 @@ public class N1QLVisitor extends SQLStringVisitor{
 
     private String buildEQ(String nameReference) {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.nameInSource(nameReference));
+        sb.append(nameInSource(nameReference));
         sb.append(SPACE).append(EQ).append(SPACE);
         return sb.toString();
     }
@@ -353,27 +374,23 @@ public class N1QLVisitor extends SQLStringVisitor{
 
     @Override
     public void visit(DerivedColumn obj) {
-        if (obj.getAlias() != null) {
-            aliasedExpressions.put(obj.getAlias(), obj.getExpression());
+        String name = obj.getAlias();
+        if (name == null) {
+            name = "c" + placeHolderIndex++; //$NON-NLS-1$
         }
         
         if (obj.getExpression() instanceof ColumnReference) {
             ColumnReference columnReference = (ColumnReference)obj.getExpression();
             CBColumn column = defineColumn(columnReference);
             String aliasName = column.getNameReference();
-            buffer.append(this.nameInSource(aliasName));
-            this.selectColumns.add(column.getNameReference());
+            buffer.append(nameInSource(aliasName));
         } else {
-            //this will be retrieved by a placeholder
-            this.selectColumns.add(nextPlaceholder());
             append(obj.getExpression());
         }
+        buffer.append(SPACE).append(name);
+        selectColumns.add(name);
     }
     
-    private String nextPlaceholder() {
-        return PLACEHOLDER + placeHolderIndex++; 
-    }
-
     private CBColumn defineColumn(ColumnReference columnReference) {
         retrieveTableProperty(columnReference.getTable());
 
@@ -392,14 +409,9 @@ public class N1QLVisitor extends SQLStringVisitor{
                 column = defineColumn(obj);
             }
             String aliasName = column.getNameReference();
-            buffer.append(this.nameInSource(aliasName));
+            buffer.append(nameInSource(aliasName));
         } else {
-            Expression ex = aliasedExpressions.get(obj.getName());
-            if (ex != null) {
-                append(ex);
-            } else {
-                super.visit(obj);
-            }
+            buffer.append(obj.getName());
         }
     }
 
@@ -413,9 +425,9 @@ public class N1QLVisitor extends SQLStringVisitor{
         } else if(isIDXColumn(obj)) {
             isIdx = true;
         } else if(obj.getMetadataObject().getNameInSource() != null && !obj.getMetadataObject().getNameInSource().endsWith(SQUARE_BRACKETS)){
-            String nameInSource = obj.getMetadataObject().getNameInSource();
+            String nameInSource = obj.getMetadataObject().getSourceName();
             leafName = nameInSource.substring(nameInSource.lastIndexOf(SOURCE_SEPARATOR) + 1, nameInSource.length());
-            leafName = this.trimWave(leafName);
+            leafName = trimWave(leafName);
         }
         
         String colExpr = this.getColumnAliasGenerator().generate() + UNDERSCORE + obj.getName();
@@ -455,21 +467,23 @@ public class N1QLVisitor extends SQLStringVisitor{
     public void visit(Function obj) {
         
         String functionName = obj.getName();
-        if(functionName.equalsIgnoreCase(CONVERT) || functionName.equalsIgnoreCase(CAST)) {
-            List<?> parts =  this.ef.getFunctionModifiers().get(functionName).translate(obj);
-            buffer.append(parts.get(0));
-            super.append(obj.getParameters().get(0));
-            buffer.append(parts.get(2));
-            return;
-        } else if (functionName.equalsIgnoreCase(NonReserved.TRIM)){
+        if (functionName.equalsIgnoreCase(NonReserved.TRIM)){
             buffer.append(obj.getName()).append(LPAREN);
             append(obj.getParameters());
             buffer.append(RPAREN);
             return;
-        } else if (this.ef.getFunctionModifiers().containsKey(functionName)) {
+        }
+        if (this.ef.getFunctionModifiers().containsKey(functionName)) {
             List<?> parts =  this.ef.getFunctionModifiers().get(functionName).translate(obj);
             if (parts != null) {
-                obj = (Function)parts.get(0);
+                for (Object part : parts) {
+                    if (part instanceof LanguageObject) {
+                        append((LanguageObject)part);
+                    } else {
+                        buffer.append(part);
+                    }
+                }
+                return;
             }
         } 
         super.visit(obj);
@@ -491,14 +505,14 @@ public class N1QLVisitor extends SQLStringVisitor{
         return selectColumns;
     }
 
-    public AliasGenerator getColumnAliasGenerator() {
+    protected AliasGenerator getColumnAliasGenerator() {
         if(this.columnAliasGenerator == null) {
             this.columnAliasGenerator = new AliasGenerator(N1QL_COLUMN_ALIAS_PREFIX);
         }
         return columnAliasGenerator;
     }
 
-    public AliasGenerator getTableAliasGenerator() {
+    protected AliasGenerator getTableAliasGenerator() {
         if(this.tableAliasGenerator == null) {
             this.tableAliasGenerator = new AliasGenerator(N1QL_TABLE_ALIAS_PREFIX);
         }
@@ -550,24 +564,6 @@ public class N1QLVisitor extends SQLStringVisitor{
         append(call.getArguments().get(0));
     }
     
-    protected String nameInSource(String path) {
-        if(path.startsWith(WAVE) && path.endsWith(WAVE)) {
-            return path;
-        }
-        return WAVE + path + WAVE; 
-    }
-    
-    protected String trimWave(String value) {
-        String results = value;
-        if(results.startsWith(WAVE)) {
-            results = results.substring(1);
-        }
-        if(results.endsWith(WAVE)) {
-            results = results.substring(0, results.length() - 1);
-        }
-        return results;
-    }
-    
     private class AliasGenerator {
         
         private final String prefix;
@@ -587,7 +583,7 @@ public class N1QLVisitor extends SQLStringVisitor{
         }
     }
     
-    protected class CBColumn {
+    protected static class CBColumn {
         
         private boolean isPK;
         private boolean isIdx;

@@ -54,12 +54,12 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.xpath.XPathExpressionException;
 
 import net.sf.saxon.expr.JPConverter;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.Name11Checker;
 import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.QNameException;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
@@ -873,16 +873,30 @@ public class XMLSystemFunctions {
     /**
      * Validate whether the XPath is a valid XPath.  If not valid, an XPathExpressionException will be thrown.
      * @param xpath An xpath expression, for example: a/b/c/getText()
-     * @throws XPathExpressionException 
-     * @throws XPathException 
      */
-    public static void validateXpath(String xpath) throws XPathException {
+    public static void validateXpath(String xpath) throws TeiidProcessingException {
         if(xpath == null) { 
             return;
         }
         
         XPathEvaluator eval = new XPathEvaluator();
-        eval.createExpression(xpath);
+        try {
+            eval.createExpression(xpath);
+        } catch (XPathException e) {
+            throw new TeiidProcessingException(e);
+        }
+    }
+    
+    public static String[] validateQName(String name) throws TeiidProcessingException {
+        try {
+            return Name11Checker.getInstance().getQNameParts(name);
+        } catch (QNameException e) {
+            throw new TeiidProcessingException(e);
+        }
+    }
+    
+    public static boolean isValidNCName(String prefix) { 
+        return Name11Checker.getInstance().isValidNCName(prefix);
     }
     
     public static String escapeName(String name, boolean fully) {
@@ -1240,7 +1254,7 @@ public class XMLSystemFunctions {
 		return f;
 	}
     
-	@TeiidFunction(category=FunctionCategoryConstants.XML)
+	@TeiidFunction(category=FunctionCategoryConstants.XML, nullOnNull=true)
 	public static XMLType xmlText(String val) throws XMLStreamException, FactoryConfigurationError, IOException, TransformerException {
 		//TODO: see if there is a less involved way to escape
 		StringWriter writer = new StringWriter();

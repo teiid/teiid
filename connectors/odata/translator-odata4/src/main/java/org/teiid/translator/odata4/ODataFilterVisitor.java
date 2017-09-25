@@ -23,12 +23,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
@@ -52,11 +52,11 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     }
     protected StringBuilder filter = new StringBuilder();
     private ODataExecutionFactory ef;
-    private Stack<String> exprType = new Stack<String>();
     protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     private ODataQuery query;
     private RuntimeMetadata metadata;
     private ODataDocumentNode filterOnElement;
+    private BaseColumn currentExpression;
     
     public ODataFilterVisitor(ODataExecutionFactory ef, RuntimeMetadata metadata, ODataQuery query) {
         this.ef = ef;
@@ -99,7 +99,23 @@ public class ODataFilterVisitor extends HierarchyVisitor {
             break;
         }
         this.filter.append(Tokens.SPACE);
+        BaseColumn old = setCurrentExpression(obj.getLeftExpression());
         appendRightComparison(obj);
+        this.currentExpression = old;
+    }
+
+    private BaseColumn setCurrentExpression(Expression leftExpression) {
+        BaseColumn old = currentExpression;
+        if (leftExpression instanceof ColumnReference) {
+            ColumnReference cr = (ColumnReference)leftExpression;
+            currentExpression = cr.getMetadataObject();
+        } else if (leftExpression instanceof Function) {
+            Function function = (Function)leftExpression;
+            currentExpression = function.getMetadataObject().getOutputParameter();
+        } else {
+            currentExpression = null;
+        }
+        return old;
     }
 
     protected void appendRightComparison(Comparison obj) {
@@ -167,8 +183,6 @@ public class ODataFilterVisitor extends HierarchyVisitor {
         Column column = obj.getMetadataObject();
         // check if the column on psedo column, then move it to the parent.
         String pseudo = ODataMetadataProcessor.getPseudo(column);
-        
-        this.exprType.push(odataType(column.getNativeType(), column.getRuntimeType()));
         
         ODataDocumentNode schemaElement = this.query.getSchemaElement((Table)column.getParent());
         if (pseudo != null) {
@@ -243,7 +257,6 @@ public class ODataFilterVisitor extends HierarchyVisitor {
                         .odataType((String) literal.getValue())
                         .getFullQualifiedName().getFullQualifiedNameAsString();
                 this.filter.append(type);
-                this.exprType.push(type);
             } else {
                 if (args != null && args.size() != 0) {
                 	if (SourceSystemFunctions.ENDSWITH.equalsIgnoreCase(name)) {
@@ -251,17 +264,17 @@ public class ODataFilterVisitor extends HierarchyVisitor {
                 		this.filter.append(Tokens.COMMA);
                 		append(args.get(0));
                 	} else {
-    	                for (int i = 0; i < args.size(); i++) {
+                	    BaseColumn old = currentExpression;
+                        for (int i = 0; i < args.size(); i++) {
+                            currentExpression = method.getInputParameters().get(Math.min(i, method.getInputParameters().size() -1));
     	                    append(args.get(i));
     	                    if (i < args.size()-1) {
     	                    	this.filter.append(Tokens.COMMA);
     	                    }
     	                }
+                        currentExpression = old;
                 	}
                 }
-                this.exprType.push(odataType(
-                        method.getOutputParameter().getNativeType(), 
-                        method.getOutputParameter().getRuntimeType()));
             }
             this.filter.append(Tokens.RPAREN);
         }
@@ -274,14 +287,21 @@ public class ODataFilterVisitor extends HierarchyVisitor {
             }
             visitNode(obj.getLeftExpression());   
             this.filter.append(" eq ");
+            BaseColumn old = setCurrentExpression(obj.getLeftExpression());
             visitNode(expr);
+            this.currentExpression = old;
         }
     }   
 
     @Override
     public void visit(Literal obj) {
         try {
-            String odataType = this.exprType.pop();
+            String odataType = ODataTypeManager.odataType(obj.getType()).toString();
+            if (currentExpression != null) {
+                //TODO: this is an attempt at contextually figuring out the type, but it 
+                //may not be sufficient in all cases
+                odataType = odataType(currentExpression.getNativeType(), currentExpression.getRuntimeType());
+            }
             this.filter.append(ODataTypeManager.convertToODataURIValue(obj.getValue(), odataType));
         } catch (EdmPrimitiveTypeException e) {
             this.exceptions.add(new TranslatorException(e));

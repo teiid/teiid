@@ -60,9 +60,11 @@ public class TestPlanNode {
     }
     
     @Test public void testXmlRoundtrip() throws Exception {
-    	String planString = example1().toXml();
+    	PlanNode example1 = example1();
+    	example1.addProperty("last", "x"); //$NON-NLS-1$ //$NON-NLS-2$
+        String planString = example1.toXml();
     	PlanNode planNode = PlanNode.fromXml(planString);
-        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><node name=\"x\"><property name=\"test\"><value></value></property><property name=\"null\"></property><property name=\"string\"><value>string</value></property><property name=\"list&lt;string&gt;\"><value>item1</value><value>item2</value><value>item3</value></property><property name=\"child\"><node name=\"y\"><property name=\"outputCols\"><value>Name (string)</value><value>Year (integer)</value></property><property name=\"Join Type\"><value>INNER JOIN</value></property><property name=\"Criteria\"><value>Item.ID = History.ID</value></property><property name=\"Other\"></property></node></property></node>", planNode.toXml()); //$NON-NLS-1$
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><node name=\"x\"><property name=\"test\"><value></value></property><property name=\"null\"></property><property name=\"string\"><value>string</value></property><property name=\"list&lt;string&gt;\"><value>item1</value><value>item2</value><value>item3</value></property><property name=\"child\"><node name=\"y\"><property name=\"outputCols\"><value>Name (string)</value><value>Year (integer)</value></property><property name=\"Join Type\"><value>INNER JOIN</value></property><property name=\"Criteria\"><value>Item.ID = History.ID</value></property><property name=\"Other\"></property></node></property><property name=\"last\"><value>x</value></property></node>", planNode.toXml()); //$NON-NLS-1$
     }
 
     @Test public void testText() throws Exception {

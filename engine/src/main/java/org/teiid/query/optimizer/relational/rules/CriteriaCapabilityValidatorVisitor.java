@@ -386,20 +386,28 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
     public void visit(Function obj) {
         try {
-            //if the function can be evaluated then return as it will get replaced during the final rewrite 
-            if (willBecomeConstant(obj)) { 
-                return; 
-            }
             if(obj.getFunctionDescriptor().getPushdown() == PushDown.CANNOT_PUSHDOWN) {
+                //if the function can be evaluated then return as it will get replaced during the final rewrite 
+                if (willBecomeConstant(obj)) { 
+                    return; 
+                }
             	markInvalid(obj, "Function metadata indicates it cannot be pusheddown."); //$NON-NLS-1$
             	return;
             }
             if (! CapabilitiesUtil.supportsScalarFunction(modelID, obj, metadata, capFinder)) {
+                //if the function can be evaluated then return as it will get replaced during the final rewrite 
+                if (willBecomeConstant(obj)) { 
+                    return; 
+                }
                 markInvalid(obj, (obj.isImplicit()?"(implicit) ":"") + obj.getName() + " function not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 return;
             }
             String name = obj.getName();
             if (CapabilitiesUtil.supports(Capability.ONLY_FORMAT_LITERALS, modelID, metadata, capFinder) && parseFormat.contains(name)) {
+                //if the function can be evaluated then return as it will get replaced during the final rewrite 
+                if (willBecomeConstant(obj)) { 
+                    return; 
+                }
             	if (!(obj.getArg(1) instanceof Constant)) {
             		markInvalid(obj, obj.getName() + " non-literal parse format function not supported by source"); //$NON-NLS-1$
                     return;
@@ -846,10 +854,10 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
 
     public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException {
-    	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false, false);
+    	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false, false, false);
     }
     
-    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin, boolean isSelectClause) throws QueryMetadataException, TeiidComponentException {
+    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin, boolean isSelectClause, final boolean multiValuedReferences) throws QueryMetadataException, TeiidComponentException {
         if(obj == null) {
             return true;
         }
@@ -867,6 +875,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         }
         
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
+        visitor.setCheckEvaluation(!multiValuedReferences);
         visitor.analysisRecord = analysisRecord;
         visitor.isJoin = isJoin;
         visitor.isSelectClause = isSelectClause;
@@ -922,7 +931,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     	        		}
         			}
 	        		obj.acceptVisitor(ev);
-	        		if (obj instanceof Expression) {
+	        		if (!multiValuedReferences && obj instanceof Expression) {
 	        			if (obj instanceof Function) {
 	        				if (!(obj instanceof AggregateSymbol)) {
 		        				Function f = (Function)obj;

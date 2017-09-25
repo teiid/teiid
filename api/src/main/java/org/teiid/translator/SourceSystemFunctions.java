@@ -143,6 +143,7 @@ public class SourceSystemFunctions {
 	public static final String WEEK = "week"; //$NON-NLS-1$
 	public static final String YEAR = "year"; //$NON-NLS-1$
 	public static final String FROM_UNIXTIME = "from_unixtime"; //$NON-NLS-1$
+	public static final String UNIX_TIMESTAMP = "unix_timestamp"; //$NON-NLS-1$
 	
 	//system functions
 	public static final String IFNULL = "ifnull"; //$NON-NLS-1$

@@ -62,6 +62,8 @@ public class DataPlugin {
 		TEIID60034, 
 		TEIID60035,
 		TEIID60036,
-		TEIID60037
+		TEIID60037, 
+		TEIID60038,
+		TEIID60039
 	}
 }

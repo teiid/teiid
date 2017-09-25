@@ -282,13 +282,17 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
         if (!table.equals(getParentTable())) {
             this.nested = true;
         }
-
+        
         // read the properties
         try {
             InfinispanDocument targetDocument = buildTargetDocument(table, false);
             int elementCount = obj.getChanges().size();
             for (int i = 0; i < elementCount; i++) {
                 Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();
+                if (isPartOfPrimaryKey(column.getName())) {
+					throw new TranslatorException(InfinispanPlugin.Event.TEIID25019,
+							InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25019, column.getName()));
+                }
                 Expression expr = obj.getChanges().get(i).getValue();
                 Object value = resolveExpressionValue(expr);
                 //this.updatePayload.put(getName(column), value);
