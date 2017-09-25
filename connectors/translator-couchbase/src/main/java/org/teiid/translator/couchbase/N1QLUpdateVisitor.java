@@ -94,6 +94,8 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 if (typeIndex != null && typeIndex == i) {
                     throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29022, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29022, typedValue));
                 }
+            } else {
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29024, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29024));                
             }
         }
         
@@ -568,8 +570,8 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 CBColumn column = formCBColumn(col);
                 CBColumnData cacheData = new CBColumnData(col.getType(), column);
                 Object value = clause.getValue();
-                if (clause.getValue() instanceof Literal) {
-                    value = ((Literal)clause.getValue()).getValue();
+                if (value instanceof Literal) {
+                    value = ((Literal)value).getValue();
                 }
                 if(typedName != null && typedName.equals(nameInSource(cacheData.getCBColumn().getLeafName()))) {
                     if (!typedValue.equals(getValueString(cacheData.getColumnType(), value))) {

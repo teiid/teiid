@@ -751,7 +751,11 @@ public class Evaluator {
 	       return getContext(expression).getFromContext(expression);
 	   } 
 	   if(expression instanceof Constant) {
-	       return ((Constant) expression).getValue();
+	       Constant c = (Constant) expression;
+	       if (c.isMultiValued()) {
+	           throw new AssertionError("Multi-valued constant not allowed to be directly evaluated"); //$NON-NLS-1$
+	       }
+	       return c.getValue();
 	   } else if(expression instanceof Function) {
 	       return evaluate((Function) expression, tuple);
 	   } else if(expression instanceof CaseExpression) {
@@ -1378,6 +1382,10 @@ public class Evaluator {
 	    
 	    for(int i=0; i < args.length; i++) {
 	        values[i+start] = internalEvaluate(args[i], tuple);
+	        if (values[i+start] instanceof Constant) {
+	            //leaked a multivalued constant
+	            throw new AssertionError("Multi-valued constant not allowed to be directly evaluated"); //$NON-NLS-1$
+	        }
 	    }            
 	    
 	    if (fd.getPushdown() == PushDown.MUST_PUSHDOWN) {

@@ -39,6 +39,7 @@ import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.TestUpdateValidator;
+import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
 public class TestTriggerActions {
@@ -331,5 +332,31 @@ public class TestTriggerActions {
         List<?>[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
 	}
+	
+	/**
+	 * Ensure that we simplify expressions
+	 */
+	@Test public void testInsertRewrite() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(
+                "create foreign table tablea (s string primary key) options (updatable true);\n" +
+                "create view viewa (i integer) options (updatable true) as SELECT cast(s as integer) from tablea;\n" +
+                "create trigger on viewa instead of insert as for each row begin atomic "
+                + "INSERT INTO tablea (tablea.s) VALUES (\"NEW\".i); END;"
+                + "create trigger on viewa instead of update as for each row begin atomic "
+                + "update tablea set s = \"NEW\".i; END;"
+                , "x", "y");
+        
+        String sql = "insert into viewa (i) values (1)";
+        
+        HardcodedDataManager dm = new HardcodedDataManager();
+        dm.addData("INSERT INTO tablea (s) VALUES ('1')", Arrays.asList(1));
+        
+        CommandContext context = createCommandContext();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        List<?>[] expected = new List[] {Arrays.asList(1)};
+        helpProcess(plan, context, dm, expected);
+    }
 
 }
