@@ -190,9 +190,11 @@ public class JoinQueryVisitor extends SelectVisitor {
 				throw new AssertionError("Unknown select symbol type " + symbol); //$NON-NLS-1$
 			}
 		}
-		if (!firstTime && addComma) {
-			result.append(", "); //$NON-NLS-1$
-		}
+		if (firstTime && !addComma) {
+            result.append("id"); //$NON-NLS-1$
+		} else if (!firstTime && addComma) {
+            result.append(", "); //$NON-NLS-1$
+        }
 	}
 	
 	@Override
