@@ -298,15 +298,15 @@ public class TeiidDialect extends Dialect {
 		return true;
 	}
 	
-	@Override
+    @Override
 	public String getSequenceNextValString(String sequenceName) {
-		return "select __x.return from (" + getSelectSequenceNextValString( sequenceName ) +") as __x";
+		return "select " + getSelectSequenceNextValString( sequenceName );
 	}
 
 	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
-		return "call "+sequenceName+"()";
-	}
+		return sequenceName + "_nextval()";
+	}	
 
     public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
         return new LocalTemporaryTableBulkIdStrategy(
