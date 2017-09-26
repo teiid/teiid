@@ -129,7 +129,9 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, SalesforceConnection connection) throws TranslatorException {
-	    metadataFactory.getModelProperties().setProperty("importer.modelAuditFields", String.valueOf(this.auditModelFields)); //$NON-NLS-1$
+	    if (metadataFactory.getModelProperties().getProperty("importer.modelAuditFields") == null) { //$NON-NLS-1$
+	        metadataFactory.getModelProperties().setProperty("importer.modelAuditFields", String.valueOf(this.auditModelFields)); //$NON-NLS-1$
+	    }
 	    super.getMetadata(metadataFactory, connection);	    
 	}	
 	
