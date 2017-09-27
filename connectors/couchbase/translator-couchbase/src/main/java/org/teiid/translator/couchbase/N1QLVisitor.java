@@ -460,11 +460,11 @@ public class N1QLVisitor extends SQLStringVisitor{
     }
 
     private boolean isIDXColumn(ColumnReference obj) {
-        return obj.getName().endsWith(IDX_SUFFIX) && obj.getMetadataObject().getNameInSource() == null;
+        return obj.getMetadataObject().getNameInSource() == null && StringUtil.endsWithIgnoreCase(obj.getName(), IDX_SUFFIX);
     }
 
-    private boolean isPKColumn(ColumnReference obj) {
-        return obj.getName().equals(DOCUMENTID) && obj.getMetadataObject().getNameInSource() == null;
+    protected boolean isPKColumn(ColumnReference obj) {
+        return obj.getMetadataObject().getNameInSource() == null && obj.getName().equalsIgnoreCase(DOCUMENTID);
     }
 
     @Override
