@@ -161,6 +161,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	        int index = endpoint.indexOf("Soap/u/"); //$NON-NLS-1$
 	        int endIndex = endpoint.indexOf('/', index+7);
 	        apiVersion = endpoint.substring(index+7,endIndex);
+	        mcf.checkVersion(apiVersion);
 	        String bulkEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "async/" + apiVersion;//$NON-NLS-1$ //$NON-NLS-2$
 	        config.setRestEndpoint(bulkEndpoint);
 			// This value identifies Teiid as a SF certified solution.

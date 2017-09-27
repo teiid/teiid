@@ -18,12 +18,15 @@
 package org.teiid.resource.adapter.salesforce;
 
 import javax.resource.ResourceException;
-import javax.security.auth.Subject;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
-import org.teiid.resource.spi.ConnectionContext;
+import org.teiid.translator.salesforce.SalesForcePlugin;
+
+import com.sforce.soap.partner.Connector;
 
 
 public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFactory {
@@ -41,6 +44,8 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	
 	private String configProperties;
 	private String configFile; // path to the "jbossws-cxf.xml" file
+
+    private boolean warned;
 
 	public String getUsername() {
 		return username;
@@ -165,5 +170,14 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 				&& checkEquals(this.proxyPassword, other.proxyPassword)
 				&& checkEquals(this.configProperties, other.configProperties);
 	}
+    public void checkVersion(String apiVersion) {
+        if (!warned) {
+            warned = true;
+            String javaApiVersion = Connector.END_POINT.substring(Connector.END_POINT.lastIndexOf('/') + 1, Connector.END_POINT.length());
+            if (!javaApiVersion.equals(apiVersion)) {
+                LogManager.logWarning(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13009, apiVersion, javaApiVersion));
+            }
+        }
+    }
 	
 }
