@@ -6567,7 +6567,18 @@ public class TestOptimizer {
                 1,      // Select
                 0,      // Sort
                 0       // UnionAll
-            });                                    
+            });
+        
+        caps.setFunctionSupport(SourceSystemFunctions.PARSETIMESTAMP, true);
+        
+        //test case sensitity
+        plan = TestOptimizer.helpPlan("SELECT ParseTimeStamp(stringkey, 'yyyy') from bqt1.smalla where FormatTimestamp(timestampvalue, 'yyyy') = '1921'", //$NON-NLS-1$
+                RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
+                new String[] {
+                    "SELECT ParseTimeStamp(g_0.StringKey, 'yyyy') FROM BQT1.SmallA AS g_0 WHERE FormatTimestamp(g_0.TimestampValue, 'yyyy') = '1921'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        checkNodeTypes(plan, FULL_PUSHDOWN);
+
     }
     
     @Test public void testDistinctConstant() throws Exception { 

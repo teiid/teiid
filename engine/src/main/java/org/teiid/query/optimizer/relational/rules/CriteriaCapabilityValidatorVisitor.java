@@ -31,6 +31,7 @@ import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
@@ -421,7 +422,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             		markInvalid(obj, obj.getName() + " non-literal parse format function not supported by source"); //$NON-NLS-1$
                     return;
             	}
-            	if (!CapabilitiesUtil.getCapabilities(modelID, metadata, capFinder).supportsFormatLiteral((String)c.getValue(), name.endsWith(DataTypeManager.DefaultDataTypes.TIMESTAMP)?Format.DATE:Format.NUMBER)) {
+            	if (!CapabilitiesUtil.getCapabilities(modelID, metadata, capFinder).supportsFormatLiteral((String)c.getValue(), StringUtil.endsWithIgnoreCase(name, DataTypeManager.DefaultDataTypes.TIMESTAMP)?Format.DATE:Format.NUMBER)) {
             		markInvalid(obj, obj.getName() + " literal parse " + c + " not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$
                     return;
             	}
