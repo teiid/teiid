@@ -386,6 +386,12 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         helpTest(sql, "N1QL2100");
     }
     
+    @Test(expected=TeiidRuntimeException.class)
+    public void testUpdatePk() throws TranslatorException {
+        String sql = "UPDATE Customer SET documentid = 'x' WHERE documentID = 'customer-5'";
+        helpTest(sql, "error");
+    }
+    
     @Test
     public void testUpdate_2() throws TranslatorException {
         
