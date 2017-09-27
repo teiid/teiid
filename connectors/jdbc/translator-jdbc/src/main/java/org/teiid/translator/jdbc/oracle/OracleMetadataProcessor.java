@@ -175,5 +175,16 @@ public final class OracleMetadataProcessor extends
 	public void setUseIntegralTypes(boolean useIntegralTypes) {
 		this.useIntegralTypes = useIntegralTypes;
 	}
+	
+	@Override
+	protected String getSequenceQuery() {
+	    return "select null as sequence_catalog, sequence_owner as sequence_schema, sequence_name from (select sequence_name, sequence_owner from all_sequences union select synonym_name, table_owner from all_synonyms us, all_sequences asq where asq.sequence_name = us.table_name and asq.sequence_owner = us.table_owner) " //$NON-NLS-1$
+	            + "where sequence_owner like ? and sequence_name like ?"; //$NON-NLS-1$
+	}
+	
+    @Override
+    protected String getSequenceNextSQL(String fullyQualifiedName) {
+        return fullyQualifiedName + ".nextval"; //$NON-NLS-1$
+    }
 
 }

@@ -20,6 +20,7 @@ package org.teiid.translator.jdbc;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -35,19 +36,14 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
@@ -59,6 +55,9 @@ import org.teiid.translator.TypeFacility;
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
  */
 public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
+    
+    @ExtensionMetadataProperty(applicable= {FunctionMethod.class}, datatype=String.class, display="Sequence Used By This Function")
+    static final String SEQUENCE = AbstractMetadataRecord.RELATIONAL_URI+"sequence"; //$NON-NLS-1$
 	
 	/**
 	 * A holder for table records that keeps track of catalog and schema information.
@@ -82,7 +81,9 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	private boolean importKeys = true;
 	private boolean importForeignKeys = true;
 	private boolean importIndexes;
+	private boolean importSequences;
 	private String procedureNamePattern;
+	private String sequenceNamePattern;
 	protected boolean useFullSchemaName = true;	
 	private String[] tableTypes;
 	private String tableNamePattern;
@@ -103,6 +104,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	
 	private Pattern excludeTables;
 	private Pattern excludeProcedures;
+	private Pattern excludeSequences;
 	
 	private int excludedTables;
 	
@@ -190,6 +192,10 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 		
 		if (importProcedures) {
 			getProcedures(metadataFactory, metadata);
+		}
+		
+		if (importSequences) {
+		    getSequences(metadataFactory, conn);
 		}
 		
 	}
@@ -764,7 +770,62 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 		}
 		return result;
 	}
-
+	
+    public void getSequences(MetadataFactory metadataFactory, Connection conn) throws SQLException {
+        String sequenceQuery = getSequenceQuery(); //TODO: may need version information
+        if (sequenceQuery == null) {
+            return;
+        }
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing sequences"); //$NON-NLS-1$
+        PreparedStatement ps = conn.prepareStatement(sequenceQuery);
+        ps.setString(1, schemaPattern==null?"%":schemaPattern); //$NON-NLS-1$
+        ps.setString(2, sequenceNamePattern==null?"%":sequenceNamePattern); //$NON-NLS-1$
+        ResultSet sequences = ps.executeQuery();
+        while (sequences.next()) {
+            String sequenceCatalog = sequences.getString(1);
+            if (catalog != null) {
+                if (catalog.isEmpty()) {
+                    if (sequenceCatalog != null && !sequenceCatalog.isEmpty()) {
+                        continue;
+                    }
+                } else if (EquivalenceUtil.areEqual(catalog, sequenceCatalog)) {
+                    continue;
+                }
+            }
+            String sequenceSchema = sequences.getString(2);
+            String sequenceName = sequences.getString(3);
+            //TODO: type
+            String sequenceTeiidName = getFullyQualifiedName(sequenceCatalog, sequenceSchema, sequenceName);
+            if (excludeSequences != null && excludeSequences.matcher(sequenceTeiidName).matches()) {
+                continue;
+            }
+            String fullyQualifiedName = getFullyQualifiedName(catalog, sequenceSchema, sequenceName, true);
+            String sequenceNext = getSequenceNextSQL(fullyQualifiedName);
+            FunctionMethod method = metadataFactory.addFunction((useFullSchemaName?sequenceTeiidName:sequenceName) + "_nextval", TypeFacility.RUNTIME_NAMES.LONG); //$NON-NLS-1$
+            method.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, sequenceNext); 
+            method.setProperty(SEQUENCE, fullyQualifiedName);
+            method.setDeterminism(Determinism.NONDETERMINISTIC);
+        }
+        sequences.close();
+    }
+    
+    /**
+     * Return the native sql for getting the next value or null if not supported
+     * @param fullyQualifiedName
+     * @return
+     */
+    protected String getSequenceNextSQL(String fullyQualifiedName) {
+        return null;
+    }
+    
+    /**
+     * Return the query to fetch sequence information or null, if sequence import is not supported
+     * @return
+     */
+    protected String getSequenceQuery() {
+        return null;
+    }
+    
 	/**
 	 * @param catalogName
 	 * @param schemaName
@@ -1041,5 +1102,35 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
     public void setImportLargeAsLob(boolean importLargeAsLob) {
         this.importLargeAsLob = importLargeAsLob;
     }
+   
+    @TranslatorProperty(display="Import Sequences", category=PropertyType.IMPORT, description="true to import sequences")
+    public boolean isImportSequences() {
+        return importSequences;
+    }
     
+    public void setImportSequences(boolean importSequences) {
+        this.importSequences = importSequences;
+    }
+
+    @TranslatorProperty(display="Exclude Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid sequence name will exclude it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
+    public String getExcludeSequences() {
+        if (this.excludeSequences == null) {
+            return null;
+        }
+        return excludeSequences.pattern();
+    }
+    
+    public void setExcludeSequences(String excludeSequences) {
+        this.excludeSequences = Pattern.compile(excludeSequences, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+    }
+    
+    @TranslatorProperty(display="Sequence Name Pattern", category=PropertyType.IMPORT, description="a sequence name pattern; must match the sequence name as it is stored in the database")
+    public String getSequenceNamePattern() {
+        return sequenceNamePattern;
+    }
+    
+    public void setSequenceNamePattern(String sequenceNamePattern) {
+        this.sequenceNamePattern = sequenceNamePattern;
+    }
+       
 }
