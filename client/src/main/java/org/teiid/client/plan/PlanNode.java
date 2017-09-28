@@ -282,16 +282,26 @@ public class PlanNode implements Externalizable {
     @Override
     public String toString() {
     	StringBuilder builder = new StringBuilder();
-    	visitNode(this, 0, builder);
+    	visitNode(this, 0, false, builder);
     	return builder.toString();
     }
     
-    protected void visitNode(PlanNode node, int nodeLevel, StringBuilder text) {
+    public String toYaml() {
+        StringBuilder builder = new StringBuilder();
+        visitNode(this, 0, true, builder);
+        return builder.toString();
+    }
+    
+    protected void visitNode(PlanNode node, int nodeLevel, boolean yaml, StringBuilder text) {
         for(int i=0; i<nodeLevel; i++) {
             text.append("  "); //$NON-NLS-1$
         }
-        text.append(node.getName());        
-        text.append("\n"); //$NON-NLS-1$
+        text.append(node.getName());
+        if (yaml) {
+            text.append(":\n"); //$NON-NLS-1$
+        } else {
+            text.append("\n"); //$NON-NLS-1$
+        }
         
         // Print properties appropriately
         int propTabs = nodeLevel + 1;
@@ -300,34 +310,48 @@ public class PlanNode implements Externalizable {
         	for(int t=0; t<propTabs; t++) {
 				text.append("  "); //$NON-NLS-1$
 			}
-            printProperty(nodeLevel, property, text);
+            printProperty(nodeLevel, property, yaml, text);
         }
     }
 
-    private void printProperty(int nodeLevel, Property p, StringBuilder text) {
-        text.append("+ "); //$NON-NLS-1$
+    private void printProperty(int nodeLevel, Property p, boolean yaml, StringBuilder text) {
+        if (!yaml) {
+            text.append("+ "); //$NON-NLS-1$
+        }
         text.append(p.getName());
         
         if (p.getPlanNode() != null) {
 	        text.append(":\n"); //$NON-NLS-1$ 
-	        visitNode(p.getPlanNode(), nodeLevel + 2, text);
+	        visitNode(p.getPlanNode(), nodeLevel + 2, yaml, text);
         } else if (p.getValues().size() > 1){
         	text.append(":\n"); //$NON-NLS-1$ 
         	for (int i = 0; i < p.getValues().size(); i++) {
             	for(int t=0; t<nodeLevel+2; t++) {
             		text.append("  "); //$NON-NLS-1$
             	}
-                text.append(i);
-                text.append(": "); //$NON-NLS-1$
+            	if (yaml) {
+            	    text.append("- "); //$NON-NLS-1$    
+            	} else {
+            	    text.append(i);
+            	    text.append(": "); //$NON-NLS-1$
+            	}
             	text.append(p.getValues().get(i));
                 text.append("\n"); //$NON-NLS-1$
 			}
         } else if (p.getValues().size() == 1) {
-        	text.append(":"); //$NON-NLS-1$
+            if (yaml) {
+                text.append(": "); //$NON-NLS-1$    
+            } else {
+                text.append(":"); //$NON-NLS-1$                
+            }
         	text.append(p.getValues().get(0));
         	text.append("\n"); //$NON-NLS-1$
         } else {
-        	text.append("\n"); //$NON-NLS-1$
+            if (yaml) {
+                text.append(": ~\n"); //$NON-NLS-1$
+            } else {
+                text.append("\n"); //$NON-NLS-1$
+            }
         }
     }
     
