@@ -54,6 +54,7 @@
         <odata-war-prefix />
         <version.com.force.api>22.0.0</version.com.force.api>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
+        <version.com.force.api.41>41.0.0</version.com.force.api.41>
         <version.nux>1.6</version.nux>
         <version.gdata-core>1.47.1</version.gdata-core>
         <version.olap4j>1.1.0</version.olap4j>
@@ -480,6 +481,11 @@
                 <artifactId>translator-salesforce-34</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-salesforce-41</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 	        <dependency>
 	            <groupId>org.teiid.connectors</groupId>
 	            <artifactId>connector-salesforce</artifactId>
@@ -490,6 +496,11 @@
                 <artifactId>connector-salesforce-34</artifactId>
                 <version>${project.version}</version>
             </dependency>           	                	
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>connector-salesforce-41</artifactId>
+                <version>${project.version}</version>
+            </dependency>
       		<dependency>
             	<groupId>org.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>

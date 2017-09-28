@@ -20,6 +20,9 @@
 	       <resource-adapter id="salesforce-34">
 	           <module id="org.jboss.teiid.resource-adapter.salesforce-34"/>
 	       </resource-adapter>                
+	       <resource-adapter id="salesforce-41">
+               <module id="org.jboss.teiid.resource-adapter.salesforce-41"/>
+           </resource-adapter>
 	       <resource-adapter id="webservice">
 	           <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
 	       </resource-adapter>

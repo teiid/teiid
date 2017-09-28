@@ -46,6 +46,7 @@
         <translator name="ws" module="org.jboss.teiid.translator.ws"/>
         <translator name="salesforce" module="org.jboss.teiid.translator.salesforce"/>
         <translator name="salesforce-34" module="org.jboss.teiid.translator.salesforce-34"/>
+        <translator name="salesforce-41" module="org.jboss.teiid.translator.salesforce-41"/>
         <translator name="hive" module="org.jboss.teiid.translator.hive"/>
         <translator name="jpa2" module="org.jboss.teiid.translator.jpa"/>
         <translator name="odata" module="org.jboss.teiid.translator.odata"/>

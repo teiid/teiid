@@ -30,9 +30,16 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
@@ -167,6 +174,9 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 					} catch (Exception e) {
 						LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get cardinality for", table); //$NON-NLS-1$
 					}
+				}
+				if (table.getPrimaryKey() == null) {
+				    continue;
 				}
 				for (Column column:table.getPrimaryKey().getColumns()) {
 					if (!column.isUpdatable()) {
