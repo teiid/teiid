@@ -51,4 +51,13 @@ public class TestCouchbase {
         assertEquals(BigInteger.valueOf(1), cef.retrieveValue(BigInteger.class, 1));
         assertEquals(BigDecimal.valueOf(2), cef.retrieveValue(BigDecimal.class, BigInteger.valueOf(2)));
     }
+    
+    @Test public void testUseDouble() throws TranslatorException {
+        CouchbaseExecutionFactory cef = new CouchbaseExecutionFactory();
+        cef.setUseDouble(false);
+        cef.start();
+        assertTrue(cef.supportsConvert(TypeFacility.RUNTIME_CODES.STRING, TypeFacility.RUNTIME_CODES.LONG));
+        cef.setUseDouble(true);
+        assertFalse(cef.supportsConvert(TypeFacility.RUNTIME_CODES.STRING, TypeFacility.RUNTIME_CODES.LONG));
+    }
 }
