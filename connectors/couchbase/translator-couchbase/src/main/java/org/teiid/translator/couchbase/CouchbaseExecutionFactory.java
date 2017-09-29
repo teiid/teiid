@@ -60,6 +60,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
     
     private int maxBulkInsertSize = 100;
+    private boolean useDouble;
     
 	public CouchbaseExecutionFactory() {
 	    setSupportsSelectDistinct(true);
@@ -197,7 +198,9 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 
     @Override
     public MetadataProcessor<CouchbaseConnection> getMetadataProcessor() {
-        return new CouchbaseMetadataProcessor();
+        CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();
+        mp.setUseDouble(useDouble);
+        return mp;
     }
 
     @Override
@@ -426,9 +429,10 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     @Override
     public boolean supportsConvert(int fromType, int toType) {
         //support only the known types
-        if (toType == FunctionModifier.STRING || toType == FunctionModifier.INTEGER || toType == FunctionModifier.LONG
-            || toType == FunctionModifier.DOUBLE || toType == FunctionModifier.BOOLEAN || toType == FunctionModifier.BIGINTEGER
-            || toType == FunctionModifier.BIGDECIMAL || toType == FunctionModifier.OBJECT) {
+        if (toType == FunctionModifier.STRING || toType == FunctionModifier.INTEGER 
+            || toType == FunctionModifier.DOUBLE || toType == FunctionModifier.BOOLEAN || toType == FunctionModifier.OBJECT 
+            || !useDouble && (toType == FunctionModifier.LONG || toType == FunctionModifier.BIGINTEGER
+                || toType == FunctionModifier.BIGDECIMAL)) {
             return super.supportsConvert(fromType, toType);
         }
         return false;
@@ -447,6 +451,15 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     @Override
     public boolean returnsSingleUpdateCount() {
         return true;
+    }
+    
+    @TranslatorProperty(display="Use Double", description="Use double rather than allowing for wider types, such as long, bigdecimal, and biginteger", advanced=true)
+    public boolean isUseDouble() {
+        return useDouble;
+    }
+    
+    public void setUseDouble(boolean useDouble) {
+        this.useDouble = useDouble;
     }
 
 }

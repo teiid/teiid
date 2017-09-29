@@ -72,6 +72,8 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     private String sampleKeyspaces = ALL_COLS;
     
     private Map<String, List<String>> typeNameMap;
+
+    private boolean useDouble;
             
     @Override
     public void process(MetadataFactory mf, CouchbaseConnection conn) throws TranslatorException {
@@ -518,14 +520,23 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         } else if (value instanceof Integer) {
             return TypeFacility.RUNTIME_NAMES.INTEGER;
         } else if (value instanceof Long) {
+            if (useDouble) {
+                return TypeFacility.RUNTIME_NAMES.DOUBLE;
+            }
             return TypeFacility.RUNTIME_NAMES.LONG;
         } else if (value instanceof Double) {
             return TypeFacility.RUNTIME_NAMES.DOUBLE;
         } else if (value instanceof Boolean) {
             return TypeFacility.RUNTIME_NAMES.BOOLEAN;
         } else if (value instanceof BigInteger) {
+            if (useDouble) {
+                return TypeFacility.RUNTIME_NAMES.DOUBLE;
+            }
             return TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
         } else if (value instanceof BigDecimal) {
+            if (useDouble) {
+                return TypeFacility.RUNTIME_NAMES.DOUBLE;
+            }
             return TypeFacility.RUNTIME_NAMES.BIG_DECIMAL;
         } 
 
@@ -664,6 +675,10 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             return DIM_SUFFIX + this.dimension;
         }
         
+    }
+
+    public void setUseDouble(boolean useDouble) {
+        this.useDouble = useDouble;
     }
    
 }
