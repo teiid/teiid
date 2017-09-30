@@ -129,6 +129,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
     private AggregateFunction[][] functions;
     private List<?> lastRow;
 	private List<?> currentGroupTuple;
+	private boolean doneReading;
 	
 	// Group sort
 	private STree tree;
@@ -160,6 +161,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         
         lastRow = null;
         currentGroupTuple = null;
+        doneReading = false;
         
         if (this.functions != null) {
 	    	for (AggregateFunction[] functions : this.functions) {
@@ -575,11 +577,12 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 
     private TupleBatch groupPhase() throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	CommandContext context = getContext();
-        while(true) {
+        while(!doneReading) {
 
         	if (currentGroupTuple == null) {
         		currentGroupTuple = this.groupTupleSource.nextTuple();
         		if (currentGroupTuple == null) {
+        		    doneReading = true;
         			break;
         		}
         	}
@@ -618,7 +621,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         return pullBatch();
     }
 
-	private void closeGroup(int colDiff, boolean reset, CommandContext context) throws FunctionExecutionException,
+	protected void closeGroup(int colDiff, boolean reset, CommandContext context) throws FunctionExecutionException,
 			ExpressionEvaluationException, TeiidComponentException,
 			TeiidProcessingException {
 		List<Object> row = new ArrayList<Object>(functions.length);

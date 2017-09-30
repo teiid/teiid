@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -251,6 +253,64 @@ public class TestGroupingNode {
         List symbols = new ArrayList();
         symbols.add(bigDecimal);
         FakeTupleSource dataSource = new FakeTupleSource(symbols, data);            
+        helpProcess(mgr, node, context, expected, dataSource, null);
+    }
+    
+    @Test public void testBlocking() throws Exception {
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
+
+        ElementSymbol bigDecimal = new ElementSymbol("value"); //$NON-NLS-1$
+        bigDecimal.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);        
+
+        // Set up
+        GroupingNode node = new GroupingNode(1) {
+            boolean block = true;
+            @Override
+            protected void closeGroup(int colDiff, boolean reset,
+                    CommandContext context) throws FunctionExecutionException,
+                    ExpressionEvaluationException, TeiidComponentException,
+                    TeiidProcessingException {
+                if (block) {
+                    block = false;
+                    throw BlockedException.INSTANCE;
+                }
+                block = true;
+                super.closeGroup(colDiff, reset, context);
+            }  
+        };       
+        List outputElements = new ArrayList();
+        outputElements.add(new AggregateSymbol("SUM", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("AVG", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
+        node.setElements(outputElements);
+        
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
+        
+        List[] data = new List[] {
+            Arrays.asList(new Object[] { new BigDecimal("0.0") }),     //$NON-NLS-1$
+            Arrays.asList(new Object[] { new BigDecimal("1.0") }),     //$NON-NLS-1$
+            Arrays.asList(new Object[] { new BigDecimal("2.0") }),     //$NON-NLS-1$
+            Arrays.asList(new Object[] { new BigDecimal("3.0") }),     //$NON-NLS-1$
+            Arrays.asList(new Object[] { new BigDecimal("4.0") }) //$NON-NLS-1$
+        };
+        
+        List[] expected = new List[] {
+            Arrays.asList(new Object[] { new BigDecimal("10.0"), new BigDecimal("2.0") }) //$NON-NLS-1$ //$NON-NLS-2$
+        };
+                
+        List symbols = new ArrayList();
+        symbols.add(bigDecimal);
+        FakeTupleSource dataSource = new FakeTupleSource(symbols, data) {
+            boolean end;
+            @Override
+            public List nextTuple() throws TeiidComponentException {
+                List result = super.nextTuple();
+                if (end) {
+                    fail();
+                }
+                end = result == null;
+                return result;
+            }  
+        };           
         helpProcess(mgr, node, context, expected, dataSource, null);
     }
 
