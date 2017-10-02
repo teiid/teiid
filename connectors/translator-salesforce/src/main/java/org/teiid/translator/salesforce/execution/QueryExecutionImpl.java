@@ -262,7 +262,8 @@ public class QueryExecutionImpl implements ResultSetExecution {
 							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
 						}
 					} else {
-						Object cell = sObject.getElementsByTagName("sf:" + element.getNameInSource()).item(0); //$NON-NLS-1$
+						Element child = (Element)sObject.getElementsByTagName("sf:" + element.getNameInSource()).item(0); //$NON-NLS-1$
+	                    Object cell = getCellDatum(element.getNameInSource(), element.getJavaType(), child);
 						setElementValueInColumn(j, cell, row);
 					}
 				}
