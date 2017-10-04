@@ -28,6 +28,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.util.CommandContext;
@@ -37,19 +38,13 @@ import org.teiid.query.util.CommandContext;
  * Used only to target what could be cpu intensive temp table queries - which are only expensive to compute up to the first tuple
  */
 final class AsyncTupleSource implements TupleSource {
-    private final TupleSource result;
-    private Future<List<?>> future;
+    private TupleSource result;
+    private Future<TupleSource> future;
+    private Callable<TupleSource> callable;
 
-    public AsyncTupleSource(TupleSource result, CommandContext context) {
-        this.result = result;
-        future = context.submit(new Callable<List<?>>() {
-            @Override
-            public List<?> call() throws Exception {
-                synchronized (AsyncTupleSource.this) {
-                    return result.nextTuple();
-                }
-            }
-        });
+    public AsyncTupleSource(Callable<TupleSource> callable, CommandContext context) {
+        this.callable = callable;
+        future = context.submit(callable);
     }
 
     @Override
@@ -59,9 +54,10 @@ final class AsyncTupleSource implements TupleSource {
             if (!future.isDone()) {
                 throw BlockedException.block("waiting for AsyncTupleSource results"); //$NON-NLS-1$
             }
-            return clearFuture();
+            result = clearFuture();
         }
-        synchronized (this) {
+        Assertion.isNotNull(result);
+        synchronized (callable) {
             return result.nextTuple();
         }
     }
@@ -79,7 +75,7 @@ final class AsyncTupleSource implements TupleSource {
         }
     }
 
-    private List<?> clearFuture() throws TeiidComponentException, TeiidProcessingException {
+    private TupleSource clearFuture() throws TeiidComponentException, TeiidProcessingException {
         if (future == null) {
             return null;
         }

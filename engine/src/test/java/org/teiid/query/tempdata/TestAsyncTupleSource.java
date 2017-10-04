@@ -21,9 +21,11 @@ package org.teiid.query.tempdata;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.concurrent.Callable;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.CollectionTupleSource;
@@ -32,7 +34,13 @@ import org.teiid.query.util.CommandContext;
 public class TestAsyncTupleSource {
 
     @Test public void testTupleSource() throws TeiidComponentException, TeiidProcessingException {
-        AsyncTupleSource ats = new AsyncTupleSource(new CollectionTupleSource(Arrays.asList(Arrays.asList(1), Arrays.asList(2)).iterator()), new CommandContext());
+        AsyncTupleSource ats = new AsyncTupleSource(new Callable<TupleSource>() {
+            
+            @Override
+            public TupleSource call() throws Exception {
+                return new CollectionTupleSource(Arrays.asList(Arrays.asList(1), Arrays.asList(2)).iterator());
+            }
+        }, new CommandContext());
         for (int i = 0; i < 20; i++) {
             try {
                 assertEquals(Arrays.asList(1), ats.nextTuple());

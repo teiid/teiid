@@ -197,6 +197,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private LRUCache<AbstractMetadataRecord, Boolean> accessible;
 
 		private Throwable batchUpdateException;
+
+        public boolean parallel;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -1188,5 +1190,15 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	public void setBatchUpdateException(Throwable t) {
 		this.globalState.batchUpdateException = t;
 	}
+
+    public boolean isParallel() {
+        return this.globalState.parallel;
+    }
+    
+    public boolean setParallel(boolean value) {
+        boolean result = this.globalState.parallel;
+        this.globalState.parallel = value;
+        return result;
+    }
 	
 }

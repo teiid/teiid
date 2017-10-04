@@ -602,11 +602,20 @@ public class TempTableDataManager implements ProcessorDataManager {
 					}
 					TempTable table = globalStore.getTempTable(tableName);
 					context.accessedDataObject(group.getMetadataID());
-					TupleSource result = table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
-					cancelMoreWork();
-					if (query.getCriteria() == null && query.getOrderBy() != null && table.getRowCount() > MIN_ASYNCH_SIZE) {
-	                    return new AsyncTupleSource(result, context);
+					if (context.isParallel() && query.getCriteria() == null && query.getOrderBy() != null && table.getRowCount() > MIN_ASYNCH_SIZE) {
+					    return new AsyncTupleSource(new Callable<TupleSource>() {
+	                        @Override
+	                        public TupleSource call() throws Exception {
+	                            synchronized (this) {
+	                                TupleSource result = table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+	                                cancelMoreWork();
+	                                return result;
+	                            }
+	                        }
+	                    }, context);
 	                }
+                    TupleSource result = table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+                    cancelMoreWork();
 					return result;
 				}
 
@@ -662,11 +671,17 @@ public class TempTableDataManager implements ProcessorDataManager {
 						context.accessedDataObject(id);
 					}
 				}
-				TupleSource result = tt.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
-				if (query.getCriteria() == null && query.getOrderBy() != null && tt.getRowCount() > MIN_ASYNCH_SIZE) {
-	                return new AsyncTupleSource(result, context);
+				if (context.isParallel() && query.getCriteria() == null && query.getOrderBy() != null && tt.getRowCount() > MIN_ASYNCH_SIZE) {
+	                return new AsyncTupleSource(new Callable<TupleSource>() {
+	                    @Override
+	                    public TupleSource call() throws Exception {
+	                        synchronized (this) {
+	                            return tt.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+                            }
+	                    }
+	                }, context);
                 }
-				return result;
+				return tt.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
 			}
 		};
 	}

@@ -350,9 +350,12 @@ public class SortUtility {
         }
         
         long rowCount = workingBuffer.getRowCount();
-        if (!nonBlocking && !onePass && ((rowCount > (1<<21) && rowCount > (this.targetRowCount<<3)) || rowCount > (this.targetRowCount<<5))) {
-            //potentially long running sort, so let it be async
-            workAsync(rowLimit);
+        if (!nonBlocking && !onePass) {
+            CommandContext cc = CommandContext.getThreadLocalContext();
+            if (cc != null && cc.isParallel() && ((rowCount > (1<<21) && rowCount > (this.targetRowCount<<3)) || rowCount > (this.targetRowCount<<5))) {
+                //potentially long running sort, so let it be async
+                workAsync(rowLimit, cc);
+            }
         }
     	
 		sortWorking(rowLimit);
@@ -390,12 +393,7 @@ public class SortUtility {
         }
     }
     
-    private void workAsync(final int rowLimit) throws BlockedException {
-        //check parents to see if this is a good spot for parallel execution
-        final CommandContext cc = CommandContext.getThreadLocalContext();
-        if (cc == null) {
-            return;
-        }
+    private void workAsync(final int rowLimit, CommandContext cc) throws BlockedException {
         future = cc.submit(new Callable<Void>() {
             @Override
             public Void call() throws Exception {
