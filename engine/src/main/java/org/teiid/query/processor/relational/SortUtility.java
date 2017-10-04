@@ -18,12 +18,17 @@
 
 package org.teiid.query.processor.relational;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -34,6 +39,7 @@ import org.teiid.common.buffer.TupleBuffer.TupleBufferTupleSource;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.SortSpecification.NullOrdering;
@@ -53,6 +59,44 @@ import org.teiid.query.util.CommandContext;
  * TODO: release the tuple buffer in the last merge pass if sublists will fit in processing batch size
  */
 public class SortUtility {
+    
+    private static class AccessibleArrayList<T> extends AbstractList<T> {
+        Object[] elementData = new Object[32];
+        int size;
+
+        @Override
+        public T get(int index) {
+            return (T) elementData[index];
+        }
+        
+        @Override
+        public T set(int index, T element) {
+            Object result = elementData[index];
+            elementData[index] = element;
+            return (T)result;
+        }
+
+        @Override
+        public int size() {
+            return size;
+        }
+        
+        @Override
+        public boolean add(T e) {
+            if (size == elementData.length) {
+                elementData = Arrays.copyOf(elementData, elementData.length*2);
+            }
+            elementData[size++] = e;
+            return true;
+        }
+        
+        @Override
+        public void clear() {
+            Arrays.parallelSetAll(elementData, i->null);
+            size = 0;
+        }
+        
+    }
 	
 	public enum Mode {
 		SORT,
@@ -109,6 +153,7 @@ public class SortUtility {
 	private static boolean STABLE_SORT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.requireStableSort", false); //$NON-NLS-1$
 	
 	private boolean stableSort = STABLE_SORT;
+    private Future<Void> future;
     
     public SortUtility(TupleSource sourceID, List<OrderByItem> items, Mode mode, BufferManager bufferMgr,
                         String groupName, List<? extends Expression> schema) {
@@ -192,15 +237,18 @@ public class SortUtility {
         throws TeiidComponentException, TeiidProcessingException {
     	boolean success = false;
     	try {
-	        if(this.phase == INITIAL_SORT) {
-	            initialSort(false, false, rowLimit);
-	        }
-	        
-	        if(this.phase == MERGE) {
-	            mergePhase(rowLimit);
-	        }
-	        success = true;
-	        return this.activeTupleBuffers.get(0);
+    	    waitForWork();
+    	    synchronized (this) {
+    	        if(this.phase == INITIAL_SORT) {
+    	            initialSort(false, false, rowLimit);
+    	        }
+    	        
+    	        if(this.phase == MERGE) {
+    	            mergePhase(rowLimit);
+    	        }
+    	        success = true;
+    	        return this.activeTupleBuffers.get(0);
+    	    }
     	} catch (BlockedException e) {
     		success = true;
     		throw e;
@@ -258,52 +306,116 @@ public class SortUtility {
                 end = System.nanoTime() + (cc.getTimeSliceEnd()-System.currentTimeMillis())*1000000;
             }
         }
+        if (source == null) {
+            doneReading = true;
+        }
     	outer: while (!doneReading) {
-    		
-    		if (this.source != null) {
-	    		//sub-phase 1 - build up a working buffer of tuples
-	    		if (this.workingBuffer == null) {
-	    			this.workingBuffer = createTupleBuffer();
-	    		}
-	    		
-	    		while (!doneReading) {
-		            try {
-		            	List<?> tuple = source.nextTuple();
-		            	
-		            	if (tuple == null) {
-		            		doneReading = true;
-		            		break;
-		            	}
-		            	this.workingBuffer.addTuple(tuple);
-		            	
-		            	if (onePass && lowLatency && this.workingBuffer.getRowCount() > 2*this.targetRowCount) {
-		            		break outer;
-		            	} else if (end != Long.MAX_VALUE && (this.workingBuffer.getRowCount()%32)==1 && System.nanoTime() > end) {
-		            	    CommandContext.getThreadLocalContext().getWorkItem().moreWork();
-		            	    throw BlockedException.block("Blocking on large sort"); //$NON-NLS-1$
-		            	}
-		            } catch(BlockedException e) {
-		            	/*there are three cases here
-		            	 * 1. a fully blocking sort (optionally dup removal)
-		            	 * 2. a streaming dup removal
-		            	 * 3. a one pass sort (for grace join like processing)
-		            	 */
-		            	if (!onePass) {
-		            		throw e; //read fully before processing
-		            	}
-	            		//we're trying to create intermediate buffers that will comfortably be small memory sorts
-	            		if (this.workingBuffer.getRowCount() < this.targetRowCount) {
-	            			throw e;
-	            		}	
-		            	break outer; //there's processing that we can do
-		            } 
-	    		}
-    		} else {
-    			doneReading = true;
+    		//sub-phase 1 - build up a working buffer of tuples
+    		if (this.workingBuffer == null) {
+    			this.workingBuffer = createTupleBuffer();
     		}
+    		
+    		while (!doneReading) {
+	            try {
+	            	List<?> tuple = source.nextTuple();
+	            	
+	            	if (tuple == null) {
+	            		doneReading = true;
+	            		break;
+	            	}
+	            	this.workingBuffer.addTuple(tuple);
+	            	
+	            	if (onePass && lowLatency && this.workingBuffer.getRowCount() > 2*this.targetRowCount) {
+	            		break outer;
+	            	} else if (end != Long.MAX_VALUE && (this.workingBuffer.getRowCount()%32)==1 && System.nanoTime() > end) {
+	            	    CommandContext.getThreadLocalContext().getWorkItem().moreWork();
+	            	    throw BlockedException.block("Blocking on large sort"); //$NON-NLS-1$
+	            	}
+	            } catch(BlockedException e) {
+	            	/*there are three cases here
+	            	 * 1. a fully blocking sort (optionally dup removal)
+	            	 * 2. a streaming dup removal
+	            	 * 3. a one pass sort (for grace join like processing)
+	            	 */
+	            	if (!onePass) {
+	            		throw e; //read fully before processing
+	            	}
+            		//we're trying to create intermediate buffers that will comfortably be small memory sorts
+            		if (this.workingBuffer.getRowCount() < this.targetRowCount) {
+            			throw e;
+            		}	
+	            	break outer; //there's processing that we can do
+	            } 
+    		} 
+        }
+        
+        long rowCount = workingBuffer.getRowCount();
+        if (!nonBlocking && !onePass && ((rowCount > (1<<21) && rowCount > (this.targetRowCount<<3)) || rowCount > (this.targetRowCount<<5))) {
+            //potentially long running sort, so let it be async
+            workAsync(rowLimit);
         }
     	
-		//sub-phase 2 - perform a memory sort on the workingbuffer/source
+		sortWorking(rowLimit);
+    }
+    
+    private void waitForWork() throws BlockedException, TeiidComponentException,
+            TeiidProcessingException {
+        if (future == null) {
+            return;
+        }
+        if (!future.isDone()) {
+            throw BlockedException.block("Waiting on sort operation"); //$NON-NLS-1$
+        }
+        try {
+            future.get();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof BlockedException) {
+                return;
+            }
+            if (e.getCause() instanceof TeiidComponentException) {
+                throw (TeiidComponentException) e.getCause();
+            }
+            if (e.getCause() instanceof TeiidProcessingException) {
+                throw (TeiidProcessingException) e.getCause();
+            }
+            if (e.getCause() instanceof TeiidRuntimeException) {
+                throw (TeiidRuntimeException) e.getCause();
+            }
+            throw new TeiidRuntimeException(e);
+        } catch (InterruptedException e) {
+            Thread.interrupted();
+            throw new TeiidRuntimeException(e);
+        } finally {
+            future = null;
+        }
+    }
+    
+    private void workAsync(final int rowLimit) throws BlockedException {
+        //check parents to see if this is a good spot for parallel execution
+        final CommandContext cc = CommandContext.getThreadLocalContext();
+        if (cc == null) {
+            return;
+        }
+        future = cc.submit(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                synchronized (SortUtility.this) {
+                    if (phase == INITIAL_SORT) {
+                        sortWorking(rowLimit);
+                    } 
+                    if (phase == MERGE) {
+                        doMerge(rowLimit);
+                    }
+                }
+                return null;
+            }
+        });
+        throw BlockedException.block("Waiting on sort operation"); //$NON-NLS-1$
+    }
+
+    private void sortWorking(int rowLimit)
+            throws TeiidComponentException, TeiidProcessingException {
+        //sub-phase 2 - perform a memory sort on the workingbuffer/source
     	int totalReservedBuffers = 0;
         try {
     		int maxRows = this.batchSize;
@@ -339,7 +451,7 @@ public class SortUtility {
 			maxRows = Math.max(1, (totalReservedBuffers/schemaSize))*batchSize;
 			boolean checkLimit = rowLimit > -1 && rowCount <= maxRows;
             if (mode == Mode.SORT) {
-            	workingTuples = new ArrayList<List<?>>();
+            	workingTuples = new AccessibleArrayList<>();
             } else {
             	workingTuples = new TreeSet<List<?>>(comparator);
             }
@@ -364,7 +476,11 @@ public class SortUtility {
 		        activeTupleBuffers.add(sublist);
 		        if (this.mode == Mode.SORT) {
 		        	//perform a stable sort
-		    		Collections.sort((List<List<?>>)workingTuples, comparator);
+		            if (workingTuples.size() > (1<<18)) {
+		                Arrays.parallelSort(((AccessibleArrayList)workingTuples).elementData,0, workingTuples.size(), comparator);
+		            } else {
+		                Collections.sort((List<List<?>>) workingTuples, comparator);
+		            }
 		        }
 		        for (List<?> list : workingTuples) {
 					sublist.addTuple(list);
@@ -529,7 +645,7 @@ public class SortUtility {
     	return this.comparator.isDistinct();
     }
 
-	public void remove() {
+	public synchronized void remove() {
 		if (workingBuffer != null && source != null) {
 			workingBuffer.remove();
 			workingBuffer = null;
@@ -563,5 +679,5 @@ public class SortUtility {
 	public boolean isDoneReading() {
 		return doneReading;
 	}
-    
+	
 }
