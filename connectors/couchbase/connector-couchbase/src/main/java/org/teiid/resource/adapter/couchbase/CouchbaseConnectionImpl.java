@@ -30,8 +30,10 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
+import com.couchbase.client.java.query.consistency.ScanConsistency;
 
 public class CouchbaseConnectionImpl extends BasicConnection implements CouchbaseConnection {
     
@@ -41,9 +43,10 @@ public class CouchbaseConnectionImpl extends BasicConnection implements Couchbas
 	private Bucket bucket;
 	
 	private String namespace; // map to namespaces
+	private ScanConsistency scanConsistency;
 	
-	public CouchbaseConnectionImpl(CouchbaseEnvironment environment, String connectionString, String keyspace, String password, TimeUnit timeUnit, String namespace){
-	    
+	public CouchbaseConnectionImpl(CouchbaseEnvironment environment, String connectionString, String keyspace, String password, TimeUnit timeUnit, String namespace, ScanConsistency scanConsistent){
+        this.scanConsistency = scanConsistent;
 	    this.cluster = CouchbaseCluster.create(environment, connectionString);  
 	    if(password != null) {
             this.bucket = this.cluster.openBucket(keyspace, password, environment.connectTimeout(), timeUnit);
@@ -55,7 +58,7 @@ public class CouchbaseConnectionImpl extends BasicConnection implements Couchbas
 
     @Override
     public N1qlQueryResult execute(String statement) throws ResourceException {
-        N1qlQueryResult result = this.bucket.query(N1qlQuery.simple(statement));
+        N1qlQueryResult result = this.bucket.query(N1qlQuery.simple(statement, N1qlParams.build().consistency(scanConsistency)));
         if (!result.finalSuccess()) {
             throw new ResourceException(UTIL.gs("query_error", result.errors()), result.status()); //$NON-NLS-1$
         }

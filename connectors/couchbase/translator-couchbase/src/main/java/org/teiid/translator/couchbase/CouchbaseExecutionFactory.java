@@ -449,7 +449,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         return true;
     }
     
-    @TranslatorProperty(display="Use Double", description="Use double rather than allowing for wider types, such as long, bigdecimal, and biginteger", advanced=true)
+    @TranslatorProperty(display="Use Double", description="Use double rather than allowing for more precise types, such as long, bigdecimal, and biginteger", advanced=true)
     public boolean isUseDouble() {
         return useDouble;
     }
