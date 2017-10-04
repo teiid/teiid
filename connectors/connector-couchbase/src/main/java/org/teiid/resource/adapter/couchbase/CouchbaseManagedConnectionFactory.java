@@ -32,6 +32,7 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.query.consistency.ScanConsistency;
 
 /**
  * Represents a managed connection factory instance for create {@code CouchbaseConnection}.
@@ -56,6 +57,8 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
     private Long searchTimeout = TimeUnit.SECONDS.toMillis(75);
     
     private Long connectTimeout = TimeUnit.SECONDS.toMillis(5);
+    
+    private String scanConsistency = ScanConsistency.NOT_BOUNDED.name();
     
     private Boolean dnsSrvEnabled = false;
 
@@ -177,6 +180,14 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
     public void setTimeUnit(String timeUnit) {
         this.timeUnit = timeUnit;
     }
+    
+    public String getScanConsistency() {
+        return scanConsistency;
+    }
+    
+    public void setScanConsistency(String scanConsistency) {
+        this.scanConsistency = scanConsistency;
+    }
 
     @SuppressWarnings("serial")
     @Override
@@ -204,6 +215,8 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
             throw new InvalidPropertyException(UTIL.getString("no_namespace")); //$NON-NLS-1$
         }
 		
+		final ScanConsistency consistency = ScanConsistency.valueOf(scanConsistency); 
+		
 		TimeUnit unit = TimeUnit.MILLISECONDS;
 		if(this.timeUnit != null) {
 		    try {
@@ -218,7 +231,7 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 
             @Override
             public CouchbaseConnectionImpl getConnection() throws ResourceException {
-                return new CouchbaseConnectionImpl(environment, connectionString, keyspace, password, timeoutUnit, namespace);
+                return new CouchbaseConnectionImpl(environment, connectionString, keyspace, password, timeoutUnit, namespace, consistency);
             }};
 		
 	}
