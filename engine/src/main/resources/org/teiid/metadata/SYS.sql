@@ -237,6 +237,7 @@ CREATE FOREIGN TABLE Tables (
 CREATE FOREIGN TABLE VirtualDatabases (
 	Name string(255) NOT NULL,
 	Version string(50) NOT NULL,
+	Description string(4000),
 	PRIMARY KEY (Name, Version)
 );
 

@@ -479,6 +479,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		VDBKey key = new VDBKey(record.getName(), 0);
         		row.add(key.getName());
     			row.add(record.getVersion());
+    			row.add(record.getDescription());
         	}
 		});
         name = SystemTables.PROCEDUREPARAMS.name();

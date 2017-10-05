@@ -130,7 +130,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 
 	@Test public void testVirtualDatabase() throws Exception {
 
-		String[] expected = { "Name[string]	Version[string]	", "PartsSupplier	1", //$NON-NLS-1$ //$NON-NLS-2$
+		String[] expected = { "Name[string]	Version[string]	Description[string] ", "PartsSupplier	1	null", //$NON-NLS-1$ //$NON-NLS-2$
 
 		};
 		executeAndAssertResults("select* from SYS.VirtualDatabases", //$NON-NLS-1$
