@@ -207,7 +207,16 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         for (MessageElement messageElement:messageTypes) {
             Table t = addTable(mf, messageTypes, enumTypes, messageElement, null, deleteTables);
             if (t != null) {
-                t.setProperty(CACHE, cacheName);
+                if (t.getAnnotation() != null && findFromAnnotation(AT_CACHE, t.getAnnotation(), "name") != null) {
+                	t.setProperty(CACHE, findFromAnnotation(AT_CACHE, t.getAnnotation(), "name"));
+                } else {
+                	// only set the cache name on the root message table, not on embedded 
+                	// of child tables, as they will be part of parent, and we do not want discrepancy 
+                	// in metadata, as both parent child must be in single cache.
+                	if (getParentTag(t) == -1) {
+                		t.setProperty(CACHE, cacheName);
+                	}
+                }
             }
         }
 
@@ -234,7 +243,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         table.setSupportsUpdate(true);
         table.setNameInSource(messageElement.qualifiedName());
         table.setAnnotation(messageElement.documentation());
-
+        
         for (FieldElement fieldElement:messageElement.fields()) {
             addColumn(mf, messageTypes, enumTypes, columnPrefix, table, fieldElement, ignoreTables, false);
         }
@@ -251,6 +260,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         String columnName =  fieldElement.name();
 
         String teiidType = null;
+        boolean searchable = true;
         if (isEnum(messageTypes, enumTypes, type)) {
             teiidType = ProtobufDataManager.teiidType(type, isCollection(fieldElement), true);
         } else if (isMessage(messageTypes, type)) {
@@ -306,9 +316,13 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
             }
             return null;
         } else {
-        	teiidType = findFromAnnotation(annotation, "type");
+        	teiidType = findFromAnnotation(AT_TEIID, annotation, "type");
             if (teiidType == null) {
             	teiidType = ProtobufDataManager.teiidType(type, isCollection(fieldElement), false);
+            } else {
+            	// these are artificial types not defined in protobuf, so not eligible for pushdown based
+            	// comparisons so that need to be marked as such.             	            	
+            	searchable = false; 
             }
         }
 
@@ -322,18 +336,18 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         c.setUpdatable(true);
         c.setNullType(fieldElement.label() == Label.REQUIRED ? NullType.No_Nulls : NullType.Nullable);
         c.setProperty(TAG, Integer.toString(fieldElement.tag()));
-        
-        String length = findFromAnnotation(annotation, "length");
+
+        String length = findFromAnnotation(AT_TEIID, annotation, "length");
         if (length != null) {
         	c.setLength(Integer.parseInt(length));
         }
 
-        String precision = findFromAnnotation(annotation, "precision");
+        String precision = findFromAnnotation(AT_TEIID, annotation, "precision");
         if (precision != null) {
         	c.setPrecision(Integer.parseInt(precision));
         }
         
-        String scale = findFromAnnotation(annotation, "scale");
+        String scale = findFromAnnotation(AT_TEIID, annotation, "scale");
         if (scale != null) {
         	c.setScale(Integer.parseInt(scale));
         }        
@@ -356,9 +370,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                 c.setSearchType(SearchType.Searchable);
             }
         }
-
+        
         if ( annotation != null && !annotation.isEmpty()) {
-
         	// this is induced annotation already represented in Teiid metadata remove it.
         	if(annotation.contains("@Teiid(")) {
                 int start = annotation.indexOf("@Teiid(");
@@ -371,7 +384,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         	}
 
             if(annotation.contains("@IndexedField(index=false")) {
-                c.setSearchType(null);
+                c.setSearchType(SearchType.Unsearchable);
             }
 
             if(annotation.contains("@Id")) {
@@ -380,16 +393,24 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                 mf.addPrimaryKey("PK_"+fieldElement.name().toUpperCase(), pkNames, table);
             }
         }
+        
+        if (!searchable) {
+        	c.setSearchType(SearchType.Unsearchable);
+        }
 
         return c;
     }
 
-    private String findFromAnnotation(String annotation, String verb) {
+    private static final String AT_TEIID = "@Teiid("; //$NON-NLS-1$
+    private static final String AT_CACHE = "@Cache("; //$NON-NLS-1$
+    
+    private String findFromAnnotation(String rootProperty, String annotation, String verb) {
         if ( annotation != null && !annotation.isEmpty()) {
-            if(annotation.contains("@Teiid(")) {
-                int start = annotation.indexOf("@Teiid(");
-                int end = annotation.indexOf(")", start+7);
-                String teiidMetadata = annotation.substring(start+7, end);
+            if(annotation.contains(rootProperty)) {
+            	int length = rootProperty.length();
+                int start = annotation.indexOf(rootProperty);
+                int end = annotation.indexOf(")", start+length);
+                String teiidMetadata = annotation.substring(start+length, end);
                 StringTokenizer st = new StringTokenizer(teiidMetadata, ",");
                 while(st.hasMoreTokens()) {
                 	String token = st.nextToken();

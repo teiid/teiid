@@ -20,6 +20,7 @@ package org.teiid.translator.infinispan.hotrod;
 import java.io.FileReader;
 import java.util.Properties;
 
+import org.infinispan.commons.api.BasicCache;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
@@ -32,15 +33,20 @@ import static org.junit.Assert.*;
 
 public class TestSchemaToProtobufProcessor {
 
-    @Test
+    @SuppressWarnings("rawtypes")
+	@Test
     public void testConverstion() throws Exception {
         SchemaToProtobufProcessor tool = new SchemaToProtobufProcessor();
         MetadataFactory mf = TestProtobufMetadataProcessor.protoMatadata("tables.proto");
-        ProtobufResource resource = tool.process(mf, Mockito.mock(InfinispanConnection.class));
+        InfinispanConnection conn = Mockito.mock(InfinispanConnection.class);
+        BasicCache cache = Mockito.mock(BasicCache.class);
+        Mockito.stub(cache.getName()).toReturn("default");
+        Mockito.stub(conn.getCache()).toReturn(cache);
+        ProtobufResource resource = tool.process(mf, conn);
 
         String expected = "package model;\n" +
                 "\n" +
-                "/* @Indexed */\n" +
+                "/* @Indexed @Cache(name=foo) */\n" +
                 "message G1 {\n" +
                 "    /* @Id @IndexedField(index=true, store=false) */\n" +
                 "    required int32 e1 = 1;\n" +
@@ -125,7 +131,11 @@ public class TestSchemaToProtobufProcessor {
 
         SchemaToProtobufProcessor tool = new SchemaToProtobufProcessor();
         tool.setIndexMessages(true);
-        ProtobufResource resource = tool.process(mf, Mockito.mock(InfinispanConnection.class));
+        InfinispanConnection conn = Mockito.mock(InfinispanConnection.class);
+        BasicCache cache = Mockito.mock(BasicCache.class);
+        Mockito.stub(cache.getName()).toReturn("default");
+        Mockito.stub(conn.getCache()).toReturn(cache);
+        ProtobufResource resource = tool.process(mf, conn);
 
         String expected = "package model;\n" +
                 "\n" +

@@ -52,13 +52,18 @@ public class SchemaToProtobufProcessor {
     public ProtobufResource process(MetadataFactory metadataFactory, InfinispanConnection connection)
             throws TranslatorException {
 
+        String defaultCacheName = "default";
+        if (connection != null) {
+            defaultCacheName = connection.getCache().getName();            
+        }
+    	
         this.schema = metadataFactory.getSchema();
         buffer.append("package ").append(schema.getName()).append(";");
         buffer.append(NL);
         buffer.append(NL);
 
         for (Table table : schema.getTables().values()) {
-            visit(table);
+            visit(table, defaultCacheName);
             buffer.append(NL);
             buffer.append(NL);
         }
@@ -74,11 +79,16 @@ public class SchemaToProtobufProcessor {
         buffer.append(TAB);
     }
 
-    private void visit(Table table) {
+    private void visit(Table table, String defaultCacheName) {
         if (table.getAnnotation() != null) {
             buffer.append("/* ").append(table.getAnnotation()).append(" */").append(NL);
         } else if (isIndexMessages()) {
-            buffer.append("/* @Indexed */").append(NL);
+            buffer.append("/* @Indexed");
+            String cacheName = ProtobufMetadataProcessor.getCacheName(table);
+            if (cacheName != null && !cacheName.equals(defaultCacheName)) {
+            	buffer.append("@Cache(name=").append(cacheName);
+            }
+            buffer.append(" */").append(NL);
         }
         buffer.append("message ").append(table.getName()).append(SPACE).append(OPEN_CURLY).append(NL);
         for (Column column : table.getColumns()) {
