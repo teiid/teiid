@@ -1765,10 +1765,12 @@ Update update(ParseInfo info) :
 	SetClauseList setClauseList = null;
 	Criteria criteria = null;
 	Option option = null;
+	String aliasID = null;
 }
 {
 	<UPDATE>
 	group = id(null)
+	[[<AS>] aliasID=id(Boolean.FALSE)]
 	<SET>
 	setClauseList = setClauseList(false, info)
 	{
@@ -1782,12 +1784,14 @@ Update update(ParseInfo info) :
 	]
 	{	
 		// Store group
-		update.setGroup(new GroupSymbol( group) );
+		if(aliasID != null) {       
+            update.setGroup(new GroupSymbol(aliasID, group));
+        } else {
+            update.setGroup(new GroupSymbol(group));
+        }
 		
 		// Store optional criteria
-		if(criteria != null) {
-			update.setCriteria(criteria);
-		}
+        update.setCriteria(criteria);
 		
 		return update;
 	}
@@ -1804,10 +1808,12 @@ Delete delete(ParseInfo info) :
 	Criteria criteria = null;
 	Delete delete = new Delete();
 	Option option = null;
+	String aliasID = null;
 }
 {
 	<DELETE> <FROM>
 	group = id(null)
+	[[<AS>] aliasID=id(Boolean.FALSE)]
 	[criteria = where(info)]
 	[option = option(info)
 	  {
@@ -1815,7 +1821,11 @@ Delete delete(ParseInfo info) :
 	  }
 	]
 	{
-		delete.setGroup(new GroupSymbol(group));
+	    if(aliasID != null) {       
+            delete.setGroup(new GroupSymbol(aliasID, group));
+        } else {
+            delete.setGroup(new GroupSymbol(group));
+        }
 		delete.setCriteria(criteria);
 		        
         return delete; 
