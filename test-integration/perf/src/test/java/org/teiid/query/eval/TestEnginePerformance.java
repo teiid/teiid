@@ -333,6 +333,10 @@ public class TestEnginePerformance {
 		helpTestSort(bm, 250000, 10, 16, Mode.SORT);
 	}
 	
+	@Test public void runSort_1_500000() throws Exception {
+        helpTestSort(bm, 500000, 10, 1, Mode.SORT);
+    }
+	
 	@Test public void runDupRemove_1_100() throws Exception {
 		helpTestSort(bm, 100, 20000, 1, Mode.DUP_REMOVE);
 	}

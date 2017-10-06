@@ -39,9 +39,6 @@ import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Table;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
@@ -55,7 +52,6 @@ import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
@@ -72,7 +68,7 @@ import org.teiid.util.Version;
 @Translator(name="postgresql", description="A translator for postgreSQL Database")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
-	private static final String UUID_TYPE = "uuid"; //$NON-NLS-1$
+	static final String UUID_TYPE = "uuid"; //$NON-NLS-1$
     private static final String INTEGER_TYPE = "integer"; //$NON-NLS-1$
 
 	private static final class NonIntegralNumberToBoolean extends
@@ -930,70 +926,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-    	return new JDBCMetdataProcessor() {
-            @Override
-            protected String getRuntimeType(int type, String typeName, int precision) {
-                //pg will otherwise report a 1111/other type for geometry
-            	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
-                    return TypeFacility.RUNTIME_NAMES.GEOMETRY;
-                }                
-            	if (UUID_TYPE.equalsIgnoreCase(typeName)) { 
-            	    return TypeFacility.RUNTIME_NAMES.STRING;
-            	}
-                return super.getRuntimeType(type, typeName, precision);                    
-            }
-            
-            @Override
-            protected Column addColumn(ResultSet columns, Table table,
-                    MetadataFactory metadataFactory, int rsColumns)
-                    throws SQLException {
-                Column result = super.addColumn(columns, table, metadataFactory, rsColumns);
-                if (UUID_TYPE.equalsIgnoreCase(result.getNativeType())) { 
-                    result.setLength(36); //pg reports max int
-                    result.setCaseSensitive(false);
-                }
-                return result;
-            }
-            
-            @Override
-            protected void getGeometryMetadata(Column c, Connection conn,
-            		String tableCatalog, String tableSchema, String tableName,
-            		String columnName) {
-            	PreparedStatement ps = null;
-            	ResultSet rs = null;
-            	try {
-            		if (tableCatalog == null) {
-            			tableCatalog = conn.getCatalog();
-            		}
-	            	ps = conn.prepareStatement("select coord_dimension, srid, type from public.geometry_columns where f_table_catalog=? and f_table_schema=? and f_table_name=? and f_geometry_column=?"); //$NON-NLS-1$
-	            	ps.setString(1, tableCatalog);
-	            	ps.setString(2, tableSchema);
-	            	ps.setString(3, tableName);
-	            	ps.setString(4, columnName);
-	            	rs = ps.executeQuery();
-	            	if (rs.next()) {
-	            		c.setProperty(MetadataFactory.SPATIAL_URI + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
-	            		c.setProperty(MetadataFactory.SPATIAL_URI + "srid", rs.getString(2)); //$NON-NLS-1$
-	            		c.setProperty(MetadataFactory.SPATIAL_URI + "type", rs.getString(3)); //$NON-NLS-1$
-	            	}
-            	} catch (SQLException e) {
-            		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get geometry metadata for column", tableSchema, tableName, columnName); //$NON-NLS-1$
-            	} finally {
-            		if (rs != null) {
-            			try {
-							rs.close();
-						} catch (SQLException e) {
-						}
-            		}
-            		if (ps != null) {
-            			try {
-							ps.close();
-						} catch (SQLException e) {
-						}
-            		}
-            	}
-            }
-    	};
+    	return new PostgreSQLMetadataProcessor();
     }
     
     @Override

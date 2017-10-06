@@ -1,6 +1,6 @@
 package pm1;
 
-/* @Indexed */
+/* @Indexed @Cache(name=foo)*/
 message G1 {
    /*
      @Id

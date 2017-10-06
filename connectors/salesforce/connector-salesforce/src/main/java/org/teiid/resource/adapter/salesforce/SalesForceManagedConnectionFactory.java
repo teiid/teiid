@@ -17,13 +17,18 @@
  */
 package org.teiid.resource.adapter.salesforce;
 
+import java.lang.reflect.Field;
+
 import javax.resource.ResourceException;
-import javax.security.auth.Subject;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
-import org.teiid.resource.spi.ConnectionContext;
+import org.teiid.translator.salesforce.SalesForcePlugin;
+
+import com.sforce.soap.partner.Connector;
 
 
 public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFactory {
@@ -85,7 +90,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	
 	@Override
 	public BasicConnectionFactory<SalesforceConnectionImpl> createConnectionFactory() throws ResourceException {
-		
+		checkVersion();
 		return new BasicConnectionFactory<SalesforceConnectionImpl>() {
 			private static final long serialVersionUID = 5028356110047329135L;
 
@@ -165,5 +170,22 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 				&& checkEquals(this.proxyPassword, other.proxyPassword)
 				&& checkEquals(this.configProperties, other.configProperties);
 	}
+	
+    public void checkVersion() {
+        try {
+            String apiVersion = url.substring(url.lastIndexOf('/') + 1, url.length());
+            Field f = Connector.class.getDeclaredField("END_POINT"); //$NON-NLS-1$
+            f.setAccessible(true);
+            if(f.isAccessible()){
+                String endPoint = (String) f.get(null);
+                String javaApiVersion = endPoint.substring(endPoint.lastIndexOf('/') + 1, endPoint.length());
+                if (!javaApiVersion.equals(apiVersion)) {
+                    LogManager.logWarning(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13009, apiVersion, javaApiVersion));
+                }
+            }
+        } catch (Exception e) {
+            
+        }
+    }
 	
 }

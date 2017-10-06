@@ -1810,5 +1810,19 @@ public class TestQueryRewriter {
     @Test public void testRewriteSubstringNegativeIndex() throws TeiidComponentException, TeiidProcessingException {
         helpTestRewriteExpression("substring(pm1.g1.e1, -1, 5)", "substring(pm1.g1.e1, -1, 5)", RealMetadataFactory.example1Cached());
     }
+    
+    @Test public void testRewriteAliasedDelete() {
+        String sql = "delete from pm1.g1 x where x.e1 = (select e1 from pm2.g1 where g1.e2 = x.e2)"; //$NON-NLS-1$
+        String expected = "DELETE FROM pm1.g1 WHERE pm1.g1.e1 = (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 = pm1.g1.e2 LIMIT 2)"; //$NON-NLS-1$
+                
+        helpTestRewriteCommand(sql, expected);        
+    }
+    
+    @Test public void testRewriteAliasedUpdate() {
+        String sql = "update pm1.g1 y set e2 = (select e2 from pm1.g1 where e1 = y.e1 || 'a') where y.e1 = (select e1 from pm2.g1 where g1.e2 = y.e2)"; //$NON-NLS-1$
+        String expected = "UPDATE pm1.g1 SET e2 = (SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 = concat(pm1.g1.e1, 'a') LIMIT 2) WHERE pm1.g1.e1 = (SELECT g_1.e1 FROM pm2.g1 AS g_1 WHERE g_1.e2 = pm1.g1.e2 LIMIT 2)"; //$NON-NLS-1$
+                
+        helpTestRewriteCommand(sql, expected);        
+    }
 
 }

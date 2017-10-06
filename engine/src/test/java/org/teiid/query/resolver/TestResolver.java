@@ -2474,7 +2474,23 @@ public class TestResolver {
 		String sql = "{call pm4.spTest9(?, ?)}"; //$NON-NLS-1$
 		
 		TestResolver.helpResolveException(sql, RealMetadataFactory.exampleBQTCached(), "TEIID31113 1 extra positional parameter(s) passed to pm4.spTest9."); //$NON-NLS-1$
-	}	
+	}
+	
+    @Test public void testUpdateAlias() {
+        String sql = "UPDATE pm1.g1 as x SET x.e1 = 1 where x.e2 = 2;"; //$NON-NLS-1$
+        
+        Update update = (Update)helpResolve(sql, RealMetadataFactory.example1Cached());
+        
+        assertEquals("UPDATE pm1.g1 AS x SET e1 = 1 WHERE x.e2 = 2", update.toString());
+    }
+    
+    @Test public void testDeleteAlias() {
+        String sql = "DELETE from pm1.g1 as x where (select e2 from pm1.g2 where x.e1 = e1) = 2;"; //$NON-NLS-1$
+        
+        Delete update = (Delete)helpResolve(sql, RealMetadataFactory.example1Cached());
+        
+        assertEquals("DELETE FROM pm1.g1 AS x WHERE (SELECT e2 FROM pm1.g2 WHERE x.e1 = e1) = 2", update.toString());
+    }
 	    
     @Test public void testUpdateSetClauseReferenceType() {
     	String sql = "UPDATE pm1.g1 SET pm1.g1.e1 = 1, pm1.g1.e2 = ?;"; //$NON-NLS-1$

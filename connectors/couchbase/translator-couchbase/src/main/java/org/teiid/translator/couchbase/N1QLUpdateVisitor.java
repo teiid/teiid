@@ -561,6 +561,9 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             List<CBColumnData> rowCache = new ArrayList<N1QLUpdateVisitor.CBColumnData>();
             for (SetClause clause : obj.getChanges()) {
                 ColumnReference col = clause.getSymbol();
+                if (isPKColumn(col)) {
+                    throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29025, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29025, typedValue));
+                }
                 CBColumn column = formCBColumn(col);
                 CBColumnData cacheData = new CBColumnData(col.getType(), column);
                 Object value = clause.getValue();
@@ -695,6 +698,9 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             buffer.append(SPACE).append(SET).append(SPACE);
             for (SetClause clause : setClauses) {
                 ColumnReference col = clause.getSymbol();
+                if (isPKColumn(col)) {
+                    throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29025, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29025, typedValue));
+                }
                 CBColumn column = formCBColumn(col);
                 CBColumnData cacheData = new CBColumnData(col.getType(), column);
                 Object value = clause.getValue();

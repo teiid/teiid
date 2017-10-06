@@ -28,6 +28,7 @@ import org.junit.Test;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestPlanNode {
 
     public static PlanNode example1() {
@@ -69,6 +70,25 @@ public class TestPlanNode {
 
     @Test public void testText() throws Exception {
         assertEquals("x\n  + test:\n  + null\n  + string:string\n  + list<string>:\n    0: item1\n    1: item2\n    2: item3\n  + child:\n    y\n      + outputCols:\n        0: Name (string)\n        1: Year (integer)\n      + Join Type:INNER JOIN\n      + Criteria:Item.ID = History.ID\n      + Other\n", example1().toString()); //$NON-NLS-1$
+    }
+    
+    @Test public void testYaml() throws Exception {
+        assertEquals("x:\n" + 
+                "  test: \n" + 
+                "  null: ~\n" + 
+                "  string: string\n" + 
+                "  list<string>:\n" + 
+                "    - item1\n" + 
+                "    - item2\n" + 
+                "    - item3\n" + 
+                "  child:\n" + 
+                "    y:\n" + 
+                "      outputCols:\n" + 
+                "        - Name (string)\n" + 
+                "        - Year (integer)\n" + 
+                "      Join Type: INNER JOIN\n" + 
+                "      Criteria: Item.ID = History.ID\n" + 
+                "      Other: ~\n", example1().toYaml()); 
     }
     
 }

@@ -60,7 +60,18 @@ public class UnionAllNode extends RelationalNode {
     	this.schemaSize = getBufferManager().getSchemaSize(getOutputElements());
     }
     
-	public void open() 
+    public void open() 
+            throws TeiidComponentException, TeiidProcessingException {
+        CommandContext context = getContext();
+        boolean old = context.setParallel(true);
+        try {
+            openInternal();
+        } finally {
+            context.setParallel(old);
+        }
+    }
+    
+	public void openInternal() 
 		throws TeiidComponentException, TeiidProcessingException {
 
         // Initialize done flags
@@ -118,8 +129,19 @@ public class UnionAllNode extends RelationalNode {
         // Open the children
         super.open();
 	}
+	
+	public TupleBatch nextBatchDirect() 
+	        throws BlockedException, TeiidComponentException, TeiidProcessingException {
+	    CommandContext context = getContext();
+        boolean old = context.setParallel(true);
+        try {
+            return nextBatchDirectInternal();
+        } finally {
+            context.setParallel(old);
+        }
+	}
 
-    public TupleBatch nextBatchDirect() 
+    public TupleBatch nextBatchDirectInternal() 
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
 
         // Walk through all children and for each one that isn't done, try to retrieve a batch

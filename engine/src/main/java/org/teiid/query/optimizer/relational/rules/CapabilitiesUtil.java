@@ -467,7 +467,9 @@ public class CapabilitiesUtil {
 
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
+        if (caps == null) {
+            throw new AssertionError(modelID);
+        }
         return caps.supportsCapability(cap);
     }
 

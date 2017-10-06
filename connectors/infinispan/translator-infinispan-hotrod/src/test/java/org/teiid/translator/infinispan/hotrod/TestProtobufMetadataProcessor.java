@@ -67,7 +67,7 @@ public class TestProtobufMetadataProcessor {
     public void testMetadataProcessor() throws Exception {
         MetadataFactory mf = protoMatadata("tables.proto");
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        //System.out.println(ddl);
+        System.out.println(ddl);
         //ObjectConverterUtil.write(new StringReader(ddl), UnitTestUtil.getTestDataFile("tables.ddl"));
         assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tables.ddl")), ddl);
     }

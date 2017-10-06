@@ -89,23 +89,6 @@ public class AnalysisRecord {
 	
 	public static final String PROP_STREAMING = "Streaming"; //$NON-NLS-1$
 	
-    // XML
-    public static final String PROP_MESSAGE = "Message"; //$NON-NLS-1$
-    public static final String PROP_TAG = "Tag"; //$NON-NLS-1$
-    public static final String PROP_NAMESPACE = "Namespace"; //$NON-NLS-1$
-    public static final String PROP_DATA_COL = "Data Column"; //$NON-NLS-1$
-    public static final String PROP_NAMESPACE_DECL = "Namespace Declarations"; //$NON-NLS-1$
-    public static final String PROP_OPTIONAL = "Optional Flag"; //$NON-NLS-1$
-    public static final String PROP_DEFAULT = "Default Value"; //$NON-NLS-1$
-    public static final String PROP_RECURSE_DIR = "Recursion Direction";  //$NON-NLS-1$
-    public static final String PROP_BINDINGS = "Bindings"; //$NON-NLS-1$
-    public static final String PROP_IS_STAGING = "Is Staging Flag"; //$NON-NLS-1$
-    public static final String PROP_IN_MEMORY = "Source In Memory Flag"; //$NON-NLS-1$
-    public static final String PROP_CONDITION = "Condition"; //$NON-NLS-1$
-    public static final String PROP_DEFAULT_PROGRAM = "Default Program"; //$NON-NLS-1$
-    public static final String PROP_ENCODING = "Encoding"; //$NON-NLS-1$
-    public static final String PROP_FORMATTED = "Formatted Flag"; //$NON-NLS-1$
-    
     // Procedure
     public static final String PROP_EXPRESSION = "Expression"; //$NON-NLS-1$
     public static final String PROP_RESULT_SET = "Result Set"; //$NON-NLS-1$

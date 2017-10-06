@@ -1,0 +1,6 @@
+/subsystem=resource-adapters/resource-adapter=salesforce-41:add(module=org.jboss.teiid.resource-adapter.salesforce-41)
+/subsystem=resource-adapters/resource-adapter=salesforce-41/connection-definitions=sfDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.salesforce.SalesForceManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=salesforce-41/connection-definitions=sfDS/config-properties=URL:add(value="${url}")
+/subsystem=resource-adapters/resource-adapter=salesforce-41/connection-definitions=sfDS/config-properties=username:add(value="${username}")
+/subsystem=resource-adapters/resource-adapter=salesforce-41/connection-definitions=sfDS/config-properties=password:add(value="${password}")
+/subsystem=resource-adapters/resource-adapter=salesforce-41:activate

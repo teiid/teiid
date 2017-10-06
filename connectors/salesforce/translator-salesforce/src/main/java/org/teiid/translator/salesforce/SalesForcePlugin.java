@@ -45,6 +45,7 @@ public class SalesForcePlugin {
     	TEIID13005,
     	TEIID13006,
     	TEIID13007,
-    	TEIID13008,
+    	TEIID13008, 
+    	TEIID13009,
     }
 }

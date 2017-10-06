@@ -1,0 +1,28 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="sf41">
+            <module id="org.jboss.teiid.resource-adapter.salesforce-41"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.salesforce.SalesForceManagedConnectionFactory" 
+                        jndi-name="java:/sfDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-sf-ds">
+                                            
+                    <config-property name="username">user</config-property>
+                    <config-property name="password">pass</config-property>
+                    
+                    <!-- 
+                      optional properties to set timeouts, which can also be done through the CXF config
+                      <config-property name="requestTimeout">long value</config-property>
+                      <config-property name="connectTimeout">long value</config-property>
+                     -->
+                    
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>
+

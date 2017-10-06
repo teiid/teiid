@@ -1353,8 +1353,14 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		return processingTimestamp;
 	}	
 	
-	<T> FutureWork<T> addHighPriorityWork(Callable<T> callable) {
-		FutureWork<T> work = new FutureWork<T>(callable, PrioritizedRunnable.NO_WAIT_PRIORITY);
+	public <T> FutureWork<T> addRequestWork(Callable<T> callable) {
+		FutureWork<T> work = new FutureWork<T>(callable, 100);
+	    work.addCompletionListener(new CompletionListener<T>() {
+	        @Override
+	        public void onCompletion(FutureWork<T> future) {
+	            RequestWorkItem.this.moreWork();
+	        }
+        });
 		work.setRequestId(this.requestID.toString());
 		dqpCore.addWork(work);
 		return work;

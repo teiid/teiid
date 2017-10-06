@@ -2,7 +2,7 @@
 <subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
     <resource-adapters>
         <resource-adapter id="sf34">
-            <module slot="34" id="org.jboss.teiid.resource-adapter.salesforce"/>
+            <module id="org.jboss.teiid.resource-adapter.salesforce-34"/>
             <transaction-support>NoTransaction</transaction-support>
             <connection-definitions>
                 <connection-definition class-name="org.teiid.resource.adapter.salesforce.SalesForceManagedConnectionFactory" 
@@ -10,10 +10,7 @@
                         enabled="true" 
                         use-java-context="true" 
                         pool-name="teiid-sf-ds">
-                        
-                    <!-- URL; the below is test; replace with actual URL you need to connect to -->
-                    <config-property name="URL">https://www.salesforce.com/services/Soap/u/34.0</config-property>
-                    
+                                            
                     <config-property name="username">user</config-property>
                     <config-property name="password">pass</config-property>
                     

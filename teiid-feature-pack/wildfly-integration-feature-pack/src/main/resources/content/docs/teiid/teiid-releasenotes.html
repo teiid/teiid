@@ -26,6 +26,10 @@
 <ul>
   <li><a href="https://issues.jboss.org/browse/TEIID-4981">TEIID-4981</a> Amazon S3 translator support, now read the objects directly from Amazon S3 with security</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-5026">TEIID-5026</a> The behavior of the FROM_UNIXTIME function was corrected and the related datetime functions UNIX_TIMESTAMP, TO_MILLIS, and FROM_MILLIS were added.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-1131">TEIID-1131</a> Added support for importing sequence information.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5073">TEIID-5073</a> Added a salesforce-41 translator/resource adapter pair, which defaults to accessing the v40 salesforce API.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-4208">TEIID-4208</a> Added parallelism to plan execution involving large sorts.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5002">TEIID-5002</a> Upgraded to WildFly 11</li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -45,6 +49,7 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-4894">TEIID-4894</a> The XML document model feature has been removed. You must use OData or SQL/XML to create XML documents.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-4924">TEIID-4924</a> Maven coordinates for Teiid artifacts have changed.  They will now be pushed directly to Maven Central and will use the org.teiid group instead of org.jboss.teiid.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-5026">TEIID-5026</a> The FROM_UNIXTIME function now returns a string rather than a timestamp value and no longer is rewritten to the timestampadd function.  The functionality now matches that of HIVE/IMPALA.  See also the to_millis and from_millis functions.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5012">TEIID-5012</a> A Description column was added to SYS.VirtualDatabases. </li>
 </ul>
 
 <h4>from 9.2</h4>

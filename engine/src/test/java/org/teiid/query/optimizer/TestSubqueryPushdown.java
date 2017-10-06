@@ -1266,6 +1266,27 @@ public class TestSubqueryPushdown {
                                       null, false); //$NON-NLS-1$
     }
     
+    @Test public void testDeleteSubqueryCorrelated() throws Exception {
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        TestOptimizer.helpPlan("delete FROM bqt1.smalla x where intkey = (select intkey from bqt1.smallb where intkey < x.intkey)", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {"DELETE FROM BQT1.SmallA WHERE BQT1.SmallA.IntKey = (SELECT g_0.IntKey FROM BQT1.SmallB AS g_0 WHERE g_0.IntKey < BQT1.SmallA.IntKey)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+    
+    @Test public void testDeleteSubqueryCorrelatedCompensated() throws Exception {
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        ProcessorPlan plan = TestOptimizer.helpPlan("delete FROM pm1.g1 x where e1 = 'a' and e3 = (select e3 from pm1.g2 where e2 < x.e2)", //$NON-NLS-1$
+                                      RealMetadataFactory.example4(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        HardcodedDataManager hcdm = new HardcodedDataManager();
+        hcdm.addData("SELECT g_0.e3, g_0.e2, g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'a'", Arrays.asList(true, 1, 'a'));
+        hcdm.addData("SELECT g_0.e3 FROM pm1.g2 AS g_0 WHERE g_0.e2 < 1", Arrays.asList(true));
+        hcdm.addData("DELETE FROM pm1.g1 WHERE pm1.g1.e1 = 'a'", Arrays.asList(1));
+        TestProcessor.helpProcess(plan, hcdm, null);
+    }
+    
     @Test public void testSubqueryPlan() throws Exception {
     	BasicSourceCapabilities bsc = getTypicalCapabilities();
         ProcessorPlan plan = TestOptimizer.helpPlan("select 1, (select cast(stringkey as integer) from bqt1.smallb where intkey = smalla.intkey) from bqt1.smalla", //$NON-NLS-1$

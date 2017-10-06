@@ -29,7 +29,10 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
@@ -155,8 +158,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    
 	    private long timeoutEnd = Long.MAX_VALUE;
 	    
-	    private boolean validateXML;
-	    
 	    private BufferManager bufferManager;
 
 	    private SessionAwareCache<PreparedPlan> planCache;
@@ -196,6 +197,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private LRUCache<AbstractMetadataRecord, Boolean> accessible;
 
 		private Throwable batchUpdateException;
+
+        public boolean parallel;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -718,6 +721,18 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		return this.globalState.executor;
 	}
 	
+	/**
+	 * Submit work that will notify the request work item of more work when complete
+	 * @param callable
+	 * @return
+	 */
+	public <V> Future<V> submit(Callable<V> callable) {
+	    if (getWorkItem() != null) {
+	        return getWorkItem().addRequestWork(callable);
+	    } 
+	    return ForkJoinPool.commonPool().submit(callable);
+    }
+	
 	public void setExecutor(Executor e) {
 		this.globalState.executor = e;
 	}
@@ -1005,7 +1020,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 
 	public long addAndGetReservedBuffers(int i) {
-		return globalState.reservedBuffers += i;
+	    synchronized (this.globalState) {
+	        return globalState.reservedBuffers += i;
+        }
 	}
 
 	@Override
@@ -1173,5 +1190,15 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	public void setBatchUpdateException(Throwable t) {
 		this.globalState.batchUpdateException = t;
 	}
+
+    public boolean isParallel() {
+        return this.globalState.parallel;
+    }
+    
+    public boolean setParallel(boolean value) {
+        boolean result = this.globalState.parallel;
+        this.globalState.parallel = value;
+        return result;
+    }
 	
 }

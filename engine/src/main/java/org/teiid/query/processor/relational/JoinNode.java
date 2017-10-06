@@ -130,7 +130,22 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     	}
     }
     
-    public void open()
+    public void open() 
+            throws TeiidComponentException, TeiidProcessingException {
+        CommandContext context = getContext();
+        if (!isDependent()) {
+            boolean old = context.setParallel(true);
+            try {
+                openInternal();
+            } finally {
+                context.setParallel(old);
+            }
+        } else {
+            openInternal();
+        }
+    }
+    
+    public void openInternal()
         throws TeiidComponentException, TeiidProcessingException {
         // Set Up Join Strategy
         this.joinStrategy.initialize(this);
@@ -170,12 +185,26 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         
         return clonedNode;
     }
+    
+    public TupleBatch nextBatchDirect() 
+            throws TeiidComponentException, TeiidProcessingException {
+        CommandContext context = getContext();
+        if (!isDependent()) {
+            boolean old = context.setParallel(true);
+            try {
+                return nextBatchDirectInternal();
+            } finally {
+                context.setParallel(old);
+            }
+        }
+        return nextBatchDirectInternal();
+    }
 
     /** 
      * @see org.teiid.query.processor.relational.RelationalNode#nextBatchDirect()
      * @since 4.2
      */
-    protected TupleBatch nextBatchDirect() throws BlockedException,
+    protected TupleBatch nextBatchDirectInternal() throws BlockedException,
                                           TeiidComponentException,
                                           TeiidProcessingException {
     	try {

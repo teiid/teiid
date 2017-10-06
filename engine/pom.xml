@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.teiid</groupId>
-        <version>10.0.0.Beta3-SNAPSHOT</version>
+        <version>10.0.0.CR2-SNAPSHOT</version>
 	</parent>
 	<licenses>
         <license>
@@ -51,7 +51,6 @@
             <plugin>   
               <groupId>org.apache.felix</groupId>
               <artifactId>maven-bundle-plugin</artifactId>
-              <version>2.3.7</version>
               <configuration>
                <instructions>
                 <Import-Package>!org.jboss.*,*</Import-Package>
