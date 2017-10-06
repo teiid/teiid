@@ -57,6 +57,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.optimizer.relational.AliasGenerator;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
@@ -3217,6 +3218,9 @@ public class QueryRewriter {
     }
 
 	private Command rewriteUpdate(Update update) throws TeiidComponentException, TeiidProcessingException{
+	    if (update.getGroup().getDefinition() != null) {
+	        removeAlias(update, update.getGroup());
+	    }
 	    Command c = rewriteForWriteThrough(update);
         if (c != null) {
             return c;
@@ -3398,6 +3402,9 @@ public class QueryRewriter {
 	}
 	
 	private Command rewriteDelete(Delete delete) throws TeiidComponentException, TeiidProcessingException{
+	    if (delete.getGroup().getDefinition() != null) {
+	        removeAlias(delete, delete.getGroup());
+        }
 	    Command c = rewriteForWriteThrough(delete);
 	    if (c != null) {
 	        return c;
@@ -3425,6 +3432,26 @@ public class QueryRewriter {
 
 		return delete;
 	}
+
+	/**
+	 * For backwards compatibility we strip the alias from delete/update
+	 * @param command
+	 * @param group
+	 */
+    private void removeAlias(ProcedureContainer command, GroupSymbol group) {
+        AliasGenerator ag = new AliasGenerator(true);
+        ag.setCorrelationGroups(Arrays.asList(group.getDefinition()));
+        command.acceptVisitor(ag);
+        final GroupSymbol clone = group.clone();
+        DeepPostOrderNavigator.doVisit(command, new LanguageVisitor() {
+            public void visit(GroupSymbol obj) {
+                if (obj.equals(clone) && obj.getMetadataID() == group.getMetadataID()) {
+                    obj.setName(obj.getDefinition());
+                    obj.setDefinition(null);
+                }
+            }
+        });
+    }
 
 	private Command rewriteInherentDelete(Delete delete, UpdateInfo info)
 			throws QueryMetadataException, TeiidComponentException,

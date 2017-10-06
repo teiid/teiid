@@ -191,9 +191,7 @@ BEGIN
 
     EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'INFO', msg=>'Materialization of view ' || VARIABLES.fullViewName || ' started.');        
     
-    /* matViewTable is null hints View is Internal Mat View*/
-    DECLARE string tempMatViewTable = '#MAT_' || UCASE(VARIABLES.fullViewName);
-    IF (matViewTable IS NULL OR matViewTable = tempMatViewTable)
+    IF (targetSchemaName IS NULL)
     BEGIN        
         rowsUpdated = (EXECUTE SYSADMIN.refreshMatView(VARIABLES.fullViewName, loadMatView.invalidate));
         EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'INFO', msg=>'Materialization of view ' || VARIABLES.fullViewName || ' completed. Rows updated = ' || VARIABLES.rowsUpdated);        
@@ -376,9 +374,7 @@ BEGIN
     DECLARE string matViewTable = array_get(targets, 1);
     DECLARE string targetSchemaName = array_get(targets, 2);
 
-    /* matViewTable is null hints View is Internal Mat View */
-    DECLARE string tempMatViewTable = '#MAT_' || UCASE(VARIABLES.fullViewName);
-    IF (matViewTable IS NULL OR matViewTable = tempMatViewTable)
+    IF (targetSchemaName IS NULL)
     BEGIN
 	    DECLARE string KeyUID = (SELECT UID FROM SYS.Keys WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName AND (Type = 'Primary' OR Type = 'Unique'));
 	    IF (KeyUID IS NULL)
@@ -447,7 +443,7 @@ BEGIN
         DECLARE string columns = (SELECT cast(string_agg('"' || replace(Name, '"', '""') || '"', ',') as string) FROM SYS.Columns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName);
         IF(loadNumColumn IS null)
         BEGIN
-            EXECUTE IMMEDIATE 'DELETE FROM ' || targetSchemaName || '.' || matViewTable || ' WHERE ' ||  replace(refreshCriteria, viewName, matViewTable);
+            EXECUTE IMMEDIATE 'DELETE FROM ' || targetSchemaName || '.' || matViewTable || ' as ' || replace(viewName, '.', '_') || '  WHERE ' ||  refreshCriteria;
             VARIABLES.rowsUpdated = VARIABLES.ROWCOUNT;
             VARIABLES.updatedCardinality = VARIABLES.updatedCardinality - VARIABLES.ROWCOUNT;
             EXECUTE IMMEDIATE 'INSERT INTO ' || targetSchemaName || '.' || matViewTable || ' (' || columns || ') SELECT '|| columns ||' FROM '|| schemaName || '.' || viewName || ' WHERE ' || refreshCriteria || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
@@ -461,7 +457,7 @@ BEGIN
             EXECUTE IMMEDIATE 'UPSERT INTO ' || targetSchemaName || '.' || matViewTable || columnNames || ' SELECT ' || VARIABLES.columnValues || ' FROM '|| schemaName || '.' || viewName || ' WHERE ' || refreshCriteria || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
             VARIABLES.rowsUpdated = VARIABLES.ROWCOUNT;
             VARIABLES.updatedCardinality = VARIABLES.updatedCardinality + VARIABLES.ROWCOUNT;
-            EXECUTE IMMEDIATE 'DELETE FROM ' || targetSchemaName || '.' || matViewTable || ' WHERE ' || VARIABLES.loadNumColumn || ' <= ' || VARIABLES.loadNumber || ' AND ' || replace(refreshCriteria, viewName, matViewTable);
+            EXECUTE IMMEDIATE 'DELETE FROM ' || targetSchemaName || '.' || matViewTable || ' as ' || replace(viewName, '.', '_') || ' WHERE ' || VARIABLES.loadNumColumn || ' <= ' || VARIABLES.loadNumber || ' AND ' || refreshCriteria;
             VARIABLES.rowsUpdated = VARIABLES.rowsUpdated + VARIABLES.ROWCOUNT;
             VARIABLES.updatedCardinality = VARIABLES.updatedCardinality - VARIABLES.ROWCOUNT;
         END
