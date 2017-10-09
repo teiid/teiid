@@ -44,14 +44,6 @@ import java.util.regex.Pattern;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import net.sf.saxon.Configuration;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.query.QueryResult;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.type.ValidationException;
-import net.sf.saxon.value.StringValue;
-
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -93,6 +85,14 @@ import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.WSConnection.Util;
+
+import net.sf.saxon.Configuration;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.query.QueryResult;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.ValidationException;
+import net.sf.saxon.value.StringValue;
 
 public class Evaluator {
 
@@ -270,6 +270,7 @@ public class Evaluator {
         				} 
     					return true;
         			}
+        			continue;
         		} else if (r == null) {
         			if (idc.isNegated()) {
     					return false;
