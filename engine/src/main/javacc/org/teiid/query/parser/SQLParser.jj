@@ -1239,17 +1239,7 @@ IfStatement ifStatement(ParseInfo info) :
 {
     <IF>
     <LPAREN>
-    (LOOKAHEAD(4) (groupID = id(null) <IS> [<NOT> {not = true;}] <DISTINCT> <FROM> groupID2 = id(null)
-      {
-        IsDistinctCriteria idc = new IsDistinctCriteria();
-        idc.setLeftRowValue(new GroupSymbol(groupID));
-        idc.setRightRowValue(new GroupSymbol(groupID2));
-        idc.setNegated(not);
-        criteria = idc;
-      }
-     )
-     | criteria = criteria(info)
-    )
+    criteria = criteria(info)
     <RPAREN>
     ifStatement = statement(info)
     //else blocks will be associated with the closest if block
@@ -3213,9 +3203,10 @@ Expression booleanPrimary(ParseInfo info) :
 			LOOKAHEAD(2) ex=matchCrit(info, ex) |
 			LOOKAHEAD(2) ex=regexMatchCrit(info, ex) |
 			ex=setCrit(info, ex) |
-			ex=isNullCrit(info, ex) |
+			LOOKAHEAD(<IS>(<NOT>)?<NULL>)ex=isNullCrit(info, ex) |
 			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>)) ex=subqueryCompareCriteria(info, ex) |
-			ex=compareCrit(info, ex)
+			ex=compareCrit(info, ex) |
+			ex=isDistinct(info, ex)
 	     )]
 	    )
 	    | ex=existsCriteria(info)
@@ -3246,6 +3237,28 @@ Token operator() :
     )
     {
     	return operator;
+    }
+}
+
+/*
+name=IS Distinct
+description=Is Distinct Right Hand Side
+example=[source,sql]\n----\nIS DISTINCT FROM expression\n----\n
+*/
+IsDistinctCriteria isDistinct(ParseInfo info, Expression expression) :
+{
+    Expression value = null;
+    Token operator = null;
+    boolean not = false;
+}
+{
+    <IS> [<NOT> {not = true;}] <DISTINCT> <FROM> value=commonValueExpression(info)
+    {
+      IsDistinctCriteria idc = new IsDistinctCriteria();
+      idc.setLeftRowValue(expression);
+      idc.setRightRowValue(value);
+      idc.setNegated(not);
+      return idc;
     }
 }
 

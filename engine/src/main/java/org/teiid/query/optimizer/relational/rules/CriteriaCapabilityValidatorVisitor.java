@@ -343,11 +343,17 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     			unsupported = false;
         	}
         	if (unsupported) {
+        	    if (EvaluatableVisitor.willBecomeConstant(obj)) {
+        	        return;
+        	    }
 	            markInvalid(obj, operatorCap + " CompareCriteria not supported by source"); //$NON-NLS-1$
 	            return;
         	}
         }                       
         if (negated && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+            if (EvaluatableVisitor.willBecomeConstant(obj)) {
+                return;
+            }
         	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
         	return;
         }
@@ -373,6 +379,42 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         // Verify capabilities are supported
         if(operator == CompoundCriteria.OR && !this.caps.supportsCapability(Capability.CRITERIA_OR) && !willBecomeConstant(crit)) {
                 markInvalid(crit, "OR criteria not supported by source"); //$NON-NLS-1$
+        }
+    }
+    
+    @Override
+    public void visit(IsDistinctCriteria obj) {
+        if (obj.getLeftRowValue() instanceof GroupSymbol || obj.getRightRowValue() instanceof GroupSymbol) {
+            markInvalid(obj, "OR criteria not supported by source"); //$NON-NLS-1$
+            return;
+        }
+        if (!this.caps.supportsCapability(Capability.CRITERIA_IS_DISTINCT)) {
+            if (willBecomeConstant(obj)) {
+                return;
+            }
+            markInvalid(obj, "OR criteria not supported by source"); //$NON-NLS-1$
+            return;
+        }
+        //check NOT
+        if(obj.isNegated() && ! this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+            if (willBecomeConstant(obj)) {
+                return;
+            }
+            markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
+            return;
+        }
+        checkLiteralComparison(obj, Arrays.asList(obj.getRightRowValue()));
+        try {
+            int support = SupportConstants.Element.SEARCHABLE_COMPARE;
+            if (!obj.isNegated()) {
+                support = SupportConstants.Element.SEARCHABLE_EQUALITY;
+            }
+            checkElementsAreSearchable(obj.getLeftRowValue(), support);                                
+            checkElementsAreSearchable(obj.getRightRowValue(), support);
+        } catch(QueryMetadataException e) {
+            handleException(new TeiidComponentException(e));
+        } catch(TeiidComponentException e) {
+            handleException(e);            
         }
     }
     
@@ -433,39 +475,48 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
     public void visit(IsNullCriteria obj) {
         // Check if compares are allowed
-    	if (willBecomeConstant(obj)) {
-    		return;
-    	}
         if(! this.caps.supportsCapability(Capability.CRITERIA_ISNULL)) {
+            if (willBecomeConstant(obj)) {
+                return;
+            }
             markInvalid(obj, "IsNull not supported by source"); //$NON-NLS-1$
             return;
         }
         
         if (obj.isNegated() && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+            if (willBecomeConstant(obj)) {
+                return;
+            }
         	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
             return;
         }        
     }
 
     public void visit(MatchCriteria obj) {
-    	if (willBecomeConstant(obj)) {
-    		return;
-    	}
     	switch (obj.getMode()) {
     	case LIKE:
             if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE)) {
+                if (willBecomeConstant(obj)) {
+                    return;
+                }
                 markInvalid(obj, "Like is not supported by source"); //$NON-NLS-1$
                 return;
             }
             break;
     	case SIMILAR:
     		if(! this.caps.supportsCapability(Capability.CRITERIA_SIMILAR)) {
+    		    if (willBecomeConstant(obj)) {
+    	            return;
+    	        }
                 markInvalid(obj, "Similar to is not supported by source"); //$NON-NLS-1$
                 return;
             }
     		break;
     	case REGEX:
     		if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE_REGEX)) {
+    		    if (willBecomeConstant(obj)) {
+    	            return;
+    	        }
                 markInvalid(obj, "Like_regex is not supported by source"); //$NON-NLS-1$
                 return;
             }
@@ -475,6 +526,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         // Check ESCAPE char if necessary
         if(obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR 
         		&& ! this.caps.supportsCapability(Capability.CRITERIA_LIKE_ESCAPE)) {
+            if (willBecomeConstant(obj)) {
+                return;
+            }
             markInvalid(obj, "Like escape is not supported by source"); //$NON-NLS-1$
             return;
         }
@@ -483,12 +537,18 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         if (required != null
         		&& obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR
             		&& !required.equals(obj.getEscapeChar())) {
+            if (willBecomeConstant(obj)) {
+                return;
+            }
             markInvalid(obj, "Escape " + obj.getEscapeChar() + " is not supported by source. Escape " + required + " is required"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             return;
         }
         
         //check NOT
         if(obj.isNegated() && ! this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+            if (willBecomeConstant(obj)) {
+                return;
+            }
         	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
         	return;
         }
@@ -520,15 +580,15 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
     
     public void visit(SetCriteria crit) {
-    	if (willBecomeConstant(crit)) {
-    		return;
-    	}
     	checkAbstractSetCriteria(crit);
         try {    
             int maxSize = CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder); 
             int maxPredicates = CapabilitiesUtil.getMaxDependentPredicates(modelID, metadata, capFinder);
             //allow 1/2 to a single predicate - TODO: make this more precise
             if (maxSize > 0 && maxPredicates > 0 && crit.getValues().size() > Math.max(maxSize, (maxSize * (long)maxPredicates)/2)) {
+                if (willBecomeConstant(crit)) {
+                    return;
+                }
                 markInvalid(crit, "SetCriteria size exceeds maximum for source"); //$NON-NLS-1$
                 return;
             }
@@ -673,11 +733,17 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         try {    
             // Check if compares are allowed
             if(! this.caps.supportsCapability(Capability.CRITERIA_IN)) {
+                if (willBecomeConstant(crit)) {
+                    return;
+                }
                 markInvalid(crit, "In is not supported by source"); //$NON-NLS-1$
                 return;
             }
             
             if (crit.isNegated() && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+                if (willBecomeConstant(crit)) {
+                    return;
+                }
             	markInvalid(crit, "Negation is not supported by source"); //$NON-NLS-1$
                 return;
             }
@@ -699,6 +765,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     private void checkElementsAreSearchable(LanguageObject crit, int searchableType)
     throws QueryMetadataException, TeiidComponentException {
     	if (!CapabilitiesUtil.checkElementsAreSearchable(Arrays.asList(crit), metadata, searchableType)) {
+    	    if (willBecomeConstant(crit)) {
+                return;
+            }
     		markInvalid(crit, "not all source columns support search type"); //$NON-NLS-1$
     	}
     }

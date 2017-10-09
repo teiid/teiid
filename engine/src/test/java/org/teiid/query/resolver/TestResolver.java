@@ -65,6 +65,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
+import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -2916,6 +2917,17 @@ public class TestResolver {
     @Test public void testLeadDefault() {
         //must have same type
         String sql = "SELECT LEAD(e2, 1, 'a') over (order by e2) FROM pm1.g1";
+        helpResolveException(sql);
+    }
+    
+    @Test public void testIsDistinctArray() {
+        String sql = "('a', null) is distinct from ('b', null)";
+        IsDistinctCriteria c = (IsDistinctCriteria)helpResolveCriteria(sql);
+        assertEquals(String.class,((Array)c.getLeftRowValue()).getComponentType());
+    }
+    
+    @Test public void testIsDistinctTypeMismatch() {
+        String sql = "select TIME '07:01:00' is distinct from 2";
         helpResolveException(sql);
     }
     

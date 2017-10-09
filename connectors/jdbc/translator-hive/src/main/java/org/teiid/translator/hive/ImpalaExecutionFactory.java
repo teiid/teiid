@@ -418,4 +418,9 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public boolean supportsStringAgg() {
         return true;
     }
+    
+    @Override
+    public boolean supportsIsDistinctCriteria() {
+        return true;
+    }
 }

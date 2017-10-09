@@ -451,6 +451,14 @@ public class ExecutionFactory<F, C> {
     public boolean supportsInlineViews() {
     	return false;
     }
+    
+    /** 
+     * Support indicates connector accepts criteria of form (exp1 IS DISTINCT exp2) 
+     * @since 10.0
+     */
+    public boolean supportsIsDistinctCriteria() {
+        return false;
+    }
 
     /** 
      * Support indicates connector accepts criteria of form (element = constant) 

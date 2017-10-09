@@ -95,6 +95,7 @@ public interface SourceCapabilities {
          */
         CRITERIA_COMPARE_EQ,
         CRITERIA_COMPARE_ORDERED,
+        CRITERIA_IS_DISTINCT,
         /**
          * Support indicates connector accepts criteria of form (element LIKE constant)
          * 

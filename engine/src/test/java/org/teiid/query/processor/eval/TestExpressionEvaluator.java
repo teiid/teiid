@@ -519,5 +519,11 @@ public class TestExpressionEvaluator {
         // Test replace-first vs replace-all.
         assertEval("endsWith('c', 'abc') = 't'", "true");
     }
+    
+    @Test public void testIsDistinct() throws Exception {
+        assertEval("'a' is distinct from 'b'", "true");
+        assertEval("'a' is not distinct from 'b'", "false");
+        assertEval("('a', null) is not distinct from ('a', null)", "true");
+    }
 
 }

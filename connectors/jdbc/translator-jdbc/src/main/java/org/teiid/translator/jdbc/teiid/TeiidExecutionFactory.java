@@ -531,6 +531,11 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    public boolean supportsIsDistinctCriteria() {
+        return getVersion().compareTo(TEN_0) > 0;
+    }
+    
+    @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
         return new SQLConversionVisitor(this) {
             @Override

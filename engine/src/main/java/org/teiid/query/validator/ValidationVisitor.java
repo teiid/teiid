@@ -747,10 +747,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(IsDistinctCriteria isDistinctCriteria) {
     	try {
 			QueryMetadataInterface metadata = getMetadata();
-			if (!metadata.isScalarGroup(isDistinctCriteria.getLeftRowValue().getMetadataID())) {
+			if (isDistinctCriteria.getLeftRowValue() instanceof GroupSymbol 
+			        && !metadata.isScalarGroup(((GroupSymbol) isDistinctCriteria.getLeftRowValue()).getMetadataID())) {
 				handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31171, isDistinctCriteria.getLeftRowValue()), isDistinctCriteria.getLeftRowValue()); 
 			}
-			if (!metadata.isScalarGroup(isDistinctCriteria.getRightRowValue().getMetadataID())) {
+			if (isDistinctCriteria.getRightRowValue() instanceof GroupSymbol 
+			        && !metadata.isScalarGroup(((GroupSymbol) isDistinctCriteria.getRightRowValue()).getMetadataID())) {
 				handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31171, isDistinctCriteria.getRightRowValue()), isDistinctCriteria.getRightRowValue()); 
 			}
 		} catch (QueryMetadataException e) {

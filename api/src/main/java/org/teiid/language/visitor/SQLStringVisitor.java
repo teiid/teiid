@@ -1122,4 +1122,21 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 			i = m.end();
 		}
 	}
+	
+	@Override
+	public void visit(IsDistinct isDistinct) {
+	    append(isDistinct.getLeftExpression());
+	    buffer.append(Tokens.SPACE);
+	    buffer.append(IS);
+	    buffer.append(Tokens.SPACE);
+        if (isDistinct.isNegated()) {
+            buffer.append(NOT);
+            buffer.append(Tokens.SPACE);
+        }
+        buffer.append(DISTINCT);
+        buffer.append(Tokens.SPACE);
+        buffer.append(FROM);
+        buffer.append(Tokens.SPACE);
+        append(isDistinct.getRightExpression());
+	}
 }

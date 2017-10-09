@@ -973,4 +973,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         super.bindValue(stmt, param, paramType, i);
     }
     
+    @Override
+    public boolean supportsIsDistinctCriteria() {
+        return true;
+    }
+    
 }

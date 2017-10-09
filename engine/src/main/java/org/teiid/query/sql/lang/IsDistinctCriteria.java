@@ -20,9 +20,9 @@ package org.teiid.query.sql.lang;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
-import org.teiid.query.sql.symbol.GroupSymbol;
 
 
 /**
@@ -32,8 +32,8 @@ import org.teiid.query.sql.symbol.GroupSymbol;
  */
 public class IsDistinctCriteria extends PredicateCriteria implements Negatable {
 
-	private GroupSymbol leftRowValue;
-	private GroupSymbol rightRowValue;
+	private LanguageObject leftRowValue;
+	private LanguageObject rightRowValue;
     /** Negation flag. Indicates whether the criteria expression contains a NOT. */
     private boolean negated;
 	
@@ -42,19 +42,19 @@ public class IsDistinctCriteria extends PredicateCriteria implements Negatable {
      */
     public IsDistinctCriteria() {}
 
-    public void setLeftRowValue(GroupSymbol leftRowValue) {
+    public void setLeftRowValue(LanguageObject leftRowValue) {
 		this.leftRowValue = leftRowValue;
 	}
     
-    public void setRightRowValue(GroupSymbol rightRowValue) {
+    public void setRightRowValue(LanguageObject rightRowValue) {
 		this.rightRowValue = rightRowValue;
 	}
     
-    public GroupSymbol getLeftRowValue() {
+    public LanguageObject getLeftRowValue() {
 		return leftRowValue;
 	}
     
-    public GroupSymbol getRightRowValue() {
+    public LanguageObject getRightRowValue() {
 		return rightRowValue;
 	}
 	
@@ -122,8 +122,8 @@ public class IsDistinctCriteria extends PredicateCriteria implements Negatable {
 	public Object clone() {
         IsDistinctCriteria criteriaCopy = new IsDistinctCriteria();
         criteriaCopy.setNegated(isNegated());
-        criteriaCopy.setLeftRowValue(this.getLeftRowValue().clone());
-        criteriaCopy.setRightRowValue(this.getRightRowValue().clone());
+        criteriaCopy.setLeftRowValue((LanguageObject)this.leftRowValue.clone());
+        criteriaCopy.setRightRowValue((LanguageObject)this.rightRowValue.clone());
 		return criteriaCopy;
 	}
 	

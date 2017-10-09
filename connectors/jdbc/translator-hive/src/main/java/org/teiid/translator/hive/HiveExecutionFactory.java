@@ -31,9 +31,12 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.ModFunctionModifier;
+import org.teiid.util.Version;
 
 @Translator(name="hive", description="A translator for hive based database on HDFS")
 public class HiveExecutionFactory extends BaseHiveExecutionFactory {
+    
+    public static final Version V_3 = Version.getVersion("3.0"); //$NON-NLS-1$
 
     public static String HIVE = "hive"; //$NON-NLS-1$
     public HiveExecutionFactory() {
@@ -208,6 +211,16 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
     
     @Override
     public boolean requiresLeftLinearJoin() {
+        return true;
+    }
+    
+    @Override
+    public boolean supportsIsDistinctCriteria() {
+        return getVersion().compareTo(V_3) >= 0;
+    }
+    
+    @Override
+    protected boolean usesDatabaseVersion() {
         return true;
     }
 }
