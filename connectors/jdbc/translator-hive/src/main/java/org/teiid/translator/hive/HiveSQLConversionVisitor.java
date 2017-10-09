@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
+import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Join.JoinType;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.translator.TypeFacility;
@@ -164,6 +165,11 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 
         endInlineView(obj);
     }
+    
+    @Override
+    protected String getLikeRegexString() {
+        return "REGEXP"; //$NON-NLS-1$
+    }
 
 	private void endInlineView(QueryExpression obj) {
 		buffer.append(Tokens.RPAREN);
@@ -275,4 +281,29 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     		super.translateSQLType(type, obj, valuesbuffer);
     	}
     }
+    
+    @Override
+    public void visit(Comparison obj) {
+        if (baseHiveExecutionFactory.rewriteBooleanFunctions() && obj.getLeftExpression() instanceof Function 
+                && obj.getRightExpression() instanceof Literal 
+                && obj.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN) {
+            Literal l = (Literal) obj.getRightExpression();
+            Boolean val = (Boolean)l.getValue();
+            Function leftExpression = (Function)obj.getLeftExpression();
+            if ((Boolean.FALSE.equals(val) && obj.getOperator() == Operator.EQ) || 
+                    (Boolean.TRUE.equals(val) && obj.getOperator() == Operator.NE)) {
+                buffer.append(SQLConstants.Reserved.NOT);
+                buffer.append(SQLConstants.Tokens.LPAREN);
+                visit(leftExpression);
+                buffer.append(SQLConstants.Tokens.RPAREN);
+                return;
+            } else if ((Boolean.TRUE.equals(val) && obj.getOperator() == Operator.EQ) ||
+                    (Boolean.FALSE.equals(val) && obj.getOperator() == Operator.NE)) {
+                visit(leftExpression);
+                return;
+            }
+        }
+        super.visit(obj);
+    }
+    
 }

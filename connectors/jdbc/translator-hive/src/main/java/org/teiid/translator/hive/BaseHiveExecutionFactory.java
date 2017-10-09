@@ -324,4 +324,13 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsOrderByUnrelated() {
     	return false;
     }
+    
+    @Override
+    public boolean supportsLikeRegex() {
+        return true;
+    }
+
+    public boolean rewriteBooleanFunctions() {
+        return false;
+    }
 }

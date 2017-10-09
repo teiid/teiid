@@ -28,6 +28,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.Join.JoinType;
 import org.teiid.language.SortSpecification.Ordering;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -44,6 +45,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public static final Version TWO_2 = Version.getVersion("2.2"); //$NON-NLS-1$
     public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
     public static final Version ONE_2_1 = Version.getVersion("1.2.1"); //$NON-NLS-1$
+    public static final Version ONE_3_1 = Version.getVersion("1.3.1"); //$NON-NLS-1$
 
     @Override
     public void start() throws TranslatorException {
@@ -166,6 +168,11 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "initcap", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "instr", INTEGER, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "find_in_set", INTEGER, STRING, STRING); //$NON-NLS-1$
+        
+        //standard function form of several predicates
+        addPushDownFunction(IMPALA, "ilike", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 ilike $2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        addPushDownFunction(IMPALA, "rlike", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 rlike $2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        addPushDownFunction(IMPALA, "iregexp", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 iregexp $2)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Override
@@ -304,6 +311,11 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public boolean requiresLeftLinearJoin() {
         return true;
     }
+    
+    @Override
+    public boolean supportsLikeRegex() {
+        return getVersion().compareTo(ONE_3_1) >= 0;
+    }
 
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
@@ -421,6 +433,11 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     
     @Override
     public boolean supportsIsDistinctCriteria() {
+        return true;
+    }
+    
+    @Override
+    public boolean rewriteBooleanFunctions() {
         return true;
     }
 }
