@@ -267,14 +267,13 @@ public class TestTriggerActions {
 	
 	@Test public void testUpdateIfDistinct() throws Exception {
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 string, e2 integer) options (updatable true);"
-				+ " create view GX options (updatable true) as select '1' as x, 2 as y union all select '2' as x, 2 as y;"
+				+ " create view GX options (updatable true) as select '1' as x, 2 as y union all select null as x, 2 as y;"
 				+ " create trigger on GX instead of update as for each row begin if (\"new\" is distinct from \"old\") update g1 set e1 = new.x, e2 = new.y where e2 = old.y; END", "x", "y");
 		
 		String sql = "update gx set x = x || 'a' where y = 2";
 		
 		HardcodedDataManager dm = new HardcodedDataManager();
 		dm.addData("UPDATE g1 SET e1 = '1a', e2 = 2 WHERE e2 = 2", new List[] {Arrays.asList(1)});
-		dm.addData("UPDATE g1 SET e1 = '2a', e2 = 2 WHERE e2 = 2", new List[] {Arrays.asList(1)});
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
