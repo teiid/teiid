@@ -86,7 +86,7 @@ public class SchemaToProtobufProcessor {
             buffer.append("/* @Indexed");
             String cacheName = ProtobufMetadataProcessor.getCacheName(table);
             if (cacheName != null && !cacheName.equals(defaultCacheName)) {
-            	buffer.append("@Cache(name=").append(cacheName);
+            	buffer.append("@Cache(name=").append(cacheName).append(")");
             }
             buffer.append(" */").append(NL);
         }
