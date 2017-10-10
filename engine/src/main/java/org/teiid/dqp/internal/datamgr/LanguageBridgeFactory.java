@@ -419,8 +419,15 @@ public class LanguageBridgeFactory {
             return translate((SubquerySetCriteria)criteria);
         } else if (criteria instanceof DependentSetCriteria) {
         	return translate((DependentSetCriteria)criteria);
+        } else if (criteria instanceof IsDistinctCriteria) {
+            return translate((IsDistinctCriteria)criteria);
         }
         throw new AssertionError(criteria.getClass().getName() + " " + criteria); //$NON-NLS-1$
+    }
+    
+    org.teiid.language.IsDistinct translate(IsDistinctCriteria criteria) {
+        return new IsDistinct(translate((Expression) criteria.getLeftRowValue()), 
+                translate((Expression)criteria.getRightRowValue()), criteria.isNegated());
     }
     
     org.teiid.language.Comparison translate(DependentSetCriteria criteria) {

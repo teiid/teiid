@@ -56,6 +56,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, srcCaps.supportsOuterJoins());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, srcCaps.supportsFullOuterJoins());
         setSupports(connectorID, tgtCaps, Capability.QUERY_FROM_INLINE_VIEWS, srcCaps.supportsInlineViews(), Capability.QUERY_FROM_GROUP_ALIAS);
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_IS_DISTINCT, srcCaps.supportsIsDistinctCriteria());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, srcCaps.supportsCompareCriteriaEquals());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, srcCaps.supportsCompareCriteriaOrdered());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, srcCaps.supportsLikeCriteria());

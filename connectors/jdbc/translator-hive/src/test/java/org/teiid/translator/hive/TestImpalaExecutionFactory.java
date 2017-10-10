@@ -35,6 +35,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.TranslationHelper;
 
 @SuppressWarnings("nls")
 public class TestImpalaExecutionFactory {
@@ -132,5 +133,20 @@ public class TestImpalaExecutionFactory {
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
         sqlVisitor.append(obj);
         assertEquals("WITH x AS (SELECT MAX(SmallA.StringNum) AS a FROM SmallA GROUP BY SmallA.StringKey) SELECT x.a FROM x", sqlVisitor.toString());
+    }
+    
+    @Test public void testPredicateFunctions() {
+        Select obj = (Select)TranslationHelper.helpTranslate("/bqt.vdb", null, impalaTranslator.getPushDownFunctions(), "select stringnum FROM bqt1.SmallA where ilike(stringkey, 'a_') and not(ilike(stringkey, '_b'))");
+        SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
+        sqlVisitor.append(obj);
+        assertEquals("SELECT SmallA.StringNum FROM SmallA WHERE (SmallA.StringKey ilike 'a_') AND NOT((SmallA.StringKey ilike '_b'))", sqlVisitor.toString());
+    }
+    
+    @Test public void testLikeRegex() {
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Select obj = (Select) commandBuilder.getCommand("SELECT max(StringNum) as a FROM bqt1.SmallA where stringkey like_regex '^[1-9]$'");
+        SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
+        sqlVisitor.append(obj);
+        assertEquals("SELECT MAX(SmallA.StringNum) AS a FROM SmallA WHERE SmallA.StringKey REGEXP '^[1-9]$'", sqlVisitor.toString());
     }
 }

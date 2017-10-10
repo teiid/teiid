@@ -242,7 +242,40 @@ public class ResolverVisitor extends LanguageVisitor {
 
     public void visit(CompareCriteria obj) {
         try {
-            resolveCompareCriteria(obj);
+            resolveCompareCriteria(obj, obj);
+        } catch(QueryResolverException e) {
+            handleException(e);
+        }
+    }
+    
+    @Override
+    public void visit(IsDistinctCriteria obj) {
+        try {
+            if (!(obj.getLeftRowValue() instanceof GroupSymbol) && !(obj.getRightRowValue() instanceof GroupSymbol)) {
+                resolveCompareCriteria(new BinaryComparison() {
+                    
+                    @Override
+                    public void setRightExpression(Expression ex) {
+                        obj.setRightRowValue(ex);
+                    }
+                    
+                    @Override
+                    public void setLeftExpression(Expression ex) {                        
+                        obj.setLeftRowValue(ex);
+                    }
+                    
+                    @Override
+                    public Expression getRightExpression() {
+                        return (Expression) obj.getRightRowValue();
+                    }
+                    
+                    @Override
+                    public Expression getLeftExpression() {
+                        return (Expression) obj.getLeftRowValue();
+                    }
+                    
+                }, obj);
+            }
         } catch(QueryResolverException e) {
             handleException(e);
         }
@@ -352,18 +385,6 @@ public class ResolverVisitor extends LanguageVisitor {
         } catch(QueryResolverException e) {
             handleException(e);
         }
-    }
-    
-    @Override
-    public void visit(IsDistinctCriteria isDistinctCriteria) {
-    	try {
-	    	ResolverUtil.resolveGroup(isDistinctCriteria.getLeftRowValue(), metadata);
-	    	ResolverUtil.resolveGroup(isDistinctCriteria.getRightRowValue(), metadata);
-    	} catch (QueryResolverException e) {
-            handleException(e);
-    	} catch (TeiidComponentException e) {
-            handleException(e);
-		}
     }
     
     public void visit(Function obj) {
@@ -979,15 +1000,15 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // invariants: exp.getType() == lower.getType() == upper.getType()
 	}
 
-	void resolveCompareCriteria(CompareCriteria ccrit)
+	void resolveCompareCriteria(BinaryComparison ccrit, LanguageObject surrounding)
 		throws QueryResolverException {
 	
 		Expression leftExpression = ccrit.getLeftExpression();
 		Expression rightExpression = ccrit.getRightExpression();
 	
 		// Check typing between expressions
-	    setDesiredType(leftExpression, rightExpression.getType(), ccrit);
-	    setDesiredType(rightExpression, leftExpression.getType(), ccrit);
+	    setDesiredType(leftExpression, rightExpression.getType(), surrounding);
+	    setDesiredType(rightExpression, leftExpression.getType(), surrounding);
 	
 		if(leftExpression.getType() == rightExpression.getType()) {
 			return;
@@ -1038,7 +1059,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // Try to apply a conversion generically
 	    
 	    if ((rightChar ^ leftChar) && !metadata.widenComparisonToString()) {
-	    	throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, ccrit));
+	    	throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, surrounding));
 	    }
 		
 	    if(ResolverUtil.canImplicitlyConvert(leftTypeName, rightTypeName)) {
@@ -1055,7 +1076,7 @@ public class ResolverVisitor extends LanguageVisitor {
 		
 		if (commonType == null) {
 	        // Neither are aggs, but types can't be reconciled
-	         throw new QueryResolverException(QueryPlugin.Event.TEIID30072, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30072, new Object[] { leftTypeName, rightTypeName, ccrit }));
+	         throw new QueryResolverException(QueryPlugin.Event.TEIID30072, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30072, new Object[] { leftTypeName, rightTypeName, surrounding }));
 		}
 		ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, commonType, metadata) );
 		ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, commonType, metadata) );
@@ -1399,8 +1420,40 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	
 	    // Resolve elements, deal with errors
-	    ResolverVisitor elementsVisitor = new ResolverVisitor(metadata, groups, externalContext);
-	    PostOrderNavigator.doVisit(obj, elementsVisitor);
+	    final ResolverVisitor elementsVisitor = new ResolverVisitor(metadata, groups, externalContext);
+	    //special handling for is distinct - we must resolve as both element and group 
+	    //until we generalize the notion of a scalar group reference as an "elementsymbol"
+	    PostOrderNavigator nav = new PostOrderNavigator(elementsVisitor) {
+	        @Override
+	        public void visit(IsDistinctCriteria obj) {
+                obj.setLeftRowValue(resolveAsGroup(obj.getLeftRowValue()));
+                obj.setRightRowValue(resolveAsGroup(obj.getRightRowValue()));
+                super.visit(obj);
+	        }
+
+            private LanguageObject resolveAsGroup(
+                    LanguageObject rowValue) {
+                if (rowValue instanceof ElementSymbol) {
+                    ElementSymbol es = (ElementSymbol)rowValue;
+                    if (es.getMetadataID() == null) {
+                        try {
+                            elementsVisitor.resolveElementSymbol(es);
+                        } catch (QueryResolverException
+                                | TeiidComponentException e) {
+                            GroupSymbol gs = new GroupSymbol(es.getName());
+                            try {
+                                ResolverUtil.resolveGroup(gs, metadata);
+                                rowValue = gs;
+                            } catch (QueryResolverException
+                                    | TeiidComponentException e1) {
+                            }
+                        }
+                    }
+                }
+                return rowValue;
+            }  
+	    };
+        obj.acceptVisitor(nav);
 	    elementsVisitor.throwException(true);
 	}
 	

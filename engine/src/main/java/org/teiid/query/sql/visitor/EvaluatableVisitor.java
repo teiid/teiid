@@ -44,6 +44,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 
@@ -208,7 +209,9 @@ public class EvaluatableVisitor extends LanguageVisitor {
     
     @Override
     public void visit(IsDistinctCriteria isDistinctCriteria) {
-		evaluationNotPossible(EvaluationLevel.PROCESSING);
+        if (isDistinctCriteria.getLeftRowValue() instanceof GroupSymbol || isDistinctCriteria.getRightRowValue() instanceof GroupSymbol) {
+            evaluationNotPossible(EvaluationLevel.PROCESSING);
+        }
     }
     
     private boolean isEvaluationPossible() {

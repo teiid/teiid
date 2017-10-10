@@ -198,59 +198,93 @@ public class Evaluator {
         } else if (criteria instanceof XMLExists) {
             return (Boolean) evaluateXMLQuery(tuple, ((XMLExists)criteria).getXmlQuery(), true);
         } else if (criteria instanceof IsDistinctCriteria) {
-        	IsDistinctCriteria idc = (IsDistinctCriteria)criteria;
-        	TempMetadataID left = (TempMetadataID)idc.getLeftRowValue().getMetadataID();
-        	TempMetadataID right = (TempMetadataID)idc.getRightRowValue().getMetadataID();
-        	VariableContext vc = this.context.getVariableContext();
-        	List<TempMetadataID> cols = left.getElements();
-        	List<TempMetadataID> colsOther = right.getElements();
-        	if (cols.size() != colsOther.size()) {
-        		return !idc.isNegated();
-        	}
-        	for (int i = 0; i < cols.size(); i++) {
-        		Object l = vc.getValue(new ElementSymbol(cols.get(i).getName(), idc.getLeftRowValue()));
-        		Object r = vc.getValue(new ElementSymbol(colsOther.get(i).getName(), idc.getRightRowValue()));
-        		if (l == null) {
-        			if (r != null) {
-            			if (idc.isNegated()) {
-        					return false;
-        				} 
-    					return true;
-        			}
-        		} else if (r == null) {
-        			if (idc.isNegated()) {
-    					return false;
-    				} 
-					return true;
-        		}
-        		try {
-        			Boolean b = compare(CompareCriteria.EQ, l, r);
-            		if (b == null) {
-            			continue; //shouldn't happen
-            		}
-            		if (!b) {
-            			if (idc.isNegated()) {
-        					return false;
-        				} 
-    					return true;
-            		}
-        		} catch (Exception e) {
-        			//we'll consider this a difference
-        			//more than likely they are different types
-        			if (idc.isNegated()) {
-    					return false;
-    				} 
-					return true;
-        		}
-        	}
-        	if (idc.isNegated()) {
-				return true;
-			} 
-			return false;
+        	return evaluateIsDistinct((IsDistinctCriteria)criteria, tuple);
 		} else {
              throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30311, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30311, criteria));
 		}
 	}
+	
+	private interface RowValue {
+	    Object get(int index) throws ExpressionEvaluationException, BlockedException, TeiidComponentException;
+	    int length();
+	}
+
+    private Boolean evaluateIsDistinct(IsDistinctCriteria idc, List<?> tuple)
+            throws AssertionError, ExpressionEvaluationException, BlockedException, TeiidComponentException {
+        RowValue left = getRowValue(tuple, idc.getLeftRowValue());
+        RowValue right = getRowValue(tuple, idc.getRightRowValue());
+        if (left.length() != right.length()) {
+        	return !idc.isNegated();
+        }
+        boolean result = false;
+        for (int i = 0; i < left.length(); i++) {
+        	Object l = left.get(i);
+        	Object r = right.get(i);
+        	if (l == null) {
+        		if (r != null) {
+        			result = true;
+        			break;
+        		} 
+    		    continue;
+        	} else if (r == null) {
+        	    result = true;
+                break;
+        	}
+        	try {
+        		Boolean b = compare(CompareCriteria.EQ, l, r);
+        		if (b == null) {
+        			continue; //shouldn't happen
+        		}
+        		if (!b) {
+        		    result = true;
+                    break;
+        		}
+        	} catch (Exception e) {
+        		//we'll consider this a difference
+        		//more than likely they are different types
+        	    result = true;
+                break;
+        	}
+        }
+        if (idc.isNegated()) {
+        	return !result;
+        } 
+        return result;
+    }
+
+    private RowValue getRowValue(final List<?> tuple, final LanguageObject lo) {
+        if (lo instanceof GroupSymbol) {
+            GroupSymbol leftRowValue = (GroupSymbol)lo;
+            TempMetadataID id = (TempMetadataID)leftRowValue.getMetadataID();
+            VariableContext vc = this.context.getVariableContext();
+            List<TempMetadataID> cols = id.getElements();
+                
+            return new RowValue() {
+                
+                @Override
+                public int length() {
+                    return cols.size();
+                }
+                
+                @Override
+                public Object get(int index) {
+                    return vc.getValue(new ElementSymbol(cols.get(index).getName(), leftRowValue));
+                }
+            };
+        }
+        return new RowValue() {
+            
+            @Override
+            public int length() {
+                return 1;
+            }
+            
+            @Override
+            public Object get(int index) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+                return internalEvaluate((Expression) lo, tuple);
+            }
+        };
+    }
 
 	private Boolean evaluate(CompoundCriteria criteria, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {

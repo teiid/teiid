@@ -37,9 +37,9 @@ import org.teiid.query.sql.symbol.Expression;
  * <LI>5 &lt;= length(companyName)</LI>
  * </UL>
  */
-public class CompareCriteria extends AbstractCompareCriteria {
-
-	/** The right-hand expression. */
+public class CompareCriteria extends AbstractCompareCriteria implements BinaryComparison {
+    
+    /** The right-hand expression. */
 	private Expression rightExpression;
 	
 	//null means existing, but implied

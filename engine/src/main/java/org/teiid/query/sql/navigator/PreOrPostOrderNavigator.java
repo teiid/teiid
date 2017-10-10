@@ -677,8 +677,12 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(IsDistinctCriteria obj) {
     	preVisitVisitor(obj);
     	//don't visit as that will fail the validation that scalar/row value groupsymbols can't be referenced
-    	//visitNode(obj.getLeftRowValue());
-    	//visitNode(obj.getRightRowValue());
+    	if (!(obj.getLeftRowValue() instanceof GroupSymbol)) {
+    	    visitNode(obj.getLeftRowValue());
+    	}
+    	if (!(obj.getRightRowValue() instanceof GroupSymbol)) {
+    	    visitNode(obj.getRightRowValue());
+    	}
     	postVisitVisitor(obj);
     }
     

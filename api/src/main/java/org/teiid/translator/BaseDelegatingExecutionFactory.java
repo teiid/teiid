@@ -1436,4 +1436,17 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsSetQueryLimitOffset(boolean value) {
         supportsSetQueryLimitOffset = value;
     }
+    
+    Boolean supportsIsDistinctCriteria;
+    @TranslatorProperty(display="Supports IS DISTINCT", advanced=true)
+    @Override
+    public boolean supportsIsDistinctCriteria() {
+        if (supportsIsDistinctCriteria != null) {
+            return supportsIsDistinctCriteria;
+        }
+        return delegate.supportsIsDistinctCriteria();
+    }
+    public void setSupportsIsDistinctCriteria(boolean value) {
+        supportsIsDistinctCriteria = value;
+    }
 }

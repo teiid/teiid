@@ -240,4 +240,10 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     	visitNode(windowSpecification.getOrderBy());
     }
     
+    @Override
+    public void visit(IsDistinct obj) {
+        visitNode(obj.getLeftExpression());
+        visitNode(obj.getRightExpression());
+    }
+    
 }
