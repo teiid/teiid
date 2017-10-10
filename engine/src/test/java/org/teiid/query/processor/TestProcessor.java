@@ -5272,7 +5272,7 @@ public class TestProcessor {
         Set atomicQueries = TestOptimizer.getAtomicQueries(plan);
         assertEquals("Expected one query to get pushed down", 1, atomicQueries.size()); //$NON-NLS-1$
         String atomicSql = atomicQueries.iterator().next().toString();
-        String expectedSql = "SELECT BQT1.SmallA.IntKey, BQT1.SmallB.IntKey FROM BQT1.SmallA, BQT1.SmallB WHERE (BQT1.SmallA.IntKey = BQT1.SmallB.IntKey) AND (BQT1.SmallA.IntKey = 5) AND (BQT1.SmallB.IntKey = 5)"; //$NON-NLS-1$
+        String expectedSql = "SELECT BQT1.SmallA.IntKey, BQT1.SmallB.IntKey FROM BQT1.SmallA, BQT1.SmallB WHERE (BQT1.SmallA.IntKey = BQT1.SmallB.IntKey) AND (BQT1.SmallA.IntKey = 5)"; //$NON-NLS-1$
         assertEquals(expectedSql, atomicSql); 
 
         List[] expected = new List[] { 

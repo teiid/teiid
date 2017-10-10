@@ -620,7 +620,7 @@ public class TestOptionalJoins {
                 + " create foreign table t2 (col1 integer primary key, col2 integer, FOREIGN KEY (col2) REFERENCES t1 (col1));", "x", "y");
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select t2.* from t1 inner join t2 on t1.col1 = t2.col2 and t1.col1 > 100", //$NON-NLS-1$
-                tm, new String[] {"SELECT g_1.col1, g_1.col2 FROM y.t1 AS g_0, y.t2 AS g_1 WHERE (g_0.col1 = g_1.col2) AND (g_0.col1 > 100) AND (g_1.col2 > 100)"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+                tm, new String[] {"SELECT g_1.col1, g_1.col2 FROM y.t1 AS g_0, y.t2 AS g_1 WHERE (g_0.col1 = g_1.col2) AND (g_0.col1 > 100)"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
         
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
         

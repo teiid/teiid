@@ -917,7 +917,7 @@ public class TestJoinOptimization {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,
                                       null, capFinder, 
                                       new String[] { 
-                                          "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = '1') AND (g_1.e1 = '1')" }, //$NON-NLS-1$ 
+                                          "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = '1')" }, //$NON-NLS-1$ 
                                           ComparisonMode.EXACT_COMMAND_STRING);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -1522,6 +1522,24 @@ public class TestJoinOptimization {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.e2, g_1.e2, g_3.e1, g_3.e3 FROM (pm1.g2 AS g_0 INNER JOIN (pm1.g3 AS g_1 CROSS JOIN pm1.g1 AS g_2) ON g_2.e1 = g_0.e1) LEFT OUTER JOIN pm1.g4 AS g_3 ON g_0.e4 = g_3.e4"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+	
+	@Test public void testKeyJoinOverConstrained() throws Exception {
+        String sql = "select col1 from t1, t2 where t1.col = t2.col and t1.col = 1"; //$NON-NLS-1$
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t1 (col integer primary key, col1 string); create foreign table t2 (col integer, foreign key (col) references t1 (col));", "x", "y");
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.col1 FROM y.t1 AS g_0, y.t2 AS g_1 WHERE (g_0.col = g_1.col) AND (g_0.col = 1)"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        
+        sql = "select col1 from t1 left outer join t2 on t1.col = t2.col where t1.col = 1"; //$NON-NLS-1$
+        
+        plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.col1 FROM y.t1 AS g_0 LEFT OUTER JOIN y.t2 AS g_1 ON g_0.col = g_1.col WHERE g_0.col = 1"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
 	
 }

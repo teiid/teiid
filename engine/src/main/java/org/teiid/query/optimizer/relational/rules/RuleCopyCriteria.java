@@ -49,6 +49,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
@@ -69,6 +70,8 @@ import org.teiid.query.util.CommandContext;
  * discover all possible relationships, only those that can be discovered quickly.
  */
 public final class RuleCopyCriteria implements OptimizerRule {
+    
+    static boolean COPY_ALL = false; //flag mainly for testing pre-TEIID-4943
 
 	/**
 	 * Execute the rule as described in the class comments.
@@ -155,21 +158,30 @@ public final class RuleCopyCriteria implements OptimizerRule {
         boolean isNew = combinedCriteria.add(tgtCrit);
         
         if (underAccess) {
-        	boolean use = false;
-        	if (isNew && !checkForGroupReduction) {
-        		if (endGroups == 1) {
-        			use = true;
-        		} else if (tgtCrit instanceof CompareCriteria) {
-	        		CompareCriteria cc = (CompareCriteria)tgtCrit;
-	        		int leftGroups = GroupsUsedByElementsVisitor.getGroups(cc.getLeftExpression()).size();
-	        		if (leftGroups == endGroups || leftGroups == 0) {
-	        			use = true;
-	        		}
-	        	}
-        	}
-        	if (!use) {
-        		return null;
-        	}
+            if (!isNew || checkForGroupReduction || endGroups > 1) {
+                return null;
+            }
+            if (!COPY_ALL) {
+                boolean use = false;
+                Collection<ElementSymbol> cols = ElementCollectorVisitor.getElements(tgtCrit, true);
+                //use only if it could be used to further rewrite predicates
+                for (Criteria existing : combinedCriteria) {
+                    if (existing.equals(tgtCrit)) {
+                        continue;
+                    }
+                    Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(existing, true);
+                    if (GroupsUsedByElementsVisitor.getGroups(elements).size() > 1) {
+                        continue;
+                    }
+                    if (elements.containsAll(cols)) {
+                        use = true;
+                        break;
+                    }
+                }
+                if (!use) {
+                    return null;
+                }
+            }
         }
         
         //if this is unique or it a duplicate but reduced a current join conjunct, return true
@@ -264,15 +276,14 @@ public final class RuleCopyCriteria implements OptimizerRule {
             }
             
             //before returning, filter out criteria that cannot go above the join node
-            if (jt == JoinType.JOIN_RIGHT_OUTER) {
-                criteriaInfo[0].removeAll(leftChildCriteria[0]);
-                criteriaInfo[1].removeAll(leftChildCriteria[1]);
+            if (jt == JoinType.JOIN_RIGHT_OUTER || jt == JoinType.JOIN_ANTI_SEMI || jt == JoinType.JOIN_SEMI || jt == JoinType.JOIN_UNION) {
+                throw new AssertionError("Unexpected join type"); //$NON-NLS-1$
             } else if (jt == JoinType.JOIN_LEFT_OUTER) {
                 criteriaInfo[0].removeAll(rightChildCriteria[0]);
                 criteriaInfo[1].removeAll(rightChildCriteria[1]);
             } else if (node.getSubqueryContainers().isEmpty()) {
             	if (!node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)) {
-                    toCopy.addAll(joinCrits);
+                    toCopy.addAll(combinedCriteria);
                 }
                 allCriteria.addAll(joinCrits);
             }
