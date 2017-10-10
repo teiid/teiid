@@ -431,7 +431,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	public void flush() {
 		this.dataOut = null;
 		this.writer = null;
-		Channels.write(this.ctx.getChannel(), null);
+		this.ctx.flush();
 	}
 
 	@Override
@@ -440,8 +440,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 	
 	private void terminate(Throwable t) {
-		trace("channel being terminated - ", t.getMessage());
-		this.ctx.getChannel().close();
+	    LogManager.logDetail(LogConstants.CTX_ODBC, "channel being terminated - ", t.getMessage());
+		this.ctx.channel().close();
 	}
 
 	private void sendEmptyQueryResponse() {
