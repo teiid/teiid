@@ -37,6 +37,7 @@ public class TestSchemaToProtobufProcessor {
 	@Test
     public void testConverstion() throws Exception {
         SchemaToProtobufProcessor tool = new SchemaToProtobufProcessor();
+        //tool.setIndexMessages(true);
         MetadataFactory mf = TestProtobufMetadataProcessor.protoMatadata("tables.proto");
         InfinispanConnection conn = Mockito.mock(InfinispanConnection.class);
         BasicCache cache = Mockito.mock(BasicCache.class);
@@ -196,4 +197,33 @@ public class TestSchemaToProtobufProcessor {
         assertEquals(expected, resource.getContents());
 
     }
+    
+    @SuppressWarnings("rawtypes")
+	@Test
+    public void testConverstionUsingCacheAnnotation() throws Exception {
+        SchemaToProtobufProcessor tool = new SchemaToProtobufProcessor();
+        tool.setIndexMessages(true);
+        MetadataFactory mf = TestProtobufMetadataProcessor.protoMatadata("tables_bad.proto");
+        InfinispanConnection conn = Mockito.mock(InfinispanConnection.class);
+        BasicCache cache = Mockito.mock(BasicCache.class);
+        Mockito.stub(cache.getName()).toReturn("foo");
+        Mockito.stub(conn.getCache()).toReturn(cache);
+        ProtobufResource resource = tool.process(mf, conn);
+
+        String expected = "package model;\n" +
+                "\n" +
+                "/* @Indexed @Cache(name=foo) */\n" +
+                "message G1 {\n" +
+                "    /* @Id @IndexedField(index=true, store=false) */\n" +
+                "    required int32 e1 = 1;\n" +
+                "    /* @IndexedField */\n" +
+                "    required string e2 = 2;\n" +
+                "    optional float e3 = 3;\n" +
+                "    /* @IndexedField(index=true, store=false) */\n" +
+                "    repeated string e4 = 4;\n" +
+                "    repeated string e5 = 5;\n" +
+                "}\n\n";
+        assertEquals(expected, resource.getContents());
+    }
+
 }
