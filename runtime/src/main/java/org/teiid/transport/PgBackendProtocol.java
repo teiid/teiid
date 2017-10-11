@@ -420,11 +420,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	public void flush() {
 		this.dataOut = null;
 		this.writer = null;
-		try {
-				((OutputStreamWriter) this.ctx).flush();
-	    } catch (IOException e){
-			LogManager.logError(LogConstants.CTX_ODBC, e, "channel being flushed - ");
-	    }
+		//this.ctx.flush(); - no explicit flush is possible
 	}
 
 	@Override
