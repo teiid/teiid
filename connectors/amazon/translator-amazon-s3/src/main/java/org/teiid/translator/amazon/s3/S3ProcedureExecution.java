@@ -68,7 +68,6 @@ public class S3ProcedureExecution implements ProcedureExecution {
 	private RuntimeMetadata metadata;
 	private ExecutionContext ec;
 	private String endpoint;
-	private static SimpleDateFormat df = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss zzz");
 	
 	private BinaryWSProcedureExecution execution = null;
 	boolean isText = false;
@@ -472,6 +471,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		if (!isList) {
 			result.add(endpoint);
 			try {
+			    SimpleDateFormat df = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss zzz");
 				result.add(lastModified == null?null:new Timestamp(df.parse(lastModified).getTime()));
 			} catch (ParseException e) {
 				result.add(null);
