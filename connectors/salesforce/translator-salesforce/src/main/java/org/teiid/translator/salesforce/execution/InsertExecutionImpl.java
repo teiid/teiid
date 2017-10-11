@@ -56,7 +56,7 @@ import com.sforce.async.SObject;
 
 
 public class InsertExecutionImpl extends AbstractUpdateExecution {
-	private static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ"); //$NON-NLS-1$
+	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ"); //$NON-NLS-1$
 	private JobInfo activeJob;
 	private List<String> batches = new ArrayList<String>();
 	private Iterator<? extends List<?>> rowIter;
@@ -157,7 +157,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 			return null;
 		}
 		if (type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-			return SDF.format(val);
+			return sdf.format(val);
 		}
 		return val.toString();
 	}	
