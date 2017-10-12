@@ -58,7 +58,9 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -390,18 +392,33 @@ public class MetadataValidator {
     }
 
 	public static void determineDependencies(AbstractMetadataRecord p, Command command) {
-		Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, true);
 		LinkedHashSet<AbstractMetadataRecord> values = new LinkedHashSet<AbstractMetadataRecord>();
-		for (GroupSymbol group : groups) {
-			Object mid = group.getMetadataID();
-			if (mid instanceof TempMetadataAdapter) {
-				mid = ((TempMetadataID)mid).getOriginalMetadataID();
-			}
-			if (mid instanceof AbstractMetadataRecord) {
-				values.add((AbstractMetadataRecord)mid);
-			}
+		collectDependencies(command, values);
+		p.setIncomingObjects(new ArrayList<AbstractMetadataRecord>(values));
+		if (p instanceof Table) {
+		    Table t = (Table)p;
+		    for (int i = 0; i < t.getColumns().size(); i++) {
+		        LinkedHashSet<AbstractMetadataRecord> columnValues = new LinkedHashSet<AbstractMetadataRecord>();
+		        Column c = t.getColumns().get(i);
+		        c.setIncomingObjects(columnValues);
+                determineDependencies(command, c, i, columnValues);
+		    }
 		}
-		Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(command, true, true);
+	}
+
+    private static void collectDependencies(org.teiid.query.sql.LanguageObject lo,
+            LinkedHashSet<AbstractMetadataRecord> values) {
+        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(lo, true);
+        for (GroupSymbol group : groups) {
+            Object mid = group.getMetadataID();
+            if (mid instanceof TempMetadataAdapter) {
+                mid = ((TempMetadataID)mid).getOriginalMetadataID();
+            }
+            if (mid instanceof AbstractMetadataRecord) {
+                values.add((AbstractMetadataRecord)mid);
+            }
+        }
+        Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(lo, true, true);
 		for (ElementSymbol elem : elems) {
 			Object mid = elem.getMetadataID();
 			if (mid instanceof TempMetadataAdapter) {
@@ -411,8 +428,41 @@ public class MetadataValidator {
 				values.add((AbstractMetadataRecord)mid);
 			}
 		}
-		p.setIncomingObjects(new ArrayList<AbstractMetadataRecord>(values));
 	}
+    }
+
+    private static void determineDependencies(Command command, Column c, int index, LinkedHashSet<AbstractMetadataRecord> columnValues) {
+        if (command instanceof Query) {
+            Expression ex = command.getProjectedSymbols().get(index);
+            collectDependencies(ex, columnValues);
+        } else if (command instanceof SetQuery) {
+            determineDependencies(((SetQuery)command).getLeftQuery(), c, index, columnValues);
+            determineDependencies(((SetQuery)command).getRightQuery(), c, index, columnValues);
+        }
+    }
+	
+	private static Table findTableByName(MetadataStore store, String name) {
+	    
+        Table table = null;
+        
+        int index = name.indexOf(Table.NAME_DELIM_CHAR);
+        if(index == -1) {
+            for(Schema schema : store.getSchemaList()) {
+                table = schema.getTable(name);
+                if(table != null) {
+                    break;
+                }
+            }
+        } else {
+            String schemaName = name.substring(0, index);
+            Schema schema = store.getSchema(schemaName);
+            if(schema != null) {
+                table = schema.getTable(name.substring(index+1));
+            }
+        }
+
+        return table;
+    }
 
 	private void validateUpdatePlan(ModelMetaData model,
 			ValidatorReport report,
