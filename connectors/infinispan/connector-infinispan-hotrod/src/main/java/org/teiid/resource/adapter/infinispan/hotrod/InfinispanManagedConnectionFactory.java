@@ -18,7 +18,6 @@
 package org.teiid.resource.adapter.infinispan.hotrod;
 
 import java.io.IOException;
-import java.util.HashSet;
 
 import javax.resource.ResourceException;
 import javax.security.auth.callback.Callback;
@@ -48,7 +47,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     private String cacheName;
     
     // security
-    private String[] saslAllowed = {"CRAM-MD5", "DIGEST-MD5", "PLAIN"}; 
+    private final static String[] saslAllowed = {"CRAM-MD5", "DIGEST-MD5", "PLAIN"}; 
     private String saslMechanism;
     private String userName;
     private String password;
@@ -296,7 +295,28 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((remoteServerList == null) ? 0 : remoteServerList.hashCode());
+        result = prime * result + ((authenticationRealm == null) ? 0
+                : authenticationRealm.hashCode());
+        result = prime * result + ((authenticationServerName == null) ? 0
+                : authenticationServerName.hashCode());
+        result = prime * result
+                + ((cacheName == null) ? 0 : cacheName.hashCode());
+        result = prime * result + ((keyStoreFileName == null) ? 0
+                : keyStoreFileName.hashCode());
+        result = prime * result + ((keyStorePassword == null) ? 0
+                : keyStorePassword.hashCode());
+        result = prime * result
+                + ((password == null) ? 0 : password.hashCode());
+        result = prime * result + ((remoteServerList == null) ? 0
+                : remoteServerList.hashCode());
+        result = prime * result
+                + ((saslMechanism == null) ? 0 : saslMechanism.hashCode());
+        result = prime * result + ((trustStoreFileName == null) ? 0
+                : trustStoreFileName.hashCode());
+        result = prime * result + ((trustStorePassword == null) ? 0
+                : trustStorePassword.hashCode());
+        result = prime * result
+                + ((userName == null) ? 0 : userName.hashCode());
         return result;
     }
 
@@ -309,10 +329,61 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         if (getClass() != obj.getClass())
             return false;
         InfinispanManagedConnectionFactory other = (InfinispanManagedConnectionFactory) obj;
+        if (authenticationRealm == null) {
+            if (other.authenticationRealm != null)
+                return false;
+        } else if (!authenticationRealm.equals(other.authenticationRealm))
+            return false;
+        if (authenticationServerName == null) {
+            if (other.authenticationServerName != null)
+                return false;
+        } else if (!authenticationServerName
+                .equals(other.authenticationServerName))
+            return false;
+        if (cacheName == null) {
+            if (other.cacheName != null)
+                return false;
+        } else if (!cacheName.equals(other.cacheName))
+            return false;
+        if (keyStoreFileName == null) {
+            if (other.keyStoreFileName != null)
+                return false;
+        } else if (!keyStoreFileName.equals(other.keyStoreFileName))
+            return false;
+        if (keyStorePassword == null) {
+            if (other.keyStorePassword != null)
+                return false;
+        } else if (!keyStorePassword.equals(other.keyStorePassword))
+            return false;
+        if (password == null) {
+            if (other.password != null)
+                return false;
+        } else if (!password.equals(other.password))
+            return false;
         if (remoteServerList == null) {
             if (other.remoteServerList != null)
                 return false;
         } else if (!remoteServerList.equals(other.remoteServerList))
+            return false;
+        if (saslMechanism == null) {
+            if (other.saslMechanism != null)
+                return false;
+        } else if (!saslMechanism.equals(other.saslMechanism))
+            return false;
+        if (trustStoreFileName == null) {
+            if (other.trustStoreFileName != null)
+                return false;
+        } else if (!trustStoreFileName.equals(other.trustStoreFileName))
+            return false;
+        if (trustStorePassword == null) {
+            if (other.trustStorePassword != null)
+                return false;
+        } else if (!trustStorePassword.equals(other.trustStorePassword))
+            return false;
+        if (userName == null) {
+            if (other.userName != null)
+                return false;
+        } else if (!userName.equals(other.userName))
             return false;
         return true;
     }    

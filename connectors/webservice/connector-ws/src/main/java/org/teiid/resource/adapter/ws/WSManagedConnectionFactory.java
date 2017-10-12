@@ -32,7 +32,6 @@ import org.apache.cxf.configuration.Configurer;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.JaxWsClientFactoryBean;
 import org.teiid.core.BundleUtil;
-import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
@@ -237,49 +236,97 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((this.authPassword == null) ? 0 : this.authPassword.hashCode());
-		result = prime * result + ((this.authUserName == null) ? 0 : this.authUserName.hashCode());
-		result = prime * result + ((this.configFile == null) ? 0 : this.configFile.hashCode());
-		result = prime * result + ((this.endPointName == null) ? 0 : this.endPointName.hashCode());
-		result = prime * result + ((this.endPoint == null) ? 0 : this.endPoint.hashCode());
-		result = prime * result + ((this.securityType == null) ? 0 : this.securityType.hashCode());
-		return result;
-	}
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((authPassword == null) ? 0 : authPassword.hashCode());
+        result = prime * result
+                + ((authUserName == null) ? 0 : authUserName.hashCode());
+        result = prime * result
+                + ((configFile == null) ? 0 : configFile.hashCode());
+        result = prime * result
+                + ((connectTimeout == null) ? 0 : connectTimeout.hashCode());
+        result = prime * result
+                + ((endPoint == null) ? 0 : endPoint.hashCode());
+        result = prime * result
+                + ((endPointName == null) ? 0 : endPointName.hashCode());
+        result = prime * result
+                + ((namespaceUri == null) ? 0 : namespaceUri.hashCode());
+        result = prime * result
+                + ((requestTimeout == null) ? 0 : requestTimeout.hashCode());
+        result = prime * result
+                + ((securityType == null) ? 0 : securityType.hashCode());
+        result = prime * result
+                + ((serviceName == null) ? 0 : serviceName.hashCode());
+        result = prime * result + ((wsdl == null) ? 0 : wsdl.hashCode());
+        return result;
+    }
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		WSManagedConnectionFactory other = (WSManagedConnectionFactory) obj;
-		if (!checkEquals(this.authPassword, other.authPassword)) {
-			return false;
-		}
-		if (!checkEquals(this.authUserName, other.authUserName)) {
-			return false;
-		}
-		if (!checkEquals(this.configFile, other.configFile)) {
-			return false;
-		}
-		if (!checkEquals(this.endPointName, other.endPointName)) {
-			return false;
-		}
-		if (!checkEquals(this.endPoint, other.endPoint)) {
-			return false;
-		}
-		if (!checkEquals(this.securityType, other.securityType)) {
-			return false;
-		}
-		return EquivalenceUtil.areEqual(this.requestTimeout, other.requestTimeout)
-				&& EquivalenceUtil.areEqual(this.connectTimeout, other.connectTimeout);
-	}
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        WSManagedConnectionFactory other = (WSManagedConnectionFactory) obj;
+        if (authPassword == null) {
+            if (other.authPassword != null)
+                return false;
+        } else if (!authPassword.equals(other.authPassword))
+            return false;
+        if (authUserName == null) {
+            if (other.authUserName != null)
+                return false;
+        } else if (!authUserName.equals(other.authUserName))
+            return false;
+        if (configFile == null) {
+            if (other.configFile != null)
+                return false;
+        } else if (!configFile.equals(other.configFile))
+            return false;
+        if (connectTimeout == null) {
+            if (other.connectTimeout != null)
+                return false;
+        } else if (!connectTimeout.equals(other.connectTimeout))
+            return false;
+        if (endPoint == null) {
+            if (other.endPoint != null)
+                return false;
+        } else if (!endPoint.equals(other.endPoint))
+            return false;
+        if (endPointName == null) {
+            if (other.endPointName != null)
+                return false;
+        } else if (!endPointName.equals(other.endPointName))
+            return false;
+        if (namespaceUri == null) {
+            if (other.namespaceUri != null)
+                return false;
+        } else if (!namespaceUri.equals(other.namespaceUri))
+            return false;
+        if (requestTimeout == null) {
+            if (other.requestTimeout != null)
+                return false;
+        } else if (!requestTimeout.equals(other.requestTimeout))
+            return false;
+        if (securityType == null) {
+            if (other.securityType != null)
+                return false;
+        } else if (!securityType.equals(other.securityType))
+            return false;
+        if (serviceName == null) {
+            if (other.serviceName != null)
+                return false;
+        } else if (!serviceName.equals(other.serviceName))
+            return false;
+        if (wsdl == null) {
+            if (other.wsdl != null)
+                return false;
+        } else if (!wsdl.equals(other.wsdl))
+            return false;
+        return true;
+    }
 }

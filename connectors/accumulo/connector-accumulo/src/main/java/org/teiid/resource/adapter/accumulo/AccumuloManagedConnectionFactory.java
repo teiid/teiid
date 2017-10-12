@@ -97,45 +97,57 @@ public class AccumuloManagedConnectionFactory extends BasicManagedConnectionFact
 		this.roles = roles;
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((instanceName == null) ? 0 : instanceName.hashCode());
-		result = prime * result
-				+ ((username == null) ? 0 : username.hashCode());
-		result = prime
-				* result
-				+ ((zooKeeperServerList == null) ? 0 : zooKeeperServerList
-						.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((instanceName == null) ? 0 : instanceName.hashCode());
+        result = prime * result
+                + ((password == null) ? 0 : password.hashCode());
+        result = prime * result + ((roles == null) ? 0 : roles.hashCode());
+        result = prime * result
+                + ((username == null) ? 0 : username.hashCode());
+        result = prime * result + ((zooKeeperServerList == null) ? 0
+                : zooKeeperServerList.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		AccumuloManagedConnectionFactory other = (AccumuloManagedConnectionFactory) obj;
-		if (instanceName == null) {
-			if (other.instanceName != null)
-				return false;
-		} else if (!instanceName.equals(other.instanceName))
-			return false;
-		if (username == null) {
-			if (other.username != null)
-				return false;
-		} else if (!username.equals(other.username))
-			return false;
-		if (zooKeeperServerList == null) {
-			if (other.zooKeeperServerList != null)
-				return false;
-		} else if (!zooKeeperServerList.equals(other.zooKeeperServerList))
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        AccumuloManagedConnectionFactory other = (AccumuloManagedConnectionFactory) obj;
+        if (instanceName == null) {
+            if (other.instanceName != null)
+                return false;
+        } else if (!instanceName.equals(other.instanceName))
+            return false;
+        if (password == null) {
+            if (other.password != null)
+                return false;
+        } else if (!password.equals(other.password))
+            return false;
+        if (roles == null) {
+            if (other.roles != null)
+                return false;
+        } else if (!roles.equals(other.roles))
+            return false;
+        if (username == null) {
+            if (other.username != null)
+                return false;
+        } else if (!username.equals(other.username))
+            return false;
+        if (zooKeeperServerList == null) {
+            if (other.zooKeeperServerList != null)
+                return false;
+        } else if (!zooKeeperServerList.equals(other.zooKeeperServerList))
+            return false;
+        return true;
+    }
+
 }

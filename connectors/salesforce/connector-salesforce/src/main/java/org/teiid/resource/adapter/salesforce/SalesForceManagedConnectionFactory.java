@@ -141,36 +141,93 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
         this.configFile = config;
     }	
 	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((url == null) ? 0 : url.hashCode());
-		result = prime * result + ((password == null) ? 0 : password.hashCode());
-		result = prime * result + ((username == null) ? 0 : username.hashCode());
-		return result;
-	}
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
-		SalesForceManagedConnectionFactory other = (SalesForceManagedConnectionFactory) obj;
-		if (!checkEquals(this.url, other.url)) {
-			return false;
-		}
-		if (!checkEquals(this.password, other.password)) {
-			return false;
-		}
-		if (!checkEquals(this.username, other.username)) {
-			return false;
-		}
-		return checkEquals(this.proxyUrl, other.proxyUrl) 
-				&& checkEquals(this.proxyUsername, other.proxyUsername)
-				&& checkEquals(this.proxyPassword, other.proxyPassword)
-				&& checkEquals(this.configProperties, other.configProperties);
-	}
-	
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((configFile == null) ? 0 : configFile.hashCode());
+        result = prime * result + ((configProperties == null) ? 0
+                : configProperties.hashCode());
+        result = prime * result
+                + ((connectTimeout == null) ? 0 : connectTimeout.hashCode());
+        result = prime * result
+                + ((password == null) ? 0 : password.hashCode());
+        result = prime * result
+                + ((proxyPassword == null) ? 0 : proxyPassword.hashCode());
+        result = prime * result
+                + ((proxyUrl == null) ? 0 : proxyUrl.hashCode());
+        result = prime * result
+                + ((proxyUsername == null) ? 0 : proxyUsername.hashCode());
+        result = prime * result
+                + ((requestTimeout == null) ? 0 : requestTimeout.hashCode());
+        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        result = prime * result
+                + ((username == null) ? 0 : username.hashCode());
+        return result;
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SalesForceManagedConnectionFactory other = (SalesForceManagedConnectionFactory) obj;
+        if (configFile == null) {
+            if (other.configFile != null)
+                return false;
+        } else if (!configFile.equals(other.configFile))
+            return false;
+        if (configProperties == null) {
+            if (other.configProperties != null)
+                return false;
+        } else if (!configProperties.equals(other.configProperties))
+            return false;
+        if (connectTimeout == null) {
+            if (other.connectTimeout != null)
+                return false;
+        } else if (!connectTimeout.equals(other.connectTimeout))
+            return false;
+        if (password == null) {
+            if (other.password != null)
+                return false;
+        } else if (!password.equals(other.password))
+            return false;
+        if (proxyPassword == null) {
+            if (other.proxyPassword != null)
+                return false;
+        } else if (!proxyPassword.equals(other.proxyPassword))
+            return false;
+        if (proxyUrl == null) {
+            if (other.proxyUrl != null)
+                return false;
+        } else if (!proxyUrl.equals(other.proxyUrl))
+            return false;
+        if (proxyUsername == null) {
+            if (other.proxyUsername != null)
+                return false;
+        } else if (!proxyUsername.equals(other.proxyUsername))
+            return false;
+        if (requestTimeout == null) {
+            if (other.requestTimeout != null)
+                return false;
+        } else if (!requestTimeout.equals(other.requestTimeout))
+            return false;
+        if (url == null) {
+            if (other.url != null)
+                return false;
+        } else if (!url.equals(other.url))
+            return false;
+        if (username == null) {
+            if (other.username != null)
+                return false;
+        } else if (!username.equals(other.username))
+            return false;
+        return true;
+    }
+    
     public void checkVersion() {
         try {
             String apiVersion = url.substring(url.lastIndexOf('/') + 1, url.length());

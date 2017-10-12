@@ -214,41 +214,71 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 	    return null;
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((this.remoteServerList == null) ? 0 : this.remoteServerList.hashCode());
-		result = prime * result + ((this.database == null) ? 0 : this.database.hashCode());
-		result = prime * result + ((this.username == null) ? 0 : this.username.hashCode());
-		result = prime * result + ((this.password == null) ? 0 : this.password.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((authDatabase == null) ? 0 : authDatabase.hashCode());
+        result = prime * result
+                + ((database == null) ? 0 : database.hashCode());
+        result = prime * result
+                + ((password == null) ? 0 : password.hashCode());
+        result = prime * result + ((remoteServerList == null) ? 0
+                : remoteServerList.hashCode());
+        result = prime * result
+                + ((securityType == null) ? 0 : securityType.hashCode());
+        result = prime * result + ((ssl == null) ? 0 : ssl.hashCode());
+        result = prime * result
+                + ((username == null) ? 0 : username.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		MongoDBManagedConnectionFactory other = (MongoDBManagedConnectionFactory) obj;
-		if (!checkEquals(this.remoteServerList, other.remoteServerList)) {
-			return false;
-		}
-		if (!checkEquals(this.database, other.database)) {
-			return false;
-		}
-		if (!checkEquals(this.username, other.username)) {
-			return false;
-		}
-		if (!checkEquals(this.password, other.password)) {
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        MongoDBManagedConnectionFactory other = (MongoDBManagedConnectionFactory) obj;
+        if (authDatabase == null) {
+            if (other.authDatabase != null)
+                return false;
+        } else if (!authDatabase.equals(other.authDatabase))
+            return false;
+        if (database == null) {
+            if (other.database != null)
+                return false;
+        } else if (!database.equals(other.database))
+            return false;
+        if (password == null) {
+            if (other.password != null)
+                return false;
+        } else if (!password.equals(other.password))
+            return false;
+        if (remoteServerList == null) {
+            if (other.remoteServerList != null)
+                return false;
+        } else if (!remoteServerList.equals(other.remoteServerList))
+            return false;
+        if (securityType == null) {
+            if (other.securityType != null)
+                return false;
+        } else if (!securityType.equals(other.securityType))
+            return false;
+        if (ssl == null) {
+            if (other.ssl != null)
+                return false;
+        } else if (!ssl.equals(other.ssl))
+            return false;
+        if (username == null) {
+            if (other.username != null)
+                return false;
+        } else if (!username.equals(other.username))
+            return false;
+        return true;
+    }
+
 }

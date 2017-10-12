@@ -233,86 +233,113 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + this.getManagementTimeout().hashCode();
-		result = prime * result + this.getConnectTimeout().hashCode();
-		result = prime * result + this.getQueryTimeout().hashCode();
-		result = prime * result + this.getViewTimeout().hashCode();
-		result = prime * result + this.getKvTimeout().hashCode();
-		result = prime * result + this.getSearchTimeout().hashCode();
-		result = prime * result + this.getDnsSrvEnabled().hashCode();
-		result = prime * result + this.getConnectionString().hashCode();
-		result = prime * result + ((this.keyspace == null) ? 0 : this.getKeyspace().hashCode());
-		result = prime * result + ((this.namespace == null) ? 0 : this.getNamespace().hashCode());  
-		result = prime * result + ((this.password == null) ? 0 : this.getPassword().hashCode());
-		result = prime * result + ((this.timeUnit == null) ? 0 : this.getTimeUnit().hashCode());
-		return result;
-	}
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((connectTimeout == null) ? 0 : connectTimeout.hashCode());
+        result = prime * result + ((connectionString == null) ? 0
+                : connectionString.hashCode());
+        result = prime * result
+                + ((dnsSrvEnabled == null) ? 0 : dnsSrvEnabled.hashCode());
+        result = prime * result
+                + ((keyspace == null) ? 0 : keyspace.hashCode());
+        result = prime * result
+                + ((kvTimeout == null) ? 0 : kvTimeout.hashCode());
+        result = prime * result + ((managementTimeout == null) ? 0
+                : managementTimeout.hashCode());
+        result = prime * result
+                + ((namespace == null) ? 0 : namespace.hashCode());
+        result = prime * result
+                + ((password == null) ? 0 : password.hashCode());
+        result = prime * result
+                + ((queryTimeout == null) ? 0 : queryTimeout.hashCode());
+        result = prime * result
+                + ((scanConsistency == null) ? 0 : scanConsistency.hashCode());
+        result = prime * result
+                + ((searchTimeout == null) ? 0 : searchTimeout.hashCode());
+        result = prime * result
+                + ((timeUnit == null) ? 0 : timeUnit.hashCode());
+        result = prime * result
+                + ((viewTimeout == null) ? 0 : viewTimeout.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		
-	    if (this == obj) {
-			return true;
-		}
-		
-		if (obj == null) {
-			return false;
-		}
-		
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		
-		CouchbaseManagedConnectionFactory other = (CouchbaseManagedConnectionFactory) obj;
-		
-		if(this.managementTimeout != other.managementTimeout){
-		    return false;
-		}
-		
-		if(this.queryTimeout != other.queryTimeout) {
-		    return false;
-		}
-		
-		if(this.viewTimeout != other.viewTimeout) {
-		    return false;
-		}
-		
-		if(this.kvTimeout != other.kvTimeout) {
-		    return false;
-		}
-		
-		if(this.searchTimeout != other.searchTimeout) {
-		    return false;
-		}
-		
-		if(this.connectTimeout != other.connectTimeout) {
-		    return false;
-		}
-		
-		if(!this.dnsSrvEnabled.equals(other.dnsSrvEnabled)) {
-		    return false;
-		}
-		
-		if (!checkEquals(this.connectionString, other.connectionString)) {
-			return false;
-		}
-		
-		if (!checkEquals(this.keyspace, other.keyspace)) {
-			return false;
-		}
-		if (!checkEquals(this.namespace, other.namespace)) {
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
             return false;
-        }
-		if (!checkEquals(this.password, other.password)) {
-			return false;
-		}
-		
-		if (!checkEquals(this.timeUnit, other.timeUnit)) {
-			return false;
-		}
-		return true;
-	}
+        if (getClass() != obj.getClass())
+            return false;
+        CouchbaseManagedConnectionFactory other = (CouchbaseManagedConnectionFactory) obj;
+        if (connectTimeout == null) {
+            if (other.connectTimeout != null)
+                return false;
+        } else if (!connectTimeout.equals(other.connectTimeout))
+            return false;
+        if (connectionString == null) {
+            if (other.connectionString != null)
+                return false;
+        } else if (!connectionString.equals(other.connectionString))
+            return false;
+        if (dnsSrvEnabled == null) {
+            if (other.dnsSrvEnabled != null)
+                return false;
+        } else if (!dnsSrvEnabled.equals(other.dnsSrvEnabled))
+            return false;
+        if (keyspace == null) {
+            if (other.keyspace != null)
+                return false;
+        } else if (!keyspace.equals(other.keyspace))
+            return false;
+        if (kvTimeout == null) {
+            if (other.kvTimeout != null)
+                return false;
+        } else if (!kvTimeout.equals(other.kvTimeout))
+            return false;
+        if (managementTimeout == null) {
+            if (other.managementTimeout != null)
+                return false;
+        } else if (!managementTimeout.equals(other.managementTimeout))
+            return false;
+        if (namespace == null) {
+            if (other.namespace != null)
+                return false;
+        } else if (!namespace.equals(other.namespace))
+            return false;
+        if (password == null) {
+            if (other.password != null)
+                return false;
+        } else if (!password.equals(other.password))
+            return false;
+        if (queryTimeout == null) {
+            if (other.queryTimeout != null)
+                return false;
+        } else if (!queryTimeout.equals(other.queryTimeout))
+            return false;
+        if (scanConsistency == null) {
+            if (other.scanConsistency != null)
+                return false;
+        } else if (!scanConsistency.equals(other.scanConsistency))
+            return false;
+        if (searchTimeout == null) {
+            if (other.searchTimeout != null)
+                return false;
+        } else if (!searchTimeout.equals(other.searchTimeout))
+            return false;
+        if (timeUnit == null) {
+            if (other.timeUnit != null)
+                return false;
+        } else if (!timeUnit.equals(other.timeUnit))
+            return false;
+        if (viewTimeout == null) {
+            if (other.viewTimeout != null)
+                return false;
+        } else if (!viewTimeout.equals(other.viewTimeout))
+            return false;
+        return true;
+    }
+
 }

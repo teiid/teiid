@@ -85,30 +85,72 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
         //}
     }
 
-
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (batchSize ^ (batchSize >>> 32));
-		return result;
-	}
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((authMethod == null) ? 0 : authMethod.hashCode());
+        result = prime * result + ((batchSize == null) ? 0 : batchSize.hashCode());
+        result = prime * result + ((clientId == null) ? 0 : clientId.hashCode());
+        result = prime * result
+                + ((clientSecret == null) ? 0 : clientSecret.hashCode());
+        result = prime * result + ((key == null) ? 0 : key.hashCode());
+        result = prime * result
+                + ((refreshToken == null) ? 0 : refreshToken.hashCode());
+        result = prime * result
+                + ((spreadsheetName == null) ? 0 : spreadsheetName.hashCode());
+        return result;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SpreadsheetManagedConnectionFactory other = (SpreadsheetManagedConnectionFactory) obj;
+        if (authMethod == null) {
+            if (other.authMethod != null)
+                return false;
+        } else if (!authMethod.equals(other.authMethod))
+            return false;
+        if (batchSize == null) {
+            if (other.batchSize != null)
+                return false;
+        } else if (!batchSize.equals(other.batchSize))
+            return false;
+        if (clientId == null) {
+            if (other.clientId != null)
+                return false;
+        } else if (!clientId.equals(other.clientId))
+            return false;
+        if (clientSecret == null) {
+            if (other.clientSecret != null)
+                return false;
+        } else if (!clientSecret.equals(other.clientSecret))
+            return false;
+        if (key == null) {
+            if (other.key != null)
+                return false;
+        } else if (!key.equals(other.key))
+            return false;
+        if (refreshToken == null) {
+            if (other.refreshToken != null)
+                return false;
+        } else if (!refreshToken.equals(other.refreshToken))
+            return false;
+        if (spreadsheetName == null) {
+            if (other.spreadsheetName != null)
+                return false;
+        } else if (!spreadsheetName.equals(other.spreadsheetName))
+            return false;
+        return true;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		SpreadsheetManagedConnectionFactory other = (SpreadsheetManagedConnectionFactory) obj;
-		if (batchSize != other.batchSize)
-			return false;
-		return true;
-	}
-
-	public Integer getBatchSize() {
+    public Integer getBatchSize() {
 		return batchSize;
 	}
 
