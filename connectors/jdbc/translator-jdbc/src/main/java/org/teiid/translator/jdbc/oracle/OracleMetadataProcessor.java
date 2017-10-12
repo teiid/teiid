@@ -40,7 +40,6 @@ public final class OracleMetadataProcessor extends
 		JDBCMetdataProcessor {
 
 	private boolean useGeometryType;
-	private boolean useIntegralTypes;
 	
 	@Override
 	protected String getRuntimeType(int type, String typeName, int precision,
@@ -51,21 +50,6 @@ public final class OracleMetadataProcessor extends
 		}
 	    if (useGeometryType && "SDO_GEOMETRY".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
 	        return TypeFacility.RUNTIME_NAMES.GEOMETRY;
-	    }
-	    if (useIntegralTypes && scale == 0 && (type == Types.NUMERIC || type == Types.DECIMAL)) {
-	    	if (precision <= 2) {
-	    		return TypeFacility.RUNTIME_NAMES.BYTE;
-	    	}
-	    	if (precision <= 4) {
-	    		return TypeFacility.RUNTIME_NAMES.SHORT;
-	    	}
-	    	if (precision <= 9) {
-	    		return TypeFacility.RUNTIME_NAMES.INTEGER;
-	    	}
-	    	if (precision <= 18) {
-	    		return TypeFacility.RUNTIME_NAMES.LONG;
-	    	}
-	    	return TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
 	    }
 		return super.getRuntimeType(type, typeName, precision, scale);
 	}
@@ -165,15 +149,6 @@ public final class OracleMetadataProcessor extends
 			return super.getFullyQualifiedName(schemaName, catalogName, objectName, quoted);
 		}
 		return super.getFullyQualifiedName(catalogName, schemaName, objectName, quoted);
-	}
-	
-	@TranslatorProperty (display="Use Integral Types", category=PropertyType.IMPORT, description="Use integral types rather than decimal when the scale is 0.")
-	public boolean isUseIntegralTypes() {
-		return useIntegralTypes;
-	}
-	
-	public void setUseIntegralTypes(boolean useIntegralTypes) {
-		this.useIntegralTypes = useIntegralTypes;
 	}
 	
 	@Override

@@ -112,9 +112,12 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	private boolean importStatistics;
 	
 	private String columnNamePattern;
-	
+
+	//type options
 	private boolean importRowIdAsBinary;
     private boolean importLargeAsLob;
+    private boolean useIntegralTypes;
+
 	
 	public void process(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
     	try {
@@ -496,6 +499,21 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	}
 	
 	protected String getRuntimeType(int type, String typeName, int precision, int scale) {
+	    if (useIntegralTypes && scale == 0 && (type == Types.NUMERIC || type == Types.DECIMAL)) {
+            if (precision <= 2) {
+                return TypeFacility.RUNTIME_NAMES.BYTE;
+            }
+            if (precision <= 4) {
+                return TypeFacility.RUNTIME_NAMES.SHORT;
+            }
+            if (precision <= 9) {
+                return TypeFacility.RUNTIME_NAMES.INTEGER;
+            }
+            if (precision <= 18) {
+                return TypeFacility.RUNTIME_NAMES.LONG;
+            }
+            return TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
+        }
 		return getRuntimeType(type, typeName, precision);
 	}
 
@@ -1131,6 +1149,15 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
     
     public void setSequenceNamePattern(String sequenceNamePattern) {
         this.sequenceNamePattern = sequenceNamePattern;
+    }
+    
+    @TranslatorProperty (display="Use Integral Types", category=PropertyType.IMPORT, description="Use integral types rather than decimal when the scale is 0.")
+    public boolean isUseIntegralTypes() {
+        return useIntegralTypes;
+    }
+    
+    public void setUseIntegralTypes(boolean useIntegralTypes) {
+        this.useIntegralTypes = useIntegralTypes;
     }
        
 }
