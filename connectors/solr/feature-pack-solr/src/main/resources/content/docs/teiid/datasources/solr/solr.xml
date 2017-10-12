@@ -21,6 +21,8 @@
                       <config-property name="ConnTimeout">10000</config-property>
                       <config-property name="MaxConns">10</config-property>
                       <config-property name="MaxRetries">3</config-property>
+                      <config-property name="AuthUserName">xxx</config-property>
+                      <config-property name="AuthPassword">xxx</config-property>
                       -->
                 </connection-definition>
             </connection-definitions>

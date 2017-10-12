@@ -20,10 +20,12 @@ package org.teiid.resource.adapter.solr;
 import java.io.IOException;
 
 import javax.resource.ResourceException;
+import javax.security.auth.Subject;
 
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpClientUtil;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient.Builder;
 import org.apache.solr.client.solrj.impl.SolrHttpRequestRetryHandler;
@@ -32,7 +34,9 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.LukeResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.apache.solr.common.params.ModifiableSolrParams;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.ConnectionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.solr.SolrConnection;
 
@@ -46,8 +50,22 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
 		if (!url.endsWith("/")) { //$NON-NLS-1$
 			url = config.getUrl()+"/"; //$NON-NLS-1$
 		}
+		ModifiableSolrParams params = new ModifiableSolrParams();
+		String userName = config.getAuthUserName();
+		String password = config.getAuthPassword();
+		// if security-domain is specified and caller identity is used; then use
+        // credentials from subject
+        Subject subject = ConnectionContext.getSubject();
+        if (subject != null) {
+            userName = ConnectionContext.getUserName(subject, config, userName);
+            password = ConnectionContext.getPassword(subject, config, userName, password);
+        }
+        if (userName != null) {
+    		params.set(HttpClientUtil.PROP_BASIC_AUTH_USER, userName);
+    		params.set(HttpClientUtil.PROP_BASIC_AUTH_PASS, password);
+        }
 		url = url + config.getCoreName();
-		this.server = new Builder().build();
+		this.server = new Builder().withInvariantParams(params).build();
 
 		if (config.getSoTimeout() != null) {
 			this.server.setSoTimeout(config.getSoTimeout());

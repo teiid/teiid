@@ -73,6 +73,18 @@
 					<config-property-name>MaxRetries</config-property-name>
 					<config-property-type>java.lang.Integer</config-property-type>
 				</config-property>
+				
+				<config-property>
+	                <description>{$display:"Authentication User Name",$description:"Name value for authentication",$advanced:"true", $required:"false"}</description>
+	                <config-property-name>AuthUserName</config-property-name>
+	                <config-property-type>java.lang.String</config-property-type>
+                </config-property>
+
+	            <config-property>
+	                <description>{$display:"Authentication User Password",$description:"Password value for authentication",$advanced:"true",$masked:"true", $required:"false"}</description>
+	                <config-property-name>AuthPassword</config-property-name>
+	                <config-property-type>java.lang.String</config-property-type>
+	            </config-property> 
 
 				<connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
 				<connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>

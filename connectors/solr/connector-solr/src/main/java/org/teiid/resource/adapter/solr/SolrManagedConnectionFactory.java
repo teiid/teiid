@@ -31,6 +31,8 @@ public class SolrManagedConnectionFactory extends BasicManagedConnectionFactory 
 	private Integer maxConns;
 	private Integer maxRetries;
 	private String coreName;
+	private String authPassword; // httpbasic - password
+    private String authUserName; // httpbasic - username
 
 	@Override
 	public SolrConnectionFactory createConnectionFactory()
@@ -93,30 +95,103 @@ public class SolrManagedConnectionFactory extends BasicManagedConnectionFactory 
 	public void setCoreName(String coreName) {
 		this.coreName = coreName;
 	}	
+	
+	public String getAuthPassword() {
+        return authPassword;
+    }
+	
+	public String getAuthUserName() {
+        return authUserName;
+    }
+	
+	public void setAuthPassword(String authPassword) {
+        this.authPassword = authPassword;
+    }
+	
+	public void setAuthUserName(String authUserName) {
+        this.authUserName = authUserName;
+    }
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((url == null) ? 0 : url.hashCode());
-		return result;
-	}
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((allowCompression == null) ? 0
+                : allowCompression.hashCode());
+        result = prime * result
+                + ((authPassword == null) ? 0 : authPassword.hashCode());
+        result = prime * result
+                + ((authUserName == null) ? 0 : authUserName.hashCode());
+        result = prime * result
+                + ((connTimeout == null) ? 0 : connTimeout.hashCode());
+        result = prime * result
+                + ((coreName == null) ? 0 : coreName.hashCode());
+        result = prime * result
+                + ((maxConns == null) ? 0 : maxConns.hashCode());
+        result = prime * result
+                + ((maxRetries == null) ? 0 : maxRetries.hashCode());
+        result = prime * result
+                + ((soTimeout == null) ? 0 : soTimeout.hashCode());
+        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		SolrManagedConnectionFactory other = (SolrManagedConnectionFactory) obj;
-		if (url == null) {
-			if (other.url != null)
-				return false;
-		} else if (!url.equals(other.url))
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SolrManagedConnectionFactory other = (SolrManagedConnectionFactory) obj;
+        if (allowCompression == null) {
+            if (other.allowCompression != null)
+                return false;
+        } else if (!allowCompression.equals(other.allowCompression))
+            return false;
+        if (authPassword == null) {
+            if (other.authPassword != null)
+                return false;
+        } else if (!authPassword.equals(other.authPassword))
+            return false;
+        if (authUserName == null) {
+            if (other.authUserName != null)
+                return false;
+        } else if (!authUserName.equals(other.authUserName))
+            return false;
+        if (connTimeout == null) {
+            if (other.connTimeout != null)
+                return false;
+        } else if (!connTimeout.equals(other.connTimeout))
+            return false;
+        if (coreName == null) {
+            if (other.coreName != null)
+                return false;
+        } else if (!coreName.equals(other.coreName))
+            return false;
+        if (maxConns == null) {
+            if (other.maxConns != null)
+                return false;
+        } else if (!maxConns.equals(other.maxConns))
+            return false;
+        if (maxRetries == null) {
+            if (other.maxRetries != null)
+                return false;
+        } else if (!maxRetries.equals(other.maxRetries))
+            return false;
+        if (soTimeout == null) {
+            if (other.soTimeout != null)
+                return false;
+        } else if (!soTimeout.equals(other.soTimeout))
+            return false;
+        if (url == null) {
+            if (other.url != null)
+                return false;
+        } else if (!url.equals(other.url))
+            return false;
+        return true;
+    }
+
 
 }
