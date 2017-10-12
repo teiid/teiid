@@ -99,13 +99,13 @@ public class ODataTypeManager {
         
         teiidTypes.put(DataTypeManager.DefaultDataTypes.STRING, "Edm.String");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.BOOLEAN, "Edm.Boolean");
-        teiidTypes.put(DataTypeManager.DefaultDataTypes.SHORT, "Edm.Byte");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.BYTE, "Edm.SByte");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.SHORT, "Edm.Int16");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.INTEGER, "Edm.Int32");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.LONG, "Edm.Int64");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.FLOAT, "Edm.Single");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.DOUBLE, "Edm.Double");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, "Edm.Decimal");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "Edm.Decimal");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.DATE, "Edm.Date");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.TIME, "Edm.TimeOfDay");

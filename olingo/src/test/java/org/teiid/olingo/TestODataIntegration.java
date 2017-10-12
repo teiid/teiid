@@ -2820,7 +2820,7 @@ public class TestODataIntegration {
             mmd.setName("vw");
             mmd.addSourceMetadata("ddl", "CREATE VIEW SimpleTable(\n" + 
                     "    intkey integer PRIMARY KEY,\n" + 
-                    "    decimalval decimal(3, 1)) as select 1,12.30 union all select 2, 1.000 union all select 3, 123.0;");
+                    "    decimalval decimal(3, 1), bigintegerval biginteger(40)) as select 1,12.30,cast(1 as biginteger) union all select 2, 1.000,2 union all select 3, 123.0,3;");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
@@ -2829,9 +2829,11 @@ public class TestODataIntegration {
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/SimpleTable");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#SimpleTable\",\"value\":[{\"intkey\":1,\"decimalval\":12.3},{\"intkey\":2,\"decimalval\":1.0},{\"intkey\":3,\"decimalval\":123}]}", 
+            assertEquals("{\"@odata.context\":\"$metadata#SimpleTable\",\"value\":[{\"intkey\":1,\"decimalval\":12.3,\"bigintegerval\":1},{\"intkey\":2,\"decimalval\":1.0,\"bigintegerval\":2},{\"intkey\":3,\"decimalval\":123,\"bigintegerval\":3}]}", 
                     response.getContentAsString());
             
+            response = http.GET(baseURL + "/northwind/vw/$metadata");
+            assertTrue(response.getContentAsString().contains("Name=\"bigintegerval\" Type=\"Edm.Decimal\" Precision=\"40\" Scale=\"0\""));
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
