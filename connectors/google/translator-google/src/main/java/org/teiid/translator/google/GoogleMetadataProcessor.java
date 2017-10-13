@@ -25,6 +25,8 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
 import org.teiid.translator.google.api.metadata.Column;
@@ -32,6 +34,8 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.google.api.metadata.Worksheet;
 
 public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsheetConnection>{
+    
+    private boolean allTypesUpdatable = true;
 	
 	/**
 	 * Creates metadata from all spreadsheets in the user account. Table name
@@ -72,22 +76,27 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 	 * @throws TranslatorException
 	 */
 	private void addColumnsToTable(MetadataFactory mf, Table table, Worksheet worksheet) {
+	    boolean updatable = true;
 		for(Column column : worksheet.getColumnsAsList()){
 			String type = null;
 			switch(column.getDataType()){
 			case DATE:
+			    updatable = false;
 				type = TypeFacility.RUNTIME_NAMES.DATE;
 				break;
 			case BOOLEAN:
 				type = TypeFacility.RUNTIME_NAMES.BOOLEAN;
 				break;
 			case DATETIME:
+			    updatable = false;
 				type = TypeFacility.RUNTIME_NAMES.TIMESTAMP;
 				break;
 			case NUMBER:
+			    updatable = false;
 				type = TypeFacility.RUNTIME_NAMES.DOUBLE;
 				break;
 			case TIMEOFDAY:
+			    updatable = false;
 				type = TypeFacility.RUNTIME_NAMES.TIME;
 				break;
 			default:
@@ -103,11 +112,20 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 			}
 			org.teiid.metadata.Column c = mf.addColumn(name, type, table);
 			if (table.supportsUpdate()) {
-			    c.setUpdatable(true);
+			    c.setUpdatable(updatable || allTypesUpdatable);
 			}
 			c.setNameInSource(worksheet.isHeaderEnabled()?column.getLabel():column.getAlphaName());
 			c.setNativeType(column.getDataType().name());
 		}    
 	}
+	
+    @TranslatorProperty (display="All Types Updatable", category=PropertyType.IMPORT, description="Allow all types to be updatable even those that may have formatting or locale inconsistencies.")
+    public boolean isAllTypesUpdatable() {
+        return allTypesUpdatable;
+    }
+    
+    public void setAllTypesUpdatable(boolean allTypesUpdatable) {
+        this.allTypesUpdatable = allTypesUpdatable;
+    }
 	
 }

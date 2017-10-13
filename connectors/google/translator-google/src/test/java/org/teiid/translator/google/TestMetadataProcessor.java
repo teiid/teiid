@@ -29,6 +29,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
 import org.teiid.translator.google.api.metadata.Column;
+import org.teiid.translator.google.api.metadata.SpreadsheetColumnType;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.google.api.metadata.Util;
 import org.teiid.translator.google.api.metadata.Worksheet;
@@ -46,6 +47,9 @@ public class TestMetadataProcessor {
             Column newCol = new Column();
             newCol.setAlphaName(Util.convertColumnIDtoString(i));
             newCol.setLabel("c" + i);
+            if (i == 1) {
+                newCol.setDataType(SpreadsheetColumnType.DATETIME);
+            }
             worksheet.addColumn(newCol.getAlphaName(), newCol);
         }
         Column newCol = new Column();
@@ -61,6 +65,12 @@ public class TestMetadataProcessor {
         assertTrue(t.supportsUpdate());
         assertEquals(3, t.getColumns().size());
         assertTrue(t.getColumns().get(0).isUpdatable());
+        
+        processor.setAllTypesUpdatable(false);
+        factory = new MetadataFactory("", 1, "", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), "");
+        processor.process(factory, conn);
+        t = factory.getSchema().getTables().get("PeopleList");
+        assertFalse(t.getColumns().get(0).isUpdatable());
     }
     
 }
