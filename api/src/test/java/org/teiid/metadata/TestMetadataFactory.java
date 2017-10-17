@@ -86,6 +86,22 @@ public class TestMetadataFactory {
         assertEquals("a_B_1", c.getName());
     }
 	
+
+    @Test public void testDuplicateTables() {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("foo");
+        mmd.addProperty("importer.renameDuplicateTables", "true");
+        HashMap<String, Datatype> types = new HashMap<String, Datatype>();
+        Datatype value = new Datatype();
+        value.setName("string");
+        types.put("string", value);
+        MetadataFactory factory = new MetadataFactory("x", 1, types, mmd);
+        Table x = factory.addTable("x");
+        assertEquals("x", x.getName());
+        Table x1 = factory.addTable("X");
+        assertEquals("X_1", x1.getName());
+    }
+	
 	public static boolean someFunction() {
 		return true;
 	}

@@ -63,6 +63,7 @@ public class MetadataFactory extends NamespaceContainer {
 	private Map<String, Datatype> dataTypes;
 	private boolean autoCorrectColumnNames = true;
     private boolean renameDuplicateColumns;
+    private boolean renameDuplicateTables;
 	private String rawMetadata;
 	private Properties modelProperties;
 	private Schema schema = new Schema();
@@ -102,6 +103,7 @@ public class MetadataFactory extends NamespaceContainer {
 			}
 		    this.autoCorrectColumnNames = PropertiesUtils.getBooleanProperty(modelProperties, "importer.autoCorrectColumnNames", this.autoCorrectColumnNames); //$NON-NLS-1$
 		    this.renameDuplicateColumns = PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameDuplicateColumns", this.renameDuplicateColumns); //$NON-NLS-1$
+		    this.renameDuplicateTables = PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameDuplicateTables", this.renameDuplicateTables); //$NON-NLS-1$
 		}
 		this.modelProperties = modelProperties;
 		this.rawMetadata = rawMetadata;
@@ -176,6 +178,15 @@ public class MetadataFactory extends NamespaceContainer {
 	public Table addTable(String name) {
 		Table table = new Table();
 		table.setTableType(Table.Type.Table);
+		if (renameDuplicateTables && this.schema.getTable(name) != null) {
+		    int suffix = 1;
+            String newName = name + "_" + suffix; //$NON-NLS-1$
+            while (this.schema.getTable(newName) != null) {
+                suffix++;
+            }
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60040, newName, name));
+            name = newName;
+		}
 		table.setName(name);
 		setUUID(table);
 		this.schema.addTable(table);
