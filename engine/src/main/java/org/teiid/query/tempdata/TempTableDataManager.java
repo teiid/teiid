@@ -264,6 +264,7 @@ public class TempTableDataManager implements ProcessorDataManager {
             return CollectionTupleSource.createUpdateCountTupleSource(0);
     	}
     	if (command instanceof AlterTempTable) {
+    	    //non longer used, was part of xml logic
     		AlterTempTable att = (AlterTempTable)command;
     		TempTable tt = contextStore.getTempTable(att.getTempTable());
     		Assertion.isNotNull(tt, "Table doesn't exist"); //$NON-NLS-1$

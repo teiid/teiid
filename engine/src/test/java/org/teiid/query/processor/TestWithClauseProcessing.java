@@ -11,6 +11,7 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -1203,6 +1204,40 @@ public class TestWithClauseProcessing {
         
         
        TestProcessor.helpProcess(plan, fdm, new List<?>[] {Arrays.asList(3, 3)});
+    }
+    
+    @Test public void testWithImplicitIndexing() throws Exception {
+        String sql = "with a (x, y, z) as /*+ no_inline */ (select e1, e2, e3 from pm1.g1) select (select max(x) from a where y = pm1.g2.e2), pm1.g2.* from pm1.g2"; //$NON-NLS-1$
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+        
+        List<?>[] rows = new List<?>[20480];
+        for (int i = 0; i < rows.length; i++) {
+            rows[i] = Arrays.asList(String.valueOf(i), i);
+        }
+        
+        dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", rows);
+        
+        rows = new List<?>[20480];
+        for (int i = 0; i < rows.length; i++) {
+            rows[i] = Arrays.asList("a", i, true, 1.1);
+        }
+        
+        dataManager.addData("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2", rows);
+        
+        List<?>[] expected = new List[20480];
+        for (int i = 0; i < rows.length; i++) {
+            expected[i] = Arrays.asList(String.valueOf(i), "a", i, true, 1.1);
+        }
+        
+        CommandContext cc = createCommandContext();
+        BufferManagerImpl bm = (BufferManagerImpl) cc.getBufferManager();
+        long reads = bm.getReadAttempts();
+        helpProcess(plan, cc, dataManager, expected);
+        reads = bm.getReadAttempts() - reads;
+        assertTrue(reads < 500000);
     }
 
 }

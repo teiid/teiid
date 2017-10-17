@@ -122,6 +122,7 @@ public class TempTableStore {
     		}
     		tempTable.insert(iterator, columns, false, false, null);
     		tempTable.setUpdatable(false);
+    		tempTable.setAllowImplicitIndexing(true);
     		close();
     		return tempTable;
 		}
@@ -208,6 +209,7 @@ public class TempTableStore {
 			this.working.truncate(true);
 			this.intermediate.truncate(true);
 			tempTable.setUpdatable(false);
+			tempTable.setAllowImplicitIndexing(true);
 			return tempTable;
 		}
 

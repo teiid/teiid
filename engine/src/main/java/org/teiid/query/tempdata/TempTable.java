@@ -61,11 +61,13 @@ import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.SortUtility;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.CacheHint;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.SetClauseList;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Array;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
@@ -386,6 +388,8 @@ public class TempTable implements Cloneable, SearchableTable {
 	
 	private AtomicInteger activeReaders = new AtomicInteger();
 
+    private boolean allowImplicitIndexing;
+
 	TempTable(TempMetadataID tid, BufferManager bm, List<ElementSymbol> columns, int primaryKeyLength, String sessionID) {
 		this.tid = tid;
 		this.bm = bm;
@@ -525,18 +529,34 @@ public class TempTable implements Cloneable, SearchableTable {
 		}
 		IndexInfo primary = new IndexInfo(this, projectedCols, condition, orderBy, true);
 		IndexInfo ii = primary;
-		if (indexTables != null && (condition != null || orderBy != null) && ii.valueSet.size() != 1) {
+		if ((indexTables != null || (!this.updatable && allowImplicitIndexing && condition != null && this.getRowCount() > 2*this.getTree().getPageSize(true))) && (condition != null || orderBy != null) && ii.valueSet.size() != 1) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Considering indexes on table", this, "for query", projectedCols, condition, orderBy); //$NON-NLS-1$ //$NON-NLS-2$
 			long rowCost = this.tree.getRowCount();
 			long bestCost = estimateCost(orderBy, ii, rowCost);
-			for (TempTable table : this.indexTables.values()) {
-				IndexInfo secondary = new IndexInfo(table, projectedCols, condition, orderBy, false);
-				long cost = estimateCost(orderBy, secondary, rowCost);
-				if (cost < bestCost) {
-					ii = secondary;
-					bestCost = cost;
-				}
-			}
+			if (this.indexTables != null) {
+    			for (TempTable table : this.indexTables.values()) {
+    				IndexInfo secondary = new IndexInfo(table, projectedCols, condition, orderBy, false);
+    				long cost = estimateCost(orderBy, secondary, rowCost);
+    				if (cost < bestCost) {
+    					ii = secondary;
+    					bestCost = cost;
+    				}
+    			}
+			} 
+			if (ii == primary && allowImplicitIndexing) {
+			    //TODO: detect if it should be covering
+                if (createImplicitIndexIfNeeded(condition)) {
+                    IndexInfo secondary = new IndexInfo(this.indexTables.values().iterator().next(), projectedCols, condition, orderBy, false);
+                    LogManager.logDetail(LogConstants.CTX_DQP, "Created an implicit index ", secondary.table); //$NON-NLS-1$
+                    long cost = estimateCost(orderBy, secondary, rowCost);
+                    if (cost < bestCost) {
+                        ii = secondary;
+                        bestCost = cost;
+                    } else {
+                        LogManager.logDetail(LogConstants.CTX_DQP, "Did not utilize the implicit index"); //$NON-NLS-1$ //$NON-NLS-2$
+                    }
+                }
+            }
 			LogManager.logDetail(LogConstants.CTX_DQP, "Choose index", ii.table, "covering:", ii.coveredCriteria,"ordering:", ii.ordering); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			if (ii.covering) {
 				return ii.table.createTupleSource(projectedCols, condition, orderBy, ii, agg);
@@ -560,6 +580,40 @@ public class TempTable implements Cloneable, SearchableTable {
 		}
 		return createTupleSource(projectedCols, condition, orderBy, ii, agg);
 	}
+
+    private boolean createImplicitIndexIfNeeded(final Criteria condition) throws TeiidComponentException, TeiidProcessingException {
+        for (Criteria c : Criteria.separateCriteriaByAnd(condition)) {
+            if (!(c instanceof CompareCriteria)) {
+                continue;
+            }
+            CompareCriteria cc = (CompareCriteria)c;
+            if (cc.getOperator() == CompareCriteria.NE) {
+                continue;
+            }
+            //TODO: an assumption is that only a single predicate will be bind eligible - if not we'll just take the first
+            if (cc.getRightExpression() instanceof Constant && ((Constant)cc.getRightExpression()).isBindEligible()) {
+                //the left can be a array or a column
+                if (cc.getLeftExpression() instanceof ElementSymbol) {
+                    this.addIndex(Arrays.asList((ElementSymbol)cc.getLeftExpression()), false);
+                    return true;
+                } else if (cc.getLeftExpression() instanceof Array) {
+                    List<ElementSymbol> symbols = new ArrayList<>();
+                    for (Expression ex : ((Array)cc.getLeftExpression()).getExpressions()) {
+                        if (ex instanceof ElementSymbol) {
+                            symbols.add((ElementSymbol)ex);
+                        } else {
+                            break;
+                        }
+                    }
+                    if (!symbols.isEmpty()) {
+                        this.addIndex(symbols, false);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
 	private TupleSource createTupleSource(
 			final List<? extends Expression> projectedCols,
@@ -1005,5 +1059,9 @@ public class TempTable implements Cloneable, SearchableTable {
 		TempTable other = (TempTable)obj;
 		return id.equals(other.id);
 	}
+
+    public void setAllowImplicitIndexing(boolean b) {
+        this.allowImplicitIndexing = b;
+    }
 
 }
