@@ -251,4 +251,7 @@ connect
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
 
+/deployment=teiid-olingo-odata4.war:add(runtime-name=teiid-olingo-odata4.war,content=[{path=modules/system/layers/dv/org/jboss/teiid/main/deployments/teiid-olingo-odata4.war/,archive=false,relative-to=jboss.home.dir}])
+/server-group=main-server-group/deployment=teiid-olingo-odata4.war:add(enabled=true)
+
 :restart-servers(blocking=true)  
