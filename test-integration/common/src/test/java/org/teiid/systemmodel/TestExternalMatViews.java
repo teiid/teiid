@@ -34,7 +34,6 @@ import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
-import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -87,11 +86,6 @@ public class TestExternalMatViews {
     }
 
     private static boolean DEBUG = false;
-
-    static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger("org.teiid.MATVIEWS");
-    {
-        logger.setLevel(Level.DEBUG);
-    }
     
     @BeforeClass public static void oneTimeSetup() {
         if (DEBUG) {
