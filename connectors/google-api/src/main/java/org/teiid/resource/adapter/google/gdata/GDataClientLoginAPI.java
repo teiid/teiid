@@ -25,6 +25,7 @@ package org.teiid.resource.adapter.google.gdata;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,6 +35,8 @@ import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
 import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
 import org.teiid.resource.adapter.google.common.UpdateResult;
 import org.teiid.resource.adapter.google.common.UpdateSet;
+import org.teiid.resource.adapter.google.metadata.Column;
+import org.teiid.resource.adapter.google.metadata.SpreadsheetColumnType;
 
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.SpreadsheetQuery;
@@ -141,9 +144,10 @@ public class GDataClientLoginAPI {
  * @param worksheetID  id that identifies worksheet
  * @param criteria  update criteria
  * @param updateSet  fields that should be updated
+ * @param allColumns 
  * @return number of updated rows
  */
-	public UpdateResult listFeedUpdate(String spreadsheetKey, String worksheetID, String criteria, List<UpdateSet> updateSet) {
+	public UpdateResult listFeedUpdate(String spreadsheetKey, String worksheetID, String criteria, List<UpdateSet> updateSet, List<Column> allColumns) {
 		SpreadsheetQuery query = null;
 		try {
 			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -155,8 +159,24 @@ public class GDataClientLoginAPI {
 			throw new SpreadsheetOperationException("Error getting spreadsheet URL: " + e);
 		}
 		ListFeed listfeed = (ListFeed) getSpreadsheetFeedQuery(query, ListFeed.class);
-		int counter=0; 
+		int counter=0;
+		
+		//TEIID-4870 existing string values can get corrupted unless we re-set the entry
+		List<Column> stringColumns = new ArrayList<Column>();
+        for (Column c : allColumns) {
+            if (c.getDataType() == SpreadsheetColumnType.STRING) {
+                stringColumns.add(c);
+                //could skip if in the update set
+            }
+        }
 		for (ListEntry row : listfeed.getEntries()) {
+		    for (int i = 0; i < stringColumns.size(); i++) {
+		        Column c = stringColumns.get(i);
+	            String value = row.getCustomElements().getValue(c.getLabel());
+	            if (value != null && !value.isEmpty()) {
+	                row.getCustomElements().setValueLocal(c.getLabel(), "'" + value); //$NON-NLS-1$
+	            }
+		    }
 			for (UpdateSet set : updateSet) {
 				row.getCustomElements().setValueLocal(set.getColumnID(), set.getValue());
 			}
