@@ -86,10 +86,10 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 
 	@Override
 	public RowsResult executeQuery(
-			String worksheetName, String query, 
+			String worksheetTitle, String query, 
 			 Integer offset, Integer limit, int batchSize) {
 		
-		return dataProtocol.executeQuery(getSpreadsheetInfo(), worksheetName, query, Math.min(batchSize, config.getBatchSize()), 
+		return dataProtocol.executeQuery(getSpreadsheetInfo(), worksheetTitle, query, Math.min(batchSize, config.getBatchSize()), 
 				offset, limit);
 	}	
 	
@@ -112,17 +112,19 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 	}
 
 	@Override
-	public UpdateResult executeListFeedUpdate(String worksheetID, String criteria, List<UpdateSet> set) {
-		return gdata.listFeedUpdate(getSpreadsheetInfo().getSpreadsheetKey(), worksheetID, criteria, set);
+	public UpdateResult executeListFeedUpdate(String worksheetTitle, String criteria, List<UpdateSet> set) {
+	    SpreadsheetInfo info = getSpreadsheetInfo();
+	    org.teiid.translator.google.api.metadata.Worksheet sheet = info.getWorksheetByName(worksheetTitle);
+		return gdata.listFeedUpdate(info.getSpreadsheetKey(), sheet.getId(), criteria, set, sheet.getColumnsAsList());
 	}
 
 	@Override
-	public UpdateResult deleteRows(String worksheetID, String criteria) {
-		return gdata.listFeedDelete(getSpreadsheetInfo().getSpreadsheetKey(), worksheetID, criteria);
+	public UpdateResult deleteRows(String worksheetTitle, String criteria) {
+		return gdata.listFeedDelete(getSpreadsheetInfo().getSpreadsheetKey(), getSpreadsheetInfo().getWorksheetByName(worksheetTitle).getId(), criteria);
 	}
 	@Override
-	public UpdateResult executeRowInsert(String worksheetID, Map<String,String> pair){
-		return gdata.listFeedInsert(getSpreadsheetInfo().getSpreadsheetKey(), worksheetID, pair);
+	public UpdateResult executeRowInsert(String worksheetTitle, Map<String,String> pair){
+		return gdata.listFeedInsert(getSpreadsheetInfo().getSpreadsheetKey(), getSpreadsheetInfo().getWorksheetByName(worksheetTitle).getId(), pair);
 	}
 
 }

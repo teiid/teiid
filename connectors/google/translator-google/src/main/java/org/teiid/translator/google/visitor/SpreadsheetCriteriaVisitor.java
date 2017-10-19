@@ -103,10 +103,6 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 		return element.toLowerCase();
 	}
 
-	public String getWorksheetKey() {
-		return worksheetKey;
-	}
-
 	public String getCriteriaQuery() {
 		return criteriaQuery;
 	}

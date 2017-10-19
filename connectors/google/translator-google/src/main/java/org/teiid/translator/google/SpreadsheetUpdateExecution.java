@@ -73,7 +73,7 @@ public class SpreadsheetUpdateExecution extends AbstractSpreadsheetExecution {
 		SpreadsheetUpdateVisitor updateVisitor = new SpreadsheetUpdateVisitor(info);
 		updateVisitor.visit((Update) command);
 		checkHeaders(updateVisitor.getWorksheetTitle());
-		result = connection.executeListFeedUpdate(updateVisitor.getWorksheetKey(), updateVisitor.getCriteriaQuery(), updateVisitor.getChanges());
+		result = connection.executeListFeedUpdate(updateVisitor.getWorksheetTitle(), updateVisitor.getCriteriaQuery(), updateVisitor.getChanges());
 		return result;
 	}
 
@@ -91,7 +91,7 @@ public class SpreadsheetUpdateExecution extends AbstractSpreadsheetExecution {
 		SpreadsheetDeleteVisitor visitor = new SpreadsheetDeleteVisitor(info);
 		visitor.visit((Delete) command);
 		checkHeaders(visitor.getWorksheetTitle());
-		result = connection.deleteRows(visitor.getWorksheetKey(), visitor.getCriteriaQuery());
+		result = connection.deleteRows(visitor.getWorksheetTitle(), visitor.getCriteriaQuery());
 		return result;
 	}
 }
