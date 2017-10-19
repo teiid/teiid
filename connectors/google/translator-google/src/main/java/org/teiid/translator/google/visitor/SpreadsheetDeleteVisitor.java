@@ -39,7 +39,6 @@ public class SpreadsheetDeleteVisitor extends SpreadsheetCriteriaVisitor {
 		}else{
 			worksheetTitle = obj.getTable().getName();	
 		}
-		worksheetKey = info.getWorksheetByName(worksheetTitle).getId();
 		translateWhere(obj.getWhere());
 	}
 

@@ -33,10 +33,10 @@ import org.teiid.translator.google.api.result.UpdateResult;
  * 
  */
 public interface GoogleSpreadsheetConnection extends Connection {
-	public RowsResult executeQuery(String worksheetName, String query, Integer offset, Integer limit, int batchSize);
-	public UpdateResult executeListFeedUpdate(String worksheetID, String criteria, List<UpdateSet> set);
+	public RowsResult executeQuery(String worksheetTitle, String query, Integer offset, Integer limit, int batchSize);
+	public UpdateResult executeListFeedUpdate(String worksheetTitle, String criteria, List<UpdateSet> set);
 	public UpdateResult deleteRows(String worksheetID, String criteria);
-	public UpdateResult executeRowInsert(String worksheetID, Map<String,String> pair);
+	public UpdateResult executeRowInsert(String worksheetTitle, Map<String,String> pair);
 	/**
 	 * Returns information about existing Spreadsheets and worksheets.
 	 * @return

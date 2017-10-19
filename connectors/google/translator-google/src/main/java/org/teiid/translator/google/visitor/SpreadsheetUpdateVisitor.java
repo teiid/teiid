@@ -53,7 +53,6 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
 		if (obj.getTable().getMetadataObject().getNameInSource() != null) {
 			this.worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
 		}
-		worksheetKey = info.getWorksheetByName(worksheetTitle).getId();
 		for (SetClause s : obj.getChanges()) {
 			if(s.getSymbol().getMetadataObject().getNameInSource()!=null){
 				columnName=s.getSymbol().getMetadataObject().getNameInSource();
