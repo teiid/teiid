@@ -38,6 +38,7 @@ import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Table;
@@ -959,9 +960,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 	protected boolean shouldNestSetChild(SetQuery parent, QueryExpression obj,
 			boolean right) {
 		return (!(obj instanceof SetQuery) && useParensForSetQueries()) 
-        		|| (!useSelectLimit() && (obj.getLimit() != null || obj.getOrderBy() != null)) || (right && ((obj instanceof SetQuery 
-        				&& ((parent.isAll() && !((SetQuery)obj).isAll()) 
-        						|| parent.getOperation() != ((SetQuery)obj).getOperation())) || obj.getLimit() != null || obj.getOrderBy() != null));
+        		|| obj.getLimit() != null || obj.getOrderBy() != null || (obj instanceof SetQuery 
+        				&& ((right && parent.isAll() && !((SetQuery)obj).isAll()) 
+        						|| ((parent.getOperation() == Operation.INTERSECT || right) && parent.getOperation() != ((SetQuery)obj).getOperation())));
 	}
     
     @Override
