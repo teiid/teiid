@@ -1712,6 +1712,17 @@ public class TestSQLStringVisitor {
         helpTest(command, "SELECT pm1.g1.e1 FROM pm1.g1 UNION (SELECT e2 FROM pm1.g2 ORDER BY e1)"); //$NON-NLS-1$
     }
     
+    @Test public void testUnionNesting() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("(select col from t1 union all select col from t2) intersect select col from t4"); //$NON-NLS-1$
+        helpTest(command, "(SELECT col FROM t1 UNION ALL SELECT col FROM t2) INTERSECT SELECT col FROM t4"); //$NON-NLS-1$
+    }
+    
+    @Test public void testUnionNesting1() throws Exception {
+        //this is not required as intersect has precedence, but it matches the existing logic
+        Command command = QueryParser.getQueryParser().parseCommand("select col from t4 union (select col from t1 intersect select col from t2)"); //$NON-NLS-1$
+        helpTest(command, "SELECT col FROM t4 UNION (SELECT col FROM t1 INTERSECT SELECT col FROM t2)"); //$NON-NLS-1$
+    }
+    
     @Test public void testAliasedOrderBy() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("select pm1.g1.e1 as a from pm1.g1 order by a"); //$NON-NLS-1$
         QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());

@@ -46,6 +46,7 @@ import org.teiid.query.sql.lang.Create.CommitAction;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.Option.MakeDep;
+import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
@@ -1096,8 +1097,10 @@ public class SQLStringVisitor extends LanguageVisitor {
     protected void appendSetQuery( SetQuery parent,
                                    QueryCommand obj,
                                    boolean right ) {
-        if (obj.getLimit() != null || obj.getOrderBy() != null || (right && ((obj instanceof SetQuery
-            && ((parent.isAll() && !((SetQuery)obj).isAll()) || parent.getOperation() != ((SetQuery)obj).getOperation()))))) {
+        if (obj.getLimit() != null || obj.getOrderBy() != null || (obj instanceof SetQuery
+            && ((right && parent.isAll() && !((SetQuery)obj).isAll()) 
+                    || ((parent.getOperation() == Operation.INTERSECT || right) 
+                            && parent.getOperation() != ((SetQuery)obj).getOperation())))) {
             append(Tokens.LPAREN);
             visitNode(obj);
             append(Tokens.RPAREN);
