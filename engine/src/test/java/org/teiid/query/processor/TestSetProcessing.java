@@ -30,7 +30,9 @@ import org.junit.Test;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -128,6 +130,23 @@ public class TestSetProcessing {
 
         FakeDataManager manager = new FakeDataManager();
         TestProcessor.helpProcess(plan, manager, expected);
+    }
+    
+    @Test public void testNestedUnionPlan() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table t1 (col string); "
+                + "create foreign table t2 (col string);"
+                + "create foreign table t3 (col string);"
+                + "create foreign table t4 (col string);", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_INTERSECT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+                "(select * from t1 union all select * from t2 union all select * from t3) intersect select * from t4", metadata, 
+                new String[] {"(SELECT g_3.col AS c_0 FROM y.t1 AS g_3 UNION ALL SELECT g_2.col AS c_0 FROM y.t2 AS g_2 UNION ALL SELECT g_1.col AS c_0 FROM y.t3 AS g_1) INTERSECT SELECT g_0.col AS c_0 FROM y.t4 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); 
+        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
 
 }
