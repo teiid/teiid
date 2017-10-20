@@ -1000,5 +1000,16 @@ public class DataTypeManager {
 		}
 		return Array.newInstance(classType, 0).getClass();
 	}
+	
+	/**
+	 * Return true if the type may be defined with a length
+	 */
+	public static boolean hasLength(Class<?> classType) {
+	    return (DataTypeManager.isLOB(classType) 
+	            || classType == DefaultDataClasses.OBJECT
+	            || classType == DefaultDataClasses.STRING
+	            || classType == DefaultDataClasses.VARBINARY
+	            || classType == DefaultDataClasses.CHAR);
+	}
 
 }

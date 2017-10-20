@@ -21,16 +21,17 @@ package org.teiid.connector.metadata.runtime;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Select;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+
+import junit.framework.TestCase;
 
 
 /**
@@ -214,7 +215,7 @@ public class TestElement extends TestCase {
             null,                       // minimum value 
             null,                        // maximum value            
             String.class,                   // java type
-            0,                             // length
+            DataTypeManager.MAX_STRING_LENGTH,                             // length
             NullType.Nullable,               // nullable            
             6,                              // position
             SearchType.Searchable,             // searchable

@@ -21,15 +21,16 @@ package org.teiid.connector.metadata.runtime;
 import java.sql.Timestamp;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Argument;
-import org.teiid.language.Call;
 import org.teiid.language.Argument.Direction;
-import org.teiid.metadata.ProcedureParameter;
+import org.teiid.language.Call;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.ProcedureParameter;
+
+import junit.framework.TestCase;
 
 
 
@@ -146,7 +147,7 @@ public class TestParams extends TestCase {
                        null, //$NON-NLS-1$
                        NullType.Nullable,
                        String.class,
-                       0,
+                       DataTypeManager.MAX_STRING_LENGTH,
                        0,
                        0); //$NON-NLS-1$
 

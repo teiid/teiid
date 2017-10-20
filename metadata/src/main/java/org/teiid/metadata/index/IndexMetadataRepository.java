@@ -24,6 +24,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.internal.core.index.Index;
 import org.teiid.metadata.*;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -248,6 +249,16 @@ public class IndexMetadataRepository extends MetadataRepository {
             type = type.substring(0, type.length()-2);
         }
 	    baseColumn.setDatatype(dataType, false, arrayDimensions);
+	    if (baseColumn.getLength() == 0) {
+	        Class<?> baseType = DataTypeManager.getDataTypeClass(type);
+	        if (DataTypeManager.hasLength(baseType)) {
+    	        //designer sends a default length of 0 as a default, but the engine does not expect that generally
+    	        Integer length = JDBCSQLTypeInfo.getMaxDisplaySize(baseType);
+    	        if (length != null) {
+    	            baseColumn.setLength(length);
+    	        }
+	        }
+	    }
 	}
 
     private void getTables(Schema model) {
