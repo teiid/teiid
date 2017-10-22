@@ -5294,5 +5294,13 @@ public class TestParser {
         query.setSelect(new Select(Arrays.asList(as)));
         helpTest(sql, "SELECT y AS \"_name\"", query); //$NON-NLS-1$
     }
+    
+    @Test public void testCharLength() {
+        helpException("select cast('abc' as char(2))");
+    }
+    
+    @Test public void testVarcharLength() {
+        helpException("select cast('abc' as varchar(0))");
+    }
 
 }

@@ -34,8 +34,8 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Table.TriggerEvent;
@@ -1705,7 +1705,9 @@ public class RealMetadataFactory {
         column.setPosition(group.getColumns().size()); //1 based indexing
         column.setUpdatable(true);
         column.setDatatype(SystemMetadata.getInstance().getRuntimeTypeMap().get(type), true, 0);
-        column.setLength(100);
+        if (DataTypeManager.hasLength(type) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CHAR)) {
+            column.setLength(100);
+        }
         column.setNameInSource(name);
         return column; 
     }

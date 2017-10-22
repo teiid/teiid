@@ -22,7 +22,7 @@ CREATE FOREIGN TABLE G4 (
 	e4 float,
 	e5 short,
 	e6 byte,
-	e7 char(2),
+	e7 char(1),
 	e8 long,
 	e9 bigdecimal,
 	e10 biginteger,

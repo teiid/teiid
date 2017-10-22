@@ -17,6 +17,8 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
+import static org.junit.Assert.*;
+
 import java.io.FileReader;
 import java.util.Properties;
 
@@ -29,7 +31,6 @@ import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.parser.QueryParser;
-import static org.junit.Assert.*;
 
 public class TestSchemaToProtobufProcessor {
 
@@ -170,7 +171,7 @@ public class TestSchemaToProtobufProcessor {
                 "    optional int32 e5 = 5;\n" + 
                 "    /* @Teiid(type=byte) */\n" + 
                 "    optional int32 e6 = 6;\n" + 
-                "    /* @Teiid(type=char, length=2) */\n" + 
+                "    /* @Teiid(type=char, length=1) */\n" + 
                 "    optional string e7 = 7;\n" + 
                 "    optional int64 e8 = 8;\n" + 
                 "    /* @Teiid(type=bigdecimal) */\n" + 

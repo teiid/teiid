@@ -250,9 +250,9 @@ public class IndexMetadataRepository extends MetadataRepository {
         }
 	    baseColumn.setDatatype(dataType, false, arrayDimensions);
 	    if (baseColumn.getLength() == 0) {
-	        Class<?> baseType = DataTypeManager.getDataTypeClass(type);
-	        if (DataTypeManager.hasLength(baseType)) {
-    	        //designer sends a default length of 0 as a default, but the engine does not expect that generally
+	        if (DataTypeManager.hasLength(type)) {
+	            Class<?> baseType = DataTypeManager.getDataTypeClass(type);
+	            //designer sends a default length of 0 as a default, but the engine does not expect that generally
     	        Integer length = JDBCSQLTypeInfo.getMaxDisplaySize(baseType);
     	        if (length != null) {
     	            baseColumn.setLength(length);

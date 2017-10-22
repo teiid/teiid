@@ -4804,6 +4804,14 @@ ParsedDataType parseDataTypePrimary() :
 			return new ParsedDataType(typeName, length, scale, precision);
 		}
 		else if (length != null){
+		    if (!precision) {
+		        if (length == 0) {
+                    throw new ParseException(QueryPlugin.Util.getString("SQLParser.zero_length", typeName)); //$NON-NLS-1$
+                }
+                if (length != 1 && typeName.equalsIgnoreCase("CHAR")) {
+                    throw new ParseException(QueryPlugin.Util.getString("SQLParser.char_length")); //$NON-NLS-1$
+                }
+            }
 			return new ParsedDataType(typeName, length, precision);
 		}
 		return new ParsedDataType(typeName);

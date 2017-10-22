@@ -1001,15 +1001,22 @@ public class DataTypeManager {
 		return Array.newInstance(classType, 0).getClass();
 	}
 	
+	private static final HashSet<String> LENGTH_DATATYPES = new HashSet<String>(
+            Arrays.asList(
+                    DataTypeManager.DefaultDataTypes.CHAR,
+                    DataTypeManager.DefaultDataTypes.CLOB,
+                    DataTypeManager.DefaultDataTypes.BLOB,
+                    DataTypeManager.DefaultDataTypes.OBJECT,
+                    DataTypeManager.DefaultDataTypes.XML,
+                    DataTypeManager.DefaultDataTypes.STRING,
+                    DataTypeManager.DefaultDataTypes.VARBINARY,
+                    DataTypeManager.DefaultDataTypes.BIG_INTEGER));
+	
 	/**
 	 * Return true if the type may be defined with a length
 	 */
-	public static boolean hasLength(Class<?> classType) {
-	    return (DataTypeManager.isLOB(classType) 
-	            || classType == DefaultDataClasses.OBJECT
-	            || classType == DefaultDataClasses.STRING
-	            || classType == DefaultDataClasses.VARBINARY
-	            || classType == DefaultDataClasses.CHAR);
+	public static boolean hasLength(String typeName) {
+	    return LENGTH_DATATYPES.contains(typeName);
 	}
 
 }

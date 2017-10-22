@@ -47,7 +47,7 @@ SET SCHEMA Accounts;
 
         CREATE FOREIGN TABLE CUSTOMER
             (
-               SSN char(10),
+               SSN varchar(10),
                FIRSTNAME varchar(64),
                LASTNAME varchar(64),
                ST_ADDRESS varchar(256),
@@ -61,9 +61,9 @@ SET SCHEMA Accounts;
             CREATE FOREIGN TABLE ACCOUNT
             (
                ACCOUNT_ID integer,
-               SSN char(10),
-               STATUS char(10),
-               "TYPE" char(10),
+               SSN varchar(10),
+               STATUS varchar(10),
+               "TYPE" char(1),
                DATEOPENED timestamp,
                DATECLOSED timestamp,
                CONSTRAINT ACCOUNT_PK PRIMARY KEY(ACCOUNT_ID)

@@ -52,16 +52,6 @@ public class DDLStringVisitor {
 	private static final String TAB = "\t"; //$NON-NLS-1$
 	private static final String NEWLINE = "\n";//$NON-NLS-1$
     public static final String GENERATED = "TEIID_GENERATED"; //$NON-NLS-1$
-	private static final HashSet<String> LENGTH_DATATYPES = new HashSet<String>(
-			Arrays.asList(
-					DataTypeManager.DefaultDataTypes.CHAR,
-					DataTypeManager.DefaultDataTypes.CLOB,
-					DataTypeManager.DefaultDataTypes.BLOB,
-					DataTypeManager.DefaultDataTypes.OBJECT,
-					DataTypeManager.DefaultDataTypes.XML,
-					DataTypeManager.DefaultDataTypes.STRING,
-					DataTypeManager.DefaultDataTypes.VARBINARY,
-					DataTypeManager.DefaultDataTypes.BIG_INTEGER));
 	
 	private static final HashSet<String> PRECISION_DATATYPES = new HashSet<String>(
 			Arrays.asList(DataTypeManager.DefaultDataTypes.BIG_DECIMAL));
@@ -253,7 +243,7 @@ public class DDLStringVisitor {
         String runtimeTypeName = dt.getBasetypeName();
         append(runtimeTypeName);
         Datatype base = SystemMetadata.getInstance().getRuntimeTypeMap().get(runtimeTypeName);
-        if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
+        if (DataTypeManager.hasLength(runtimeTypeName)) {
             if (dt.getLength() != base.getLength()) {
                 append(LPAREN).append(dt.getLength()).append(RPAREN);
             }
@@ -698,7 +688,7 @@ public class DDLStringVisitor {
 	            append(datatype.getName());
 			} else {
     			append(runtimeTypeName);
-    			if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
+    			if (DataTypeManager.hasLength(runtimeTypeName)) {
     				if (column.getLength() != 0 && (datatype == null || column.getLength() != datatype.getLength())) {
     					append(LPAREN).append(column.getLength()).append(RPAREN);
     				}
