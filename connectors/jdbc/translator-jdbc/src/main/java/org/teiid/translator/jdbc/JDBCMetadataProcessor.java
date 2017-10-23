@@ -790,6 +790,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     public void getSequences(MetadataFactory metadataFactory, Connection conn) throws SQLException {
         ResultSet sequences = executeSequenceQuery(conn); //TODO: may need version information
         if (sequences == null) {
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - sequence import requested, but is not supported by the translator."); //$NON-NLS-1$
             return;
         }
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing sequences"); //$NON-NLS-1$
