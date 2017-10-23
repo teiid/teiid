@@ -38,13 +38,13 @@ import org.teiid.query.metadata.SystemMetadata;
 public class TestMetadataProcessor {
 
 	@Test public void testInvalidIndex() throws SQLException {
-		JDBCMetdataProcessor processor = new JDBCMetdataProcessor();
+		JDBCMetadataProcessor processor = new JDBCMetadataProcessor();
 		processor.setImportIndexes(true);
 		processor.setWidenUnsingedTypes(false);
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
 		DatabaseMetaData dmd = Mockito.mock(DatabaseMetaData.class);
 		Table t = mf.addTable("c");
-		JDBCMetdataProcessor.TableInfo ti = new JDBCMetdataProcessor.TableInfo("a", "b", "c", t);
+		JDBCMetadataProcessor.TableInfo ti = new JDBCMetadataProcessor.TableInfo("a", "b", "c", t);
 		
 		ResultSet rs = Mockito.mock(ResultSet.class);
 		Mockito.stub(rs.next()).toAnswer(new Answer<Boolean>() {
@@ -71,7 +71,7 @@ public class TestMetadataProcessor {
 	 * JDBC says to return an empty string, but some sources return null and we need to handle the null case anyways
 	 */
 	@Test public void testQuoteStringNull() {
-		JDBCMetdataProcessor jmp = new JDBCMetdataProcessor();
+		JDBCMetadataProcessor jmp = new JDBCMetadataProcessor();
 		assertEquals("x", jmp.quoteName("x"));
 	}
 	

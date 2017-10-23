@@ -32,9 +32,9 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
-public class PrestoDBMetadataProcessor extends JDBCMetdataProcessor implements MetadataProcessor<Connection>{
+public class PrestoDBMetadataProcessor extends JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 
 	private boolean trimColumnNames;
 

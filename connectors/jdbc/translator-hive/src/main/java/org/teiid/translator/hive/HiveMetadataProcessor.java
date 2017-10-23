@@ -33,9 +33,9 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
-public class HiveMetadataProcessor extends JDBCMetdataProcessor implements MetadataProcessor<Connection>{
+public class HiveMetadataProcessor extends JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 
 	private boolean trimColumnNames;
 	private boolean useDatabaseMetaData;

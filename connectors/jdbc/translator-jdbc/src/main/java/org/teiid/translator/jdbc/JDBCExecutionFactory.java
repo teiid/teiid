@@ -297,7 +297,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 			if (conn == null) {
 				throw new TranslatorException(JDBCPlugin.Event.TEIID11018, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11018));
 			}
-			JDBCMetdataProcessor metadataProcessor = createMetadataProcessor();
+			JDBCMetadataProcessor metadataProcessor = createMetadataProcessor();
 			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
 		} catch (SQLException e) {
@@ -310,13 +310,13 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 * @see getMetadataProcessor
 	 */
     @Deprecated
-    protected JDBCMetdataProcessor createMetadataProcessor() {
-		return (JDBCMetdataProcessor)getMetadataProcessor();
+    protected JDBCMetadataProcessor createMetadataProcessor() {
+		return (JDBCMetadataProcessor)getMetadataProcessor();
 	}    
 	
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-        return new JDBCMetdataProcessor();
+        return new JDBCMetadataProcessor();
     }
 		
 	@Override

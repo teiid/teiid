@@ -30,10 +30,10 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
 public final class PostgreSQLMetadataProcessor
-        extends JDBCMetdataProcessor {
+        extends JDBCMetadataProcessor {
     
     @Override
     protected String getRuntimeType(int type, String typeName, int precision) {

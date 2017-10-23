@@ -1,7 +1,7 @@
 package org.teiid.translator.jdbc.hana;
 
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
-public class HanaMetadataProcessor extends JDBCMetdataProcessor {
+public class HanaMetadataProcessor extends JDBCMetadataProcessor {
 
 }

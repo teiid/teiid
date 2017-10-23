@@ -41,7 +41,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 /** 
  * Translator class for accessing the ModeShape JCR repository.  
  */
@@ -250,8 +250,8 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	
 	@Override
     @Deprecated
-    protected JDBCMetdataProcessor createMetadataProcessor() {
-        return (JDBCMetdataProcessor)getMetadataProcessor();
+    protected JDBCMetadataProcessor createMetadataProcessor() {
+        return (JDBCMetadataProcessor)getMetadataProcessor();
     }    
     
     @Override

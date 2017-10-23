@@ -21,7 +21,7 @@ package org.teiid.translator.jdbc.modeshape;
 import java.sql.DatabaseMetaData;
 
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
 
 /**
@@ -30,7 +30,7 @@ import org.teiid.translator.jdbc.JDBCMetdataProcessor;
  * See https://issues.jboss.org/browse/TEIID-2786 which describes this implementation.
  * 
  */
-public class ModeShapeJDBCMetdataProcessor extends JDBCMetdataProcessor {
+public class ModeShapeJDBCMetdataProcessor extends JDBCMetadataProcessor {
 	
 	public ModeShapeJDBCMetdataProcessor() {
 		setWidenUnsignedTypes(false);

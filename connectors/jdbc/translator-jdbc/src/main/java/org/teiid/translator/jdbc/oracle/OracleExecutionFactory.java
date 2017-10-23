@@ -984,8 +984,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     @Deprecated
-    protected JDBCMetdataProcessor createMetadataProcessor() {
-        return (JDBCMetdataProcessor)getMetadataProcessor();
+    protected JDBCMetadataProcessor createMetadataProcessor() {
+        return (JDBCMetadataProcessor)getMetadataProcessor();
     }    
     
     @Override

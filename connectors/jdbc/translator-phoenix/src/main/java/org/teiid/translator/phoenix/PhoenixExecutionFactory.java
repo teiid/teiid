@@ -60,7 +60,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.util.Version;
 
@@ -340,8 +340,8 @@ public class PhoenixExecutionFactory extends JDBCExecutionFactory{
     }
     
     @Override
-    protected JDBCMetdataProcessor createMetadataProcessor() {
-        JDBCMetdataProcessor processor = new JDBCMetdataProcessor() {
+    protected JDBCMetadataProcessor createMetadataProcessor() {
+        JDBCMetadataProcessor processor = new JDBCMetadataProcessor() {
             @Override
             protected boolean getIndexInfoForTable(String catalogName,
                     String schemaName, String tableName, boolean uniqueOnly,

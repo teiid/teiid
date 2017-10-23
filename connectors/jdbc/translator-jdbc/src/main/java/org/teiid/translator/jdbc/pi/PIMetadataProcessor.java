@@ -26,9 +26,9 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
-public class PIMetadataProcessor extends JDBCMetdataProcessor {
+public class PIMetadataProcessor extends JDBCMetadataProcessor {
     static Pattern guidPattern = Pattern.compile(Pattern.quote("guid"), Pattern.CASE_INSENSITIVE);
     
     @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, 

@@ -35,7 +35,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 import org.teiid.translator.jdbc.sybase.BaseSybaseExecutionFactory;
 
 @Translator(name="access", description="A translator for Microsoft Access Database")
@@ -132,7 +132,7 @@ public class AccessExecutionFactory extends BaseSybaseExecutionFactory {
     
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-    	JDBCMetdataProcessor processor = new JDBCMetdataProcessor();
+    	JDBCMetadataProcessor processor = new JDBCMetadataProcessor();
     	processor.setExcludeTables(".*[.]MSys.*"); //$NON-NLS-1$
     	processor.setImportKeys(false);
     	return processor;

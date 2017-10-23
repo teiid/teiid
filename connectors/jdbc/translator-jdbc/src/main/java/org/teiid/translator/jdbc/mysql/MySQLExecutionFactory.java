@@ -50,7 +50,7 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 
 
@@ -418,7 +418,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-        return new JDBCMetdataProcessor() {
+        return new JDBCMetadataProcessor() {
             @Override
             protected String getRuntimeType(int type, String typeName, int precision) {
                 //mysql will otherwise report a 0/null type for geometry
@@ -481,8 +481,8 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     @Deprecated
-    protected JDBCMetdataProcessor createMetadataProcessor() {
-        return (JDBCMetdataProcessor)getMetadataProcessor();
+    protected JDBCMetadataProcessor createMetadataProcessor() {
+        return (JDBCMetadataProcessor)getMetadataProcessor();
     }    
     
     @Override

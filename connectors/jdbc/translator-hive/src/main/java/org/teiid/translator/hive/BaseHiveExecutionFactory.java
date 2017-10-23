@@ -41,7 +41,7 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
@@ -215,12 +215,12 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
 
     @Deprecated
     @Override
-    protected JDBCMetdataProcessor createMetadataProcessor() {
+    protected JDBCMetadataProcessor createMetadataProcessor() {
         return getMetadataProcessor();
     }
     
     @Override
-    public JDBCMetdataProcessor getMetadataProcessor(){
+    public JDBCMetadataProcessor getMetadataProcessor(){
         HiveMetadataProcessor result = new HiveMetadataProcessor();
         result.setUseDatabaseMetaData(this.useDatabaseMetaData);
         return result;

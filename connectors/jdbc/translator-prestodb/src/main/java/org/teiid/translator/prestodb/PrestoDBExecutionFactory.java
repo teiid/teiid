@@ -44,7 +44,7 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
 
 @Translator(name="prestodb", description="PrestoDB custom translator")
@@ -85,7 +85,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     
     @Deprecated
     @Override
-    protected JDBCMetdataProcessor createMetadataProcessor() {
+    protected JDBCMetadataProcessor createMetadataProcessor() {
         return (PrestoDBMetadataProcessor)getMetadataProcessor();
     }
     

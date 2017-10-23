@@ -43,7 +43,7 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.SQLDialect;
 import org.teiid.util.Version;
@@ -452,7 +452,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-    	return new JDBCMetdataProcessor() {
+    	return new JDBCMetadataProcessor() {
     		@Override
             protected String getRuntimeType(int type, String typeName, int precision) {
             	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
