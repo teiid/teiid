@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>google</artifactId>
-      <version>9.3.4</version>
+      <version>9.3.5-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-google</artifactId>
     <name>Google Feature Pack</name>
