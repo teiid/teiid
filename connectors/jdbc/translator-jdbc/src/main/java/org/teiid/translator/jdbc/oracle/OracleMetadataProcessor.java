@@ -152,9 +152,14 @@ public final class OracleMetadataProcessor extends
 	}
 	
 	@Override
-	protected String getSequenceQuery() {
-	    return "select null as sequence_catalog, sequence_owner as sequence_schema, sequence_name from (select sequence_name, sequence_owner from all_sequences union select synonym_name, table_owner from all_synonyms us, all_sequences asq where asq.sequence_name = us.table_name and asq.sequence_owner = us.table_owner) " //$NON-NLS-1$
-	            + "where sequence_owner like ? and sequence_name like ?"; //$NON-NLS-1$
+	protected ResultSet executeSequenceQuery(Connection conn)
+	        throws SQLException {
+	    String query = "select null as sequence_catalog, sequence_owner as sequence_schema, sequence_name from (select sequence_name, sequence_owner from all_sequences union select synonym_name, table_owner from all_synonyms us, all_sequences asq where asq.sequence_name = us.table_name and asq.sequence_owner = us.table_owner) " //$NON-NLS-1$
+                + "where sequence_owner like ? and sequence_name like ?"; //$NON-NLS-1$
+        PreparedStatement ps = conn.prepareStatement(query);
+        ps.setString(1, getSchemaPattern()==null?"%":getSchemaPattern()); //$NON-NLS-1$
+        ps.setString(2, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
+        return ps.executeQuery();
 	}
 	
     @Override

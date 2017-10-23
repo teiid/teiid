@@ -20,7 +20,6 @@ package org.teiid.translator.jdbc;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -36,7 +35,6 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -790,57 +788,50 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	}
 	
     public void getSequences(MetadataFactory metadataFactory, Connection conn) throws SQLException {
-        String sequenceQuery = getSequenceQuery(); //TODO: may need version information
-        if (sequenceQuery == null) {
+        ResultSet sequences = executeSequenceQuery(conn); //TODO: may need version information
+        if (sequences == null) {
             return;
         }
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing sequences"); //$NON-NLS-1$
-        PreparedStatement ps = conn.prepareStatement(sequenceQuery);
-        ps.setString(1, schemaPattern==null?"%":schemaPattern); //$NON-NLS-1$
-        ps.setString(2, sequenceNamePattern==null?"%":sequenceNamePattern); //$NON-NLS-1$
-        ResultSet sequences = ps.executeQuery();
-        while (sequences.next()) {
-            String sequenceCatalog = sequences.getString(1);
-            if (catalog != null) {
-                if (catalog.isEmpty()) {
-                    if (sequenceCatalog != null && !sequenceCatalog.isEmpty()) {
-                        continue;
-                    }
-                } else if (EquivalenceUtil.areEqual(catalog, sequenceCatalog)) {
+        try {
+            while (sequences.next()) {
+                String sequenceCatalog = sequences.getString(1);
+                String sequenceSchema = sequences.getString(2);
+                String sequenceName = sequences.getString(3);
+                //TODO: type
+                String sequenceTeiidName = getFullyQualifiedName(sequenceCatalog, sequenceSchema, sequenceName);
+                if (excludeSequences != null && excludeSequences.matcher(sequenceTeiidName).matches()) {
                     continue;
                 }
+                String fullyQualifiedName = getFullyQualifiedName(sequenceCatalog, sequenceSchema, sequenceName, true);
+                String sequenceNext = getSequenceNextSQL(fullyQualifiedName);
+                FunctionMethod method = metadataFactory.addFunction((useFullSchemaName?sequenceTeiidName:sequenceName) + "_nextval", TypeFacility.RUNTIME_NAMES.LONG); //$NON-NLS-1$
+                method.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, sequenceNext); 
+                method.setProperty(SEQUENCE, fullyQualifiedName);
+                method.setDeterminism(Determinism.NONDETERMINISTIC);
             }
-            String sequenceSchema = sequences.getString(2);
-            String sequenceName = sequences.getString(3);
-            //TODO: type
-            String sequenceTeiidName = getFullyQualifiedName(sequenceCatalog, sequenceSchema, sequenceName);
-            if (excludeSequences != null && excludeSequences.matcher(sequenceTeiidName).matches()) {
-                continue;
-            }
-            String fullyQualifiedName = getFullyQualifiedName(catalog, sequenceSchema, sequenceName, true);
-            String sequenceNext = getSequenceNextSQL(fullyQualifiedName);
-            FunctionMethod method = metadataFactory.addFunction((useFullSchemaName?sequenceTeiidName:sequenceName) + "_nextval", TypeFacility.RUNTIME_NAMES.LONG); //$NON-NLS-1$
-            method.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, sequenceNext); 
-            method.setProperty(SEQUENCE, fullyQualifiedName);
-            method.setDeterminism(Determinism.NONDETERMINISTIC);
+        } finally {
+            sequences.close();
         }
-        sequences.close();
     }
     
+    /**
+     * Return a result set with three columns - sequence_catalog, sequence_schema, and sequence_name
+     * or null if sequences are not supported
+     * @param conn
+     * @return
+     * @throws SQLException 
+     */
+    protected ResultSet executeSequenceQuery(Connection conn) throws SQLException {
+        return null;
+    }
+
     /**
      * Return the native sql for getting the next value or null if not supported
      * @param fullyQualifiedName
      * @return
      */
     protected String getSequenceNextSQL(String fullyQualifiedName) {
-        return null;
-    }
-    
-    /**
-     * Return the query to fetch sequence information or null, if sequence import is not supported
-     * @return
-     */
-    protected String getSequenceQuery() {
         return null;
     }
     

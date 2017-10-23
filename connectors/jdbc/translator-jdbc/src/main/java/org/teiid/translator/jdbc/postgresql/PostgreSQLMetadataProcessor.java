@@ -99,9 +99,15 @@ public final class PostgreSQLMetadataProcessor
     }
     
     @Override
-    protected String getSequenceQuery() {
-        return "select null::varchar as sequence_catalog, nspname as sequence_schema, relname as sequence_name from pg_class, pg_namespace where relkind='S' and pg_namespace.oid = relnamespace " //$NON-NLS-1$
+    protected ResultSet executeSequenceQuery(Connection conn)
+            throws SQLException {
+        String query = "select null::varchar as sequence_catalog, nspname as sequence_schema, relname as sequence_name " //$NON-NLS-1$
+                + "from pg_class, pg_namespace where relkind='S' and pg_namespace.oid = relnamespace " //$NON-NLS-1$
                 + "and nspname like ? escape '' and relname like ? escape ''"; //$NON-NLS-1$
+        PreparedStatement ps = conn.prepareStatement(query);
+        ps.setString(1, getSchemaPattern()==null?"%":getSchemaPattern()); //$NON-NLS-1$
+        ps.setString(2, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
+        return ps.executeQuery();
     }
     
     @Override

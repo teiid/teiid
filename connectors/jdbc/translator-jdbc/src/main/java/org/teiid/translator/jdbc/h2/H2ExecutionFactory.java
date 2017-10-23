@@ -18,7 +18,11 @@
 
 package org.teiid.translator.jdbc.h2;
 
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -28,6 +32,7 @@ import org.teiid.language.LanguageObject;
 import org.teiid.language.Like;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -36,6 +41,7 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.hsql.AddDiffModifier;
@@ -285,5 +291,25 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsIsDistinctCriteria() {
         return true;
+    }
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new JDBCMetadataProcessor() {
+            
+            @Override
+            protected ResultSet executeSequenceQuery(Connection conn)
+                    throws SQLException {
+                //matches the catalog search behavior of the h2 driver, as a pattern
+                String query = "select SEQUENCE_CATALOG, SEQUENCE_SCHEMA, SEQUENCE_NAME from information_schema.sequences " //$NON-NLS-1$
+                        + "where SEQUENCE_CATALOG like ? escape '' and SEQUENCE_SCHEMA like ? escape '' and sequence_name like ? escape ''"; //$NON-NLS-1$
+                PreparedStatement ps = conn.prepareStatement(query);
+                ps.setString(1, getCatalog()==null?"%":getCatalog()); //$NON-NLS-1$
+                ps.setString(2, getSchemaPattern()==null?"%":getSchemaPattern()); //$NON-NLS-1$
+                ps.setString(3, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
+                return ps.executeQuery();
+            }
+            
+        };
     }
 }

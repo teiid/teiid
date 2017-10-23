@@ -18,6 +18,10 @@
 
 package org.teiid.translator.jdbc.db2;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +29,7 @@ import java.util.List;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -32,6 +37,7 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 import org.teiid.util.Version;
 
 @Translator(name="db2", description="A translator for IBM DB2 Database")
@@ -201,6 +207,24 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
     @Override
     protected boolean supportsBooleanExpressions() {
         return false;
+    }
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new JDBCMetadataProcessor() {
+            
+            @Override
+            protected ResultSet executeSequenceQuery(Connection conn)
+                    throws SQLException {
+                String query = "select null as sequence_catalog, seqschema as sequence_schema, seqname as sequence_name from sysibm.syssequences " //$NON-NLS-1$
+                        + "where seqschema like ? and seqname like ?"; //$NON-NLS-1$
+                PreparedStatement ps = conn.prepareStatement(query);
+                ps.setString(1, getSchemaPattern()==null?"%":getSchemaPattern()); //$NON-NLS-1$
+                ps.setString(2, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
+                return ps.executeQuery();
+            }
+            
+        };
     }
 	
 }

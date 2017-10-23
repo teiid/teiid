@@ -22,6 +22,7 @@ package org.teiid.translator.jdbc.sqlserver;
 
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -510,6 +511,21 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
                     c.setAutoIncremented(true);
                 }
                 return c;
+            }
+            
+            @Override
+            protected ResultSet executeSequenceQuery(Connection conn)
+                    throws SQLException {
+                if (getVersion().compareTo(ELEVEN_0) < 0) {
+                    return null;
+                }
+                String query = "select db_name() as sequence_catalog, SCHEMA_NAME(schema_id) as sequence_schema, name as sequence_name from sys.sequences" //$NON-NLS-1$
+                        + "where db_name() like ? and SCHEMA_NAME(schema_id) like ? and name like ?"; //$NON-NLS-1$
+                PreparedStatement ps = conn.prepareStatement(query);
+                ps.setString(1, getCatalog()==null?"%":getCatalog()); //$NON-NLS-1$
+                ps.setString(2, getSchemaPattern()==null?"%":getSchemaPattern()); //$NON-NLS-1$
+                ps.setString(3, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
+                return ps.executeQuery();
             }
         };
     }
