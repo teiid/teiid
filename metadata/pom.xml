@@ -3,7 +3,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>9.3.4-SNAPSHOT</version>
+    <version>9.3.4</version>
   </parent>
   <licenses>
         <license>
