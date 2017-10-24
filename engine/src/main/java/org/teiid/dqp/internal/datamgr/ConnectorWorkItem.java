@@ -43,16 +43,8 @@ import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.*;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.StandardXMLTranslator;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.dqp.internal.process.SaveOnReadInputStream;
@@ -633,26 +625,31 @@ public class ConnectorWorkItem implements ConnectorWork {
 	
 	static Object convertToRuntimeType(BufferManager bm, Object value, Class<?> desiredType, CommandContext context) throws TransformationException {
 		if (desiredType != DataTypeManager.DefaultDataClasses.XML || !(value instanceof Source)) {
-			if (value instanceof InputStreamFactory) {
-				return new BlobType(new BlobImpl((InputStreamFactory)value));
-			}
 			if (value instanceof DataSource) {
 			    final DataSource ds = (DataSource)value;
 			    try {
 			        //Teiid uses the datasource interface in a degenerate way that 
 			        //reuses the stream, so we test for that here
                     InputStream initial = ds.getInputStream();
-                    InputStream other = ds.getInputStream();
-                    if (initial != other) {
+                    InputStream other = null;
+                    try {
+                        other = ds.getInputStream();
+                    } catch (IOException e) {
+                        //likely streaming
+                    }
+                    if (other != null && initial != other) {
                         initial.close();
                         other.close();
-                        return new BlobType(new BlobImpl(new InputStreamFactory() {
+                        if (value instanceof InputStreamFactory) {
+                            return asLob((InputStreamFactory)value, desiredType);
+                        }
+                        return asLob(new InputStreamFactory() {
                             
                             @Override
                             public InputStream getInputStream() throws IOException {
                                 return ds.getInputStream();
                             }
-                        }));
+                        }, desiredType);
                     }
     				FileStore fs = bm.createFileStore("bytes"); //$NON-NLS-1$
     				//TODO: guess at the encoding from the content type
@@ -662,11 +659,14 @@ public class ConnectorWorkItem implements ConnectorWork {
 					if (context != null) {
 						context.addCreatedLob(fsisf);
 					}
-					return new BlobType(new BlobImpl(is.getInputStreamFactory()));
+					return asLob(is.getInputStreamFactory(), desiredType);
 				} catch (IOException e) {
 					throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
 				}
 			}
+			if (value instanceof InputStreamFactory) {
+			    return asLob((InputStreamFactory)value, desiredType);
+            }
 			if (value instanceof GeometryInputSource) {
 				GeometryInputSource gis = (GeometryInputSource)value;
 				try {
@@ -735,6 +735,14 @@ public class ConnectorWorkItem implements ConnectorWork {
 		}
 		return DataTypeManager.convertToRuntimeType(value, desiredType != DataTypeManager.DefaultDataClasses.OBJECT);
 	}
+
+    private static Object asLob(InputStreamFactory value, Class<?> desiredType) {
+        if (desiredType == DataTypeManager.DefaultDataClasses.CLOB) {
+            //assumes UTF-8
+            return new ClobType(new ClobImpl(value, -1));
+        }
+        return new BlobType(new BlobImpl(value));
+    }
 
     @Override
     public int hashCode() {
