@@ -51,6 +51,7 @@ import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.StandardXMLTranslator;
 import org.teiid.core.types.Streamable;
@@ -124,6 +125,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	private boolean explicitClose;
 	
 	private boolean copyLobs;
+	private boolean copyStreamingLobs;
 	private boolean areLobsUsableAfterClose;
 	
 	private TeiidException conversionError;
@@ -188,6 +190,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 		}
 		this.areLobsUsableAfterClose = this.connector.areLobsUsableAfterClose();
 		this.copyLobs = this.connector.isCopyLobs();
+		if (!this.copyLobs && message.isCopyStreamingLobs()) {
+		    this.copyLobs = true;
+		    this.copyStreamingLobs = true;
+		}
     }
     
     @Override
@@ -596,7 +602,18 @@ public class ConnectorWorkItem implements ConnectorWork {
 							lobStore = requestMsg.getBufferManager().createFileStore("lobs"); //$NON-NLS-1$
 							lobBuffer = new byte[1 << 14];
 						}
-						requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
+						if (copyStreamingLobs) {
+                            //if we are free, then we're either streaming or invalid
+                            if (InputStreamFactory.getStorageMode((Streamable<?>) result) == StorageMode.FREE) {
+                                try {
+                                    requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
+                                    explicitClose = true;
+                                } catch (TeiidComponentException e) {
+                                }
+                            }
+                        } else {
+                            requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
+                        }
 					} else if (value == result) {
 						convertToDesiredRuntimeType[i] = false;
 						continue;

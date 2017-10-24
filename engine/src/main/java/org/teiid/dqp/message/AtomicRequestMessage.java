@@ -82,6 +82,8 @@ public class AtomicRequestMessage {
     
     private boolean serial;
     
+    private boolean copyStreamingLobs;
+    
     private DQPWorkContext workContext;
     private CommandContext commandContext;
     private BufferManager bufferManager;
@@ -218,5 +220,13 @@ public class AtomicRequestMessage {
 	public void setBufferManager(BufferManager bufferManager) {
 		this.bufferManager = bufferManager;
 	}
+
+    public boolean isCopyStreamingLobs() {
+        return copyStreamingLobs;
+    }
+    
+    public void setCopyStreamingLobs(boolean copyStreamingLobs) {
+        this.copyStreamingLobs = copyStreamingLobs;
+    }
 
 }

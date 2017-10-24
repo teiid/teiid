@@ -35,6 +35,7 @@ public class RegisterRequestParameter {
 	public SharedAccessInfo info;
 	public boolean doNotCache;
 	public int fetchSize;
+    public boolean copyStreamingLobs;
 
 	public RegisterRequestParameter(String connectorBindingId, int nodeID,
 			int limit) {

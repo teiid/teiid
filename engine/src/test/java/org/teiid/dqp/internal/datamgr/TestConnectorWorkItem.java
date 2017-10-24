@@ -24,6 +24,9 @@ package org.teiid.dqp.internal.datamgr;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +48,7 @@ import org.teiid.client.RequestMessage;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
@@ -285,6 +289,7 @@ public class TestConnectorWorkItem {
     
     @Test public void testLobs() throws Exception {
     	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+    	final List result = Arrays.asList(AutoGenDataService.CLOB_VAL);
     	final ExecutionFactory<Object, Object> ef = new ExecutionFactory<Object, Object> () {
     		@Override
     		public boolean isSourceRequired() {
@@ -320,7 +325,7 @@ public class TestConnectorWorkItem {
 							return null;
 						}
 						returned = true;
-						return Arrays.asList(AutoGenDataService.CLOB_VAL);
+						return result;
 					}
 				};
     		}
@@ -348,6 +353,7 @@ public class TestConnectorWorkItem {
 		assertEquals(StorageMode.MEMORY, InputStreamFactory.getStorageMode(clob));
 		assertTrue(message.supportsImplicitClose());
 		
+		result.set(0, AutoGenDataService.CLOB_VAL);
 		ef.setCopyLobs(false);
 		cwi = new ConnectorWorkItem(requestMsg, cm);
     	cwi.execute();
@@ -358,6 +364,30 @@ public class TestConnectorWorkItem {
 		clob = (ClobType)tuple.get(0);
 		assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
 		assertFalse(message.supportsImplicitClose());
+		
+		result.set(0, new ClobImpl(new InputStreamFactory() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(new byte[0]);
+            }
+            
+            @Override
+            public StorageMode getStorageMode() {
+                return StorageMode.FREE; //TODO: introduce an explicit streaming
+            }
+            
+        }, -1));
+		requestMsg.setCopyStreamingLobs(true);
+        cwi = new ConnectorWorkItem(requestMsg, cm);
+        cwi.execute();
+        message = cwi.more();
+        resutls = message.getResults();
+        
+        tuple = resutls[0];
+        clob = (ClobType)tuple.get(0);
+        //switched from FREE to PERSISTENT
+        assertEquals(StorageMode.PERSISTENT, InputStreamFactory.getStorageMode(clob));
+        assertFalse(message.supportsImplicitClose());
     }
     
     @Test public void testConversionError() throws Exception {

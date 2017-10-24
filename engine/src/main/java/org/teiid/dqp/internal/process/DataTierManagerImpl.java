@@ -27,8 +27,16 @@ import java.sql.Clob;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -963,6 +971,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		if (parameterObject.limit > 0) {
 			aqr.setFetchSize(Math.min(parameterObject.limit, aqr.getFetchSize()));
 		}
+		aqr.setCopyStreamingLobs(parameterObject.copyStreamingLobs);
 		Collection<GroupSymbol> accessedGroups = null;
 		if (context.getDataObjects() != null) {
 			QueryMetadataInterface metadata = context.getMetadata();
