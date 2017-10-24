@@ -20,8 +20,11 @@ package org.teiid.translator.jdbc.pi;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -50,9 +53,6 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 public class PIExecutionFactory extends JDBCExecutionFactory {
     public static String PI = "pi"; //$NON-NLS-1$
     protected ConvertModifier convert = new ConvertModifier();
-
-
-
     
     public PIExecutionFactory() {
         setUseBindVariables(false);
@@ -75,6 +75,13 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         convert.addTypeMapping("Time", FunctionModifier.TIME); //$NON-NLS-1$
         convert.addTypeMapping("Variant", FunctionModifier.OBJECT); //$NON-NLS-1$
 
+        convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList("cast(format(",function.getParameters().get(0), ", 'hh:mm:ss.fff') as Time)"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		});
+    	
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
         registerFunctionModifier(SourceSystemFunctions.MOD, new AliasModifier("%")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("DAY")); //$NON-NLS-1$
@@ -91,6 +98,7 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("SUBSTR")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier("LEN")); //$NON-NLS-1$
         
         addPushDownFunction(PI, "COSH", FLOAT, FLOAT); //$NON-NLS-1$
         addPushDownFunction(PI, "TANH", FLOAT, FLOAT); //$NON-NLS-1$
@@ -284,5 +292,35 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
      */
     public boolean supportsProcedureTable() {
         return true;
+    }
+    
+    @Override
+    public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
+    	Object result = results.getObject(columnIndex);
+    	if (result == null) {
+    		return null;
+    	}
+    	return super.retrieveValue(results, columnIndex, expectedType);
+    }
+
+    @Override
+	public Object retrieveValue(CallableStatement results, int parameterIndex, Class<?> expectedType)
+			throws SQLException {
+    	Object result = results.getObject(parameterIndex);
+    	if (result == null) {
+    		return null;
+    	}
+    	return super.retrieveValue(results, parameterIndex, expectedType);
+    }
+    
+    @Override
+    public boolean supportsConvert(int fromType, int toType) {
+    	if (!super.supportsConvert(fromType, toType)) {
+    		return false;
+    	}
+    	if (convert.hasTypeMapping(toType)) {
+    		return true;
+    	}
+    	return false;
     }    
 }
