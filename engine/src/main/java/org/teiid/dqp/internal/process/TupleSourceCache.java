@@ -155,6 +155,7 @@ public class TupleSourceCache {
 			state.expectedReaders = parameterObject.info.sharingCount;
 			RegisterRequestParameter param = new RegisterRequestParameter(parameterObject.connectorBindingId, parameterObject.nodeID, -1);
 			param.fetchSize = parameterObject.fetchSize;
+			param.copyStreamingLobs = true;
 			state.ts = pdm.registerRequest(context, command, modelName, param);
 			if (param.doNotCache) {
 				return state.ts;

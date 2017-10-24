@@ -34,11 +34,19 @@ import java.util.Map;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.types.*;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.SQLXMLInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.Expression;
@@ -271,7 +279,13 @@ public class LobManager {
 				((BlobType)lob).setReference(new BlobImpl(isf));
 			}
 			else if (lob instanceof ClobType) {
-				((ClobType)lob).setReference(new ClobImpl(isf, ((ClobType)lob).length()));
+			    long length = -1;
+			    try {
+			        length = ((ClobType)lob).length();
+			    } catch (SQLException e) {
+			        //could be streaming
+			    }
+				((ClobType)lob).setReference(new ClobImpl(isf, length));
 			}
 			else {
 				((XMLType)lob).setReference(new SQLXMLImpl(isf));
