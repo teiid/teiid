@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -285,6 +286,21 @@ public class TestConnectorWorkItem {
     	BlobType blob = (BlobType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.BLOB, null);
     	
     	assertArrayEquals(bytes, ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()));
+    }
+    
+    @Test public void testTypeConversionClob() throws Exception {
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+        
+        final String str = "hello world";
+        
+        Clob clob = (Clob) ConnectorWorkItem.convertToRuntimeType(bm, new InputStreamFactory() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(str.getBytes(Streamable.CHARSET));
+            }
+        }, DataTypeManager.DefaultDataClasses.CLOB, null);
+        
+        assertEquals(str, clob.getSubString(1, str.length()));
     }
     
     @Test public void testLobs() throws Exception {

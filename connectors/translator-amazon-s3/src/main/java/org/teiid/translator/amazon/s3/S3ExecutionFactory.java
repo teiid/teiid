@@ -252,6 +252,11 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param = metadataFactory.addProcedureParameter("encryptionkey", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Server side encryption key to decrypt the object"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
+		
+		param = metadataFactory.addProcedureParameter("stream", TypeFacility.RUNTIME_NAMES.BOOLEAN, Type.In, p); //$NON-NLS-1$
+        param.setAnnotation("If the result should be streamed."); //$NON-NLS-1$
+        param.setNullType(NullType.Nullable);
+        param.setDefaultValue("false"); //$NON-NLS-1$
 
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.CLOB, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("endpoint", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
@@ -277,6 +282,11 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setAnnotation("Server side encryption key to decrypt the object"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
 		
+		param = metadataFactory.addProcedureParameter("stream", TypeFacility.RUNTIME_NAMES.BOOLEAN, Type.In, p); //$NON-NLS-1$
+        param.setAnnotation("If the result should be streamed."); //$NON-NLS-1$
+        param.setNullType(NullType.Nullable);
+        param.setDefaultValue("false"); //$NON-NLS-1$
+		
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.BLOB, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("endpoint", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("lastModified", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p); //$NON-NLS-1$
@@ -286,7 +296,7 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 	
 	@Override
 	public boolean areLobsUsableAfterClose() {
-		return true;
+	    return false;
 	}
 	
 }

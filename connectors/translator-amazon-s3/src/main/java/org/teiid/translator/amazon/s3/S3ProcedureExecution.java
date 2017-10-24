@@ -44,6 +44,7 @@ import org.teiid.core.util.Base64;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -74,6 +75,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 	private BinaryWSProcedureExecution execution = null;
 	boolean isText = false;
 	boolean isList = false;
+	boolean streaming = false;
 
 	public S3ProcedureExecution(Call command, S3ExecutionFactory ef, RuntimeMetadata metadata, ExecutionContext ec,
 			WSConnection conn) {
@@ -199,7 +201,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 	        headers.put("Content-Type", "application/octet-stream");
 	        
 			LogManager.logDetail(LogConstants.CTX_WS, "Saving", endpoint); //$NON-NLS-1$
-			return invokeHTTP("PUT", endpoint, new BlobType(contents), headers,true);
+            return invokeHTTP("PUT", endpoint, new BlobType(contents), headers);
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		} catch(IOException e) {
@@ -217,6 +219,11 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		
 		String encryption = (String)arguments.get(6).getArgumentValue().getValue();
 		String encryptionKey = (String)arguments.get(7).getArgumentValue().getValue();
+		Boolean isStreaming = (Boolean)arguments.get(8).getArgumentValue().getValue();
+		
+		if (isStreaming != null) {
+		    this.streaming = isStreaming;
+		}
 		
 		if (bucket == null) {
 			bucket = this.ef.getBucket();
@@ -269,7 +276,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 			}
 			
 			LogManager.logDetail(LogConstants.CTX_WS, "Getting", endpoint); //$NON-NLS-1$
-			return invokeHTTP("GET", endpoint, null, headers,true);
+            return invokeHTTP("GET", endpoint, null, headers);
 		} catch (MalformedURLException e) {
 			throw new TranslatorException(e);
 		} catch(NoSuchAlgorithmException e) {
@@ -321,7 +328,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 			}
 			headers.put("Content-Type", "text/plain");
 			LogManager.logDetail(LogConstants.CTX_WS, "Deleting", endpoint); //$NON-NLS-1$
-			return invokeHTTP("DELETE", endpoint, null, headers,true);
+			return invokeHTTP("DELETE", endpoint, null, headers);
 		} catch (MalformedURLException e) {
 			throw new TranslatorException(e);
 		}
@@ -376,14 +383,14 @@ public class S3ProcedureExecution implements ProcedureExecution {
 			this.isText = true;
 			this.isList = true;
 			LogManager.logDetail(LogConstants.CTX_WS, "Getting", endpoint); //$NON-NLS-1$
-			return invokeHTTP("GET", endpoint, null, headers, true);
+			return invokeHTTP("GET", endpoint, null, headers);
 		} catch (MalformedURLException e) {
 			throw new TranslatorException(e);
 		}
 	}	
 	
     protected BinaryWSProcedureExecution invokeHTTP(String method,
-            String uri, Object payload, Map<String, String> headers, boolean streaming)
+            String uri, Object payload, Map<String, String> headers)
             throws TranslatorException {
 
     	Map<String, List<String>> targetHeaders = new HashMap<String, List<String>>();
@@ -402,7 +409,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
         parameters.add(new Argument(Direction.IN, new Literal(method, TypeFacility.RUNTIME_TYPES.STRING), null));
         parameters.add(new Argument(Direction.IN, new Literal(payload, TypeFacility.RUNTIME_TYPES.OBJECT), null));
         parameters.add(new Argument(Direction.IN, new Literal(uri, TypeFacility.RUNTIME_TYPES.STRING), null));
-        parameters.add(new Argument(Direction.IN, new Literal(streaming, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
+        parameters.add(new Argument(Direction.IN, new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
         //the engine currently always associates out params at resolve time even if the 
         // values are not directly read by the call
         parameters.add(new Argument(Direction.OUT, TypeFacility.RUNTIME_TYPES.STRING, null));
@@ -473,8 +480,15 @@ public class S3ProcedureExecution implements ProcedureExecution {
 			ClobImpl clob = new ClobImpl(isf, -1);
 			clob.setCharset(Charset.forName(this.ef.getEncoding()));
 			value = new ClobType(clob);
+			if (!streaming) {
+			    value = new InputStreamFactory.ClobInputStreamFactory(clob);
+			}
 		} else {
-			value = new BlobType(contents);
+		    if (streaming) {
+	            value = new BlobType(contents);
+		    } else {
+		        value = isf;
+		    }
 		}
 		
 		String lastModified = getHeader("Last-Modified");
