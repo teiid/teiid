@@ -154,14 +154,18 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
     }    
     
     public void visit(ColumnReference obj) {
-        ColumnSet<?> cs = obj.getMetadataObject().getParent();
-        if (cs.getParent() instanceof Procedure && isTVF((Procedure)cs.getParent())) {
-            this.shortNameOnly = true;
-            super.visit(obj);
-            this.shortNameOnly = false;
-        } else {
-            super.visit(obj);
-        }
+    	if (obj.getMetadataObject() != null) {
+	        ColumnSet<?> cs = obj.getMetadataObject().getParent();
+	        if (cs.getParent() instanceof Procedure && isTVF((Procedure)cs.getParent())) {
+	            this.shortNameOnly = true;
+	            super.visit(obj);
+	            this.shortNameOnly = false;
+	        } else {
+	            super.visit(obj);
+	        }
+    	} else {
+    		super.visit(obj);
+    	}
     }    
 
     public void visit(DerivedTable obj) {

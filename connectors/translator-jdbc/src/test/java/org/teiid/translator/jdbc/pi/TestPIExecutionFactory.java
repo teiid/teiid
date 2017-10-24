@@ -25,12 +25,14 @@ package org.teiid.translator.jdbc.pi;
 import java.util.TimeZone;
 
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.TranslationHelper;
 
 @SuppressWarnings("nls")
@@ -117,4 +119,38 @@ public class TestPIExecutionFactory {
         String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("pi.ddl"));
         TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
     }  
+    
+	@Test 
+	public void testTimestamp2Time() throws TranslatorException {
+		String input = "select cast(timestampvalue as time) from BQT1.MediumA"; //$NON-NLS-1$
+		String output = "SELECT cast(format(MediumA.TimestampValue, 'hh:mm:ss.fff') as Time) FROM MediumA"; //$NON-NLS-1$
+		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+	}
+	
+	@Test 
+	public void testLength() throws TranslatorException {
+		String input = "select length(STRINGKEY) from BQT1.MediumA"; //$NON-NLS-1$
+		String output = "SELECT LEN(MediumA.StringKey) FROM MediumA"; //$NON-NLS-1$
+		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+	}
+	
+	@Test 
+	public void testOrderBy() throws TranslatorException {
+		String input = "SELECT FloatNum FROM BQT1.MediumA ORDER BY FloatNum ASC"; //$NON-NLS-1$
+		String output = "SELECT MediumA.FloatNum FROM MediumA ORDER BY MediumA.FloatNum"; //$NON-NLS-1$
+		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+	}	
+	
+	@Test 
+	public void testConvertToBigDecimal() throws TranslatorException {
+		Assert.assertFalse(
+				TRANSLATOR.supportsConvert(TypeFacility.RUNTIME_CODES.STRING, TypeFacility.RUNTIME_CODES.BIG_DECIMAL));
+		Assert.assertFalse(
+				TRANSLATOR.supportsConvert(TypeFacility.RUNTIME_CODES.STRING, TypeFacility.RUNTIME_CODES.BIG_INTEGER));
+		Assert.assertFalse(
+				TRANSLATOR.supportsConvert(TypeFacility.RUNTIME_CODES.STRING, TypeFacility.RUNTIME_CODES.GEOMETRY));
+		Assert.assertTrue(
+				TRANSLATOR.supportsConvert(TypeFacility.RUNTIME_CODES.STRING, TypeFacility.RUNTIME_CODES.INTEGER));
+		
+	} 	
 }
