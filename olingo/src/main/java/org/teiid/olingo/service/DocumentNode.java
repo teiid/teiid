@@ -386,7 +386,7 @@ public class DocumentNode {
 		Collections.sort(list, new Comparator<ProjectedColumn>() {
         	@Override
         	public int compare(ProjectedColumn o1, ProjectedColumn o2) {
-        		return Integer.compare(o1.getOrdinal(), o2.getOrdinal());
+        		return Integer.valueOf(o1.getOrdinal()).compareTo(o2.getOrdinal());
         	}
         });
 		return list;
