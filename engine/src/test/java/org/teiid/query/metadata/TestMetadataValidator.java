@@ -26,12 +26,14 @@ import static org.junit.Assert.*;
 import java.util.Properties;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.ParseException;
 import org.teiid.metadata.Table;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.parser.QueryParser;
@@ -172,6 +174,15 @@ public class TestMetadataValidator {
 		ValidatorReport report = new MetadataValidator().validate(vdb, store);
 		assertTrue(printError(report), report.hasItems());			
 	}
+	
+	@Ignore("allowed by default in 9.3.x")
+	@Test(expected=ParseException.class) public void testProcWithOutOfOrderReturn() throws Exception {
+        String ddl = "create foreign procedure x (out param1 string, out param2 string result); ";
+        buildModel("pm1", true, this.vdb, this.store,ddl);
+        buildTransformationMetadata();
+        ValidatorReport report = new MetadataValidator().validate(vdb, store);
+        assertTrue(printError(report), report.hasItems());          
+    }
 	
 	@Test public void testProcWithDuplicateParam() throws Exception {
 		String ddl = "create foreign procedure x (out param1 string, out param1 string); ";

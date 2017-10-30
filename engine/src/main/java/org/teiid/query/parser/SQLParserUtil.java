@@ -58,6 +58,8 @@ public class SQLParserUtil {
 	
 	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.decimalAsDouble", false); //$NON-NLS-1$
 	
+	public static final boolean RESULT_ANY_POSITION = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.resultAnyPosition", true); //$NON-NLS-1$
+	
 	String prependSign(String sign, String literal) {
 		if (sign != null && sign.charAt(0) == '-') {
 			return sign + literal;
