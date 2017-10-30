@@ -130,7 +130,8 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 	        if (arguments.size() > 5
 	        		//designer modeled the return value as an out, which will add an argument in the 5th position that is an out
 	        		&& this.procedure.getMetadataObject() != null
-	        		&& this.procedure.getMetadataObject().getParameters().get(0).getType() == Type.ReturnValue) {
+	        		&& (this.procedure.getMetadataObject().getParameters().get(0).getType() == Type.ReturnValue
+	        		|| arguments.get(5).getMetadataObject().getSourceName().equalsIgnoreCase("headers"))) { //$NON-NLS-1$
 	        	Clob headers = (Clob)arguments.get(5).getArgumentValue().getValue();
 	        	if (headers != null) {
 	        		parseHeader(httpHeaders, headers);
