@@ -53,8 +53,16 @@ import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator.SubqueryState;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
@@ -571,6 +579,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 				target.subPlans.put(entry.getKey(), entry.getValue().clone());
 			}
 		}
+		target.transactionSupport = transactionSupport;
 	}
 
     public synchronized PlanNode getDescriptionProperties() {

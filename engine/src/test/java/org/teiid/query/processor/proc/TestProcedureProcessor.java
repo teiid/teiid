@@ -55,8 +55,10 @@ import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.HardcodedDataManager;
@@ -75,6 +77,7 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 
 @SuppressWarnings({"unchecked", "rawtypes", "nls"})
 public class TestProcedureProcessor {
@@ -1912,6 +1915,23 @@ public class TestProcedureProcessor {
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
         
         assertTrue(plan.requiresTransaction(false));
+    }
+    
+    @Test public void testDDLProcTransactionNonTransactionalJoin() throws Exception {
+        String ddl = "create foreign procedure proc () returns table(col string);"
+                + "create virtual procedure virt() as begin select * from proc, proc as x; end"; //$NON-NLS-1$
+            
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        String userQuery = "EXEC virt()"; //$NON-NLS-1$
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
+        
+        assertTrue(plan.requiresTransaction(false));
+        
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setSourceProperty(Capability.TRANSACTION_SUPPORT, TransactionSupport.NONE);
+        plan = getProcedurePlan(userQuery, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        assertFalse(plan.requiresTransaction(false));
     }
     
     @Test public void testAnonProcTransaction() throws Exception {
