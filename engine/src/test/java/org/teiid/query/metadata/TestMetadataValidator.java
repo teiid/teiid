@@ -28,6 +28,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.ParseException;
 import org.teiid.metadata.Table;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.parser.QueryParser;
@@ -161,13 +162,21 @@ public class TestMetadataValidator {
 		assertTrue(printError(report), report.hasItems());			
 	}
 	
-	@Test public void testProcWithMultipleReturn() throws Exception {
+	@Test(expected=ParseException.class) public void testProcWithMultipleReturn() throws Exception {
 		String ddl = "create foreign procedure x (out param1 string result, out param2 string result); ";
 		buildModel("pm1", true, this.vdb, this.store,ddl);
 		buildTransformationMetadata();
 		ValidatorReport report = new MetadataValidator().validate(vdb, store);
 		assertTrue(printError(report), report.hasItems());			
 	}
+	
+	@Test(expected=ParseException.class) public void testProcWithOutOfOrderReturn() throws Exception {
+        String ddl = "create foreign procedure x (out param1 string, out param2 string result); ";
+        buildModel("pm1", true, this.vdb, this.store,ddl);
+        buildTransformationMetadata();
+        ValidatorReport report = new MetadataValidator().validate(vdb, store);
+        assertTrue(printError(report), report.hasItems());          
+    }
 	
 	@Test public void testProcWithDuplicateParam() throws Exception {
 		String ddl = "create foreign procedure x (out param1 string, out param1 string); ";
