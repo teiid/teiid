@@ -5055,6 +5055,9 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	    	throw new ParseException(QueryPlugin.Util.getString("SQLParser.param_out", proc.getName(), name));
 	    }
 	    ppType = ProcedureParameter.Type.ReturnValue;
+	    if (!RESULT_ANY_POSITION && !proc.getParameters().isEmpty()) {
+	       throw new ParseException(QueryPlugin.Util.getString("SQLParser.param_result_first", proc.getName(), name));
+	    }
 	  }
 	]
 	{
