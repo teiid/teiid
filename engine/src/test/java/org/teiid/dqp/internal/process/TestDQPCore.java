@@ -25,8 +25,13 @@ package org.teiid.dqp.internal.process;
 import static org.junit.Assert.*;
 
 import java.sql.ResultSet;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -160,6 +165,32 @@ public class TestDQPCore {
 
     @Test public void testRequest1() throws Exception {
     	helpExecute("SELECT IntKey FROM BQT1.SmallA", "a"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRequestMaxActive() throws Exception {
+        agds.latch = new CountDownLatch(1);
+        int toRun = 2;
+        CountDownLatch submitted = new CountDownLatch(toRun);
+        ExecutorService es = Executors.newCachedThreadPool();
+        final DQPWorkContext context = DQPWorkContext.getWorkContext();
+        es.invokeAll(Collections.nCopies(toRun, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                DQPWorkContext.setWorkContext(context);
+                RequestMessage reqMsg = exampleRequestMessage("select * FROM BQT1.SmallA"); 
+                DQPWorkContext.getWorkContext().getSession().setSessionId("1");
+                DQPWorkContext.getWorkContext().getSession().setUserName("a");
+
+                Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+                assertNotNull(core.getClientState("1", false));
+                submitted.countDown();
+                submitted.await(); //after this, both will be submitted
+                agds.latch.countDown(); //allow the execution to proceed
+                message.get(500000, TimeUnit.MILLISECONDS);
+                return null;
+            }
+        }));
+        assertEquals(1, this.core.getMaxWaitingPlanWatermark());
     }
     
     @Test public void testHasRole() throws Exception {

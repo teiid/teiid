@@ -291,7 +291,7 @@ public class DQPCore implements DQP {
         }
         boolean runInThread = requestMsg.isSync();
         synchronized (waitingPlans) {
-			if (runInThread || currentlyActivePlans <= maxActivePlans) {
+			if (runInThread || currentlyActivePlans < maxActivePlans) {
 				startActivePlan(workItem, !runInThread);
 			} else {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
