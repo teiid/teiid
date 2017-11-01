@@ -135,7 +135,14 @@ public class TestPIExecutionFactory {
 		String input = "SELECT FloatNum FROM BQT1.MediumA ORDER BY FloatNum ASC"; //$NON-NLS-1$
 		String output = "SELECT MediumA.FloatNum FROM MediumA ORDER BY MediumA.FloatNum"; //$NON-NLS-1$
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-	}	
+	}
+	
+	@Test 
+    public void testBooleanCast() throws TranslatorException {
+        String input = "SELECT cast(booleanvalue as float), cast(booleanvalue as double) FROM BQT1.MediumA"; //$NON-NLS-1$
+        String output = "SELECT cast(cast(MediumA.BooleanValue as int8) as single), cast(cast(MediumA.BooleanValue as int8) as double) FROM MediumA"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 	
 	@Test 
 	public void testConvertToBigDecimal() throws TranslatorException {

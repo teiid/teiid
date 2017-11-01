@@ -81,6 +81,18 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList("cast(format(",function.getParameters().get(0), ", 'hh:mm:ss.fff') as Time)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
+        convert.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.FLOAT, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(cast(",function.getParameters().get(0), " as int8) as single)"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        });
+        convert.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.DOUBLE, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(cast(",function.getParameters().get(0), " as int8) as double)"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        });
     	
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
         registerFunctionModifier(SourceSystemFunctions.MOD, new AliasModifier("%")); //$NON-NLS-1$
