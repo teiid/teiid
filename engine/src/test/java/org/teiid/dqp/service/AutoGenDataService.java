@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.core.TeiidComponentException;
@@ -71,6 +72,7 @@ public class AutoGenDataService extends ConnectorManager{
 	public CacheDirective cacheDirective;
 	public boolean dataAvailable;
 	public boolean threadBound;
+	public CountDownLatch latch;
 
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -145,6 +147,14 @@ public class AutoGenDataService extends ConnectorManager{
 					} catch (InterruptedException e) {
 						throw new RuntimeException(e);
 					}
+				}
+				if (latch != null) {
+				    try {
+				        latch.countDown();
+                        latch.await();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
 				}
 				if (throwExceptionOnExecute) {
 		    		throw new TranslatorException("Connector Exception"); //$NON-NLS-1$
