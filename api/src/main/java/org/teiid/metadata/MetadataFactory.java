@@ -184,7 +184,7 @@ public class MetadataFactory extends NamespaceContainer {
             while (this.schema.getTable(newName) != null) {
                 suffix++;
             }
-            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60040, newName, name));
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60040, name, newName));
             name = newName;
 		}
 		table.setName(name);
@@ -220,7 +220,7 @@ public class MetadataFactory extends NamespaceContainer {
             while (table.getColumnByName(newName) != null) {
 		        suffix++;
 		    }
-            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60039, newName, name));
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60039, name, newName));
             name = newName;
 		}
 		Column column = new Column();
