@@ -21,6 +21,10 @@ package org.teiid.query.xquery.saxon;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.PathMap.PathMapArc;
@@ -34,10 +38,6 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.SchemaType;
 import net.sf.saxon.type.SimpleType;
 import net.sf.saxon.type.Type;
-
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
-import org.teiid.logging.MessageLevel;
 
 /**
  * A filter that uses the PathMap to determine what should be included in the document
@@ -133,6 +133,10 @@ class PathMapFilter extends ProxyReceiver {
 				if (test == null || test.matches(Type.ELEMENT, elemName, typeCode.getFingerprint())) {
 					newContext.bulidContext(arc.getTarget());
 					newContext.matchedElement = true;
+					if (arc.getTarget().isAtomized() && arc.getTarget().getArcs().length == 0) {
+					    //we must expect the text as there are no further arcs
+					    newContext.matchesText = true;
+					}
 				} 
 				if (arc.getAxis() == AxisInfo.DESCENDANT || arc.getAxis() == AxisInfo.DESCENDANT_OR_SELF) {
 					newContext.processArc(arc);
