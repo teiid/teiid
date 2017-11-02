@@ -960,4 +960,44 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testAtomizedPredicate() throws Exception {
+        String sql = "Select valOption2 From\n" + 
+                "    (select '<root>\n" + 
+                "        <item>\n" + 
+                "            <id>id1</id>\n" + 
+                "            <val>val1</val>\n" + 
+                "        </item>\n" + 
+                "    </root>' as resp) w,\n" + 
+                "    XMLTABLE(\n" + 
+                "        '/root' passing XMLPARSE(document w.resp) columns\n" + 
+                "        valOption2 string PATH 'item[id = \"id1\"]/val'\n" + 
+                "    ) x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+                Collections.singletonList("val1"),
+        };    
+        
+        process(sql, expected);
+    }
+    
+    @Test public void testTextPredicate() throws Exception {
+        String sql = "Select valOption2 From\n" + 
+                "    (select '<root>\n" + 
+                "        <item>\n" + 
+                "            <id>id1</id>\n" + 
+                "            <val>val1</val>\n" + 
+                "        </item>\n" + 
+                "    </root>' as resp) w,\n" + 
+                "    XMLTABLE(\n" + 
+                "        '/root' passing XMLPARSE(document w.resp) columns\n" + 
+                "        valOption2 string PATH 'item[id/text() = \"id1\"]/val'\n" + 
+                "    ) x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+            Collections.singletonList("val1"),
+        };
+    
+        process(sql, expected);
+    }
+    
 }

@@ -32,6 +32,30 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stax.StAXSource;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.XMLType;
+import org.teiid.core.types.XMLType.Type;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
+import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.XMLTableNode;
+import org.teiid.query.sql.symbol.XMLCast;
+import org.teiid.query.sql.symbol.XMLQuery;
+import org.teiid.query.util.CommandContext;
+import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
+import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
+
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.FilterFactory;
 import net.sf.saxon.event.ProxyReceiver;
@@ -52,19 +76,6 @@ import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nux.xom.xquery.StreamingPathFilter;
 import nux.xom.xquery.StreamingTransform;
-
-import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.BinaryType;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
-import org.teiid.logging.MessageLevel;
-import org.teiid.query.QueryPlugin;
-import org.teiid.query.function.source.XMLSystemFunctions;
-import org.teiid.query.processor.relational.RelationalNode;
-import org.teiid.query.util.CommandContext;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 
 /**
  * Used to isolate the xom/nux dependency and to better isolate the saxon processing logic.
