@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.teiid</groupId>
         <artifactId>teiid-feature-pack</artifactId>
-        <version>10.0.0.CR3-SNAPSHOT</version>
+        <version>10.0.0.Final</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>

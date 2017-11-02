@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>accumulo</artifactId>
-      <version>10.0.0.CR3-SNAPSHOT</version>
+      <version>10.0.0.Final</version>
     </parent>
     <artifactId>feature-pack-accumulo</artifactId>
     <name>Teiid Accumulo Feature Pack</name>
