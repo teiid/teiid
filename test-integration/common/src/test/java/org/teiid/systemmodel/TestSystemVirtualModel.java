@@ -263,7 +263,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 	
 	@Test public void testUsage() throws Exception {
-		checkResult("testUsgae", "select * from usage"); //$NON-NLS-1$ //$NON-NLS-2$
+		checkResult("testUsage", "select * from usage"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	@Test public void testFunctions() throws Exception {
