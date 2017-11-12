@@ -28,7 +28,7 @@ connect
 
 :restart-servers(blocking=true)
 
-/profile=ha/subsystem=jgroups/channel=teiid-cluster:add(stack=udp)
+/profile=ha/subsystem=jgroups/channel=ee/fork=teiid-cluster:add()
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache:add()
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000, channel=teiid-cluster)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC, batching=true)
@@ -53,7 +53,7 @@ connect
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add()
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")]) 
 
-/profile=full-ha/subsystem=jgroups/channel=teiid-cluster:add(stack=udp)
+/profile=full-ha/subsystem=jgroups/channel=ee/fork=teiid-cluster:add()
 /profile=full-ha/subsystem=infinispan/cache-container=teiid-cache:add()
 /profile=full-ha/subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000, channel=teiid-cluster)
 /profile=full-ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC, batching=true)
