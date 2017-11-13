@@ -114,7 +114,7 @@ public class TestPIExecutionFactory {
                 + "OUTER APPLY Sample.EventFrame.GetPIPoint(EA.[ID])"; //$NON-NLS-1$
         String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("pi.ddl"));
         TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
-    }  
+    } 
     
 	@Test 
 	public void testTimestamp2Time() throws TranslatorException {
@@ -156,4 +156,29 @@ public class TestPIExecutionFactory {
 				TRANSLATOR.supportsConvert(TypeFacility.RUNTIME_CODES.STRING, TypeFacility.RUNTIME_CODES.INTEGER));
 		
 	} 	
+
+	@Test 
+    public void testLocate() throws TranslatorException {
+        String input = "SELECT INTKEY FROM BQT1.SmallA WHERE LOCATE(2, INTKEY, 1) = 1"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE INSTR(cast(SmallA.IntKey AS String),'2',1) = 1"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+        
+        input = "SELECT STRINGKEY FROM BQT1.SmallA WHERE LOCATE('2', STRINGKEY) = 1"; //$NON-NLS-1$
+        output = "SELECT SmallA.StringKey FROM SmallA WHERE INSTR(SmallA.StringKey,'2') = 1"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+	
+	@Test 
+    public void testMOD() throws TranslatorException {
+        String input = "SELECT FloatNum, 11, MOD(FloatNum, 11) FROM BQT1.SmallA"; 
+        String output = "SELECT SmallA.FloatNum, 11, cast(SmallA.FloatNum as int64)%cast(11.0 as int64) FROM SmallA"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+	@Test 
+    public void testSOME() throws TranslatorException {
+        String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE FLOATNUM <> SOME (SELECT FLOATNUM FROM BQT1.SMALLA WHERE STRINGKEY = 10)"; 
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.FloatNum <> ANY (SELECT SmallA.FloatNum FROM SmallA WHERE SmallA.StringKey = '10')"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 }

@@ -24,6 +24,7 @@ import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Join.JoinType;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.Procedure;
 import org.teiid.translator.jdbc.JDBCPlugin;
@@ -215,5 +216,13 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
     private boolean isTVF(Procedure proc) {
         String value = proc.getProperty(PIMetadataProcessor.TVF, false);
         return Boolean.parseBoolean(value); 
-    }    
+    }
+
+	@Override
+    public void visit(SubqueryComparison obj) {
+		if(obj.getQuantifier() == Quantifier.SOME) {
+			obj.setQuantifier(Quantifier.ANY);
+		}
+		super.visit(obj);
+	}
 }
