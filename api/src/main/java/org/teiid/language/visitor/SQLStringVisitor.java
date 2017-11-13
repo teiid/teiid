@@ -882,6 +882,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         switch(obj.getQuantifier()) {
             case ALL: buffer.append(ALL); break;
             case SOME: buffer.append(SOME); break;
+            case ANY: buffer.append(ANY); break;
             default: buffer.append(UNDEFINED);
         }
         buffer.append(Tokens.SPACE);

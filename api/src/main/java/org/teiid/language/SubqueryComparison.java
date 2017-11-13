@@ -30,7 +30,8 @@ public class SubqueryComparison extends Condition implements Predicate, Subquery
 
 	public enum Quantifier {
 		SOME,
-		ALL
+		ALL,
+		ANY
 	}
 	
     private Expression leftExpr;
