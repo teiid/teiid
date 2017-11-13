@@ -7915,5 +7915,30 @@ public class TestProcessor {
         TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("Test1@mail.com", "test1@mail.com", "test1@mail.com", "test1@mail.com")});
     }
 	
+	@Test public void testMixedAnsiLateralJoins() throws Exception { 
+        int rows = 20;
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE VIRTUAL PROCEDURE pr0(arg1 string) returns (res1 string) AS\n" + 
+                "    BEGIN\n" + 
+                "        SELECT '2017-01-01';\n" + 
+                "    END;"
+                + "create foreign table test_t1(col_t1 varchar) options (cardinality 20); create foreign table test_t2(col_t2 integer) options (cardinality 20);", "x", "y");
+        
+        //prior to the fix, the following worked as non-ansi, but not with ansi
+        
+        String sql = "SELECT d.col_t2 FROM \"test_t1\", table(CALL pr0(\"arg1\" => col_t1)) x\n" + 
+                "    cross join table(select * from \"test_t2\" where col_t2 >= res1) d";
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, true);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(caps));
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        List<?>[] vals = new List<?>[rows];
+        Arrays.fill(vals, Arrays.asList("1"));
+        List<?>[] vals1 = new List<?>[rows];
+        Arrays.fill(vals1, Arrays.asList(1));
+        dataManager.addData("SELECT g_0.col_t1 FROM y.test_t1 AS g_0", vals);
+        dataManager.addData("SELECT g_0.col_t2 FROM y.test_t2 AS g_0", vals1);
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {});
+    }
+	
     private static final boolean DEBUG = false;
 }

@@ -129,7 +129,7 @@ public class TupleSourceCache {
 		
 		@Override
 		public void closeSource() {
-			if (!closed && --state.expectedReaders == 0 && sharedStates != null && sharedStates.containsKey(state.id)) {
+			if (!closed && state.expectedReaders != -1 && --state.expectedReaders == 0 && sharedStates != null && sharedStates.containsKey(state.id)) {
 				state.remove();
 				sharedStates.remove(state.id);
 			}
