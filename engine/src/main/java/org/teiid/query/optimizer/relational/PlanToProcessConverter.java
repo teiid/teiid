@@ -482,7 +482,7 @@ public class PlanToProcessConverter {
 	                    }
 	                    //check if valid to share this with other nodes
 	                    if (ev != null && ev.getDeterminismLevel().compareTo(Determinism.COMMAND_DETERMINISTIC) >= 0 && command.areResultsCachable()) {
-	                    	checkForSharedSourceCommand(aNode);
+	                    	checkForSharedSourceCommand(aNode, node);
 	                    }
                     }
     				if (subPlans != null) {
@@ -759,7 +759,7 @@ public class PlanToProcessConverter {
 		return command;
 	}
 	
-	private void checkForSharedSourceCommand(AccessNode aNode) {
+	private void checkForSharedSourceCommand(AccessNode aNode, PlanNode node) {
 		//create a top level key to avoid the full command toString
 		String modelName = aNode.getModelName();
 		Command cmd = aNode.getCommand();
@@ -778,14 +778,38 @@ public class PlanToProcessConverter {
 		}
 		
 		AccessNode other = sharedCommands.get(cmd);
+		
+		//lateral may be reused any number of times,
+		//so this requires special handling
+		//we will clean it up at the end
+		boolean lateral = false;
+		while (node.getParent() != null) {
+		    if (node.getParent().getType() == NodeConstants.Types.JOIN 
+		            && node.getParent().getProperty(Info.JOIN_STRATEGY) == JoinStrategyType.NESTED_TABLE
+		            && node.getParent().getLastChild() == node) {
+		        lateral = true;
+		        break;
+		    }
+		    node = node.getParent();
+		}
+		
 		if (other == null) {
 			sharedCommands.put(cmd, aNode);
+			if (lateral) {
+			    aNode.info = new RegisterRequestParameter.SharedAccessInfo();
+			    aNode.info.id = sharedId.getAndIncrement();
+			    aNode.info.sharingCount = -1;
+			}
 		} else {
 			if (other.info == null) {
 				other.info = new RegisterRequestParameter.SharedAccessInfo();
 				other.info.id = sharedId.getAndIncrement();
 			}
-			other.info.sharingCount++;
+			if (other.info.sharingCount != -1) {
+			    other.info.sharingCount++;
+			} else if (lateral) {
+			    other.info.sharingCount = -1;
+			}
 			aNode.info = other.info;
 		}
 	}

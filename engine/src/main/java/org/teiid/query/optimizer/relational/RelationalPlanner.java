@@ -1666,11 +1666,14 @@ public class RelationalPlanner {
 	private SymbolMap getCorrelatedReferences(PlanNode parent, PlanNode node,
 			LanguageObject lo) {
 		PlanNode rootJoin = parent;
+		Set<GroupSymbol> groups = new HashSet<GroupSymbol>(rootJoin.getGroups());
 		while (rootJoin.getParent() != null && rootJoin.getParent().getType() == NodeConstants.Types.JOIN && !rootJoin.getParent().getGroups().isEmpty()) {
 			rootJoin = rootJoin.getParent();
+			//accumulate groups as we go, as intermediate joins may not contribute groups to the final join
+			groups.addAll(rootJoin.getGroups());
 		}
 		List<Reference> correlatedReferences = new ArrayList<Reference>();
-		CorrelatedReferenceCollectorVisitor.collectReferences(lo, rootJoin.getGroups(), correlatedReferences, metadata);
+		CorrelatedReferenceCollectorVisitor.collectReferences(lo, groups, correlatedReferences, metadata);
 		
 		if (correlatedReferences.isEmpty()) {
 			return null;

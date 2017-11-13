@@ -2272,5 +2272,52 @@ public class TestEmbeddedServer {
         
         s.execute("select * from g1");
     }
+    
+    @Test public void testLateralTupleSourceReuse() throws Exception { 
+        es.start(new EmbeddedConfiguration());
+        int rows = 20;
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("y");
+        mmd.addSourceMetadata("ddl", "CREATE VIRTUAL PROCEDURE pr0(arg1 string) returns (res1 string) AS\n" + 
+                "    BEGIN\n" + 
+                "        SELECT '2017-01-01';\n" + 
+                "    END;"
+                + "create foreign table test_t1(col_t1 varchar) options (cardinality 20); create foreign table test_t2(col_t2 integer) options (cardinality 20);");
+        mmd.addSourceMapping("y", "y", null);
+        
+        HardCodedExecutionFactory hcef = new HardCodedExecutionFactory();
+        es.addTranslator("y", hcef);
+        
+        es.deployVDB("x", mmd);
+        
+        String sql = "SELECT d.col_t2 FROM \"test_t1\", table(CALL pr0(\"arg1\" => col_t1)) x\n" + 
+                "     join table(select * from \"test_t2\") d \n" +
+                " on true " +
+                "UNION all\n" + 
+                "SELECT d.col_t2 FROM \"test_t1\", table(CALL pr0(\"arg1\" => col_t1)) x\n" + 
+                "    join table(select * from \"test_t2\") d \n" +
+                " on true " + 
+                "        limit 100";
+        
+        List<?>[] vals = new List<?>[rows];
+        Arrays.fill(vals, Arrays.asList("1"));
+        List<?>[] vals1 = new List<?>[rows];
+        Arrays.fill(vals1, Arrays.asList(1));
+        hcef.addData("SELECT test_t1.col_t1 FROM test_t1", Arrays.asList(vals));
+        hcef.addData("SELECT test_t2.col_t2 FROM test_t2", Arrays.asList(vals1));
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:x;", null);
+        Statement s = c.createStatement();
+        
+        s.executeQuery(sql);
+        
+        ResultSet rs = s.getResultSet();
+        int count = 0;
+        while (rs.next()) {
+            count++;
+        }
+        rs.close();
+        assertEquals(100, count);
+    }
 
 }
