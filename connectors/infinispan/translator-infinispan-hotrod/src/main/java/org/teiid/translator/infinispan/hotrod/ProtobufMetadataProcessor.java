@@ -147,7 +147,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
             } catch (IOException e) {
                 throw new TranslatorException(e);
             }
-            this.protoResource = new ProtobufResource(protobufFile, protoContents);
+			this.protoResource = new ProtobufResource(this.protobufName != null ? this.protobufName : protobufFile,
+					protoContents);
             toTeiidSchema(protobufFile, protoContents, metadataFactory, cacheName);
         } else if( this.protobufName != null) {
             // Read from cache
