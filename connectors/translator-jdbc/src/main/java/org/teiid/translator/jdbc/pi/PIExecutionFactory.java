@@ -95,16 +95,23 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         });
     	
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
-        registerFunctionModifier(SourceSystemFunctions.MOD, new AliasModifier("%")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.MOD, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList("cast(", function.getParameters().get(0), " as int64)", "%", //$NON-NLS-1$ //$NON-NLS-2$
+						"cast(",function.getParameters().get(1), " as int64)");
+			}
+		}); //$NON-NLS-1$
+        
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("DAY")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
-                function.setName("INSTR"); //$NON-NLS-1$
-                if (function.getParameters().get(2) == null) {
-                    return Arrays.asList(function.getParameters().get(1), function.getParameters().get(0));
+                if (function.getParameters().size() <= 2) {
+                    return Arrays.asList("INSTR(",function.getParameters().get(1), ",", function.getParameters().get(0), ")");
                 }
-                return Arrays.asList(function.getParameters().get(1), function.getParameters().get(0), function.getParameters().get(2));
+				return Arrays.asList("INSTR(", function.getParameters().get(1), ",", function.getParameters().get(0),
+						",", function.getParameters().get(2), ")");
             }
         });        
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER")); //$NON-NLS-1$
