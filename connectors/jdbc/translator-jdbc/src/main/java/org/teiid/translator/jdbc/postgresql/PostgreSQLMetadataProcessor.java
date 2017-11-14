@@ -114,4 +114,17 @@ public final class PostgreSQLMetadataProcessor
     protected String getSequenceNextSQL(String fullyQualifiedName) {
         return "nextval('" + StringUtil.replaceAll(fullyQualifiedName, "'", "''") + "')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
     }
+    
+    @Override
+    protected Table addTable(MetadataFactory metadataFactory,
+            String tableCatalog, String tableSchema, String tableName,
+            String remarks, String fullName, ResultSet tables)
+            throws SQLException {
+        String type = tables.getString(4);
+        if (type == null || type.contains("INDEX")) { //$NON-NLS-1$
+            return null;
+        }
+        return super.addTable(metadataFactory, tableCatalog, tableSchema, tableName,
+                remarks, fullName, tables);
+    }
 }
