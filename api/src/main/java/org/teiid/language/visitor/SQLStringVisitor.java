@@ -855,16 +855,19 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             default: buffer.append(UNDEFINED);
         }
         buffer.append(Tokens.SPACE);
-        switch(obj.getQuantifier()) {
-            case ALL: buffer.append(ALL); break;
-            case SOME: buffer.append(SOME); break;
-	    case ANY: buffer.append(ANY); break;
-            default: buffer.append(UNDEFINED);
-        }
+        appendQuantifier(obj);
         buffer.append(Tokens.SPACE);
         buffer.append(Tokens.LPAREN);        
         append(obj.getSubquery());
         buffer.append(Tokens.RPAREN);        
+    }
+    
+    protected void appendQuantifier(SubqueryComparison obj) {
+        switch(obj.getQuantifier()) {
+            case ALL: buffer.append(ALL); break;
+            case SOME: buffer.append(SOME); break;
+            default: buffer.append(UNDEFINED);
+        }
     }
 
     public void visit(SubqueryIn obj) {
