@@ -217,12 +217,14 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
         String value = proc.getProperty(PIMetadataProcessor.TVF, false);
         return Boolean.parseBoolean(value); 
     }
+    
+    @Override
+    protected void appendQuantifier(SubqueryComparison obj) {
+        if(obj.getQuantifier() == Quantifier.SOME) {
+            buffer.append("ANY"); //$NON-NLS-1$
+        } else {
+            super.appendQuantifier(obj);
+        }
+    }
 
-	@Override
-    public void visit(SubqueryComparison obj) {
-		if(obj.getQuantifier() == Quantifier.SOME) {
-			obj.setQuantifier(Quantifier.ANY);
-		}
-		super.visit(obj);
-	}
 }
