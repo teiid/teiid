@@ -106,6 +106,7 @@ public class IntegrationPlugin {
     	TEIID50111,
     	TEIID50112,
     	TEIID50114, 
-    	TEIID50115
+    	TEIID50115,
+    	TEIID50116
     }
 }

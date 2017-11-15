@@ -184,7 +184,6 @@ class TeiidAdd extends AbstractAddStepHandler {
 
 	static SimpleAttributeDefinition[] ATTRIBUTES = {
 		TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT,
-		TeiidConstants.ASYNC_THREAD_POOL_ELEMENT,
 		TeiidConstants.THREAD_COUNT_ATTRIBUTE,
 		TeiidConstants.MAX_THREADS_ELEMENT,
 		TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT,
@@ -302,10 +301,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
 		// async thread-pool
 		int maxThreads = 10;
-        if (isDefined(ASYNC_THREAD_POOL_ELEMENT, operation, context)) {
-            if(asInt(THREAD_COUNT_ATTRIBUTE, operation, context) != null) {
-                maxThreads = asInt(THREAD_COUNT_ATTRIBUTE, operation, context);
-            }
+        if(asInt(THREAD_COUNT_ATTRIBUTE, operation, context) != null) {
+            maxThreads = asInt(THREAD_COUNT_ATTRIBUTE, operation, context);
         }
         buildThreadService(maxThreads, target);
 		
