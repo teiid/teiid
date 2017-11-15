@@ -223,16 +223,21 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 						if (success) {
 							long warnTime = warnWaitTime;
 							if (r != null && System.currentTimeMillis() - r.getCreationTime() > warnTime) {
-								LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30009, maximumPoolSize, poolName, highestQueueSize, warnTime));
+								logWaitMessage(warnTime, maximumPoolSize, poolName, highestQueueSize);
 								warnWaitTime*=2; //we don't really care if this is synchronized
 							}
 						}
 						t.setName(name);
 					}
 				}
-			};
+			}
+
 		});
 	}
+	
+	protected void logWaitMessage(long warnTime, int maximumPoolSize, String poolName, int highestQueueSize) {
+        LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30009, maximumPoolSize, poolName, highestQueueSize, warnTime));
+    }
 
 	private void checkForTermination() {
 		if (terminated) {

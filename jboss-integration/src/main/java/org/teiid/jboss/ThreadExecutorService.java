@@ -23,6 +23,8 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 
 public class ThreadExecutorService implements Service<TeiidExecutor> {
 
@@ -41,7 +43,13 @@ public class ThreadExecutorService implements Service<TeiidExecutor> {
 
     @Override
     public void start(StartContext context) throws StartException {
-        this.threadExecutor = new ThreadReuseExecutor("async-teiid-threads", this.threadCount);
+        this.threadExecutor = new ThreadReuseExecutor("async-teiid-threads", this.threadCount) {  //$NON-NLS-1$
+            @Override
+            protected void logWaitMessage(long warnTime, int maximumPoolSize,
+                    String poolName, int highestQueueSize) {
+                LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50116, maximumPoolSize, poolName, highestQueueSize, warnTime));
+            }  
+        };
     }
 
     @Override
