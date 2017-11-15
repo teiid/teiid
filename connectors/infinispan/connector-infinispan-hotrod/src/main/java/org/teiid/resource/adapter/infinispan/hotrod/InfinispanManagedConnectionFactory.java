@@ -201,7 +201,11 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
                     if (metadataCache != null) {
                         metadataCache.put(protobuf.getIdentifier(), protobuf.getContents());
                         String errors = metadataCache.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
-                        if (errors != null) {
+                        // ispn removes leading '/' in a string in the results
+                        String protoSchemaIdent = (protobuf.getIdentifier().startsWith("/"))
+                                ? protobuf.getIdentifier().substring(1)
+                                : protobuf.getIdentifier();
+                        if (errors != null && isProtoSchemaInErrors(protoSchemaIdent, errors)) {
                            throw new TranslatorException(InfinispanManagedConnectionFactory.UTIL.getString("proto_error", errors));
                         }
                     }
@@ -211,6 +215,15 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
             } catch(Throwable t) {
                 throw new TranslatorException(t);
             }
+        }
+
+        private boolean isProtoSchemaInErrors(String ident, String errors) {
+            for (String s : errors.split("\n")) {
+                if (s.trim().startsWith(ident)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         @Override
