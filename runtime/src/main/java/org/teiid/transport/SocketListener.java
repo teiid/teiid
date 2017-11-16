@@ -18,20 +18,6 @@
 
 package org.teiid.transport;
 
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.ssl.SslHandler;
-import io.netty.handler.stream.ChunkedWriteHandler;
-import io.netty.util.concurrent.Future;
-
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
@@ -47,6 +33,20 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ChannelListener.ChannelListenerFactory;
+
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.concurrent.Future;
 
 
 /**
@@ -94,7 +94,7 @@ public class SocketListener implements ChannelListenerFactory {
 		}
         
         if (maxWorkers == 0) {
-        	maxWorkers = Math.max(4, 2*Runtime.getRuntime().availableProcessors());
+        	maxWorkers = Math.max(4, PropertiesUtils.getIntProperty(System.getProperties(), "io.netty.eventLoopThreads", 2*Runtime.getRuntime().availableProcessors())); //$NON-NLS-1$
         }
         EventLoopGroup workers = new NioEventLoopGroup(maxWorkers, nettyPool); 
         
