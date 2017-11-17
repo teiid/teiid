@@ -63,17 +63,18 @@ import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
-import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.NullOrder;
@@ -150,20 +151,38 @@ public final class RuleCollapseSource implements OptimizerRule {
                 	}
                 }
                 
-                //find all pushdown functions and mark them to be evaluated by the source
-                for (Function f : FunctionCollectorVisitor.getFunctions(queryCommand, false)) {
-                	FunctionDescriptor fd = f.getFunctionDescriptor();
-    				if (f.isEval()) {
-    					if (modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN 
-    								&& fd.getMethod() != null 
-    								&& CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
-    						f.setEval(false);
-    					} else if (fd.getDeterministic() == Determinism.NONDETERMINISTIC
-    							&& CapabilitiesUtil.supportsScalarFunction(modelId, f, metadata, capFinder)) {
-    						f.setEval(false);
-    					}
-    				}
-                }
+                //find all pushdown functions in evaluatable locations and mark them to be evaluated by the source
+                LanguageVisitor lv = new LanguageVisitor() {
+                    @Override
+                    public void visit(Function f) {
+                        FunctionDescriptor fd = f.getFunctionDescriptor();
+                        if (f.isEval()) {
+                            try {
+                                if (modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN 
+                                            && fd.getMethod() != null 
+                                            && CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
+                                    f.setEval(false);
+                                } else if (fd.getDeterministic() == Determinism.NONDETERMINISTIC
+                                        && CapabilitiesUtil.supportsScalarFunction(modelId, f, metadata, capFinder)) {
+                                    f.setEval(false);
+                                }
+                            } catch (QueryMetadataException e) {
+                                throw new TeiidRuntimeException(e);
+                            } catch (TeiidComponentException e) {
+                                throw new TeiidRuntimeException(e);
+                            }
+                        }
+                    }
+                    @Override
+                    public void visit(SubqueryFromClause obj) {
+                        PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);                        
+                    }
+                    @Override
+                    public void visit(WithQueryCommand obj) {
+                        PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);
+                    }
+                };
+                PreOrPostOrderNavigator.doVisit(queryCommand, lv, true);
             	plan = addDistinct(metadata, capFinder, accessNode, plan, queryCommand, capFinder);
                 command = queryCommand;
                 queryCommand.setSourceHint((SourceHint) accessNode.getProperty(Info.SOURCE_HINT));
@@ -338,6 +357,33 @@ public final class RuleCollapseSource implements OptimizerRule {
 
     private PlanNode removeUnnecessaryInlineView(PlanNode root, PlanNode accessNode) {
     	PlanNode child = accessNode.getFirstChild();
+    	
+    	//check for simple projection - may happen with non-deterministic functions 
+    	//TODO: in most cases more logic in ruleremovevirtual (to make sure there is only a single use of the non-deterministic function)
+    	//will allow us to remove these views
+    	if (child.getType() == NodeConstants.Types.PROJECT && child.getFirstChild() != null 
+    	        && child.getFirstChild().hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
+    	    List<Expression> requiredElements = (List<Expression>) child.getFirstChild().getProperty(Info.OUTPUT_COLS);
+            List<Expression> selectSymbols = (List<Expression>)child.getProperty(NodeConstants.Info.PROJECT_COLS);
+
+            // check that it only performs simple projection and that all required symbols are projected
+            LinkedHashSet<Expression> symbols = new LinkedHashSet<Expression>(); //ensuring there are no duplicates prevents problems with subqueries  
+            for (Expression symbol : selectSymbols) {
+                Expression expr = SymbolMap.getExpression(symbol);
+                if (!(expr instanceof ElementSymbol)) {
+                    return root;
+                }
+                requiredElements.remove(expr);
+                if (!symbols.add(expr)) {
+                    return root;
+                }
+            }
+            if (!requiredElements.isEmpty()) {
+                return root;
+            }
+            root = RuleRaiseAccess.performRaise(root, child, accessNode);
+            child = accessNode.getFirstChild();
+    	}
         
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
         	

@@ -7541,6 +7541,44 @@ public class TestProcessor {
         helpProcess(plan, hdm, expected);
     }
     
+    @Test public void testNonDeterministicViewPushdown() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setFunctionSupport(SourceSystemFunctions.RAND, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        CommandContext cc = createCommandContext();
+        
+        ProcessorPlan plan = helpPlan("select * from (select rand() as x from pm1.g1) as v limit 1", metadata,  //$NON-NLS-1
+                                      null, capFinder,
+            new String[] { "SELECT v_0.c_0 FROM (SELECT rand() AS c_0 FROM pm1.g1 AS g_0) AS v_0 LIMIT 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT v_0.c_0 FROM (SELECT rand() AS c_0 FROM pm1.g1 AS g_0) AS v_0 LIMIT 1", new List[] {Arrays.asList(1.0)});
+        List[] expected = new List[] {
+                Arrays.asList(1.0),
+        };    
+        
+        cc.setMetadata(metadata);
+
+        helpProcess(plan, cc, hdm, expected);
+        
+        //make sure it's not evaluated in a correlated subquery either
+        plan = helpPlan("select (select rand() from pm1.g2 where e1 = pm1.g1.e1) from pm1.g1", metadata,  //$NON-NLS-1
+                null, capFinder,
+                new String[] { "SELECT (SELECT rand() FROM pm1.g2 AS g_1 WHERE g_1.e1 = g_0.e1) FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        hdm.addData("SELECT (SELECT rand() FROM pm1.g2 AS g_1 WHERE g_1.e1 = g_0.e1) FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1.0)});
+        helpProcess(plan, cc, hdm, expected);
+        
+    }
+    
     @Test public void testUncorrelatedScalarSubqueryPushdown1() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
