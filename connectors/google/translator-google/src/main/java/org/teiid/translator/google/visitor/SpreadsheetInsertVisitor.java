@@ -22,7 +22,7 @@
 
 package org.teiid.translator.google.visitor;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.teiid.core.types.DataTypeManager;
@@ -43,13 +43,12 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
  */
 public class SpreadsheetInsertVisitor extends SQLStringVisitor {
 	private String worksheetKey;
-	private Map<String, String> columnNameValuePair;
+	private Map<String, String> columnNameValuePair = new LinkedHashMap<String, String>();
 	SpreadsheetInfo info;
 	private String worksheetTitle;
 
 	public SpreadsheetInsertVisitor(SpreadsheetInfo info) {
 		this.info = info;
-		columnNameValuePair = new HashMap<String, String>();
 	}
 
 	public void visit(Insert obj) {
