@@ -20,6 +20,7 @@ package org.teiid.translator.google;
 
 import static org.junit.Assert.*;
 
+import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import org.junit.BeforeClass;
@@ -35,12 +36,14 @@ import org.teiid.language.Insert;
 import org.teiid.language.Select;
 import org.teiid.language.Update;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
 import org.teiid.translator.google.api.metadata.Column;
@@ -67,9 +70,11 @@ public class TestSQLtoSpreadsheetQuery {
 	public static void createSpreadSheetInfo() {
 	    people=  new SpreadsheetInfo("People");
         Worksheet worksheet = people.createWorksheet("PeopleList");
+        worksheet.setHeaderEnabled(true);
         for (int i = 1; i <= 4; i++) {
             Column newCol = new Column();
             newCol.setAlphaName(Util.convertColumnIDtoString(i));
+            newCol.setLabel(newCol.getAlphaName());
             worksheet.addColumn(newCol.getAlphaName(), newCol);
         }
         worksheet.getColumns().get("C").setDataType(SpreadsheetColumnType.NUMBER);
@@ -216,6 +221,23 @@ public class TestSQLtoSpreadsheetQuery {
         assertEquals(2, visitor.getColumnNameValuePair().size());
         assertEquals("'String,String",visitor.getColumnNameValuePair().get("A"));
         assertEquals("15.5",visitor.getColumnNameValuePair().get("C"));
+    }
+	
+	@Test
+    public void testInsertExecution() throws Exception {
+        String sql="insert into PeopleList(A,B,C) values ('String,String', 'val', 15.5)";
+        Insert insert = (Insert)getCommand(sql);
+        GoogleSpreadsheetConnection gsc = Mockito.mock(GoogleSpreadsheetConnection.class);
+        Mockito.stub(gsc.getSpreadsheetInfo()).toReturn(people);
+        RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
+        ExecutionContext ec = Mockito.mock(ExecutionContext.class);
+        SpreadsheetUpdateExecution sue = new SpreadsheetUpdateExecution(insert, gsc, ec, rm);
+        sue.execute();
+        LinkedHashMap<String, String> vals = new LinkedHashMap<String, String>();
+        vals.put("A", "'String,String");
+        vals.put("B", "'val");
+        vals.put("C", "15.5");
+        Mockito.verify(gsc).executeRowInsert("PeopleList", vals);
     }
 	
 	@Test
