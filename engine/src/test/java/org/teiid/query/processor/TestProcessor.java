@@ -7905,5 +7905,24 @@ public class TestProcessor {
         TestProcessor.helpProcess(plan, dataManager, new List<?>[] {});
     }
 	
+	@Test public void testMixedAnsiLateralJoinsWithConstantProjection() throws Exception { 
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE VIRTUAL PROCEDURE pr0(arg1 string) returns (res1 string) AS\n" + 
+                "    BEGIN\n" + 
+                "        SELECT '2017-01-01';\n" + 
+                "    END;"
+                + "create foreign table test_t1(col_t1 varchar) options (cardinality 1)", "x", "y");
+        
+        String sql = "SELECT *\n" + 
+                "    FROM (SELECT 'League' AS type, 1 AS arg0) xxx, test_t1 dl, table(CALL pr0(arg0)) x\n" + 
+                "    JOIN test_t1 d ON d.col_t1 = 'str_val'";
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, true);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(caps));
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.col_t1 FROM y.test_t1 AS g_0 WHERE g_0.col_t1 = 'str_val'", Arrays.asList("str_val"));
+        dataManager.addData("SELECT g_0.col_t1 FROM y.test_t1 AS g_0", Arrays.asList("str_val"));
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("str_val", "2017-01-01", "League", 1, "str_val")});
+    }
+	
     private static final boolean DEBUG = false;
 }

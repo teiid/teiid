@@ -170,22 +170,23 @@ public final class RuleMergeVirtual implements
             	return root; //only consider no sources when the frame is simple and there is a parent join
             }
             if (sources.isEmpty() && parentJoin != null) {
-                PlanNode left = FrameUtil.findJoinSourceNode(parentJoin.getFirstChild());
-                boolean isLeft = left == frame;
             	JoinType jt = (JoinType) parentJoin.getProperty(Info.JOIN_TYPE);
             	if (jt.isOuter()) {
         			return root; //cannot remove if the no source side is an outer side, or if it can change the meaning of the plan
             	}
-            	PlanNode other = isLeft? FrameUtil.findJoinSourceNode(parentJoin.getLastChild()):left;
-            	if (other != null) {
-            	    //scan all sources under the other side as there could be a join structure
-            	    for (PlanNode node : NodeEditor.findAllNodes(other, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE)) {
-            	        SymbolMap map = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-            	        if (map != null) {
-            	            //TODO: we don't have the logic yet to then replace the correlated references
-            	            return root;
-            	        }
+            	PlanNode joinToTest = parentJoin;
+            	while (joinToTest != null) {
+            	    if (FrameUtil.findJoinSourceNode(joinToTest.getFirstChild()).getGroups().contains(virtualGroup)) {
+                	    //scan all sources under the other side as there could be a join structure
+                	    for (PlanNode node : NodeEditor.findAllNodes(joinToTest.getLastChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE)) {
+                	        SymbolMap map = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+                	        if (map != null && GroupsUsedByElementsVisitor.getGroups(map.getValues()).contains(virtualGroup)) {
+                	            //TODO: we don't have the logic yet to then replace the correlated references
+                	            return root;
+                	        }
+                	    }
             	    }
+            	    joinToTest = NodeEditor.findParent(joinToTest, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP);
             	}
             }
         }
