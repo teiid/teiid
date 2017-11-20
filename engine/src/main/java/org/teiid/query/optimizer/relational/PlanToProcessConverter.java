@@ -292,9 +292,7 @@ public class PlanToProcessConverter {
                 } else if (stype == JoinStrategyType.NESTED_TABLE) {
                 	NestedTableJoinStrategy ntjStrategy = new NestedTableJoinStrategy();
                 	jnode.setJoinStrategy(ntjStrategy);
-                	SymbolMap references = (SymbolMap)node.getProperty(Info.LEFT_NESTED_REFERENCES);
-            		ntjStrategy.setLeftMap(references);
-                	references = (SymbolMap)node.getProperty(Info.RIGHT_NESTED_REFERENCES);
+            		SymbolMap references = (SymbolMap)node.getProperty(Info.RIGHT_NESTED_REFERENCES);
             		ntjStrategy.setRightMap(references);
                 } else {
                     NestedLoopJoinStrategy nljStrategy = new NestedLoopJoinStrategy();

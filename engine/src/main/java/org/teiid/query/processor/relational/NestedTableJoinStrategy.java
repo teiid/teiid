@@ -36,7 +36,6 @@ import org.teiid.query.sql.util.SymbolMap;
  */
 public class NestedTableJoinStrategy extends JoinStrategy {
 	
-	private SymbolMap leftMap;
 	private SymbolMap rightMap;
 	private Evaluator eval;
 	private boolean outerMatched;
@@ -44,7 +43,6 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 	@Override
 	public NestedTableJoinStrategy clone() {
 		NestedTableJoinStrategy clone = new NestedTableJoinStrategy();
-		clone.leftMap = leftMap;
 		clone.rightMap = rightMap;
 		return clone;
 	}
@@ -55,20 +53,8 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 		this.eval = new Evaluator(null, joinNode.getDataManager(), joinNode.getContext());
 	}
 	
-	public void setLeftMap(SymbolMap leftMap) {
-		this.leftMap = leftMap;
-	}
-	
 	public void setRightMap(SymbolMap rightMap) {
 		this.rightMap = rightMap;
-	}
-	
-	@Override
-	protected void openLeft() throws TeiidComponentException,
-			TeiidProcessingException {
-		if (leftMap == null) {
-			super.openLeft();
-		}
 	}
 	
 	@Override
@@ -83,14 +69,6 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 	@Override
 	protected void process() throws TeiidComponentException,
 			TeiidProcessingException {
-		
-		if (leftMap != null && !leftSource.open) {
-			for (Map.Entry<ElementSymbol, Expression> entry : leftMap.asMap().entrySet()) {
-				joinNode.getContext().getVariableContext().setValue(entry.getKey(), eval.evaluate(entry.getValue(), null));
-			}
-			leftSource.getSource().reset();
-			super.openLeft();
-		}
 		
 		IndexedTupleSource its = leftSource.getIterator();
 		
@@ -150,12 +128,6 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 			updateContext(null, leftSource.getSource().getElements());
 		}
 		
-		if (leftMap != null) {
-			leftSource.close();
-			for (Map.Entry<ElementSymbol, Expression> entry : leftMap.asMap().entrySet()) {
-				joinNode.getContext().getVariableContext().remove(entry.getKey());
-			}
-		}
 	}
 
 	private void updateContext(List<?> tuple,
