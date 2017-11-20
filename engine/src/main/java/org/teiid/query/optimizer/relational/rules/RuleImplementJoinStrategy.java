@@ -85,12 +85,11 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	        	while (joinNode != null) {
 	        		if (joinNode.getGroups().containsAll(groups)) {
 	        			joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.NESTED_TABLE);
-	        			SymbolMap map = null;
 	        			Info info = Info.RIGHT_NESTED_REFERENCES;
 	        			if (!FrameUtil.findJoinSourceNode(joinNode.getFirstChild()).getGroups().containsAll(groups)) {
-	        				info = Info.LEFT_NESTED_REFERENCES;
+	        			    throw new AssertionError("Should not have reordered the join tree to reverse the lateral join");  //$NON-NLS-1$
 	        			}
-        				map = (SymbolMap) joinNode.getProperty(info);
+	        			SymbolMap map = (SymbolMap) joinNode.getProperty(info);
         				if (map == null) {
         					map = new SymbolMap();
         				}
