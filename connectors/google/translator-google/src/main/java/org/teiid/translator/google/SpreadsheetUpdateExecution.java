@@ -78,7 +78,7 @@ public class SpreadsheetUpdateExecution extends AbstractSpreadsheetExecution {
 		SpreadsheetInsertVisitor visitor = new SpreadsheetInsertVisitor(info);
 		visitor.visit((Insert) command);
 		checkHeaders(visitor.getWorksheetTitle());
-		result = connection.executeRowInsert(visitor.getWorksheetKey(), visitor.getColumnNameValuePair());
+		result = connection.executeRowInsert(visitor.getWorksheetTitle(), visitor.getColumnNameValuePair());
 		return result;
 	}
 
