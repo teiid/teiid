@@ -13,25 +13,32 @@ connect
 /subsystem=logging/logger=org.teiid.AUDIT_LOG:write-attribute(name="level", value="WARN")
 
 /subsystem=jgroups/channel=ee/fork=teiid-cluster:add()
+
+batch
 /subsystem=infinispan/cache-container=teiid-cache:add()
 /subsystem=infinispan/cache-container=teiid-cache/transport=jgroups:add(lock-timeout=60000)
 /subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC)
-/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/locking=LOCKING:add(isolation=READ_COMMITTED)
-/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/expiration=EXPIRATION:add(lifespan=7200000)
-/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/eviction=EVICTION:add(max-entries=1024, strategy=LIRS)
-/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/transaction=TRANSACTION:add(mode=NON_XA)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/component=locking:add(isolation=READ_COMMITTED)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/component=expiration:add(lifespan=7200000)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/component=eviction:add(max-entries=1024, strategy=LIRS)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/component=transaction:add(mode=NON_XA)
+run-batch
 
+batch
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset:add()
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/locking=LOCKING:add(isolation=READ_COMMITTED)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/expiration=EXPIRATION:add(lifespan=7200000)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/eviction=EVICTION:add(max-entries=1024, strategy=LIRS)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/transaction=TRANSACTION:add(mode=NON_XA)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/component=locking:add(isolation=READ_COMMITTED)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/component=expiration:add(lifespan=7200000)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/component=eviction:add(max-entries=1024, strategy=LIRS)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/component=transaction:add(mode=NON_XA)
+run-batch
 
+batch
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan:add()
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/locking=LOCKING:add(isolation=READ_COMMITTED)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/expiration=EXPIRATION:add(lifespan=28800)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/eviction=EVICTION:add(max-entries=512, strategy=LIRS)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/component=locking:add(isolation=READ_COMMITTED)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/component=expiration:add(lifespan=28800)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/component=eviction:add(max-entries=512, strategy=LIRS)
 /subsystem=infinispan/cache-container=teiid-cache:write-attribute(name=default-cache, value=resultset)
+run-batch
 
 /subsystem=security/security-domain=teiid-security:add(cache-type=default)
 /subsystem=security/security-domain=teiid-security/authentication=classic:add()
