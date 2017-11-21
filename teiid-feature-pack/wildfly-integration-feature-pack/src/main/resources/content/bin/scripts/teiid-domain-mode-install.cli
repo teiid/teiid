@@ -5,6 +5,9 @@ connect
 /server-group=main-server-group:write-attribute(name=profile, value=ha)
 /server-group=main-server-group:write-attribute(name=socket-binding-group, value=ha-sockets)
 
+/profile=ha/subsystem=logging/pattern-formatter=PATTERN:write-attribute(name=pattern, value="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%e%n")
+/profile=ha/subsystem=logging/pattern-formatter=COLOR-PATTERN:write-attribute(name=pattern, value="%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%e%n")
+
 /profile=ha/subsystem=logging/logger=org.teiid:add 
 /profile=ha/subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")
  
@@ -17,6 +20,9 @@ connect
 /socket-binding-group=full-ha-sockets/socket-binding=teiid-odbc:add(port=35432)
 /server-group=other-server-group:write-attribute(name=profile, value=full-ha)
 /server-group=other-server-group:write-attribute(name=socket-binding-group, value=full-ha-sockets)
+
+/profile=full-ha/subsystem=logging/pattern-formatter=PATTERN:write-attribute(name=pattern, value="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%e%n")
+/profile=full-ha/subsystem=logging/pattern-formatter=COLOR-PATTERN:write-attribute(name=pattern, value="%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%e%n")
 
 /profile=full-ha/subsystem=logging/logger=org.teiid:add 
 /profile=full-ha/subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")

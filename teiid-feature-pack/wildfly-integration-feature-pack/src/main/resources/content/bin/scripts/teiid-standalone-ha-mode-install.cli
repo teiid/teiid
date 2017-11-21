@@ -3,6 +3,9 @@ connect
 /socket-binding-group=standard-sockets/socket-binding=teiid-jdbc:add(port=31000)
 /socket-binding-group=standard-sockets/socket-binding=teiid-odbc:add(port=35432)
 
+/subsystem=logging/pattern-formatter=PATTERN:write-attribute(name=pattern, value="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%e%n")
+/subsystem=logging/pattern-formatter=COLOR-PATTERN:write-attribute(name=pattern, value="%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%e%n")
+
 /subsystem=logging/logger=org.teiid:add 
 /subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")  
 
