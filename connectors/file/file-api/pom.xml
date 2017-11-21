@@ -3,7 +3,7 @@
     <parent>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>file</artifactId>
-      <version>9.3.5</version>
+      <version>9.3.6-SNAPSHOT</version>
     </parent>
     <groupId>org.jboss.teiid.connectors</groupId> 
     <artifactId>file-api</artifactId>

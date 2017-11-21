@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.jboss.teiid.connectors</groupId>
 		<artifactId>infinispan</artifactId>
-		<version>9.3.5</version>
+		<version>9.3.6-SNAPSHOT</version>
 	</parent>
 	<artifactId>connector-infinispan-hotrod</artifactId>
 	<name>Infinispan Hotrod Protocol Based Resource Adapter</name>
