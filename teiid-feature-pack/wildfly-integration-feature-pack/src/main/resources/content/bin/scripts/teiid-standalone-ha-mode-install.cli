@@ -12,21 +12,22 @@ connect
 /subsystem=logging/logger=org.teiid.AUDIT_LOG:add 
 /subsystem=logging/logger=org.teiid.AUDIT_LOG:write-attribute(name="level", value="WARN")
 
+/subsystem=jgroups/channel=ee/fork=teiid-cluster:add()
 /subsystem=infinispan/cache-container=teiid-cache:add()
-/subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000)
-/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC, batching=true)
+/subsystem=infinispan/cache-container=teiid-cache/transport=jgroups:add(lock-timeout=60000)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC)
 /subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/locking=LOCKING:add(isolation=READ_COMMITTED)
 /subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/expiration=EXPIRATION:add(lifespan=7200000)
 /subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/eviction=EVICTION:add(max-entries=1024, strategy=LIRS)
 /subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/transaction=TRANSACTION:add(mode=NON_XA)
 
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset:add(batching=true)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset:add()
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/locking=LOCKING:add(isolation=READ_COMMITTED)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/expiration=EXPIRATION:add(lifespan=7200000)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/eviction=EVICTION:add(max-entries=1024, strategy=LIRS)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/transaction=TRANSACTION:add(mode=NON_XA)
 
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan:add(batching=true)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan:add()
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/locking=LOCKING:add(isolation=READ_COMMITTED)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/expiration=EXPIRATION:add(lifespan=28800)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/eviction=EVICTION:add(max-entries=512, strategy=LIRS)
@@ -36,7 +37,7 @@ connect
 /subsystem=security/security-domain=teiid-security/authentication=classic:add()
 /subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")])
 
-/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache, distributed-cache-jgroups-stack=udp, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
+/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache, distributed-cache-jgroups-stack=teiid-cluster, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
 /subsystem=teiid/transport=local:add()
 /subsystem=teiid/transport=odata:add()
 /subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc)
