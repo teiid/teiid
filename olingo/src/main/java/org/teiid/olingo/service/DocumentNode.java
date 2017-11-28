@@ -172,14 +172,6 @@ public class DocumentNode {
         return table.getColumnByName(propertyName);
     }
     
-    public void buildEntityKeyCriteria(UriInfo uriInfo, MetadataStore metadata, OData odata,
-            UniqueNameGenerator nameGenerator, URLParseService parseService) throws TeiidException {
-        // URL is like /entitySet(key)s
-        if (getKeyPredicates() != null && !getKeyPredicates().isEmpty()) {
-            this.criteria = buildEntityKeyCriteria(this, uriInfo, metadata, odata, nameGenerator, parseService);
-        }        
-    }
-    
     public DocumentNode() {
     }
     
@@ -396,30 +388,22 @@ public class DocumentNode {
         }
     }
     
+    Criteria buildJoinCriteria(DocumentNode joinResource, EdmNavigationProperty property) throws TeiidException {
+        KeyInfo keyInfo = joinFK(joinResource.getTable(), getTable(), property);
+        if (keyInfo == null) {
+            keyInfo = joinFK(getTable(), joinResource.getTable(), property);
+            if (keyInfo == null) {
+                throw new TeiidException("Fk not found");
+            }
+        }
+        
+        return buildCriteria(keyInfo.reverse?joinResource:this, keyInfo.reverse?this:joinResource, keyInfo.fk);
+    }
+    
     DocumentNode joinTable(DocumentNode joinResource, EdmNavigationProperty property, JoinType joinType) throws TeiidException {
-        ForeignKey fk = null;
-        boolean reverse = false;
-        if (property.isCollection()) {
-            fk = joinFK(joinResource.getTable(), getTable(), property);
-            reverse = true;
-        }
-        else {
-            fk = joinFK(getTable(), joinResource.getTable(), property);
-        }
-        
-        // reverse lookup
-        if (fk == null) {
-            if (property.isCollection()) {
-                fk = joinFK(getTable(), joinResource.getTable(), property);
-            }
-            else {
-                fk = joinFK(joinResource.getTable(), getTable(), property);
-                reverse = true;
-            }
-        }
-        
-        if (fk == null && !joinType.equals(JoinType.JOIN_CROSS)) {
-            throw new TeiidException("Fk not found");
+        Criteria crit = null;
+        if (!joinType.equals(JoinType.JOIN_CROSS)) {
+            crit = buildJoinCriteria(joinResource, property); 
         }
         
         FromClause fromClause;
@@ -428,10 +412,6 @@ public class DocumentNode {
             fromClause = new UnaryFromClause(joinResource.getGroupSymbol());
         }
         else {
-            Criteria crit = null;
-            if (!joinType.equals(JoinType.JOIN_CROSS)) {
-                crit = buildCriteria(reverse?joinResource:this, reverse?this:joinResource, fk);
-            }
             fromClause = new JoinPredicate(this.getFromClause(), new UnaryFromClause(joinResource.getGroupSymbol()), joinType, crit);
         }
         
@@ -446,17 +426,35 @@ public class DocumentNode {
             return null;
         }
         
-        return joinFK(currentTable, referenceTable, property);
+        KeyInfo keyInfo = joinFK(currentTable, referenceTable, property);
+        if (keyInfo != null) {
+            return keyInfo.fk;
+        }
+        return null;
     }    
+    
+    private static class KeyInfo {
+        boolean reverse;
+        ForeignKey fk;
+        
+        public KeyInfo(boolean reverse, ForeignKey fk) {
+            this.reverse = reverse;
+            this.fk = fk;
+        }
+    }
 
-    private static ForeignKey joinFK(Table currentTable, Table referenceTable, EdmNavigationProperty property) {
+    private static KeyInfo joinFK(Table currentTable, Table referenceTable, EdmNavigationProperty property) {
         for (ForeignKey fk : currentTable.getForeignKeys()) {
             String refSchemaName = fk.getReferenceKey().getParent().getParent().getName();
-            if (((!property.isCollection() && property.getName().equals(fk.getName()))
-                    || (property.isCollection() && property.getName().equals(currentTable.getName() + "_" + fk.getName()))) //$NON-NLS-1$
-                    && referenceTable.getParent().getName().equals(refSchemaName)
-                    && referenceTable.getName().equals(fk.getReferenceTableName())) {
-                return fk;
+            if (!referenceTable.getParent().getName().equals(refSchemaName)
+                    || !referenceTable.getName().equals(fk.getReferenceTableName())) {
+                continue;
+            }
+            if (!property.isCollection() && property.getName().equals(fk.getName())) {
+                return new KeyInfo(false, fk); 
+            }
+            if (property.getName().equals(currentTable.getName() + "_" + fk.getName())) { //$NON-NLS-1$
+                return new KeyInfo(true, fk);
             }
         }
         return null;
@@ -473,14 +471,13 @@ public class DocumentNode {
 
     private static Criteria buildCriteria(DocumentNode from, DocumentNode to,
             ForeignKey fk) {
-        Criteria criteria;
         List<String> fkColumns = DocumentNode.getColumnNames(fk.getColumns());
         if (fkColumns == null) {
             fkColumns = DocumentNode.getColumnNames(getPKColumns(from.getTable()));
         }                   
         
         List<String> pkColumns = DocumentNode.getColumnNames(getPKColumns(to.getTable()));
-        criteria = DocumentNode.buildJoinCriteria(
+        Criteria criteria = DocumentNode.buildJoinCriteria(
                 from.getGroupSymbol(),
                 to.getGroupSymbol(), pkColumns, fkColumns);
         return criteria;
