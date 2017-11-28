@@ -224,31 +224,6 @@ public class ODataSchemaBuilder {
         return false;
     }
     
-    static boolean isPrimaryKey(Table table, List<String> columnNames) {
-        KeyRecord pk = table.getPrimaryKey();
-        boolean isPK = true;
-        for (String columnName:columnNames) {
-	        if (!hasColumn(pk, columnName)) {
-	            isPK = false;
-	            break;
-	        }
-        }
-        if (!isPK) {        	
-	        for (KeyRecord key:table.getUniqueKeys()) {
-	        	isPK = true;
-	        	for (String columnName:columnNames) {
-		            if (!hasColumn(key, columnName)) {
-		                isPK = false;
-		            }
-	        	}
-	        	if (isPK) {
-	        		break;
-	        	}
-	        }
-        }
-        return isPK;
-    }
-    
     static boolean hasColumn(KeyRecord pk, String columnName) {
         if (pk != null) {
             for (Column column : pk.getColumns()) {
@@ -286,10 +261,9 @@ public class ODataSchemaBuilder {
     
                 // check to see if fk is part of this table's pk, then it is 1 to 1 relation
                 boolean fkPKSame = sameColumnSet(getIdentifier(table), fk);
-                boolean fkIsPK= isPrimaryKey(schema.getTable(fk.getReferenceTableName()), fk.getReferenceColumns());
                 
-                addForwardNavigation(entityTypes, entitySets, table, fk, fkPKSame || fkIsPK);
-                addReverseNavigation(entityTypes, entitySets, table, fk, fkPKSame && fkIsPK);
+                addForwardNavigation(entityTypes, entitySets, table, fk, fkPKSame);
+                addReverseNavigation(entityTypes, entitySets, table, fk, fkPKSame);
             }
         }
     }
@@ -304,12 +278,17 @@ public class ODataSchemaBuilder {
         navigaton = buildNavigation(fk);                
         navigationBinding = buildNavigationBinding(fk);                    
         
-        if (onetoone ) {
+        if (onetoone) {
             navigaton.setNullable(false);
         } else {
-            navigaton.setCollection(true);
-        }                
-        
+            for (Column c : fk.getColumns()) {
+                if (c.getNullType() == NullType.No_Nulls) {
+                    navigaton.setNullable(false);
+                    break;
+                }
+            }
+        }
+            
         CsdlEntityType entityType = entityTypes.get(entityTypeName);
         entityType.getNavigationProperties().add(navigaton);
         

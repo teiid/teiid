@@ -372,21 +372,21 @@ public class TestODataSQLBuilder {
     @Test
     public void test$CountIn$FilterWithCount() throws Exception {
         String expected = "SELECT g0.e1, g0.e2 FROM PM1.G1 AS g0 WHERE "
-                + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) = 2 ORDER BY g0.e2";
+                + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) = 2 ORDER BY g0.e2";
         helpTest("/odata4/vdb/PM1/G1?$filter=G4_FKX/$count eq 2&$select=e1", expected);
     }
     
     @Test
     public void test$CountIn$FilterOnExpression() throws Exception {
         String expected = "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 "
-                + "WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) = 2 "
+                + "WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) = 2 "
                 + "ORDER BY g0.e2";
         helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/$count eq 2"), expected);
     }
     
     @Test
     public void test$CountIn$orderby() throws Exception {
-        String expected = "SELECT g0.e1, g0.e2, g0.e3, (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) "
+        String expected = "SELECT g0.e1, g0.e2, g0.e3, (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) "
                 + "AS \"_orderByAlias\" FROM PM1.G1 AS g0 "
                 + "ORDER BY \"_orderByAlias\"";
         helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count", expected);
@@ -396,7 +396,7 @@ public class TestODataSQLBuilder {
     public void test$CountIn$OrderBy() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count", 
                 "SELECT g0.e1, g0.e2, g0.e3, "
-                + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) AS \"_orderByAlias\" "
+                + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) AS \"_orderByAlias\" "
                 + "FROM PM1.G1 AS g0 "
                 + "ORDER BY \"_orderByAlias\"");
     }
@@ -689,12 +689,12 @@ public class TestODataSQLBuilder {
     public void test$filterWithNavigation() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$filter=G4_FKX/$count lt 2",
                 "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 "
-                + "WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) < 2 ORDER BY g0.e2");
+                + "WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) < 2 ORDER BY g0.e2");
         
         helpTest("/odata4/vdb/PM1/Customers?$filter=Orders_FK0/$count lt 2",
                 "SELECT g0.id, g0.name FROM PM1.Customers AS g0 "
                 + "WHERE (SELECT COUNT(*) FROM PM1.Orders AS g1 "
-                + "WHERE g1.customerid = g0.id) < 2 ORDER BY g0.id");
+                + "WHERE g0.id = g1.customerid) < 2 ORDER BY g0.id");
     }    
     
     @Test
