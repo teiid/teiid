@@ -301,7 +301,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             }
 
             buildAggregateQuery(node, outerQuery, expandResource,
-					expandOrder, query);
+					expandOrder, query, property);
     	}
     	
     	if (starLevels > 0) {
@@ -339,7 +339,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 	}
 
 	private void buildAggregateQuery(DocumentNode node, Query outerQuery,
-			ExpandDocumentNode expandResource, OrderBy expandOrder, Query query) {
+			ExpandDocumentNode expandResource, OrderBy expandOrder, Query query, EdmNavigationProperty navigationProperty) throws TeiidException {
 		Select select = query.getSelect();
 		Array array = new Array(Object.class, new ArrayList<Expression>(select.getSymbols()));
 		select.getSymbols().clear();
@@ -347,10 +347,8 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 		select.addSymbol(symbol);
 		symbol.setOrderBy(expandOrder);
 		            
-		Criteria crit = DocumentNode.buildJoinCriteria(expandResource, node);
-		if (crit == null) {
-		    crit = DocumentNode.buildJoinCriteria(node, expandResource);
-		}
+		Criteria crit = node.buildJoinCriteria(expandResource, navigationProperty);
+		
 		if (crit != null) {
 			query.setCriteria(Criteria.combineCriteria(crit, query.getCriteria()));
 		} // else assertion error?
@@ -692,7 +690,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
             processExpand(expandNode.children, expandResource, query, expandLevel + 1);
             
-            buildAggregateQuery(resource, outerQuery, expandResource, expandOrder, query);
+            buildAggregateQuery(resource, outerQuery, expandResource, expandOrder, query, expandNode.navigationProperty);
         }
 	}
     

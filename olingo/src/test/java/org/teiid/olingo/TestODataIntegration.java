@@ -1681,6 +1681,70 @@ public class TestODataIntegration {
     }     
     
     @Test 
+    public void testExpandComplexSelf() throws Exception {
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
+        hc.addData("SELECT tree.a, tree.b, tree.c FROM tree", Arrays.asList(Arrays.asList("1", "null", "x"), Arrays.asList("2", "1", "y"), Arrays.asList("3", "1", "z")));
+        hc.addData("SELECT tree.b, tree.a, tree.c FROM tree", Arrays.asList(Arrays.asList("null", "1", "x"), Arrays.asList("1", "2", "y"), Arrays.asList("1", "3", "z")));
+        
+        teiid.addTranslator("x7", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table tree ("
+                    + " a string, "
+                    + " b string, "
+                    + " c string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT parent FOREIGN KEY (b) REFERENCES tree(a)"
+                    + ");");
+            
+            mmd.addSourceMapping("x7", "x7", null);
+            teiid.deployVDB("northwind", mmd);
+            
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = null;
+            response = http.newRequest(baseURL + "/northwind/m/tree?$expand=tree_parent($filter=$it/c%20eq%20%27x%27)")
+                    .method("GET")
+                    .send();
+            
+            assertEquals(response.getContentAsString(), 200, response.getStatus());
+            
+            assertEquals("{\"@odata.context\":\"$metadata#tree\",\"value\":["
+                    + "{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\",\"tree_parent\":[{\"a\":\"2\",\"b\":\"1\",\"c\":\"y\"},{\"a\":\"3\",\"b\":\"1\",\"c\":\"z\"}]},"
+                    + "{\"a\":\"2\",\"b\":\"1\",\"c\":\"y\",\"tree_parent\":[]},"
+                    + "{\"a\":\"3\",\"b\":\"1\",\"c\":\"z\",\"tree_parent\":[]}]}", 
+                    response.getContentAsString());
+            
+            response = http.newRequest(baseURL + "/northwind/m/tree?$expand=parent($filter=$it/c%20eq%20%27x%27)")
+                    .method("GET")
+                    .send();
+            
+            assertEquals(response.getContentAsString(), 200, response.getStatus());
+            
+            assertEquals("{\"@odata.context\":\"$metadata#tree\",\"value\":[{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\",\"parent\":null},"
+                    + "{\"a\":\"2\",\"b\":\"1\",\"c\":\"y\",\"parent\":null},"
+                    + "{\"a\":\"3\",\"b\":\"1\",\"c\":\"z\",\"parent\":null}]}", 
+                    response.getContentAsString());
+            
+            response = http.newRequest(baseURL + "/northwind/m/tree?$expand=parent($filter=$it/c%20eq%20%27y%27)")
+                    .method("GET")
+                    .send();
+            
+            assertEquals(response.getContentAsString(), 200, response.getStatus());
+            
+            assertEquals("{\"@odata.context\":\"$metadata#tree\",\"value\":[{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\",\"parent\":null},"
+                    + "{\"a\":\"2\",\"b\":\"1\",\"c\":\"y\",\"parent\":{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\"}},"
+                    + "{\"a\":\"3\",\"b\":\"1\",\"c\":\"z\",\"parent\":null}]}", 
+                    response.getContentAsString());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test 
     public void testExpandComplex() throws Exception {
         HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
         hc.addData("SELECT x.a, x.b FROM x", Arrays.asList(Arrays.asList("a", "b")));
@@ -1688,8 +1752,6 @@ public class TestODataIntegration {
         hc.addData("SELECT y.a, y.b FROM y", Arrays.asList(Arrays.asList("y", "a"), Arrays.asList("y1","a")));
         hc.addData("SELECT z.a, z.b FROM z", Arrays.asList(Arrays.asList("a", "y")));
         hc.addData("SELECT z.b, z.a FROM z", Arrays.asList(Arrays.asList("y", "a")));
-        hc.addData("SELECT tree.a, tree.b FROM tree", Arrays.asList(Arrays.asList("1", "2"), Arrays.asList("2", "3"), Arrays.asList("3", "1")));
-        hc.addData("SELECT tree.b, tree.a FROM tree", Arrays.asList(Arrays.asList("2", "1"), Arrays.asList("3", "2"), Arrays.asList("1", "3")));
         
         teiid.addTranslator("x7", hc);
 
@@ -1713,13 +1775,7 @@ public class TestODataIntegration {
                     + " primary key (a),"
                     + " CONSTRAINT FKX FOREIGN KEY (a) REFERENCES x(a),"                    
                     + " CONSTRAINT FKY FOREIGN KEY (b) REFERENCES y(a)"
-                    + ") options (updatable true);"
-                    + "create foreign table tree ("
-                    + " a string, "
-                    + " b string, "
-                    + " primary key (a),"
-                    + " CONSTRAINT parent FOREIGN KEY (b) REFERENCES tree(a)"
-                    + ");");
+                    + ") options (updatable true);");
             
             mmd.addSourceMapping("x7", "x7", null);
             teiid.deployVDB("northwind", mmd);
