@@ -122,8 +122,14 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		this.internalResultSet.next();
 		assertEquals("<e1>ABCDEFGHIJ</e1>", this.internalResultSet.getString(1));
 		
+		admin.deploy("sample2-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample2-vdb.xml")));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample2", 1, 3));
+		
 		//test swagger
 		response = httpCall("http://localhost:8080/sample_1/swagger.yaml", "GET", null);
+		
+		String response1 = httpCall("http://localhost:8080/sample2_1/swagger.yaml", "GET", null);
+		assertNotEquals(response, response1);
 		
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);

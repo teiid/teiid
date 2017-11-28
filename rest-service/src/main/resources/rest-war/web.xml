@@ -31,6 +31,14 @@
     <filter>
         <filter-name>Resteasy</filter-name>
         <filter-class>org.jboss.resteasy.plugins.server.servlet.FilterDispatcher</filter-class>
+        <init-param>
+          <param-name>swagger.scanner.id</param-name>
+          <param-value>${context-name}</param-value>
+        </init-param>
+        <init-param>
+          <param-name>swagger.config.id</param-name>
+          <param-value>${context-name}</param-value>
+        </init-param>
     </filter>
 
     <filter>
