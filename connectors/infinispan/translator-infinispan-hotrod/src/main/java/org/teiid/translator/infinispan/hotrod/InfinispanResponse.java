@@ -69,14 +69,22 @@ public class InfinispanResponse {
             }
         }
         query.maxResults(nextBatch);
-        List<Object> values = query.list();
+		List<Object> values = query.list();
 
-        if (query.getResultSize() < nextBatch) {
-            this.lastBatch = true;
-        }
+		if (values == null || values.isEmpty()) {
+			this.lastBatch = true;
+			this.responseIter = null;
 
-        this.responseIter = values.iterator();
-        offset = offset + nextBatch;
+		} else if (values.size() < nextBatch) {
+			this.lastBatch = true;
+			this.responseIter = values.iterator();
+			nextBatch = values.size();
+
+		} else {
+			this.responseIter = values.iterator();
+		}
+
+		offset = offset + nextBatch;
     }
 
     public List<Object> getNextRow() throws IOException {
@@ -88,25 +96,30 @@ public class InfinispanResponse {
             fetchNextBatch();
         }
 
-        if (responseIter != null && responseIter.hasNext()){
-            Object row = this.responseIter.next();
-            if (row instanceof Object[]) {
-                return buildRow((Object[])row);
-            }
-            this.currentDocumentRows = this.documentNode.tuples((InfinispanDocument)row);
-        } else {
-            if (lastBatch) {
-                return null;
-            } else {
-                fetchNextBatch();
-                Object row = this.responseIter.next();
-                if (row instanceof Object[]) {
-                    return Arrays.asList((Object[])row);
-                }
-                this.currentDocumentRows = this.documentNode.tuples((InfinispanDocument)row);
-            }
-        }
-        return getNextRow();
+		if (responseIter != null && responseIter.hasNext()) {
+			Object row = this.responseIter.next();
+			if (row instanceof Object[]) {
+				return buildRow((Object[]) row);
+			}
+			this.currentDocumentRows = this.documentNode.tuples((InfinispanDocument) row);
+		} else {
+			if (lastBatch) {
+				return null;
+
+			}
+			fetchNextBatch();
+
+			if (this.responseIter == null) {
+				return null;
+			}
+			Object row = this.responseIter.next();
+			if (row instanceof Object[]) {
+				return Arrays.asList((Object[]) row);
+			}
+			this.currentDocumentRows = this.documentNode.tuples((InfinispanDocument) row);
+
+		}
+		return getNextRow();
     }
 
     private List<Object> buildRow(Map<String, Object> row) throws IOException {
