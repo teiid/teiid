@@ -287,7 +287,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
                 if (!remove && bytesUsed > maxSessionBatchManagerSizeEstimate) {
                     //TODO: kill the session?
                     this.remove();
-                    throw new TeiidComponentException(QueryPlugin.Event.TEIID31261, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31262, maxSessionBatchManagerSizeEstimate, id));
+                    throw new TeiidComponentException(QueryPlugin.Event.TEIID31262, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31262, maxSessionBatchManagerSizeEstimate, threadLocalContext.getSession().getSessionId(), id));
                 }
             }
         }
