@@ -132,6 +132,8 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		//test swagger
 		response = httpCall("http://localhost:8080/sample_1/swagger.yaml", "GET", null);
 		
+		Thread.sleep(2000); //wait for the war to come up
+		
 		String response1 = httpCall("http://localhost:8080/sample2_1/swagger.yaml", "GET", null);
 		assertNotEquals(response, response1);
 		
