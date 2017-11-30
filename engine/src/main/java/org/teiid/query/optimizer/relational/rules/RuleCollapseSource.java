@@ -387,7 +387,6 @@ public final class RuleCollapseSource implements OptimizerRule {
         
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
         	
-        	
         	child.removeProperty(NodeConstants.Info.INLINE_VIEW);
         	root = RuleRaiseAccess.performRaise(root, child, accessNode);
             //add the groups from the lower project
@@ -396,6 +395,8 @@ public final class RuleCollapseSource implements OptimizerRule {
             if (sourceNode != null) {
                 accessNode.addGroups(sourceNode.getGroups());                
             }
+            //update the output columns for both the source node and access node
+            child.setProperty(Info.OUTPUT_COLS, accessNode.getProperty(Info.OUTPUT_COLS));
             accessNode.setProperty(Info.OUTPUT_COLS, accessNode.getFirstChild().getProperty(Info.OUTPUT_COLS));
         }
         

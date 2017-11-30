@@ -7577,6 +7577,17 @@ public class TestProcessor {
         hdm.addData("SELECT (SELECT rand() FROM pm1.g2 AS g_1 WHERE g_1.e1 = g_0.e1) FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1.0)});
         helpProcess(plan, cc, hdm, expected);
         
+        //test without a limit
+        plan = helpPlan("select * from (select rand() as x from pm1.g1) as v", metadata,  //$NON-NLS-1
+                null, capFinder,
+        new String[] { "SELECT rand() FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        hdm = new HardcodedDataManager();
+        hdm.addData("SELECT rand() FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1.0)});
+        
+        cc.setMetadata(metadata);
+        
+        helpProcess(plan, cc, hdm, expected);
     }
     
     @Test public void testUncorrelatedScalarSubqueryPushdown1() throws Exception {
