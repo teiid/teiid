@@ -359,7 +359,7 @@ public final class RuleCollapseSource implements OptimizerRule {
     	//will allow us to remove these views
     	if (child.getType() == NodeConstants.Types.PROJECT && child.getFirstChild() != null 
     	        && child.getFirstChild().hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
-    	    List<Expression> requiredElements = (List<Expression>) child.getFirstChild().getProperty(Info.OUTPUT_COLS);
+    	    Set<Expression> requiredElements = new HashSet<Expression>((List<Expression>) child.getFirstChild().getProperty(Info.OUTPUT_COLS));
             List<Expression> selectSymbols = (List<Expression>)child.getProperty(NodeConstants.Info.PROJECT_COLS);
 
             // check that it only performs simple projection and that all required symbols are projected
