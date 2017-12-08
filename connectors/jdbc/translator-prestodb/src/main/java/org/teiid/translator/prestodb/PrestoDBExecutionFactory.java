@@ -25,10 +25,8 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
@@ -46,10 +44,15 @@ import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
+import org.teiid.util.Version;
 
 @Translator(name="prestodb", description="PrestoDB custom translator")
 public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     private static final String PRESTODB = "prestodb"; //$NON-NLS-1$
+    
+    public static final Version V_0_153 = Version.getVersion("0.153"); //$NON-NLS-1$
+
+    private ConvertModifier convert = new ConvertModifier();
     
     public PrestoDBExecutionFactory() {
         setSupportsSelectDistinct(true);
@@ -100,10 +103,38 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    public boolean supportsConvert(int fromType, int toType) {
+        if (!super.supportsConvert(fromType, toType)) {
+            return false;
+        }
+        if (convert.hasTypeMapping(toType)) {
+            return true;
+        }
+        return false;
+    }
+    
+
+    @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
+    }
+    
+    @Override
+    public void initCapabilities(Connection connection)
+            throws TranslatorException {
+        super.initCapabilities(connection);
+        if (getVersion().compareTo(V_0_153) >= 0) {
+            convert.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
+            convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
+            convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
+            convert.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
+        }
+    }
+    
+    @Override
     public void start() throws TranslatorException {
         super.start();
         
-        ConvertModifier convert = new ConvertModifier();
         convert.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
         convert.addTypeMapping("bigint", FunctionModifier.BIGINTEGER, FunctionModifier.LONG); //$NON-NLS-1$
         convert.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
@@ -113,34 +144,6 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
         convert.addTypeMapping("varbinary", FunctionModifier.BLOB); //$NON-NLS-1$
         convert.addTypeMapping("json", FunctionModifier.BLOB); //$NON-NLS-1$
-        convert.addConvert(DataTypeManager.DefaultTypeCodes.DATE, DataTypeManager.DefaultTypeCodes.TIMESTAMP, new FunctionModifier() {
-            @Override
-            public List<?> translate(Function function) {
-                return Arrays.asList("cast(", function.getParameters().get(0), " AS timestamp)");    //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            
-        });
-        convert.addConvert(DataTypeManager.DefaultTypeCodes.TIME, DataTypeManager.DefaultTypeCodes.TIMESTAMP, new FunctionModifier() {
-            @Override
-            public List<?> translate(Function function) {
-                return Arrays.asList("cast(", function.getParameters().get(0), " AS timestamp)");    //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            
-        });
-        convert.addConvert(DataTypeManager.DefaultTypeCodes.STRING, DataTypeManager.DefaultTypeCodes.INTEGER, new FunctionModifier() {
-            @Override
-            public List<?> translate(Function function) {
-                return Arrays.asList("cast(", function.getParameters().get(0), " AS integer)");    //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            
-        });
-        convert.addConvert(DataTypeManager.DefaultTypeCodes.BOOLEAN, DataTypeManager.DefaultTypeCodes.INTEGER, new FunctionModifier() {
-            @Override
-            public List<?> translate(Function function) {
-                return Arrays.asList("cast(", function.getParameters().get(0), " AS integer)");    //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            
-        });
         
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);        
         

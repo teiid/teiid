@@ -43,7 +43,12 @@ public class TestSQLConversionVisitor {
     
     @BeforeClass
     public static void init() throws TranslatorException {
+        init("0.92");
+    }
+    
+    public static void init(String version) throws TranslatorException {
         TRANSLATOR = new PrestoDBExecutionFactory();
+        TRANSLATOR.setDatabaseVersion(version);
         TRANSLATOR.start();
         translationUtility.addUDF(CoreConstants.SYSTEM_MODEL, TRANSLATOR.getPushDownFunctions());
     }
@@ -149,21 +154,28 @@ public class TestSQLConversionVisitor {
     
     @Test
     public void testConvertCast() throws TranslatorException {
+        String sql = "SELECT convert(dateValue, timestamp) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        String expected = "SELECT cast(smalla.dateValue AS timestamp) FROM smalla"; //$NON-NLS-1$   
+        helpTest(sql, expected);
         
-        String sql = "SELECT convert(stringnum, integer) FROM prestodbModel.smalla"; //$NON-NLS-1$   
-        String expected = "SELECT cast(smalla.stringnum AS integer) FROM smalla"; //$NON-NLS-1$   
+        sql = "SELECT convert(timeValue, timestamp) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        expected = "SELECT cast(smalla.timeValue AS timestamp) FROM smalla"; //$NON-NLS-1$   
+        helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testConvertCastExpandedTypes() throws TranslatorException {
+        init("0.190");
+        String sql = "SELECT convert(stringnum, integer), convert(stringnum, byte) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        String expected = "SELECT cast(smalla.stringnum AS integer), cast(smalla.stringnum AS tinyint) FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
         sql = "SELECT booleanValue, (booleanValue + 1) AS BooleanValuePlus2 FROM prestodbModel.SmallA"; //$NON-NLS-1$   
         expected = "SELECT smalla.booleanValue, (cast(smalla.booleanValue AS integer) + 1) AS BooleanValuePlus2 FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
-        sql = "SELECT convert(dateValue, timestamp) FROM prestodbModel.smalla"; //$NON-NLS-1$   
-        expected = "SELECT cast(smalla.dateValue AS timestamp) FROM smalla"; //$NON-NLS-1$   
-        helpTest(sql, expected);
-        
-        sql = "SELECT convert(timeValue, timestamp) FROM prestodbModel.smalla"; //$NON-NLS-1$   
-        expected = "SELECT cast(smalla.timeValue AS timestamp) FROM smalla"; //$NON-NLS-1$   
+        sql = "SELECT convert(stringnum, float), convert(stringnum, short) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        expected = "SELECT cast(smalla.stringnum AS real), cast(smalla.stringnum AS smallint) FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
     }
     
