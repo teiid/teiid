@@ -204,6 +204,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 
         //specific to 8.2 client or later
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$
         
         registerFunctionModifier(SourceSystemFunctions.ARRAY_GET, new FunctionModifier() {
 			
@@ -475,6 +476,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("LOWER"); //$NON-NLS-1$
         supportedFunctions.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.RAND);
         supportedFunctions.add("REPEAT"); //$NON-NLS-1$
         supportedFunctions.add("REPLACE"); //$NON-NLS-1$
         if (getVersion().compareTo(NINE_0) > 0) {

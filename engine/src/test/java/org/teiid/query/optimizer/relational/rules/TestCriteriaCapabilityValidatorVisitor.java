@@ -36,6 +36,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**
@@ -321,6 +322,21 @@ public class TestCriteriaCapabilityValidatorVisitor {
         helpTestVisitor("rand() = '1.0'", modelID, metadata, capFinder, false, false); 
     }
 
+    /**
+     * don't push seed with seed argument
+     */
+    @Test public void testRandWithSeed() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Object modelID = metadata.getMetadataStore().getSchema("PM1");
+        
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setFunctionSupport(SourceSystemFunctions.RAND, true); //$NON-NLS-1$
+        capFinder.addCapabilities("pm1", caps); 
+        
+        helpTestVisitor("rand(5) = '1.0'", modelID, metadata, capFinder, false, false); 
+    }
     
     @Test public void testIsNull1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();

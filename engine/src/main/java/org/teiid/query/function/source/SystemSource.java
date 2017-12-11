@@ -382,6 +382,8 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                                           new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")) );                 //$NON-NLS-1$ //$NON-NLS-2$
         rand.setNullOnNull(false);
         rand.setDeterminism(Determinism.NONDETERMINISTIC);
+        //seed handling varies greatly by source
+        rand.setPushdown(PushDown.CANNOT_PUSHDOWN);
         functions.add(rand);
         // Without Seed
         rand = new FunctionMethod(SourceSystemFunctions.RAND, QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ 

@@ -302,6 +302,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new AliasModifier("SDO_EQUALS")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("DBMS_RANDOM.VALUE")); //$NON-NLS-1$
     }
     
     @Override
@@ -863,6 +865,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
         supportedFunctions.add(SourceSystemFunctions.ST_SRID);
         supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
+        supportedFunctions.add(SourceSystemFunctions.RAND);
         return supportedFunctions;
     }
     

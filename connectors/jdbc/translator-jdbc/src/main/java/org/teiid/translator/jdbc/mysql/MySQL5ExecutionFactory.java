@@ -105,6 +105,7 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 	        supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
         }
         supportedFunctions.add(SourceSystemFunctions.ST_SRID);
+        supportedFunctions.add(SourceSystemFunctions.RAND);
         return supportedFunctions;
     }
     
