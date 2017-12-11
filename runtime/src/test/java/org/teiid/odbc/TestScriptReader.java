@@ -91,4 +91,18 @@ public class TestScriptReader {
 		assertNull(sr.readStatement());
 	}
 	
+	@Test public void testFunctionRewrite() throws Exception {
+	    ScriptReader sr = new ScriptReader("select textcat('a', 'b'), textcat+('a', 'b')");
+	    sr.setRewrite(true);
+        String result = sr.readStatement();
+        assertEquals("select concat('a', 'b'), textcat+('a', 'b')", result);
+	}
+	
+    @Test public void testFunctionRewrite2() throws Exception {
+        ScriptReader sr = new ScriptReader("select \"ltrunc('a')\", ltrunc('a')");
+        sr.setRewrite(true);
+        String result = sr.readStatement();
+        assertEquals("select \"ltrunc('a')\", left('a')", result);
+    }
+	
 }
