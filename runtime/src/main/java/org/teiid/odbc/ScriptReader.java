@@ -9,6 +9,7 @@ package org.teiid.odbc;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.TreeMap;
 
 /**
  * This class can split SQL scripts to single SQL statements.
@@ -16,6 +17,14 @@ import java.io.StringReader;
  * in comments and quotes.
  */
 public class ScriptReader {
+    
+    private static TreeMap<String, String> FUNCTION_MAPPING = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+    static {
+        FUNCTION_MAPPING.put("textcat", "concat"); //$NON-NLS-1$ //$NON-NLS-2$
+        FUNCTION_MAPPING.put("rtrunc", "right"); //$NON-NLS-1$ //$NON-NLS-2$
+        FUNCTION_MAPPING.put("ltrunc", "left"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     private Reader reader;
     private StringBuilder builder;
     private boolean endOfFile;
@@ -77,6 +86,27 @@ public class ScriptReader {
                 break;
             }
             switch (c) {
+            case '(': {
+                if (rewrite) {
+                    //check if this is a function the driver uses to handle escape functions
+                    int start = builder.length();
+                    int functionStart = start - 2;
+                    for (; functionStart>=0; functionStart--) {
+                        if (!Character.isLetterOrDigit(builder.charAt(functionStart))) {
+                            break;
+                        }
+                    }
+                    if (functionStart != start -2) {
+                        String functionName = builder.substring(functionStart + 1, start -1);
+                        String mappedFunction = FUNCTION_MAPPING.get(functionName);
+                        if (mappedFunction != null) {
+                            builder.replace(functionStart + 1, start - 1, mappedFunction);
+                        }
+                    } 
+                }
+                c = read();
+                break;
+            }
             case '$': {
                 c = read();
                 if (c == '$' && (builder.length() < 3 || builder.charAt(builder.length() - 3) <= ' ')) {
