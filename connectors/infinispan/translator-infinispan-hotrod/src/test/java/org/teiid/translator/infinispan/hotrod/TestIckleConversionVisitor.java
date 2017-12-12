@@ -108,9 +108,12 @@ public class TestIckleConversionVisitor {
 
     @Test
     public void testAggregate() throws Exception {
-        helpExecute("select count(*) from model.G1", "SELECT COUNT(*) FROM pm1.G1 g1_0");
-        helpExecute("select sum(e1) from model.G1", "SELECT SUM(g1_0.e1) FROM pm1.G1 g1_0");
-        helpExecute("select min(e1) from model.G1", "SELECT MIN(g1_0.e1) FROM pm1.G1 g1_0");
+	    	IckleConversionVisitor v = helpExecute("select count(*) from model.G1", "SELECT COUNT(*) FROM pm1.G1 g1_0");
+	    	assertEquals(v.getProjectedDocumentAttributes().size(), 1);
+	        v = helpExecute("select sum(e1) from model.G1", "SELECT SUM(g1_0.e1) FROM pm1.G1 g1_0");
+	    	assertEquals(v.getProjectedDocumentAttributes().size(), 1);
+	        v = helpExecute("select min(e1) from model.G1", "SELECT MIN(g1_0.e1) FROM pm1.G1 g1_0");
+	    	assertEquals(v.getProjectedDocumentAttributes().size(), 1);
     }
 
     @Test
