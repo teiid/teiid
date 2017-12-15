@@ -304,6 +304,7 @@ public class IckleConversionVisitor extends SQLStringVisitor {
             this.projectedExpressions.add(func);
             // Aggregate functions can not be part of the implicit query projection when the complex object is involved
             // thus not adding to projectedDocumentAttributes. i.e. sum(g2.g3.e1) is not supported by Infinispan AFAIK.
+            this.projectedDocumentAttributes.put(obj.getAlias(), func.getType());
         }
         else {
             this.exceptions.add(new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25002, obj)));
