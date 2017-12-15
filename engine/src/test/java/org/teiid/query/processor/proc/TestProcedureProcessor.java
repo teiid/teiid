@@ -2447,7 +2447,18 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testOmitDefault() throws Exception {
-        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign procedure f1(x string options (\"teiid_rel:default_handling\" 'omit')) RETURNS string", "x", "y");
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign procedure f1(x string not null options (\"teiid_rel:default_handling\" 'omit')) RETURNS string;", "x", "y");
+        
+        ProcessorPlan plan = helpGetPlan("exec f1()", metadata);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("EXEC f1()", Arrays.asList("a"));
+        helpProcess(plan, cc, hdm, new List[] {Arrays.asList("a")});
+    }
+    
+    @Test public void testOmitDefaultWithDefault() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign procedure f1(x string default truncate options (\"teiid_rel:default_handling\" 'omit')) RETURNS string", "x", "y");
         
         ProcessorPlan plan = helpGetPlan("exec f1()", metadata);
         CommandContext cc = TestProcessor.createCommandContext();

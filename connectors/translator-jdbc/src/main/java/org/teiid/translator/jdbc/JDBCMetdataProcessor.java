@@ -232,6 +232,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			Procedure procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);
 			procedure.setNameInSource(getFullyQualifiedName(procedureCatalog, procedureSchema, nameInSource, true));
 			ResultSet columns = metadata.getProcedureColumns(procedureCatalog, procedureSchema, procedureName, null);
+			int rsProcColumns = procedures.getMetaData().getColumnCount();
 			while (columns.next()) {
 				String columnName = columns.getString(4);				
 				short columnType = 0;
@@ -281,6 +282,18 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 				record.setRadix(columns.getInt(11));
 				record.setNullType(NullType.values()[columns.getInt(12)]);
 				record.setAnnotation(columns.getString(13));
+				if (rsProcColumns >= 14) {
+				    String def = columns.getString(14);
+				    if (def != null) {
+				        if (def.equalsIgnoreCase("null")) { //$NON-NLS-1$
+				            record.setNullType(NullType.Nullable);
+				        } else {
+				            record.setDefaultValue(def);
+				            //we can't assume that the default is something we can handle
+				            record.setProperty(BaseColumn.DEFAULT_HANDLING, "omit");
+				        }
+				    }
+				}
 			}
 		}
 		procedures.close();
