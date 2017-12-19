@@ -22,10 +22,10 @@
 package org.teiid.translator.swagger;
 
 import static org.junit.Assert.*;
-import io.swagger.models.Swagger;
-import io.swagger.parser.SwaggerParser;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -51,6 +51,12 @@ import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.models.Swagger;
+import io.swagger.parser.SwaggerParser;
+
 @SuppressWarnings("nls")
 public class TestSwaggerMetadataProcessor {
     
@@ -67,32 +73,25 @@ public class TestSwaggerMetadataProcessor {
     }
     
     static MetadataFactory swaggerMetadata(SwaggerExecutionFactory ef) throws TranslatorException {
-        SwaggerMetadataProcessor processor = new SwaggerMetadataProcessor(ef) {
-            protected Swagger getSchema(WSConnection conn) throws TranslatorException {
-                File f = new File(UnitTestUtil.getTestDataPath()+"/swagger.json");
-                SwaggerParser parser = new SwaggerParser();
-                return parser.read(f.getAbsolutePath());
-            }           
-        };
-        processor.setPreferredProduces("application/json");
-        processor.setPreferredConsumes("application/json");
-        processor.setPreferredScheme("http");
-        Properties props = new Properties();
-        MetadataFactory mf = new MetadataFactory("vdb", 1, "swagger",
-                SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
-        processor.process(mf, null);
-        //String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        //System.out.println(ddl);    
-        
-        return mf;
+        return getMetadata(ef, UnitTestUtil.getTestDataPath()+"/swagger.json");
     }
     
     static MetadataFactory petstoreMetadata(SwaggerExecutionFactory ef) throws TranslatorException {
+        return getMetadata(ef, UnitTestUtil.getTestDataPath()+"/petstore.json");
+    }
+
+    private static MetadataFactory getMetadata(SwaggerExecutionFactory ef,
+            final String file) throws TranslatorException {
         SwaggerMetadataProcessor processor = new SwaggerMetadataProcessor(ef) {
             protected Swagger getSchema(WSConnection conn) throws TranslatorException {
-                File f = new File(UnitTestUtil.getTestDataPath()+"/petstore.json");
-                SwaggerParser parser = new SwaggerParser();
-                return parser.read(f.getAbsolutePath());
+                File f = new File(file);
+                ObjectMapper objectMapper = new ObjectMapper();
+                try (FileInputStream fis = new FileInputStream(f)) {
+                    JsonNode rootNode = objectMapper.readTree(fis);
+                    return new SwaggerParser().read(rootNode, true);
+                } catch (IOException e) {
+                    throw new TranslatorException(e);
+                }
             }           
         };
         processor.setPreferredProduces("application/json");
@@ -448,5 +447,20 @@ public class TestSwaggerMetadataProcessor {
         
         List<Column> columns = p.getResultSet().getColumns();
         assertEquals(2, columns.size());        
+    }
+    
+    @Test
+    public void testRefParameter() throws Exception {
+        SwaggerExecutionFactory translator = new SwaggerExecutionFactory();
+        translator.start();
+        MetadataFactory mf = getMetadata(translator, UnitTestUtil.getTestDataPath()+"/redis-swagger.json");
+        
+        Procedure p = mf.getSchema().getProcedure("Operations_List");
+        assertNotNull(p);
+        assertEquals("GET", p.getProperty(RestMetadataExtension.METHOD, false).toUpperCase());
+        assertEquals("null://management.azure.comnull/providers/Microsoft.Cache/operations", p.getProperty(RestMetadataExtension.URI, false));
+        assertNotNull(p.getResultSet());
+        
+        assertNotNull(p.getParameterByName("api-version"));
     }
 }
