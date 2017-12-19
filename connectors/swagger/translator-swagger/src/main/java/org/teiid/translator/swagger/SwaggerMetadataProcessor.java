@@ -28,6 +28,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -52,13 +53,9 @@ import io.swagger.models.RefModel;
 import io.swagger.models.Response;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
+import io.swagger.models.parameters.AbstractSerializableParameter;
 import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.parameters.CookieParameter;
-import io.swagger.models.parameters.FormParameter;
-import io.swagger.models.parameters.HeaderParameter;
 import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.PathParameter;
-import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.FileProperty;
 import io.swagger.models.properties.MapProperty;
@@ -190,7 +187,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         }        
         
         String httpHost = null;
-        if(swagger.getHost() != null && !swagger.getHost().trim().isEmpty()) { //$NON-NLS-1$
+        if(swagger.getHost() != null && !swagger.getHost().trim().isEmpty()) { 
             httpHost = scheme + "://" + swagger.getHost();//$NON-NLS-1$
         }
         
@@ -375,6 +372,10 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     private void walkProperties(final Swagger swagger,
             final Map<String,Property> properties, final String namePrefix,
             final String nisPrefix, final PropertyAction pa) {
+        
+        if (properties == null) {
+            return;
+        }
 
         final PropertyVisitor visitor = new PropertyVisitor() {
             @Override
@@ -480,7 +481,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                         Model m = swagger.getDefinitions().get(refModel.getSimpleRef());
                         walkProperties(swagger, m.getProperties(), null, null, pa);
                     }
-                    break;
                 } else {
                     if ((model instanceof ModelImpl) && model.getProperties() != null) {
                         walkProperties(swagger, model.getProperties(), null, null, pa);
@@ -501,8 +501,8 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 String defaultValue = null;
                 String collectionFormat = null;
                 
-                if(parameter instanceof PathParameter) {
-                    PathParameter p  = (PathParameter) parameter;
+                if(parameter instanceof AbstractSerializableParameter) {
+                    AbstractSerializableParameter p  = (AbstractSerializableParameter) parameter;
                     type = p.getType();
                     if (p.getType().equalsIgnoreCase("array")){
                         Property ap = p.getItems();
@@ -511,47 +511,9 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
                     defaultValue = p.getDefaultValue();
                     collectionFormat = p.getCollectionFormat();
-                } else if(parameter instanceof QueryParameter) {
-                    QueryParameter p  = (QueryParameter) parameter;
-                    type = p.getType();
-                    if (p.getType().equalsIgnoreCase("array")){
-                        Property ap = p.getItems();
-                        type = ap.getType();
-                    }
-                    type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
-                    defaultValue = p.getDefaultValue();
-                    collectionFormat = p.getCollectionFormat();
-                } else if (parameter instanceof FormParameter) {
-                    FormParameter p = (FormParameter) parameter;
-                    type = p.getType();
-                    if (p.getType().equalsIgnoreCase("array")){
-                        Property ap = p.getItems();
-                        type = ap.getType();
-                    }
-                    type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
-                    defaultValue = p.getDefaultValue();
-                    collectionFormat = p.getCollectionFormat();
-                } else if (parameter instanceof HeaderParameter) {
-                    HeaderParameter p = (HeaderParameter)parameter;
-                    type = p.getType();
-                    if (p.getType().equalsIgnoreCase("array")){
-                        Property ap = p.getItems();
-                        type = ap.getType();
-                    }
-                    type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
-                    defaultValue = p.getDefaultValue();
-                    collectionFormat = p.getCollectionFormat();
-                } else if (parameter instanceof CookieParameter) {
-                    CookieParameter p = (CookieParameter) parameter;
-                    type = p.getType();
-                    if (p.getType().equalsIgnoreCase("array")){
-                        Property ap = p.getItems();
-                        type = ap.getType();
-                    }
-                    type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
-                    defaultValue = p.getDefaultValue();
-                    collectionFormat = p.getCollectionFormat();
-                }
+                } else {
+                    throw new MetadataException("Unknown property type" + parameter.getClass().getName()); //$NON-NLS-1$
+                } 
                 
                 pp = mf.addProcedureParameter(name, type, Type.In, procedure);
                 pp.setProperty(PARAMETER_TYPE, parameter.getIn());
@@ -608,13 +570,13 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         	if( swaggerFile != null &&  !swaggerFile.isEmpty()) {        		 
                 File f = new File(swaggerFile);
 
-                if(f == null || !f.exists() || !f.isFile()) {
+                if(!f.exists() || !f.isFile()) {
 	                throw new TranslatorException(SwaggerPlugin.Event.TEIID28019,
 	                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28019, swaggerFile));
                 }
                 	
                 SwaggerParser parser = new SwaggerParser();
-                swagger =  parser.read(f.getAbsolutePath());
+                swagger =  parser.read(f.getAbsolutePath(), null, true);
         	} else {        	
 	            BaseQueryExecution execution = new BaseQueryExecution(this.ef, null, null, conn);
 	            Map<String, List<String>> headers = new HashMap<String, List<String>>();
@@ -628,7 +590,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
 	            Blob out = (Blob)call.getOutputParameterValues().get(0);
 	            ObjectMapper objectMapper = new ObjectMapper();
 	            JsonNode rootNode = objectMapper.readTree(out.getBinaryStream());
-	            swagger =  new SwaggerParser().read(rootNode);
+	            swagger =  new SwaggerParser().read(rootNode, true);
         	}
         } catch (Exception e) {
             throw new TranslatorException(SwaggerPlugin.Event.TEIID28016, e,
