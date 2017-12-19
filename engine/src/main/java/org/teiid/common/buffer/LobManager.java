@@ -234,7 +234,11 @@ public class LobManager {
 					b.setReference(new SerialBlob(blobBytes));
 				} else if (lob instanceof ClobType) {
 					ClobType c = (ClobType)lob;
-					String s = c.getSubString(1, (int)(byteLength>>>1));
+					String s = ""; //$NON-NLS-1$
+					//some clob impls return null for 0 length
+					if (byteLength != 0) {
+	                    s = c.getSubString(1, (int)(byteLength>>>1));
+					}
 					c.setReference(new ClobImpl(s));
 				} else {
 					XMLType x = (XMLType)lob;
