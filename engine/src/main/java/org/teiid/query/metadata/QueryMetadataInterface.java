@@ -443,14 +443,6 @@ public interface QueryMetadataInterface {
         throws TeiidComponentException, QueryMetadataException;
 
     /**
-     * Determine whether a group is an XML virtual document.
-     * @param groupID Group to check 
-     * @return True if group is an XML virtual document
-     */
-    boolean isXMLGroup(Object groupID) 
-        throws TeiidComponentException, QueryMetadataException;
-        
-    /**
      * Get the currently connected virtual database name.  If the current metadata is not
      * virtual-database specific, then null should be returned.
      * @return Name of current virtual database

@@ -466,9 +466,6 @@ public class SimpleQueryResolver implements CommandResolver {
             GroupSymbol group = obj.getGroup();
             visitNode(group);
             try {
-	            if (!group.isProcedure() && metadata.isXMLGroup(group.getMetadataID())) {
-	                 throw new QueryResolverException(QueryPlugin.Event.TEIID30112, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30112));
-	            }
 	            discoveredGroup(group);
 	            if (group.isProcedure()) {
 	                createProcRelational(obj);

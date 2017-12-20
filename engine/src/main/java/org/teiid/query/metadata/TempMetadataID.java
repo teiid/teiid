@@ -125,7 +125,6 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		VIRTUAL,
 		TEMP,
 		SCALAR,
-		XML,
 		INDEX
 	}
 	

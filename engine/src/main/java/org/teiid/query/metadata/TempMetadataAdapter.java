@@ -528,15 +528,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.groupSupports(groupID, groupConstant);
     }
     
-    public boolean isXMLGroup(Object groupID)
-        throws TeiidComponentException, QueryMetadataException {
-
-        if(groupID instanceof TempMetadataID) {
-            return ((TempMetadataID)groupID).getMetadataType() == Type.XML;
-        }
-        return this.actualMetadata.isXMLGroup(groupID);
-    }
-
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getVirtualDatabaseName()
      */
