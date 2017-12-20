@@ -60,13 +60,11 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>connector-infinispan-hotrod</artifactId>
-            <scope>test</scope>
         </dependency>		
 		<dependency>
 			<groupId>org.teiid.connectors</groupId>
 			<artifactId>connector-infinispan-hotrod</artifactId>
 			<type>test-jar</type>
-			<scope>test</scope>
 		</dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
@@ -88,13 +86,6 @@
             <artifactId>jboss-logging</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-		
-		
 	</dependencies>
 
 	<build>
