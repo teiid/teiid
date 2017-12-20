@@ -1301,4 +1301,10 @@ public class TestOracleTranslator {
         String output = "SELECT listagg(SmallA.StringKey), listagg(SmallA.StringKey, ';') WITHIN GROUP (ORDER BY SmallA.IntKey) FROM SmallA"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+    
+    @Test public void testRand() throws Exception {
+        String input = "SELECT rand() FROM BQT1.SmallA";
+        String output = "SELECT DBMS_RANDOM.VALUE() FROM SmallA"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 }

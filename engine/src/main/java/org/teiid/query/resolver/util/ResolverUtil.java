@@ -497,11 +497,9 @@ public class ResolverUtil {
 		
         String defaultValue = metadata.getDefaultValue(mid);
         
-        if (defaultValue == null && !metadata.elementSupports(mid, SupportConstants.Element.NULL)) {
-             throw new QueryResolverException(QueryPlugin.Event.TEIID30089, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30089, symbol.getOutputName()));
-        }
-        
-        if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(metadata.getExtensionProperty(mid,  BaseColumn.DEFAULT_HANDLING, false))) { 
+        boolean omit = false;
+        String extensionProperty = metadata.getExtensionProperty(mid,  BaseColumn.DEFAULT_HANDLING, false);
+        if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(extensionProperty)) { 
         	Expression ex = null;
         	try {
         		ex = QueryParser.getQueryParser().parseExpression(defaultValue);
@@ -515,6 +513,16 @@ public class ResolverUtil {
         		QueryResolver.resolveCommand(container.getCommand(), metadata);
         	}
         	return ResolverUtil.convertExpression(ex, DataTypeManager.getDataTypeName(type), metadata);
+        } else if (BaseColumn.OMIT_DEFAULT.equalsIgnoreCase(extensionProperty)) {
+            Object id = metadata.getGroupIDForElementID(symbol.getMetadataID());
+            if (!metadata.isVirtualGroup(id)) {
+                omit = true;
+                defaultValue = null; //for physical procedures we just need a dummy value
+            }
+        }
+        
+        if (!omit && defaultValue == null && !metadata.elementSupports(mid, SupportConstants.Element.NULL)) {
+            throw new QueryResolverException(QueryPlugin.Event.TEIID30089, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30089, symbol.getOutputName()));
         }
         
         return getProperlyTypedConstant(defaultValue, type);

@@ -37,19 +37,17 @@ Step 2:  Configuring the Driver and Datasource (CLI or Edit configuration)
 	-	Configure driver (if the driver has not already been configured) by copying one of the following under "datasources" subsystem under <drivers> element:
 
 
-		a.  Driver (using local connection)
+		a.  non-XA
 
-                    <driver name="teiid-local" module="org.jboss.teiid">
-                        <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>
-                        <xa-datasource-class>org.teiid.jdbc.TeiidDataSource</xa-datasource-class>
-                    </driver>	
+                     <driver name="db2" module="com.ibm.db2">
+                        <driver-class>com.ibm.db2.jcc.DB2Driver</driver-class>
+                    </driver>   
 
 
-		b.  Driver (using remote connection)
+        b.  XA
 
-                    <driver name="teiid" module="org.jboss.teiid.client">
-                        <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>
-                        <xa-datasource-class>org.teiid.jdbc.TeiidDataSource</xa-datasource-class>
+                    <driver name="db2" module="com.ibm.db2">
+                        <xa-datasource-class>com.ibm.db2.jcc.DB2XADataSource</xa-datasource-class>
                     </driver>
-
+       
 		

@@ -359,7 +359,7 @@ public final class RuleCollapseSource implements OptimizerRule {
     	//will allow us to remove these views
     	if (child.getType() == NodeConstants.Types.PROJECT && child.getFirstChild() != null 
     	        && child.getFirstChild().hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
-    	    List<Expression> requiredElements = (List<Expression>) child.getFirstChild().getProperty(Info.OUTPUT_COLS);
+    	    Set<Expression> requiredElements = new HashSet<Expression>((List<Expression>) child.getFirstChild().getProperty(Info.OUTPUT_COLS));
             List<Expression> selectSymbols = (List<Expression>)child.getProperty(NodeConstants.Info.PROJECT_COLS);
 
             // check that it only performs simple projection and that all required symbols are projected
@@ -383,7 +383,6 @@ public final class RuleCollapseSource implements OptimizerRule {
         
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
         	
-        	
         	child.removeProperty(NodeConstants.Info.INLINE_VIEW);
         	root = RuleRaiseAccess.performRaise(root, child, accessNode);
             //add the groups from the lower project
@@ -392,6 +391,8 @@ public final class RuleCollapseSource implements OptimizerRule {
             if (sourceNode != null) {
                 accessNode.addGroups(sourceNode.getGroups());                
             }
+            //update the output columns for both the source node and access node
+            child.setProperty(Info.OUTPUT_COLS, accessNode.getProperty(Info.OUTPUT_COLS));
             accessNode.setProperty(Info.OUTPUT_COLS, accessNode.getFirstChild().getProperty(Info.OUTPUT_COLS));
         }
         

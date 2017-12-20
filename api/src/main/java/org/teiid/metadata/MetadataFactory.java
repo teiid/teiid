@@ -183,6 +183,7 @@ public class MetadataFactory extends NamespaceContainer {
             String newName = name + "_" + suffix; //$NON-NLS-1$
             while (this.schema.getTable(newName) != null) {
                 suffix++;
+                newName = name + "_" + suffix; //$NON-NLS-1$
             }
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60040, name, newName));
             name = newName;
@@ -219,6 +220,7 @@ public class MetadataFactory extends NamespaceContainer {
 		    String newName = name + "_" + suffix; //$NON-NLS-1$
             while (table.getColumnByName(newName) != null) {
 		        suffix++;
+		        newName = name + "_" + suffix; //$NON-NLS-1$
 		    }
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60039, name, newName));
             name = newName;

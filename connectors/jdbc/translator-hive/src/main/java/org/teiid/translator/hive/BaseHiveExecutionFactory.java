@@ -273,12 +273,15 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     	// Calendar based setX not supported by Hive
     	if (paramType.equals(Timestamp.class)) {
     		stmt.setTimestamp(i, (Timestamp) param);
+    		return;
     	}
     	if (paramType.equals(Date.class)) {
     		stmt.setDate(i, (Date) param);
+    		return;
     	}
     	if (paramType.equals(Time.class)) {
     		stmt.setTime(i, (Time) param);
+    		return;
     	}
     	super.bindValue(stmt, param, paramType, i);
     }

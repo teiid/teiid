@@ -86,7 +86,6 @@ public class TestMetadataFactory {
         assertEquals("a_B_1", c.getName());
     }
 	
-
     @Test public void testDuplicateTables() {
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("foo");
@@ -100,6 +99,8 @@ public class TestMetadataFactory {
         assertEquals("x", x.getName());
         Table x1 = factory.addTable("X");
         assertEquals("X_1", x1.getName());
+        Table x2 = factory.addTable("X");
+        assertEquals("X_2", x2.getName());
     }
 	
 	public static boolean someFunction() {

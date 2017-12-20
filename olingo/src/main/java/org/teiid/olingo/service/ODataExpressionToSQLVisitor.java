@@ -38,7 +38,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.Assertion;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataExpressionVisitor;
@@ -483,36 +482,8 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             query.setSelect(new Select(Arrays.asList(new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null))));
             query.setFrom(new From(Arrays.asList(navigationResource.getFromClause())));
 
-            Criteria criteria = null;
-            ForeignKey fk = null;
-            if (info.isCollection()) {
-                fk = DocumentNode.joinFK(navigationResource, this.ctxQuery, info.getProperty());    
-            }
-            else {
-                fk = DocumentNode.joinFK(this.ctxQuery, navigationResource, info.getProperty());
-            }
-            
-            if (fk != null) {
-                List<String> lhsColumns = DocumentNode.getColumnNames(fk.getColumns());
-                List<String> rhsColumns = fk.getReferenceColumns();
-                GroupSymbol leftSymbol = this.ctxQuery.getGroupSymbol();
-                GroupSymbol rightSymbol = navigationResource.getGroupSymbol();
-                if (info.isCollection()) {
-                    leftSymbol = navigationResource.getGroupSymbol();
-                    rightSymbol = this.ctxQuery.getGroupSymbol();                    
-                }
-                for (int i = 0; i < lhsColumns.size(); i++) {
-                    if (criteria == null) {
-                        criteria = new CompareCriteria(new ElementSymbol(lhsColumns.get(i), leftSymbol),
-                                CompareCriteria.EQ, new ElementSymbol(rhsColumns.get(i), rightSymbol));
-                    } else {
-                        Criteria subcriteria = new CompareCriteria(new ElementSymbol(lhsColumns.get(i), leftSymbol),
-                                CompareCriteria.EQ, new ElementSymbol(rhsColumns.get(i), rightSymbol));
-                        criteria = new CompoundCriteria(CompoundCriteria.AND, criteria, subcriteria);
-                    }
-                }
-            }
-            else {
+            Criteria criteria = this.ctxQuery.buildJoinCriteria(navigationResource, info.getProperty());
+            if (criteria == null) {
                 throw new TeiidException(ODataPlugin.Event.TEIID16037, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16037));
             }            
             query.setCriteria(criteria);

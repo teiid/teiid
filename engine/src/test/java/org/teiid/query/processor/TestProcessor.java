@@ -7504,6 +7504,48 @@ public class TestProcessor {
         hdm.addData("SELECT (SELECT rand() FROM pm1.g2 AS g_1 WHERE g_1.e1 = g_0.e1) FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1.0)});
         helpProcess(plan, cc, hdm, expected);
         
+        //test without a limit
+        plan = helpPlan("select * from (select rand() as x from pm1.g1) as v", metadata,  //$NON-NLS-1
+                null, capFinder,
+        new String[] { "SELECT rand() FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        hdm = new HardcodedDataManager();
+        hdm.addData("SELECT rand() FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1.0)});
+        
+        cc.setMetadata(metadata);
+        
+        helpProcess(plan, cc, hdm, expected);
+    }
+    
+    @Test
+    public void testPushdownInlineViewNotRemoved() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table test_a (a integer, b integer)", "x", "y");
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+        
+        String sql = "select CustomerType from (select 'a' as CustomerType, view1.* \n" + 
+                "            from (select min(a) as FirstOrderDate, count(b), b \n" + 
+                "                  from (SELECT * FROM test_a) as pixiGetOrderHeader group by b) as NewCustomerTable, (SELECT * FROM test_a) view1 \n" + 
+                "            where view1.a = NewCustomerTable.b and view1.b = NewCustomerTable.FirstOrderDate \n" + 
+                "            UNION select 'Existing Customer' as CustomerType, view1.* \n" + 
+                "            from (select min(a) as FirstOrderDate, count(b), b \n" + 
+                "                  from (SELECT * FROM test_a) view1 group by b) as NewCustomerTable, (SELECT * FROM test_a) view1 \n" + 
+                "            where view1.a = NewCustomerTable.b and view1.b != NewCustomerTable.FirstOrderDate) as view2"; 
+        
+        ProcessorPlan plan = helpPlan(sql, metadata,  //$NON-NLS-1
+                null, capFinder,
+                new String[] { "SELECT v_2.c_0 FROM (SELECT 'a' AS c_0, g_3.a AS c_1, g_3.b AS c_2 FROM (SELECT g_2.b AS c_0, MIN(g_2.a) AS c_1 FROM y.test_a AS g_2 GROUP BY g_2.b) AS v_1, y.test_a AS g_3 WHERE (g_3.a = v_1.c_0) AND (g_3.b = v_1.c_1) UNION SELECT 'Existing Customer' AS c_0, g_1.a AS c_1, g_1.b AS c_2 FROM (SELECT g_0.b AS c_0, MIN(g_0.a) AS c_1 FROM y.test_a AS g_0 GROUP BY g_0.b) AS v_0, y.test_a AS g_1 WHERE (g_1.a = v_0.c_0) AND (g_1.b <> v_0.c_1)) AS v_2" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        CommandContext cc = createCommandContext();
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT v_2.c_0 FROM (SELECT 'a' AS c_0, g_3.a AS c_1, g_3.b AS c_2 FROM (SELECT g_2.b AS c_0, MIN(g_2.a) AS c_1 FROM y.test_a AS g_2 GROUP BY g_2.b) AS v_1, y.test_a AS g_3 WHERE (g_3.a = v_1.c_0) AND (g_3.b = v_1.c_1) UNION SELECT 'Existing Customer' AS c_0, g_1.a AS c_1, g_1.b AS c_2 FROM (SELECT g_0.b AS c_0, MIN(g_0.a) AS c_1 FROM y.test_a AS g_0 GROUP BY g_0.b) AS v_0, y.test_a AS g_1 WHERE (g_1.a = v_0.c_0) AND (g_1.b <> v_0.c_1)) AS v_2", Arrays.asList("a"));
+        helpProcess(plan, cc, hdm, new List<?>[] {Arrays.asList("a")} );
     }
     
     @Test public void testUncorrelatedScalarSubqueryPushdown1() throws Exception {

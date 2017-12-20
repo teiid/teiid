@@ -660,4 +660,10 @@ public class TestPostgreSQLTranslator {
             output);
     }
     
+    @Test public void testRand() throws Exception {
+        String input = "SELECT rand() FROM BQT1.SmallA";
+        String output = "SELECT random() FROM SmallA"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
 }

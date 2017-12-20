@@ -17,37 +17,7 @@
  */
 package org.teiid.jboss.rest;
 
-import static org.objectweb.asm.Opcodes.AASTORE;
-import static org.objectweb.asm.Opcodes.ACC_ENUM;
-import static org.objectweb.asm.Opcodes.ACC_FINAL;
-import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static org.objectweb.asm.Opcodes.ACC_SUPER;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ANEWARRAY;
-import static org.objectweb.asm.Opcodes.ARETURN;
-import static org.objectweb.asm.Opcodes.ASTORE;
-import static org.objectweb.asm.Opcodes.ATHROW;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.F_SAME1;
-import static org.objectweb.asm.Opcodes.GETFIELD;
-import static org.objectweb.asm.Opcodes.GETSTATIC;
-import static org.objectweb.asm.Opcodes.ICONST_0;
-import static org.objectweb.asm.Opcodes.ICONST_1;
-import static org.objectweb.asm.Opcodes.ICONST_2;
-import static org.objectweb.asm.Opcodes.ICONST_3;
-import static org.objectweb.asm.Opcodes.ICONST_4;
-import static org.objectweb.asm.Opcodes.ICONST_5;
-import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.NEW;
-import static org.objectweb.asm.Opcodes.POP;
-import static org.objectweb.asm.Opcodes.PUTFIELD;
-import static org.objectweb.asm.Opcodes.RETURN;
-import static org.objectweb.asm.Opcodes.V1_5;
-import static org.objectweb.asm.Opcodes.V1_6;
+import static org.objectweb.asm.Opcodes.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -302,7 +272,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 	
 	private String replaceTemplates(String orig, Properties replacements) {
 		for (String key:replacements.stringPropertyNames()) {
-			orig = StringUtil.replace(orig, key, replacements.getProperty(key));	
+			orig = StringUtil.replaceAll(orig, key, replacements.getProperty(key));	
 		}
 		return orig;
 	}
@@ -357,9 +327,9 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     	mv.visitVarInsn(ALOAD, 0);
     	
     	mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
-        mv.visitTypeInsn(NEW, "io/swagger/jaxrs/listing/ApiListingResource");
+        mv.visitTypeInsn(NEW, "org/teiid/jboss/rest/CustomApiListingResource");
         mv.visitInsn(DUP);
-        mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/listing/ApiListingResource", "<init>", "()V");
+        mv.visitMethodInsn(INVOKESPECIAL, "org/teiid/jboss/rest/CustomApiListingResource", "<init>", "()V");
         mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "add", "(Ljava/lang/Object;)Z");
         mv.visitInsn(POP);
         mv.visitVarInsn(ALOAD, 0);
