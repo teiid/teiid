@@ -2931,6 +2931,12 @@ public class TestResolver {
         helpResolveException(sql);
     }
     
+    @Test public void testSubqueryReferencingInlineView() throws Exception {
+        String sql = "select a.a1 from (select 1 as a1) a where a.a1 in (select a1 from a)";
+        
+        helpResolveException(sql);
+    }
+    
     private void helpTestWidenToString(String sql) {
     	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
     	tm.setWidenComparisonToString(false);
