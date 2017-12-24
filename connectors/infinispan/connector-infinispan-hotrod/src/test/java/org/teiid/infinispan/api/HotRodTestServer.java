@@ -24,6 +24,7 @@ import org.infinispan.configuration.cache.Index;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanConnectionImpl;
@@ -36,12 +37,16 @@ public class HotRodTestServer {
     private BasicConnectionFactory<InfinispanConnectionImpl> connectionFactory;
 
     public HotRodTestServer(int port) {
-        ConfigurationBuilder c = new ConfigurationBuilder();
+        ConfigurationBuilder c = getConfigurationBuilder();
+        		//new ConfigurationBuilder();
         GlobalConfigurationBuilder gc = GlobalConfigurationBuilder.defaultClusteredBuilder().nonClusteredDefault();
         GlobalConfiguration config = gc.build();
         this.defaultCacheManager = new DefaultCacheManager(config, c.build(config));
         this.defaultCacheManager.defineConfiguration("default", getConfigurationBuilder().build());
-        this.defaultCacheManager.startCaches("default");
+        
+        this.defaultCacheManager.defineConfiguration("foo", getConfigurationBuilder().build());
+
+        this.defaultCacheManager.startCaches("default", "foo", ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
         this.defaultCacheManager.getCache();
 
         HotRodServerConfigurationBuilder builder = new HotRodServerConfigurationBuilder();
@@ -57,15 +62,19 @@ public class HotRodTestServer {
                 .addProperty("lucene_version", "LUCENE_CURRENT");
         return builder;
     }
-
-    public InfinispanConnection getConnection() throws ResourceException {
+    
+    public InfinispanConnection getConnection(String cacheName) throws ResourceException {
         if (connectionFactory == null) {
             InfinispanManagedConnectionFactory factory = new InfinispanManagedConnectionFactory();
-            factory.setCacheName("default");
+            factory.setCacheName(cacheName);
             factory.setRemoteServerList("127.0.0.1:"+server.getPort());
             connectionFactory = factory.createConnectionFactory();
         }
         return this.connectionFactory.getConnection();
+    }
+
+    public InfinispanConnection getConnection() throws ResourceException {
+    	return getConnection("default");
     }
 
     public void stop() {
