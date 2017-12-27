@@ -42,6 +42,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -398,6 +399,7 @@ public class MetadataFactory extends NamespaceContainer {
 	 * @throws MetadataException
 	 */
 	public Procedure addProcedure(String name) {
+	    Assertion.isNotNull(name, "name cannot be null"); //$NON-NLS-1$
 		Procedure procedure = new Procedure();
 		procedure.setName(name);
 		setUUID(procedure);
