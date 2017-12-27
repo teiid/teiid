@@ -596,7 +596,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 String name = parameter.getName();
                 ProcedureParameter pp = null;
                 String type = null;
-                String defaultValue = null;
+                Object defaultValue = null;
                 String collectionFormat = null;
                 
                 if(parameter instanceof AbstractSerializableParameter) {
@@ -621,7 +621,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 
                 pp.setAnnotation(parameter.getDescription());
                 if (defaultValue != null) {
-                    pp.setDefaultValue(defaultValue);
+                    pp.setDefaultValue(defaultValue.toString());
                 }
                 if (collectionFormat != null) {
                     pp.setProperty(COLLECION_FORMAT, collectionFormat);

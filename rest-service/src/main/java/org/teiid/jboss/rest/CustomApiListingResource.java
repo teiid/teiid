@@ -36,6 +36,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.teiid.core.util.StringUtil;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import io.swagger.annotations.ApiOperation;
 import io.swagger.jaxrs.listing.BaseApiListingResource;
 
@@ -59,7 +61,7 @@ public class CustomApiListingResource extends BaseApiListingResource {
             @Context FilterConfig fc,
             @Context HttpHeaders headers,
             @Context UriInfo uriInfo,
-            @PathParam("type") String type) {
+            @PathParam("type") String type) throws JsonProcessingException {
         sc = getConfig(sc, fc);
         if (!StringUtil.isEmpty(type) && type.trim().equalsIgnoreCase("yaml")) {
             return getListingYamlResponse(app, context, sc, headers, uriInfo);

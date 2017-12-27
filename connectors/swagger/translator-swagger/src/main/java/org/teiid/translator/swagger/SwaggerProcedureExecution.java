@@ -102,13 +102,13 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                                     metadata.getProperty(SwaggerMetadataProcessor.COLLECION_FORMAT, false), 
                                     queryParameters);    
                         } else {
-                            String argValue = WSConnection.Util.httpURLEncode(((Literal)value).getValue().toString());
+                            String argValue = getURLValue((Literal)value);
                             queryParameters.append(argName);
                             queryParameters.append(Tokens.EQ);
                             queryParameters.append(argValue);                            
                         }
                     } else if (in.equalsIgnoreCase(RestMetadataExtension.ParameterType.PATH.name())) {
-                        String argValue = WSConnection.Util.httpURLEncode(param.getArgumentValue().getValue().toString());
+                        String argValue = getURLValue(param.getArgumentValue());
                         String regex = "\\{" + argName + "\\}"; //$NON-NLS-1$ //$NON-NLS-2$
                         uri = uri.replaceAll(regex, argValue);                        
                     } else if (in.equalsIgnoreCase(RestMetadataExtension.ParameterType.FORM.name()) ||
@@ -124,7 +124,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                         } else {                        
                             formParameters.append(argName);
                             formParameters.append(Tokens.EQ);
-                            formParameters.append(WSConnection.Util.httpURLEncode(((Literal)value).getValue().toString()));
+                            formParameters.append(getURLValue((Literal)value));
                         }
                     } else if (in.equalsIgnoreCase(RestMetadataExtension.ParameterType.BODY.name())) {
                         if (input == null) {
@@ -177,6 +177,10 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
         
         return buildInvokeHTTP(method, uri, payload, headers);
     }
+
+    private String getURLValue(Literal value) {
+        return WSConnection.Util.httpURLEncode(value.getValue().toString());
+    }
     
     private void addArgumentValue(String argName, Array value, String collectionFormat,
             StringBuilder queryStr) {
@@ -190,7 +194,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                 queryStr.append(argName);
                 queryStr.append(Tokens.EQ);
                 Literal l = (Literal)exprs.get(i);
-                queryStr.append(WSConnection.Util.httpURLEncode(l.getValue().toString()));
+                queryStr.append(getURLValue(l));
             }            
         } else {
             String delimiter = ",";
@@ -210,7 +214,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                 if (i > 0) {
                     queryStr.append(delimiter);
                 }
-                queryStr.append(WSConnection.Util.httpURLEncode(l.getValue().toString()));
+                queryStr.append(getURLValue(l));
             }
         }
     }
