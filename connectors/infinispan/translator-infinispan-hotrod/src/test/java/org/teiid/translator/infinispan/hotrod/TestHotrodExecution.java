@@ -17,9 +17,7 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -30,6 +28,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.resource.ResourceException;
 
@@ -39,6 +38,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.infinispan.api.HotRodTestServer;
@@ -64,6 +64,7 @@ public class TestHotrodExecution {
 
     @BeforeClass
     public static void setup() throws Exception {
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-5"));
         SERVER = new HotRodTestServer(PORT);
         
         MetadataFactory mf = TestProtobufMetadataProcessor.protoMatadata("tables.proto");
@@ -89,6 +90,7 @@ public class TestHotrodExecution {
 
     @AfterClass
     public static void tearDown() {
+        TimestampWithTimezone.resetCalendar(null);
         SERVER.stop();
     }
 
@@ -297,7 +299,7 @@ public class TestHotrodExecution {
         
         
         assertEquals(new Time(new SimpleDateFormat("HH:mm:ss").parse(time.toString()).getTime()), results.get(10));
-        assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-09-08 12:51:53").getTime()), results.get(11));
+        assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-09-08 11:51:53").getTime()), results.get(11));
         assertEquals(new Date(new SimpleDateFormat("yyyy-MM-dd").parse("2017-09-08").getTime()), results.get(12));
         
         assertEquals("clob contents", ObjectConverterUtil.convertToString(((Clob)results.get(15)).getCharacterStream()));
