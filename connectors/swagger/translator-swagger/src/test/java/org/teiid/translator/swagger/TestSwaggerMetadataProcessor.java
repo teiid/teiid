@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.junit.Test;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
@@ -392,7 +393,9 @@ public class TestSwaggerMetadataProcessor {
         
         pa = p.getParameterByName("tags_Tag_id");
         assertEquals("tags[]/Tag/id", pa.getNameInSource());
-        assertEquals("body", pa.getProperty("teiid_rest:PARAMETER_TYPE", false));        
+        assertEquals("body", pa.getProperty("teiid_rest:PARAMETER_TYPE", false));
+        //TODO: the logic could support this as a long array as well
+        assertEquals("long", pa.getRuntimeType());
     }     
     
     @Test
@@ -454,9 +457,40 @@ public class TestSwaggerMetadataProcessor {
         Procedure p = mf.getSchema().getProcedure("Operations_List");
         assertNotNull(p);
         assertEquals("GET", p.getProperty(RestMetadataExtension.METHOD, false).toUpperCase());
-        assertEquals("null://management.azure.comnull/providers/Microsoft.Cache/operations", p.getProperty(RestMetadataExtension.URI, false));
+        assertEquals("https://management.azure.comnull/providers/Microsoft.Cache/operations", p.getProperty(RestMetadataExtension.URI, false));
         assertNotNull(p.getResultSet());
         
         assertNotNull(p.getParameterByName("api-version"));
+    }
+    
+    @Test
+    public void testEndpointAsName() throws Exception {
+        SwaggerExecutionFactory translator = new SwaggerExecutionFactory();
+        translator.start();
+        MetadataFactory mf = getMetadata(translator, UnitTestUtil.getTestDataPath()+"/fahrplan-swagger.json");
+        
+        Procedure p = mf.getSchema().getProcedure("arrivalBoard/id");
+        assertNotNull(p);
+        assertEquals("GET", p.getProperty(RestMetadataExtension.METHOD, false).toUpperCase());
+        assertEquals("http://api.deutschebahn.com/freeplan/v1/arrivalBoard/{id}", p.getProperty(RestMetadataExtension.URI, false));
+        assertNotNull(p.getResultSet());
+    }
+    
+    @Test
+    public void testObjectArrayTypes() throws Exception {
+        SwaggerExecutionFactory translator = new SwaggerExecutionFactory();
+        translator.start();
+        MetadataFactory mf = getMetadata(translator, UnitTestUtil.getTestDataPath()+"/doubleclick-swagger.json");
+        
+        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("doubleclick.ddl")), DDLStringVisitor.getDDLString(mf.getSchema(), null, null));
+    }
+    
+    @Test
+    public void testRecursiveProperty() throws Exception {
+        SwaggerExecutionFactory translator = new SwaggerExecutionFactory();
+        translator.start();
+        MetadataFactory mf = getMetadata(translator, UnitTestUtil.getTestDataPath()+"/magento-swagger.json");
+        
+        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("magento.ddl")), DDLStringVisitor.getDDLString(mf.getSchema(), null, null));
     }
 }
