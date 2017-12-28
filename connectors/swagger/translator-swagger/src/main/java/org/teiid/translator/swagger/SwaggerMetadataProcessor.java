@@ -368,7 +368,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     String type = SwaggerTypeManager.teiidType(schema.getType(), schema.getFormat(), array);
                     mf.addProcedureParameter("return", type, ProcedureParameter.Type.ReturnValue, procedure);
                 } else {
-                    HashMap<String, Property> properties = new HashMap<String, Property>();
+                    Map<String, Property> properties = new LinkedHashMap<String, Property>();
                     properties.put("return", schema);
                     walkProperties(swagger, properties, null, null, pa);
                 }
