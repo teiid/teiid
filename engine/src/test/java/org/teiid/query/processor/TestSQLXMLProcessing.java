@@ -1000,4 +1000,22 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testNotNullParameterValidation() throws Exception {
+        String sql = "call v0(\n" + 
+                "    soapBody => XmlElement(root)\n" + 
+                ")";
+        
+        String ddl = "create virtual procedure v0(IN soapBody xml not null)\n" + 
+                "             returns (response xml) as\n" + 
+                "          begin\n" + 
+                "             select XmlElement(root, 'Hi!');\n" + 
+                "          end";
+        
+        List<?>[] expected = new List[] {Arrays.asList("<root>Hi!</root>")};
+        
+        CommandContext cc = createCommandContext();
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.fromDDL(ddl, "x", "y"), new DefaultCapabilitiesFinder(), cc);
+        helpProcess(plan, cc, dataManager, expected);
+    }
+    
 }
