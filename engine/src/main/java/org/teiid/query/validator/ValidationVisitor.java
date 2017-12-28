@@ -349,7 +349,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	            				}
 	            			}
 	            		}
-	                } catch(ExpressionEvaluationException e) {
+	                } catch(Exception e) {
 	                    //ignore for now, we don't have the context which could be the problem
 	                }
 	            }
