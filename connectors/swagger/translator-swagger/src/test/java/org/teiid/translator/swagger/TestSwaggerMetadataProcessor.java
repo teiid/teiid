@@ -482,7 +482,9 @@ public class TestSwaggerMetadataProcessor {
         translator.start();
         MetadataFactory mf = getMetadata(translator, UnitTestUtil.getTestDataPath()+"/doubleclick-swagger.json");
         
-        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("doubleclick.ddl")), DDLStringVisitor.getDDLString(mf.getSchema(), null, null));
+       Procedure p = mf.getSchema().getProcedure("doubleclicksearch.reports.request");
+       ProcedureParameter param = p.getParameterByName("filters_values");
+       assertEquals("string[]", param.getRuntimeType());
     }
     
     @Test
