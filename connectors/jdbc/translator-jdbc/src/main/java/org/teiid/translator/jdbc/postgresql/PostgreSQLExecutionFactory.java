@@ -990,4 +990,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         return true;
     }
     
+    @Override
+    public boolean supportsFunctionsInGroupBy() {
+        return true;
+    }
+    
 }

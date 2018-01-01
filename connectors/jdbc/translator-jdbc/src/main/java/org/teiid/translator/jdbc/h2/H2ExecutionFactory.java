@@ -312,4 +312,9 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
             
         };
     }
+    
+    @Override
+    public boolean supportsFunctionsInGroupBy() {
+        return true;
+    }
 }
