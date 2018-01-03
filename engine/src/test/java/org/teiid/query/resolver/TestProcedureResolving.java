@@ -1173,4 +1173,13 @@ public class TestProcedureResolving {
         TestValidator.helpValidate("begin declare string var; var = exec proc(); select var; end", new String[] {"SELECT var;"}, tm);
     }
     
+    @Test public void testDotInName() throws Exception {
+        String ddl = "CREATE FOREIGN PROCEDURE \"my.proc\" (param STRING) RETURNS TABLE (a INTEGER, b STRING);"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve("exec \"my.proc\"()", tm);
+        assertEquals(2, sp.getProjectedSymbols().size());
+        assertEquals("y.my.proc.b", sp.getProjectedSymbols().get(1).toString());
+        TestValidator.helpValidate("begin exec proc(); end", new String[] {}, tm);
+    }
+    
 }
