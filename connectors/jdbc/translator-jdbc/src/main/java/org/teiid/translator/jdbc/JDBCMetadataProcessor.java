@@ -305,7 +305,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 				        } else {
 				            record.setDefaultValue(def);
 				            //we can't assume that the default is something we can handle
-				            record.setProperty(BaseColumn.DEFAULT_HANDLING, "omit");
+				            record.setProperty(BaseColumn.DEFAULT_HANDLING, BaseColumn.OMIT_DEFAULT);
 				        }
 				    }
 				}

@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
@@ -562,7 +563,10 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                         if (procedure.getParameterByName(nameInSource) == null) {
                             ProcedureParameter param = mf.addProcedureParameter(name, type, Type.In, procedure);
                             param.setProperty(PARAMETER_TYPE, parameter.getIn());
-                            param.setNullType((property!=null&&property.getRequired())?NullType.No_Nulls:NullType.Nullable);
+                            if (property != null && !property.getRequired()) {
+                                param.setProperty(BaseColumn.DEFAULT_HANDLING, BaseColumn.OMIT_DEFAULT);
+                            }
+                            param.setNullType(NullType.No_Nulls);
                             param.setAnnotation(property!=null?property.getDescription():null);
                             if (!name.equalsIgnoreCase(nameInSource)) {
                                 param.setNameInSource(nameInSource);
@@ -617,7 +621,10 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 pp.setProperty(PARAMETER_TYPE, parameter.getIn());
                 
                 boolean required = parameter.getRequired();
-                pp.setNullType(required ? NullType.No_Nulls : NullType.Nullable);  
+                if (!required) {
+                    pp.setProperty(BaseColumn.DEFAULT_HANDLING, BaseColumn.OMIT_DEFAULT);
+                }
+                pp.setNullType(NullType.No_Nulls);
                 
                 pp.setAnnotation(parameter.getDescription());
                 if (defaultValue != null) {

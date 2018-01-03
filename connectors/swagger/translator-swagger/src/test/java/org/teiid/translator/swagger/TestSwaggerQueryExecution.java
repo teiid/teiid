@@ -42,14 +42,12 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
-import org.teiid.language.QueryExpression;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 
@@ -349,7 +347,27 @@ public class TestSwaggerQueryExecution {
         ProcedureExecution excution = helpProcedureExecute(query, response,
                 expectedURL, 200, true, "GET", null, getHeaders());
         assertEquals("foo", excution.getOutputParameterValues().get(0));
-    }    
+    }
+    
+    @Test(expected=TeiidRuntimeException.class)
+    public void testNullParameter() throws Exception {
+        String query = "exec loginStatus(null);";
+        String expectedURL = null;
+        String response = null;
+        
+        ProcedureExecution excution = helpProcedureExecute(query, response,
+                expectedURL, 200, true, "GET", null, getHeaders());
+    }
+    
+    @Test
+    public void testOptionalParameter() throws Exception {
+        String query = "exec updatePet(name=>'fido');";
+        String expectedURL = "http://petstore.swagger.io/v2/pet";
+        String response = "";
+        
+        ProcedureExecution excution = helpProcedureExecute(query, response,
+                expectedURL, 200, true, "PUT", null, getHeaders());
+    }
     
     private Map<String, Object> getHeaders() {
         Map<String, Object> headers = new HashMap<String, Object>();

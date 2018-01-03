@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
@@ -179,6 +180,9 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
     }
 
     private String getURLValue(Literal value) {
+        if (value.getValue() == null) {
+            throw new TeiidRuntimeException("Null is not supported"); //$NON-NLS-1$
+        }
         return WSConnection.Util.httpURLEncode(value.getValue().toString());
     }
     
