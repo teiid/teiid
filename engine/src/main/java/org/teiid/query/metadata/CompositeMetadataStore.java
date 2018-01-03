@@ -137,14 +137,13 @@ public class CompositeMetadataStore extends MetadataStore {
 		if (index > -1) {
 			String schemaName = name.substring(0, index);
 			Schema schema = getSchema(schemaName);
-			if (schema == null ) {
-		         throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, name+TransformationMetadata.NOT_EXISTS_MESSAGE);			
-			}			
-			Procedure proc = schema.getProcedures().get(name.substring(index + 1));
-			if (proc != null) {
-				result.add(proc);
-		        return result;
-			}	
+			if (schema != null ) {
+    			Procedure proc = schema.getProcedures().get(name.substring(index + 1));
+    			if (proc != null) {
+    				result.add(proc);
+    		        return result;
+    			}	
+			}
 		}
 		//assume it's a partial name
 		for (Schema schema : getSchemas().values()) {
