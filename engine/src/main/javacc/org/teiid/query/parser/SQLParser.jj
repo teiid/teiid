@@ -635,6 +635,25 @@ Token nonReserved() :
 }
 
 /*
+name=Unqualified identifier
+description=Unqualified name of a single entity.
+example=[source,sql]\n----\n"tbl"\n----\n
+*/
+String unqualifiedId() :
+{
+}
+{
+    <ID>
+    {
+       	return normalizeId(getToken(0).image, ParseInfo.REQUIRE_UNQUALIFIED_NAMES);
+    }
+    | nonReserved()
+    {
+        return getToken(0).image;
+    }
+}
+
+/*
 name=identifier
 description=Partial or full name of a single entity.
 example=[source,sql]\n----\ntbl.col\n----\n\n[source,sql]\n----\n"tbl"."col"\n----\n
@@ -643,13 +662,17 @@ String id(Boolean nonAlias) :
 {
 }
 {
-  	(<ID>|nonReserved())
+  	<ID>
   	{
   		String id = normalizeId(getToken(0).image);
   		if (nonAlias != null) {
   			return validateName(id, nonAlias);
   		}
   		return id;
+  	}
+  	| nonReserved()
+  	{
+  	    return getToken(0).image;
   	}
 }
 
@@ -696,7 +719,7 @@ name=create trigger
 description=Creates a trigger action on the given target.
 example=[source,sql]\n----\nCREATE TRIGGER ON vw INSTEAD OF INSERT AS FOR EACH ROW BEGIN ATOMIC ... END\n----\n
 */
-Command createTrigger(ParseInfo info) :
+Command createTrigger(ParseInfo info, boolean ddl) :
 {
   	String target = null;
   	TriggerAction triggerAction = null;
@@ -705,7 +728,15 @@ Command createTrigger(ParseInfo info) :
   	String name = null;
 }
 {
-	<CREATE> <TRIGGER> [name = id(Boolean.TRUE)] <ON> target = id(null) 
+	<CREATE> <TRIGGER> [name = id(Boolean.TRUE)] <ON> target = id(null) {
+	  if (ddl) {
+        String rawId = getToken(0).image;
+        if (rawId.indexOf('.') >= 0 && (!(rawId.startsWith("\"") && rawId.endsWith("\"")) || rawId.substring(1, rawId.length()-1).indexOf("\"") >= 0)) {
+            //this is not fully correct, but catches all cases except for identifiers containing a quote character
+            throw new ParseException(QueryPlugin.Util.getString("SQLParser.ddl_id_unqualified", rawId)); //$NON-NLS-1$
+        }
+	  }
+	} 
 	((<INSTEAD> <OF>)|(<AFTER> {after = true;}))
 	(event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
 	<AS> triggerAction = forEachRowTriggerAction(info)
@@ -839,7 +870,7 @@ Command userCommand(ParseInfo info) :
 	LOOKAHEAD(2) command = createTempTable(info) |
 	LOOKAHEAD(2) command = createForeignTempTable(info) |
 	command = alter(info) |
-	command = createTrigger(info) |
+	command = createTrigger(info, false) |
 	block = compoundStatement(info) {command = new CreateProcedureCommand(block);}
 	)
 	{
@@ -5036,7 +5067,7 @@ void ddlStmt(DatabaseStore dbStore) :
 	 LOOKAHEAD(3) 	createTable(dbStore) [LOOKAHEAD(3) createTable(dbStore) | createDDLProcedure(dbStore, ParseInfo.DEFAULT_INSTANCE)] | 
 	 LOOKAHEAD(2)	createNameSpace(dbStore) |
 	 LOOKAHEAD(4)	alterStatement(dbStore) |
-	 LOOKAHEAD(4) 	command=createTrigger(ParseInfo.DEFAULT_INSTANCE)
+	 LOOKAHEAD(4) 	command=createTrigger(ParseInfo.DEFAULT_INSTANCE, true)
 	 {
 	 	createDDLTrigger(dbStore, (AlterTrigger)command);
 	 } |
@@ -5092,7 +5123,7 @@ void createDatabase(DatabaseStore dbStore) :
     String version = null;
 }
 { 
-    <CREATE> <DATABASE> name = id(null) 
+    <CREATE> <DATABASE> name = id(Boolean.TRUE) 
     {
         database = new Database(name);
     }
@@ -5165,7 +5196,7 @@ void createSchema(DatabaseStore dbStore) :
 }
 {
     <CREATE> [<VIRTUAL> {physical=false;}] <SCHEMA> 
-    name = id(null) 
+    name = id(Boolean.TRUE) 
     {
         schema = new Schema();
         schema.setName(name);
@@ -5239,9 +5270,15 @@ void createDomain(DatabaseStore dbStore) :
     String domainName = null; 
     ParsedDataType type = null;
     boolean notNull = false;
+    Token idToken = null;
 }
 {
-    <CREATE> <DOMAIN> domainName = id(null) [<AS>] 
+    <CREATE> <DOMAIN> idToken = <ID> {
+        //restricting to only unqualfied ids (excluding non-reserved)
+        String id = normalizeId(idToken.image);
+        domainName = validateName(id, true);
+    }
+    [<AS>] 
     type = parseDataType()
     //-default, and other options
     [<NOT> <NULL> {notNull = true;}]    
@@ -5263,7 +5300,7 @@ void createDataWrapper(DatabaseStore dbStore) :
 }
 {
     <CREATE> <FOREIGN> (<DATA> <WRAPPER>|<TRANSLATOR>) 
-    ( wrapperName = id(null)
+    ( wrapperName = unqualifiedId()
       {
         wrapper = new DataWrapper(wrapperName);
       } 
@@ -5310,7 +5347,7 @@ void createRole(DatabaseStore dbStore) :
 }
 {
     <CREATE> <ROLE> 
-    ( roleName = id(null)
+    ( roleName = unqualifiedId()
       {
         role = new Role(roleName);
       }
@@ -5496,7 +5533,7 @@ void createServer(DatabaseStore dbStore) :
 }
 {
     <CREATE> <SERVER> 
-    ( serverName = id(null)
+    ( serverName = unqualifiedId()
       {
         server = new Server(serverName);
       }
@@ -5516,7 +5553,7 @@ void createServer(DatabaseStore dbStore) :
       )   
     ]    
     <FOREIGN> (<DATA> <WRAPPER>|<TRANSLATOR>) 
-    ( wrapperName = id(null)
+    ( wrapperName = unqualifiedId()
       {
         server.setDataWrapper(wrapperName);
       } 
@@ -5571,7 +5608,7 @@ CreateProcedureCommand createDDLProcedure(DatabaseStore dbStore, ParseInfo info)
 }
 {
     <CREATE> [<VIRTUAL> | <FOREIGN> {virtual = false;}](<PROCEDURE> | <FUNCTION> {function = true;})
-    procName = id(null)
+    procName = unqualifiedId()
 	//the below is optional because to allow the designer based metadata
 	(   {
 		    factory = DatabaseStore.createMF(dbStore);
@@ -5746,7 +5783,7 @@ void createTable(DatabaseStore dbStore) :
 		([<VIRTUAL>] <VIEW> {view = true;}) |
 		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true; view = true;})
 	) 
-	tableName = id(null)
+	tableName = unqualifiedId()
 	{	    
 	    factory = DatabaseStore.createMF(dbStore);
 	    table = factory.addTable(tableName);
@@ -5790,7 +5827,7 @@ void dropTableView(DatabaseStore dbStore) :
 		([<VIRTUAL>] <VIEW> {view = true;}) |
 		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true; view = true;})
 	) 
-	tableName = id(null)
+	tableName = unqualifiedId()
 	{
 	   dbStore.tableDropped(tableName);
 	}

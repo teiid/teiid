@@ -28,13 +28,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.Table.TriggerEvent;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseStore.Mode;
@@ -1650,6 +1649,14 @@ public class TestDDLParser {
         assertEquals(NullType.No_Nulls, db.getMetadataStore().getDatatypes().get("NNINT").getNullType());
     }
     
+    @Test(expected=org.teiid.metadata.ParseException.class)
+    public void testCreateInvalidDomain() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE DOMAIN foo.bar AS integer not null;";
+        
+        helpParse(ddl);
+    }
+    
     @Test
     public void testCreateDomainUsedInSchema() throws Exception {
         String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
@@ -1675,5 +1682,14 @@ public class TestDDLParser {
                  + "CREATE SCHEMA S2;";
         
         helpParse(ddl, Mode.DATABASE_STRUCTURE);
+    }
+    
+    @Test(expected=org.teiid.metadata.ParseException.class)
+    public void testCreateInvalidQualifiedName() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE SCHEMA S1; SET SCHEMA S1;"
+                 + "CREATE VIEW S2.X (y string) as select 'a';";
+        
+        helpParse(ddl);
     }
 }

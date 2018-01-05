@@ -98,10 +98,15 @@ public class SQLParserUtil {
   		return result;
 	}
 	
-	public static String normalizeId(String s) {
-		if (s.indexOf('"') == -1) {
+	public static String normalizeId(String s) throws ParseException {
+	    return normalizeId(s, false);
+	}
+	
+	public static String normalizeId(String s, boolean singlePart) throws ParseException {
+		if (s.indexOf('"') == -1 && !singlePart) {
 			return s;
 		}
+		String orig = s;
 		List<String> nameParts = new LinkedList<String>();
 		while (s.length() > 0) {
 			if (s.charAt(0) == '"') {
@@ -128,6 +133,12 @@ public class SQLParserUtil {
 				nameParts.add(s.substring(0, index));
 				s = s.substring(index + 1);
 			}
+		}
+		if (nameParts.size() == 1) {
+		    return nameParts.get(0);
+		}
+		if (singlePart) {
+		    throw new ParseException(QueryPlugin.Util.getString("SQLParser.ddl_id_unqualified", orig)); //$NON-NLS-1$
 		}
 		StringBuilder sb = new StringBuilder();
 		for (Iterator<String> i = nameParts.iterator(); i.hasNext();) {

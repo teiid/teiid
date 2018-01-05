@@ -339,7 +339,7 @@ public class TestFunctionPushdown {
 	
 	@Test public void testDDLMetadata1() throws Exception {
 		String ddl = "CREATE foreign FUNCTION sourceFunc(msg varchar) RETURNS varchar options (nameinsource 'a.sourcefunc'); " +
-		              "CREATE foreign FUNCTION b.sourceFunc(msg varchar) RETURNS varchar; " +
+		              "CREATE foreign FUNCTION \"b.sourceFunc\"(msg varchar) RETURNS varchar; " +
 				"CREATE foreign table X (Y varchar);";
 
 		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");

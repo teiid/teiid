@@ -40,6 +40,11 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-4731">TEIID-4731</a> The default authentication scheme for MongoDB resource adapter has been changed to SCRAM_SHA_1 to match with latest versions of MongoDB. If using MongoDB version less than 3.0, to restore previous functionality change/add SecurityType to 'None' in the resource adapter configuration.
 </ul>
 
+<h4>from 10.0</h4>
+<ul>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5177">TEIID-5177</a> Stricter naming is now enforced in DDL.  Only unqualified identifiers are expected as names.  Set the system property org.teiid.requireUnqualifiedNames=false to restore the older behavior.</li>
+</ul>
+
 <h4>from 9.3</h4>
 <ul>
   <li><a href="https://issues.jboss.org/browse/TEIID-4894">TEIID-4894</a> The XML document model feature has been removed. You must use OData or SQL/XML to create XML documents.</li>

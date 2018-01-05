@@ -2026,7 +2026,7 @@ public class TestEmbeddedServer {
 		ModelMetaData mmd = new ModelMetaData();
 		mmd.setName("my-schema");
 		mmd.addSourceMapping("x", "y", null);
-		mmd.addSourceMetadata("ddl", "create foreign table pm1.g1 (e1 string)");
+		mmd.addSourceMetadata("ddl", "create foreign table \"pm1.g1\" (e1 string)");
 
 		es.deployVDB("test", mmd);
 		
@@ -2059,7 +2059,7 @@ public class TestEmbeddedServer {
 		ModelMetaData mmd = new ModelMetaData();
 		mmd.setName("my-schema");
 		mmd.addSourceMapping("x", "y", null);
-		mmd.addSourceMetadata("ddl", "create foreign table pm1.g1 (e1 string, e2 integer) options (updatable true)");
+		mmd.addSourceMetadata("ddl", "create foreign table \"pm1.g1\" (e1 string, e2 integer) options (updatable true)");
 
 		es.deployVDB("test", mmd);
 		
@@ -2096,7 +2096,7 @@ public class TestEmbeddedServer {
 		es.undeployVDB("test");
 		mmd = new ModelMetaData();
 		mmd.setName("my-schema");
-		mmd.addSourceMetadata("ddl", "create foreign table pm1.g1 (e1 string, e2 integer) options (updatable true)");
+		mmd.addSourceMetadata("ddl", "create foreign table \"pm1.g1\" (e1 string, e2 integer) options (updatable true)");
 		mmd.addSourceMapping("y", "z", null);
 		es.deployVDB("test", mmd);
 
