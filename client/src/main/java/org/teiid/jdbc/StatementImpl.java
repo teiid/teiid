@@ -735,6 +735,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		commandStatus = State.DONE;
 		// warnings thrown
         List resultsWarning = resultsMsg.getWarnings();
+        // save warnings if have any
+        if (resultsWarning != null) {
+            accumulateWarnings(resultsWarning);
+        }
 
         setAnalysisInfo(resultsMsg);
 
@@ -743,11 +747,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     		throw TeiidSQLException.create(resultsMsg.getException());
         }
 
-        // save warnings if have any
-        if (resultsWarning != null) {
-            accumulateWarnings(resultsWarning);
-        }
-        
         resultsMsg.processResults();
         
         if (resultsMsg.isUpdateResult()) {

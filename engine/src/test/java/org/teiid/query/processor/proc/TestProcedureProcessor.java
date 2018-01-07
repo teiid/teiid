@@ -1824,7 +1824,7 @@ public class TestProcedureProcessor {
         assertNull(plan.requiresTransaction(false));
         
         plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin loop on (select e1 from pm1.g1) as x begin insert into pm1.g1 (e1) values (x.e1); end end", RealMetadataFactory.example1Cached());
-        assertTrue(plan.requiresTransaction(false));
+        assertNull(plan.requiresTransaction(false));
         
         plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin execute immediate 'select 1'; end", RealMetadataFactory.example1Cached());
         assertFalse(plan.requiresTransaction(false));
