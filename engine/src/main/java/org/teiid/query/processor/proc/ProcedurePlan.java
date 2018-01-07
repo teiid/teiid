@@ -419,24 +419,24 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     		        		//this will not work correctly until we support
     		        		//checkpoints/subtransactions
 							tc.getTransaction().setRollbackOnly();
+							getContext().addWarning(TeiidSQLException.create(e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31266)));
     	            	}
     	        	}
 	        	} catch (IllegalStateException | SystemException| TeiidComponentException e1) {
 	        	    LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception while rolling back transaction", e1); //$NON-NLS-1$	        	    
 	        	} catch (Throwable e1) {
-	        	    LogManager.logWarning(LogConstants.CTX_DQP, e1); //$NON-NLS-1$
+	        	    LogManager.logWarning(LogConstants.CTX_DQP, e1); 
 	        	}
-	        	
+	        	if (e instanceof RuntimeException) {
+                    LogManager.logWarning(LogConstants.CTX_DQP, e); 
+                } else {
+                    LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception in exception hanlding block", e); //$NON-NLS-1$
+                }
         		if (program.getExceptionProgram() == null) {
         			continue;
         		}
 	        	Program exceptionProgram = program.getExceptionProgram();
 				this.push(exceptionProgram);
-				if (e instanceof RuntimeException) {
-				    LogManager.logWarning(LogConstants.CTX_DQP, e); //$NON-NLS-1$
-				} else {
-				    LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception in exception hanlding block", e); //$NON-NLS-1$
-				}
 				TeiidSQLException tse = TeiidSQLException.create(e);
 				GroupSymbol gs = new GroupSymbol(program.getExceptionGroup());
 				this.currentVarContext.setValue(exceptionSymbol(gs, 0), tse.getSQLState());

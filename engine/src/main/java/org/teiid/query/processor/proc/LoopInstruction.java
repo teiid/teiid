@@ -129,7 +129,13 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
             return true;
         }
         Boolean loopRequires = loopProgram.requiresTransaction(transactionalReads);
-        if (loopRequires == null || loopRequires) {
+        if (loopRequires == null) {
+            if (requires == null) {
+                return true;
+            }
+            return null;
+        }
+        if (loopRequires) {
             return true;
         }
         return requires;

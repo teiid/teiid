@@ -52,6 +52,7 @@ import java.util.zip.ZipOutputStream;
 import javax.resource.spi.XATerminator;
 import javax.transaction.*;
 
+import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -705,6 +706,59 @@ public class TestEmbeddedServer {
 		assertEquals(2, tm.txnHistory.size());
 		txn = tm.txnHistory.remove(0);
 		Mockito.verify(txn, Mockito.times(0)).registerSynchronization((Synchronization) Mockito.any());
+	}
+	
+	@Test public void testTransactionWithCatchBlocks() throws Exception {
+	    String ddl = "create procedure px1() returns (a string) as\n" + 
+	            "          begin atomic\n" + 
+	            "            begin\n" + 
+	            "              error 'aaaa';\n" + 
+	            "            end\n" + 
+	            "            exception e\n" + 
+	            "            select 'bbbbb';\n" + 
+	            "          end;\n" + 
+	            "          create procedure px2() returns (a string) as\n" + 
+	            "          begin atomic\n" + 
+	            "            select 'bbbbb';\n" + 
+	            "          end;"
+	            + "    create foreign table batch_test (a varchar) options (updatable true);";
+	    
+	    String sql = "begin \n" + 
+	            "  loop on (select s.a as a from (call procs.px1()) as s) as x \n" + 
+	            "  begin \n" + 
+	            "    insert into batch_test (a) values (x.a); \n" + 
+	            "  end \n" + 
+	            "end;";
+	    
+	    EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        DummyTransactionManager tm = new DummyTransactionManager();
+        ec.setTransactionManager(tm);
+        ec.setUseDisk(false);
+        es.start(ec);
+        HardCodedExecutionFactory ef = new HardCodedExecutionFactory();
+        ef.addUpdate("INSERT INTO batch_test (a) VALUES ('bbbbb')", new int[] {1});
+        es.addTranslator("t", ef);
+        
+        ModelMetaData mmd1 = new ModelMetaData();
+        mmd1.setName("procs");
+        mmd1.addSourceMetadata("ddl", ddl);
+        mmd1.addSourceMapping("t", "t", null);
+        
+        es.deployVDB("vdb", mmd1);
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+        
+        Statement s = c.createStatement();
+        s.execute(sql);
+        
+        s.execute("set autoCommitTxn on");
+        try {
+            s.execute(sql);
+            fail();
+        } catch (SQLException e) {
+            
+        }
+        assertNotNull(s.getWarnings());
 	}
 	
 	@Test public void testMultiSourcePreparedDynamicUpdate() throws Exception {

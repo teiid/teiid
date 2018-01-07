@@ -95,7 +95,9 @@ import org.teiid.translator.ReusableExecution;
  */
 public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
-	private static ThreadLocal<LinkedList<CommandContext>> threadLocalContext = new ThreadLocal<LinkedList<CommandContext>>() {
+	private static final int MAX_WARNINGS = 1000;
+
+    private static ThreadLocal<LinkedList<CommandContext>> threadLocalContext = new ThreadLocal<LinkedList<CommandContext>>() {
 		@Override
 		protected LinkedList<CommandContext> initialValue() {
 			return new LinkedList<CommandContext>();
@@ -952,6 +954,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
             	globalState.warnings = new ArrayList<Exception>(1);
             }
             globalState.warnings.add(warning);
+            if (globalState.warnings.size() > MAX_WARNINGS) {
+                globalState.warnings.remove(0);
+            }
 		}
     	if (!this.getOptions().isSanitizeMessages() || LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
     		LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31105, warning.getMessage()));

@@ -22,11 +22,15 @@
 
 package org.teiid.query.optimizer.proc;
 
+import static org.junit.Assert.*;
+
 import java.util.Collections;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.Table.TriggerEvent;
@@ -37,6 +41,10 @@ import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.proc.LoopInstruction;
+import org.teiid.query.processor.proc.Program;
+import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
@@ -139,6 +147,29 @@ public class TestProcedurePlanner {
          
         helpPlanProcedure(null, procedure, 
                                      TriggerEvent.UPDATE); 
+    }
+    
+    @Test public void testLoopInstructionTransaction() throws Exception {
+        //create a dummy instruction that may need a transaction to create the loop
+        LoopInstruction loop = new LoopInstruction(new Program(false) {
+            @Override
+            public Boolean requiresTransaction(boolean transactionalReads) {
+                return null;
+            }
+        }, "x", new RelationalPlan(new RelationalNode(1) {
+            
+            @Override
+            protected TupleBatch nextBatchDirect() throws BlockedException,
+                    TeiidComponentException, TeiidProcessingException {
+                return null;
+            }
+            
+            @Override
+            public Object clone() {
+                return null;
+            }
+        }), "y");
+        assertNull(loop.requiresTransaction(true)); 
     }
 
     // =============================================================================
