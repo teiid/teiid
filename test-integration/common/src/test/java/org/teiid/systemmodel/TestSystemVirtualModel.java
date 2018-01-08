@@ -32,6 +32,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -363,4 +364,17 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		this.execute("create local temporary table #x (e1 string)");
 		this.execute("insert into #x (e1) values (?)", "a");
 	}
+	
+	@Test public void testCommandDeterministic() throws Exception {
+        String sql = "select now(), a.* from sys.columns a"; //$NON-NLS-1$
+        this.execute(sql);
+        Timestamp ts = null;
+        while (this.internalResultSet.next()) {
+            if (ts == null) {
+                ts = this.internalResultSet.getTimestamp(1);
+            } else {
+                assertEquals(ts, this.internalResultSet.getTimestamp(1));
+            }
+        }
+    }
 }

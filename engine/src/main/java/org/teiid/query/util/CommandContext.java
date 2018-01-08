@@ -28,6 +28,8 @@ import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.AbstractMap.SimpleEntry;
@@ -54,6 +56,7 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.LRUCache;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
@@ -202,6 +205,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private LRUCache<AbstractMetadataRecord, Boolean> accessible;
 
 		private Throwable batchUpdateException;
+        
+        private long timestamp = System.currentTimeMillis();
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -1187,5 +1192,17 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	public void setBatchUpdateException(Throwable t) {
 		this.globalState.batchUpdateException = t;
 	}
+
+    public Date currentDate() {
+        return TimestampWithTimezone.createDate(new Date(this.globalState.timestamp));
+    }
+
+    public Time currentTime() {
+        return TimestampWithTimezone.createTime(new Date(this.globalState.timestamp));
+    }
+
+    public Timestamp currentTimestamp() {
+        return new Timestamp(this.globalState.timestamp);
+    }
 	
 }
