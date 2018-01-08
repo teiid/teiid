@@ -146,6 +146,7 @@ public class TestTranslatorUtil {
         assertEquals("{http://teiid.org}/my-extension-property", importProperties.get(0).name());
         assertEquals("java.lang.String", importProperties.get(0).datatype());
         assertEquals("org.teiid.metadata.Column", importProperties.get(0).owner());
+        assertArrayEquals(new String[] {"TOBE", "NOTTOBE"}, importProperties.get(0).allowed());
     }    
 	
 	@Test
@@ -185,7 +186,8 @@ public class TestTranslatorUtil {
 	
 	@Translator(name="my-translator")
 	public static class MyTranslator extends ExecutionFactory<Object, Object> {
-	    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, description="description", required=true)
+		@ExtensionMetadataProperty(applicable = Column.class, datatype = String.class, 
+				description = "description", required = true, allowed = "TOBE, NOTTOBE")
 	    public static final String EXTENSION_PROP = "{http://teiid.org}/my-extension-property"; 
 		
 	    String mine;
