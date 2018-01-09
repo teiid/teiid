@@ -20,6 +20,7 @@ package org.teiid.translator.jdbc.pi;
 import static org.teiid.language.SQLConstants.Reserved.*;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Join.JoinType;
@@ -39,6 +40,51 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
 		super(hef);
 		this.executionFactory = hef;
 	}
+
+	@Override
+	public void visit(SetQuery obj) {
+        Limit limit = obj.getLimit();
+        if(limit != null) {
+            buffer.append(SELECT);
+            buffer.append(Tokens.SPACE);
+            append(limit);
+            buffer.append(Tokens.SPACE);
+            buffer.append(Tokens.ALL_COLS);
+            buffer.append(Tokens.SPACE);
+            buffer.append(FROM);
+            buffer.append(Tokens.SPACE);
+            buffer.append(Tokens.LPAREN);
+        }
+    	
+    	if (obj.getWith() != null) {
+    		append(obj.getWith());
+    	}
+        appendSetQuery(obj, obj.getLeftQuery(), false);
+        
+        buffer.append(Tokens.SPACE);
+        
+        appendSetOperation(obj.getOperation());
+
+        if(obj.isAll()) {
+            buffer.append(Tokens.SPACE);
+            buffer.append(ALL);                
+        }
+        buffer.append(Tokens.SPACE);
+
+        appendSetQuery(obj, obj.getRightQuery(), true);
+        
+        OrderBy orderBy = obj.getOrderBy();
+        if(orderBy != null) {
+            buffer.append(Tokens.SPACE);
+            append(orderBy);
+        }
+
+        if(limit != null) {
+            buffer.append(Tokens.RPAREN);
+            buffer.append(Tokens.SPACE);
+            buffer.append("_X_");
+        }
+    }	
 	
     @Override
 	public void visit(Join obj) {
@@ -150,6 +196,7 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
         }
     }    
     
+    @Override
     public void visit(ColumnReference obj) {
     	if (obj.getMetadataObject() != null) {
 	        ColumnSet<?> cs = obj.getMetadataObject().getParent();
@@ -165,6 +212,7 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
     	}
     }    
 
+    @Override
     public void visit(DerivedTable obj) {
         buffer.append(Tokens.LPAREN);
         append(obj.getQuery());
@@ -181,6 +229,7 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
         buffer.append(LATERAL);
     }
     
+    @Override
     public void visit(NamedProcedureCall obj) {
         buffer.append(Tokens.LPAREN);
         append(obj.getCall());
@@ -227,4 +276,56 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
         }
     }
 
+    @Override
+    public void visit(Comparison obj) {
+        if (allowImplictConversion(obj)) {
+            Function left = (Function) obj.getLeftExpression();
+            obj.setLeftExpression(left.getParameters().get(0));
+            Function right = (Function) obj.getRightExpression();
+            obj.setRightExpression(right.getParameters().get(0));
+        }
+        super.visit(obj);
+    }
+
+    private boolean isConvertFunctionWithSimpleExpression(Expression expr) {
+        if (expr instanceof Function && ((Function) expr).getName().equals("convert")) {
+            Function f = (Function) expr;
+            Expression param = f.getParameters().get(0);
+            if (param instanceof ColumnReference) {
+                return true;
+            } else if (param instanceof Literal) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean allowImplictConversion(Comparison obj) {
+        if (isConvertFunctionWithSimpleExpression(obj.getLeftExpression())
+                && isConvertFunctionWithSimpleExpression(obj.getRightExpression())) {
+            String left = getParameterDataType(obj.getLeftExpression());
+            String right = getParameterDataType(obj.getRightExpression());
+            if (left.equals(DataTypeManager.DefaultDataTypes.INTEGER)
+                    && right.equals(DataTypeManager.DefaultDataTypes.FLOAT)) {
+                return true;
+            }
+            if (left.equals(DataTypeManager.DefaultDataTypes.FLOAT)
+                    && right.equals(DataTypeManager.DefaultDataTypes.INTEGER)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String getParameterDataType(Expression expr) {
+        Function f = (Function) expr;
+        Expression param = f.getParameters().get(0);
+
+        if (param instanceof ColumnReference) {
+            return ((ColumnReference) param).getMetadataObject().getRuntimeType();
+        } else if (param instanceof Literal) {
+            return DataTypeManager.getDataTypeName(((Literal) param).getType());
+        }
+        return null;
+    }
 }

@@ -181,4 +181,25 @@ public class TestPIExecutionFactory {
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.FloatNum <> ANY (SELECT SmallA.FloatNum FROM SmallA WHERE SmallA.StringKey = '10')"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+	
+	@Test 
+    public void testLimitOverUnion() throws TranslatorException {
+        String input = "SELECT g_0.intkey FROM bqt1.smalla g_0 UNION SELECT g_1.intkey FROM bqt1.smallb g_1 LIMIT 100";        		 
+        String output = "SELECT TOP 100 * FROM (SELECT g_0.IntKey FROM SmallA AS g_0 UNION SELECT g_1.IntKey FROM SmallB AS g_1) _X_"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+	}
+	
+	@Test 
+    public void testCastFloatToSingle() throws Exception {
+        String input = 
+        		"SELECT MediumA.IntNum, MediumB.FloatNum " + 
+        		"	FROM MediumA, MediumB " + 
+        		"	WHERE MediumA.IntNum = MediumB.FloatNum";
+        String output = "SELECT dvqe..MediumA.IntNum, dvqe..MediumB.FloatNum " + 
+        		"FROM dvqe..MediumA, dvqe..MediumB " + 
+        		"WHERE dvqe..MediumA.IntNum = dvqe..MediumB.FloatNum"; 
+        String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("pi.ddl"));
+        TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
+
+    }	
 }
