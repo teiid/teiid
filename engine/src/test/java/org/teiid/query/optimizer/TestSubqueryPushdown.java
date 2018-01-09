@@ -1704,4 +1704,31 @@ public class TestSubqueryPushdown {
         TestQueryRewriter.helpTestRewriteCommand(sql, 
                 "SELECT A.INTKEY, C.LONGNUM, X__1.expr1 AS expr3, X__2.expr1 AS expr4 FROM ((BQT1.SMALLA AS A CROSS JOIN BQT2.SMALLA AS C) LEFT OUTER JOIN (SELECT SUM(LONGNUM) AS expr1, B.INTKEY FROM BQT1.SMALLB AS B GROUP BY B.INTKEY) AS X__1 ON A.INTKEY = X__1.IntKey) LEFT OUTER JOIN (SELECT MIN(LONGNUM) AS expr1, B.INTKEY FROM BQT1.SMALLB AS B GROUP BY B.INTKEY) AS X__2 ON A.INTKEY = X__2.IntKey WHERE A.INTNUM = C.INTNUM ORDER BY A.INTKEY", RealMetadataFactory.exampleBQTCached());
     }
+    
+    @Test public void testNManySubqueryProcessingFalsePredicate() throws Exception {
+        String sql = "SELECT INTKEY, FLOATNUM FROM BQT1.SMALLA AS A WHERE FLOATNUM = /*+ NO_UNNEST */ (SELECT MIN(FLOATNUM) FROM BQT1.SMALLA AS B WHERE (INTKEY >= 9) AND (A.INTKEY = B.INTKEY))"; //$NON-NLS-1$
+        
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQT();
+
+        HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+    
+        dataMgr.addData("SELECT g_0.FloatNum, g_0.IntKey FROM SmallA AS g_0", Arrays.asList(.1f, 1));
+        dataMgr.addData("SELECT MIN(g_0.FloatNum) FROM SmallA AS g_0 WHERE g_0.IntKey >= 9 AND g_0.IntKey = 1");
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
+        
+        ProcessorPlan pp = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        TestProcessor.helpProcess(pp, dataMgr, new List[] {});
+        
+        sql = "SELECT INTKEY, STRINGKEY, DOUBLENUM FROM BQT1.SMALLA GROUP BY INTKEY, STRINGKEY, DOUBLENUM HAVING DOUBLENUM = /*+ NO_UNNEST */ (SELECT DOUBLENUM FROM BQT1.SMALLA WHERE STRINGKEY = 20)";
+        pp = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        dataMgr.clearData();
+        dataMgr.addData("SELECT g_0.DoubleNum FROM SmallA AS g_0 WHERE g_0.StringKey = '20'");
+        
+        TestProcessor.helpProcess(pp, dataMgr, new List[] {});
+    }
 }
