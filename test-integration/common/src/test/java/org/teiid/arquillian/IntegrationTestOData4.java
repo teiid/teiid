@@ -22,7 +22,8 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -31,8 +32,11 @@ import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.cxf.jaxrs.client.WebClient;
@@ -51,6 +55,8 @@ import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.TeiidDriver;
+
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
@@ -276,4 +282,48 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         statusCode = response.getStatus();
         assertEquals(404, statusCode);        
     }
+	
+    @Test
+    public void testExponentialDecimalValue() throws Exception {
+        String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+                "<vdb name=\"expo\" version=\"1\">\n" + 
+                "    <model name=\"test\">\n" + 
+                "        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" + 
+                "         <metadata type=\"DDL\"><![CDATA[\n" + 
+                "                CREATE FOREIGN TABLE test_tbl(\n" + 
+                "                  id integer NOT NULL AUTO_INCREMENT,\n" + 
+                "                  title VARCHAR(100) NOT NULL, \n" + 
+                "                  author VARCHAR(40) NOT NULL, \n" + 
+                "                  price DECIMAL(15,15) NOT NULL, \n" + 
+                "                  submission_date DATE, \n" + 
+                "                  PRIMARY KEY ( id ) \n" + 
+                "                ) OPTIONS (UPDATABLE true);\n" + 
+                "        ]]> </metadata>\n" + 
+                "    </model>\n" + 
+                "</vdb>";
+        
+        admin.deploy("expo-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
+        
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "expo", 1, 3));
+        
+        WebClient client = WebClient.create("http://localhost:8080/odata4/expo.1/test/$metadata");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        Response response = client.invoke("GET", null);
+        
+        int statusCode = response.getStatus();
+        assertEquals(200, statusCode);
+        
+        String payload = "{\"id\":3,\"title\":\"title 3\",\"author\":\"author 3\",\"price\":9.9999999999E8,\"submission_date\":\"2017-12-08\"}";
+        List<Object> providers = new ArrayList<Object>();
+        providers.add( new JacksonJaxbJsonProvider() );
+        
+        client = WebClient.create("http://localhost:8080/odata4/expo.1/test/test_tbl", providers);
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        client.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON);
+        
+        response = client.invoke("POST", payload);
+        assertEquals(304, response.getStatus());
+        
+        admin.undeploy("expo-vdb.xml");
+    }	
 }
