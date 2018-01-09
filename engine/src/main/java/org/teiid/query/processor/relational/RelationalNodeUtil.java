@@ -19,6 +19,7 @@
 package org.teiid.query.processor.relational;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.sql.lang.*;
@@ -84,16 +85,14 @@ public class RelationalNodeUtil {
                 Query query = (Query) queryCommand;                
                 criteria = query.getCriteria();
 
-                if(criteria == null) {
-                    return true;
-                } else if(!EvaluatableVisitor.isFullyEvaluatable(criteria, duringPlanning)) {
-                    // If there are elements present in the criteria,
-                    // then we don't know the result, so assume we need to execute
-                    return true;
-                } else if(Evaluator.evaluate(criteria)) {
-                    if (simplifyCriteria) {
-                        query.setCriteria(null);
-                    }
+                boolean shouldEvaluate = shouldEvaluate(simplifyCriteria, duringPlanning, criteria, query, false);
+                
+                if (shouldEvaluate) {
+                    //check for false having as well
+                    shouldEvaluate = shouldEvaluate(simplifyCriteria, duringPlanning, query.getHaving(), query, true);
+                }
+                
+                if (shouldEvaluate) {
                     return true;
                 }
                 
@@ -150,6 +149,29 @@ public class RelationalNodeUtil {
                 break;
             default:
                 return true;
+        }
+        return false;
+    }
+
+    private static boolean shouldEvaluate(boolean simplifyCriteria,
+            boolean duringPlanning, Criteria criteria, Query query, boolean having)
+            throws ExpressionEvaluationException, BlockedException,
+            TeiidComponentException {
+        if(criteria == null) {
+            return true;
+        } else if(!EvaluatableVisitor.isFullyEvaluatable(criteria, duringPlanning)) {
+            // If there are elements present in the criteria,
+            // then we don't know the result, so assume we need to execute
+            return true;
+        } else if(Evaluator.evaluate(criteria)) {
+            if (simplifyCriteria) {
+                if (having) {
+                    query.setHaving(null);
+                } else {
+                    query.setCriteria(null);
+                }
+            }
+            return true;
         }
         return false;
     }

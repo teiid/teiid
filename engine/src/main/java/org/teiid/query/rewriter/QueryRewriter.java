@@ -495,15 +495,32 @@ public class QueryRewriter {
         if(crit != null) {
     		boolean preserveUnknownOld = preserveUnknown;
             preserveUnknown = false;
+            Criteria clone = null;
+            if (processing && query.getGroupBy() == null && query.hasAggregates()) {
+                clone = (Criteria) crit.clone();
+            }
     		crit = rewriteCriteria(crit);
     		preserveUnknown = preserveUnknownOld;
-            if(crit == TRUE_CRITERIA) {
+            if(crit.equals(TRUE_CRITERIA)) {
                 query.setCriteria(null);
-            } else if (crit == UNKNOWN_CRITERIA) {
+            } else if (crit.equals(UNKNOWN_CRITERIA)) {
             	query.setCriteria(FALSE_CRITERIA);
             } else {
                 query.setCriteria(crit);
             } 
+            
+            //attempt to workaround a soft spot in planning with 
+            //aggregates and an always false predicate
+            if (clone != null && query.getCriteria() != null && query.getCriteria().equals(FALSE_CRITERIA)) {
+                List<Criteria> crits = new ArrayList<Criteria>(); 
+                List<Criteria> parts = Criteria.separateCriteriaByAnd(clone);
+                if (parts.size() > 1) {
+                    for (Criteria c : parts) {
+                        crits.add(rewriteCriteria(c));
+                    }
+                    query.setCriteria(new CompoundCriteria(parts));
+                }
+            }
         }
         
         if (from != null) {
