@@ -22,3 +22,82 @@ CREATE FOREIGN PROCEDURE "Sample.EventFrame.GetPIPoint"(
         "Number of Computers" string(23) OPTIONS (NAMEINSOURCE '[Number of Computers]'))
     OPTIONS ("teiid_pi:TVF" 'TRUE', NAMEINSOUCE '[Sample].[EventFrame].[GetPIPoint]');
 
+CREATE FOREIGN TABLE SmallA (
+	IntKey integer OPTIONS (NATIVE_TYPE 'int32'),
+	StringKey string OPTIONS (NATIVE_TYPE 'string'),
+	IntNum integer OPTIONS (NATIVE_TYPE 'int32'),
+	StringNum string OPTIONS (NATIVE_TYPE 'string'),
+	FloatNum float OPTIONS (NATIVE_TYPE 'single'),
+	LongNum long OPTIONS (NATIVE_TYPE 'int64'),
+	DoubleNum double OPTIONS (NATIVE_TYPE 'double'),
+	ByteNum byte OPTIONS (NATIVE_TYPE 'int8'),
+	DateValue date OPTIONS (NATIVE_TYPE 'datetime'),
+	TimeValue timestamp OPTIONS (NATIVE_TYPE 'datetime'),
+	TimestampValue timestamp OPTIONS (NATIVE_TYPE 'timestamp'),
+	BooleanValue boolean OPTIONS (NATIVE_TYPE 'boolean'),
+	CharValue char OPTIONS (NATIVE_TYPE 'string'),
+	ShortValue short OPTIONS (NATIVE_TYPE 'int16'),
+	BigIntegerValue biginteger OPTIONS (NATIVE_TYPE 'int64'),
+	BigDecimalValue integer OPTIONS (NATIVE_TYPE 'int32'),
+	ObjectValue string OPTIONS (NATIVE_TYPE 'string'))
+OPTIONS (UPDATABLE 'FALSE', NAMEINSOURCE 'dvqe..SmallA');
+
+CREATE FOREIGN TABLE SmallB (
+	IntKey integer OPTIONS (NATIVE_TYPE 'int32'),
+	StringKey string OPTIONS (NATIVE_TYPE 'string'),
+	IntNum integer OPTIONS (NATIVE_TYPE 'int32'),
+	StringNum string OPTIONS (NATIVE_TYPE 'string'),
+	FloatNum float OPTIONS (NATIVE_TYPE 'single'),
+	LongNum long OPTIONS (NATIVE_TYPE 'int64'),
+	DoubleNum double OPTIONS (NATIVE_TYPE 'double'),
+	ByteNum byte OPTIONS (NATIVE_TYPE 'int8'),
+	DateValue date OPTIONS (NATIVE_TYPE 'datetime'),
+	TimeValue timestamp OPTIONS (NATIVE_TYPE 'datetime'),
+	TimestampValue timestamp OPTIONS (NATIVE_TYPE 'timestamp'),
+	BooleanValue boolean OPTIONS (NATIVE_TYPE 'boolean'),
+	CharValue char OPTIONS (NATIVE_TYPE 'string'),
+	ShortValue short OPTIONS (NATIVE_TYPE 'int16'),
+	BigIntegerValue biginteger OPTIONS (NATIVE_TYPE 'int64'),
+	BigDecimalValue integer OPTIONS (NATIVE_TYPE 'int32'),
+	ObjectValue string OPTIONS (NATIVE_TYPE 'string'))
+OPTIONS (UPDATABLE 'FALSE', NAMEINSOURCE 'dvqe..SmallB');
+
+CREATE FOREIGN TABLE MediumA (
+	IntKey integer OPTIONS (NATIVE_TYPE 'int32'),
+	StringKey string OPTIONS (NATIVE_TYPE 'string'),
+	IntNum integer OPTIONS (NATIVE_TYPE 'int32'),
+	StringNum string OPTIONS (NATIVE_TYPE 'string'),
+	FloatNum float OPTIONS (NATIVE_TYPE 'single'),
+	LongNum long OPTIONS (NATIVE_TYPE 'int64'),
+	DoubleNum double OPTIONS (NATIVE_TYPE 'double'),
+	ByteNum byte OPTIONS (NATIVE_TYPE 'int8'),
+	DateValue date OPTIONS (NATIVE_TYPE 'datetime'),
+	TimeValue timestamp OPTIONS (NATIVE_TYPE 'datetime'),
+	TimestampValue timestamp OPTIONS (NATIVE_TYPE 'timestamp'),
+	BooleanValue boolean OPTIONS (NATIVE_TYPE 'boolean'),
+	CharValue char OPTIONS (NATIVE_TYPE 'string'),
+	ShortValue short OPTIONS (NATIVE_TYPE 'int16'),
+	BigIntegerValue biginteger OPTIONS (NATIVE_TYPE 'int64'),
+	BigDecimalValue integer OPTIONS (NATIVE_TYPE 'int32'),
+	ObjectValue string OPTIONS (NATIVE_TYPE 'string'))
+OPTIONS (UPDATABLE 'FALSE', NAMEINSOURCE 'dvqe..MediumA');
+
+CREATE FOREIGN TABLE MediumB (
+	IntKey integer OPTIONS (NATIVE_TYPE 'int32'),
+	StringKey string OPTIONS (NATIVE_TYPE 'string'),
+	IntNum integer OPTIONS (NATIVE_TYPE 'int32'),
+	StringNum string OPTIONS (NATIVE_TYPE 'string'),
+	FloatNum float OPTIONS (NATIVE_TYPE 'single'),
+	LongNum long OPTIONS (NATIVE_TYPE 'int64'),
+	DoubleNum double OPTIONS (NATIVE_TYPE 'double'),
+	ByteNum byte OPTIONS (NATIVE_TYPE 'int8'),
+	DateValue date OPTIONS (NATIVE_TYPE 'datetime'),
+	TimeValue timestamp OPTIONS (NATIVE_TYPE 'datetime'),
+	TimestampValue timestamp OPTIONS (NATIVE_TYPE 'timestamp'),
+	BooleanValue boolean OPTIONS (NATIVE_TYPE 'boolean'),
+	CharValue char OPTIONS (NATIVE_TYPE 'string'),
+	ShortValue short OPTIONS (NATIVE_TYPE 'int16'),
+	BigIntegerValue biginteger OPTIONS (NATIVE_TYPE 'int64'),
+	BigDecimalValue integer OPTIONS (NATIVE_TYPE 'int32'),
+	ObjectValue string OPTIONS (NATIVE_TYPE 'string'))
+OPTIONS (UPDATABLE 'FALSE', NAMEINSOURCE 'dvqe..MediumB');

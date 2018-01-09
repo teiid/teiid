@@ -103,7 +103,7 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
 			}
 		}); //$NON-NLS-1$
         
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("DAY")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("DAY")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
@@ -202,7 +202,7 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add(SourceSystemFunctions.COS);        
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
-        supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
+        supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.EXP);
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
         supportedFunctions.add(SourceSystemFunctions.HOUR);
@@ -315,11 +315,7 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
-    	Object result = results.getObject(columnIndex);
-    	if (result == null) {
-    		return null;
-    	}
-    	return super.retrieveValue(results, columnIndex, expectedType);
+    	return results.getObject(columnIndex);
     }
 
     @Override
