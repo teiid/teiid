@@ -26,6 +26,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -1534,6 +1535,24 @@ public class TestAggregatePushdown {
         String sql = "select * from (select intnum as a from bqt1.smalla group by intnum union all select 1 as a) as x where a = 1;";
         TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[]{"SELECT g_0.IntNum FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 1 GROUP BY g_0.IntNum"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
+    }
+    
+    @Test public void testHavingWithSubqueryPlacement() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+        
+        String sql = "SELECT INTKEY, STRINGKEY \n" + 
+                "  FROM BQT1.SMALLA AS A \n" + 
+                "  WHERE NOT (INTKEY IN (10)) \n" + 
+                "  GROUP BY INTKEY, STRINGKEY \n" + 
+                "  HAVING INTKEY = (SELECT MIN(STRINGKEY) FROM BQT1.SMALLA AS B WHERE A.INTKEY = B.INTKEY)";
+        
+        BasicSourceCapabilities aggregateCapabilities = getAggregateCapabilities();
+        aggregateCapabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        aggregateCapabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        aggregateCapabilities.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        
+        TestOptimizer.helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(aggregateCapabilities), 
+                new String[] {"SELECT g_0.IntKey, g_0.StringKey FROM BQT1.SmallA AS g_0 WHERE (g_0.IntKey <> 10) AND (convert(g_0.IntKey, string) = (SELECT MIN(g_1.StringKey) FROM BQT1.SmallA AS g_1 WHERE g_1.IntKey = g_0.IntKey)) GROUP BY g_0.IntKey, g_0.StringKey"}, ComparisonMode.EXACT_COMMAND_STRING);
     }
     
 
