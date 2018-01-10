@@ -1002,7 +1002,7 @@ public class LanguageBridgeFactory {
                 	continue;
             }
             
-            if (param.isUsingDefault() && "omit".equalsIgnoreCase(metadataFactory.getMetadata().getExtensionProperty(param.getMetadataID(), BaseColumn.DEFAULT_HANDLING, false))) { 
+            if (param.isUsingDefault() && BaseColumn.OMIT_DEFAULT.equalsIgnoreCase(metadataFactory.getMetadata().getExtensionProperty(param.getMetadataID(), BaseColumn.DEFAULT_HANDLING, false))) { 
             	continue;
             }
             

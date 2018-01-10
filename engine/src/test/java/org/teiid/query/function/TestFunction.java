@@ -1109,7 +1109,7 @@ public class TestFunction {
     // case 2458
     @Test public void testCurrentDate() throws Exception {
 
-        Date curDate = (Date)FunctionMethods.currentDate();
+        Date curDate = (Date)FunctionMethods.currentDate(new CommandContext());
      
         Calendar cal1 = Calendar.getInstance();
         cal1.setTime(curDate);
@@ -1124,7 +1124,7 @@ public class TestFunction {
     // case 2458
     @Test public void testCurrentTime() throws Exception {
         
-        Time curDate = (Time)FunctionMethods.currentTime();
+        Time curDate = (Time)FunctionMethods.currentTime(new CommandContext());
 
         Calendar cal1 = Calendar.getInstance();
         cal1.setTime(curDate);

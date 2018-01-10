@@ -24,6 +24,8 @@ import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -53,6 +55,7 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.LRUCache;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
@@ -94,7 +97,9 @@ import org.teiid.translator.ReusableExecution;
  */
 public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
-	private static ThreadLocal<LinkedList<CommandContext>> threadLocalContext = new ThreadLocal<LinkedList<CommandContext>>() {
+	private static final int MAX_WARNINGS = 1000;
+
+    private static ThreadLocal<LinkedList<CommandContext>> threadLocalContext = new ThreadLocal<LinkedList<CommandContext>>() {
 		@Override
 		protected LinkedList<CommandContext> initialValue() {
 			return new LinkedList<CommandContext>();
@@ -199,6 +204,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private Throwable batchUpdateException;
 
         public boolean parallel;
+        
+        private long timestamp = System.currentTimeMillis();
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -955,6 +962,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
             	globalState.warnings = new ArrayList<Exception>(1);
             }
             globalState.warnings.add(warning);
+            if (globalState.warnings.size() > MAX_WARNINGS) {
+                globalState.warnings.remove(0);
+            }
 		}
     	if (!this.getOptions().isSanitizeMessages() || LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
     		LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31105, warning.getMessage()));
@@ -1199,6 +1209,18 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         boolean result = this.globalState.parallel;
         this.globalState.parallel = value;
         return result;
+    }
+
+    public Date currentDate() {
+        return TimestampWithTimezone.createDate(new Date(this.globalState.timestamp));
+    }
+
+    public Time currentTime() {
+        return TimestampWithTimezone.createTime(new Date(this.globalState.timestamp));
+    }
+
+    public Timestamp currentTimestamp() {
+        return new Timestamp(this.globalState.timestamp);
     }
 	
 }

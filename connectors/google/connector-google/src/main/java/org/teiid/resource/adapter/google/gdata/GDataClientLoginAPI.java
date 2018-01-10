@@ -93,7 +93,7 @@ public class GDataClientLoginAPI {
 	}
 	
 
-	private BaseFeed<?, ?> getSpreadsheetFeedQuery(SpreadsheetQuery squery, Class<? extends BaseFeed<?, ?>> feedClass) {
+	protected BaseFeed<?, ?> getSpreadsheetFeedQuery(SpreadsheetQuery squery, Class<? extends BaseFeed<?, ?>> feedClass) {
 		try { 
 			return service.getFeed(squery, feedClass);
 		} catch (Exception ex) {
@@ -160,7 +160,7 @@ public class GDataClientLoginAPI {
 		//TEIID-4870 existing string values can get corrupted unless we re-set the entry
 		List<Column> stringColumns = new ArrayList<Column>();
         for (Column c : allColumns) {
-            if (c.getDataType() == SpreadsheetColumnType.STRING) {
+            if (c.getLabel() != null && c.getDataType() == SpreadsheetColumnType.STRING) {
                 stringColumns.add(c);
                 //could skip if in the update set
             }

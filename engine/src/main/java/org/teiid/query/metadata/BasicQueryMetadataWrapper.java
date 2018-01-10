@@ -305,11 +305,6 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.isVirtualModel(modelID);
 	}
 
-	public boolean isXMLGroup(Object groupID)
-			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.isXMLGroup(groupID);
-	}
-
 	public boolean modelSupports(Object modelID, int modelConstant)
 			throws TeiidComponentException, QueryMetadataException {
 		return actualMetadata.modelSupports(modelID, modelConstant);

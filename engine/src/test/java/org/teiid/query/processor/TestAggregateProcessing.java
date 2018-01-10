@@ -1234,12 +1234,12 @@ public class TestAggregateProcessing {
 		bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
 		bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
 		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
-				new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT (g_0.e2 / 2) AS c_0, g_0.e1 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1 HAVING v_0.c_1 = (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1 WHERE g_1.e2 = v_0.c_0)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+				new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT (g_0.e2 / 2) AS c_0, g_0.e1 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1 WHERE g_1.e2 = (g_0.e2 / 2))) AS v_0 GROUP BY v_0.c_0, v_0.c_1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
 
 		bsc.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
 		plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
-				new String[] {"SELECT (g_0.e2 / 2), g_0.e1 FROM pm1.g1 AS g_0 GROUP BY (g_0.e2 / 2), g_0.e1 HAVING g_0.e1 = (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1 WHERE g_1.e2 = (g_0.e2 / 2))"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+				new String[] {"SELECT (g_0.e2 / 2), g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1 WHERE g_1.e2 = (g_0.e2 / 2)) GROUP BY (g_0.e2 / 2), g_0.e1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
 	}
 	

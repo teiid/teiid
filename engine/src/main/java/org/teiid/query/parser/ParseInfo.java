@@ -27,6 +27,7 @@ public class ParseInfo implements Serializable{
 
 	private static final long serialVersionUID = -7323683731955992888L;
     private static final boolean ANSI_QUOTED_DEFAULT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ansiQuotedIdentifiers", true); //$NON-NLS-1$
+    public static boolean REQUIRE_UNQUALIFIED_NAMES = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.requireUnqualifiedNames", true); //$NON-NLS-1$
 
     public int referenceCount = 0;
     

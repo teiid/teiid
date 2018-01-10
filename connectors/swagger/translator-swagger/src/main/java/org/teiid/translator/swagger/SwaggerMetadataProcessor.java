@@ -20,14 +20,19 @@ package org.teiid.translator.swagger;
 import java.io.File;
 import java.sql.Blob;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -52,13 +57,9 @@ import io.swagger.models.RefModel;
 import io.swagger.models.Response;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
+import io.swagger.models.parameters.AbstractSerializableParameter;
 import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.parameters.CookieParameter;
-import io.swagger.models.parameters.FormParameter;
-import io.swagger.models.parameters.HeaderParameter;
 import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.PathParameter;
-import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.FileProperty;
 import io.swagger.models.properties.MapProperty;
@@ -68,6 +69,7 @@ import io.swagger.models.properties.RefProperty;
 import io.swagger.parser.SwaggerParser;
 
 public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>{
+    private static final String ARRAY_SUFFIX = "[]";
     public static final String KEY_NAME = "key_name";
     public static final String KEY_VALUE = "key_value";
 
@@ -186,11 +188,19 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                         break;
                     }
                 }
+                if (scheme == null) {
+                    scheme = swagger.getSchemes().get(0).toValue();
+                }
             }
-        }        
+        } else {
+            scheme = preferredScheme;
+            if (scheme == null) {
+                scheme = "https"; //$NON-NLS-1$
+            }
+        }
         
         String httpHost = null;
-        if(swagger.getHost() != null && !swagger.getHost().trim().isEmpty()) { //$NON-NLS-1$
+        if(swagger.getHost() != null && !swagger.getHost().trim().isEmpty()) { 
             httpHost = scheme + "://" + swagger.getHost();//$NON-NLS-1$
         }
         
@@ -230,17 +240,67 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         return sb.toString();
     }
     
+    private static <T> T nvl(T value, T ifNull) {
+        if (value == null) {
+            return ifNull;
+        }
+        return value;
+    }
+    
+    //to maintain a stable order
+    public static Map<HttpMethod, Operation> getOperationMap(Path operations) {
+        Map<HttpMethod, Operation> result = new LinkedHashMap<HttpMethod, Operation>();
+
+        if (operations.getGet() != null) {
+            result.put(HttpMethod.GET, operations.getGet());
+        }
+        if (operations.getPut() != null) {
+            result.put(HttpMethod.PUT, operations.getPut());
+        }
+        if (operations.getPost() != null) {
+            result.put(HttpMethod.POST, operations.getPost());
+        }
+        if (operations.getDelete() != null) {
+            result.put(HttpMethod.DELETE, operations.getDelete());
+        }
+        if (operations.getPatch() != null) {
+            result.put(HttpMethod.PATCH, operations.getPatch());
+        }
+        if (operations.getHead() != null) {
+            result.put(HttpMethod.HEAD, operations.getHead());
+        }
+        if (operations.getOptions() != null) {
+            result.put(HttpMethod.OPTIONS, operations.getOptions());
+        }
+
+        return result;
+    }
+
+    
     private void addProcedure(MetadataFactory mf, Swagger swagger,
             String basePath, String endpoint, Path operations)
             throws TranslatorException {
         
-        for(Entry<HttpMethod, Operation> entry : operations.getOperationMap().entrySet()){
+        for(Entry<HttpMethod, Operation> entry : getOperationMap(operations).entrySet()){
             
             Operation operation = entry.getValue();
-            String produces = getTypes(operation.getProduces(), getPreferredProduces());
-            String consumes = getTypes(operation.getConsumes(), getPreferredConsumes());
+            String produces = getTypes(nvl(operation.getProduces(), swagger.getProduces()), getPreferredProduces());
+            String consumes = getTypes(nvl(operation.getConsumes(), swagger.getConsumes()), getPreferredConsumes());
+            String name = operation.getOperationId();
+            if (name == null) {
+                //determine a name from the endpoint
+                int start = 0;
+                if (endpoint.startsWith("/")) { //$NON-NLS-1$
+                    start = 1;
+                }
+                name = endpoint.substring(start);
+                name = name.replaceAll("\\{([^}]*)\\}", "$1"); //$NON-NLS-1$ //$NON-NLS-2$
+                if (operations.getOperationMap().entrySet().size() > 1) {
+                    name = name + "_" + entry.getKey().name(); //$NON-NLS-1$ 
+                }
+            }
             
-            Procedure procedure = mf.addProcedure(operation.getOperationId());
+            Procedure procedure = mf.addProcedure(name);
             procedure.setVirtual(false);
             procedure.setProperty(METHOD, entry.getKey().name());
             if (operation.getSchemes() != null && !operation.getSchemes().isEmpty()) {
@@ -285,7 +345,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             @Override
             public void execute(String name, String nameInSource,
                     Property property, boolean array) {
-                String type = SwaggerTypeManager.teiidType(property.getType(), property.getFormat(), array);
+                String type = getPropertyType(property, array);
                 Column c = mf.addProcedureResultSetColumn(name, type, procedure);
                 if (!name.equalsIgnoreCase(nameInSource)) {
                     c.setNameInSource(nameInSource);
@@ -305,7 +365,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     String type = SwaggerTypeManager.teiidType(schema.getType(), schema.getFormat(), array);
                     mf.addProcedureParameter("return", type, ProcedureParameter.Type.ReturnValue, procedure);
                 } else {
-                    HashMap<String, Property> properties = new HashMap<String, Property>();
+                    Map<String, Property> properties = new LinkedHashMap<String, Property>();
                     properties.put("return", schema);
                     walkProperties(swagger, properties, null, null, pa);
                 }
@@ -375,6 +435,16 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     private void walkProperties(final Swagger swagger,
             final Map<String,Property> properties, final String namePrefix,
             final String nisPrefix, final PropertyAction pa) {
+        walkProperties(swagger, new HashSet<Property>(), properties, namePrefix, nisPrefix, pa);
+    }
+
+    private void walkProperties(final Swagger swagger, Set<Property> parents,
+            final Map<String,Property> properties, final String namePrefix,
+            final String nisPrefix, final PropertyAction pa) {
+        
+        if (properties == null) {
+            return;
+        }
 
         final PropertyVisitor visitor = new PropertyVisitor() {
             @Override
@@ -389,9 +459,10 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 } else {
                     // if Object or Ref, array does not matter as return is already a resultset.
                     Property items = property.getItems();
+                    parents.add(property);
                     if (items instanceof ObjectProperty) {
                         String modelName = ((ObjectProperty)items).getName();
-                        walkProperties(swagger,
+                        walkProperties(swagger, parents,
                                 ((ObjectProperty) items).getProperties(),
                                 fqn(fqn(namePrefix, name), modelName),
                                 nis(nis(nisPrefix, name, true), modelName, false),
@@ -399,15 +470,16 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     } else if (items instanceof RefProperty) {
                         String modelName = ((RefProperty)items).getSimpleRef();
                         Model model = swagger.getDefinitions().get(modelName);
-                        walkProperties(swagger, model.getProperties(),
+                        walkProperties(swagger, parents, model.getProperties(),
                                 fqn(fqn(namePrefix, name), modelName),
                                 nis(nis(nisPrefix, name, true), modelName, false),
                                 pa);
                     } else {
-                        walkProperties(swagger,
+                        walkProperties(swagger, parents,
                                 properties, fqn(namePrefix, name), 
                                 nis(nisPrefix, name, true), pa);
                     }                    
+                    parents.remove(property);
                 }
             }
             @Override
@@ -420,35 +492,63 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             }
             @Override
             public void visit(String name, ObjectProperty property) {
-                walkProperties(swagger,
+                parents.add(property);
+                walkProperties(swagger, parents,
                         property.getProperties(), fqn(namePrefix, name),
-                        nis(nisPrefix, name, false), pa);                    
+                        nis(nisPrefix, name, false), pa);
+                parents.remove(property);
             }
             @Override
             public void visit(String name, RefProperty property) {
+                parents.add(property);
                 Model model = swagger.getDefinitions().get(property.getSimpleRef());
-                walkProperties(swagger,
+                walkProperties(swagger, parents,
                         model.getProperties(), fqn(namePrefix, name),
-                        nis(nisPrefix, name, false), pa);                    
+                        nis(nisPrefix, name, false), pa);
+                parents.remove(property);
             }           
         };
         
         for (Entry<String, Property> p:properties.entrySet()) {
+            if (parents.contains(p.getValue())) {
+                //we don't yet handle recursive properties
+                //TODO: could be an error condition
+                continue;
+            }
             visitor.accept(p.getKey(), p.getValue());
         }
     }
     
     private String fqn(String prefix, String name) {
+        if (name == null) {
+            return prefix;
+        }
         return prefix == null?name:prefix+"_"+name;
     }
     
     private String nis(String prefix, String name, boolean array) {
-        String nis = prefix == null?name:prefix+"/"+name;
+        String nis = null;
+        if (name == null) {
+            nis = prefix;
+        } else {
+            nis = prefix == null?name:prefix+"/"+name;
+        }
         if (array) {
-            nis = nis+"[]";
+            nis = nis+ARRAY_SUFFIX;
         }
         return nis;
     }    
+    
+    private static String getPropertyType(Property property,
+            boolean array) {
+        String type = DataTypeManager.DefaultDataTypes.STRING;
+        if (property != null) {
+            type = SwaggerTypeManager.teiidType(property.getType(), property.getFormat(), array);
+        } else if (array) {
+            type += ARRAY_SUFFIX;
+        }
+        return type;
+    }
 
     private void addProcedureParameters(final MetadataFactory mf, final Swagger swagger,
             final Procedure procedure, final Operation operation) throws TranslatorException {
@@ -459,12 +559,15 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     @Override
                     public void execute(String name, String nameInSource,
                             Property property, boolean array) {
-                        String type = SwaggerTypeManager.teiidType(property.getType(), property.getFormat(), array);
+                        String type = getPropertyType(property, array);
                         if (procedure.getParameterByName(nameInSource) == null) {
                             ProcedureParameter param = mf.addProcedureParameter(name, type, Type.In, procedure);
                             param.setProperty(PARAMETER_TYPE, parameter.getIn());
-                            param.setNullType(property.getRequired()?NullType.No_Nulls:NullType.Nullable);
-                            param.setAnnotation(property.getDescription());
+                            if (property != null && !property.getRequired()) {
+                                param.setProperty(BaseColumn.DEFAULT_HANDLING, BaseColumn.OMIT_DEFAULT);
+                            }
+                            param.setNullType(NullType.No_Nulls);
+                            param.setAnnotation(property!=null?property.getDescription():null);
                             if (!name.equalsIgnoreCase(nameInSource)) {
                                 param.setNameInSource(nameInSource);
                             }
@@ -480,7 +583,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                         Model m = swagger.getDefinitions().get(refModel.getSimpleRef());
                         walkProperties(swagger, m.getProperties(), null, null, pa);
                     }
-                    break;
                 } else {
                     if ((model instanceof ModelImpl) && model.getProperties() != null) {
                         walkProperties(swagger, model.getProperties(), null, null, pa);
@@ -498,11 +600,11 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 String name = parameter.getName();
                 ProcedureParameter pp = null;
                 String type = null;
-                String defaultValue = null;
+                Object defaultValue = null;
                 String collectionFormat = null;
                 
-                if(parameter instanceof PathParameter) {
-                    PathParameter p  = (PathParameter) parameter;
+                if(parameter instanceof AbstractSerializableParameter) {
+                    AbstractSerializableParameter p  = (AbstractSerializableParameter) parameter;
                     type = p.getType();
                     if (p.getType().equalsIgnoreCase("array")){
                         Property ap = p.getItems();
@@ -511,57 +613,22 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
                     defaultValue = p.getDefaultValue();
                     collectionFormat = p.getCollectionFormat();
-                } else if(parameter instanceof QueryParameter) {
-                    QueryParameter p  = (QueryParameter) parameter;
-                    type = p.getType();
-                    if (p.getType().equalsIgnoreCase("array")){
-                        Property ap = p.getItems();
-                        type = ap.getType();
-                    }
-                    type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
-                    defaultValue = p.getDefaultValue();
-                    collectionFormat = p.getCollectionFormat();
-                } else if (parameter instanceof FormParameter) {
-                    FormParameter p = (FormParameter) parameter;
-                    type = p.getType();
-                    if (p.getType().equalsIgnoreCase("array")){
-                        Property ap = p.getItems();
-                        type = ap.getType();
-                    }
-                    type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
-                    defaultValue = p.getDefaultValue();
-                    collectionFormat = p.getCollectionFormat();
-                } else if (parameter instanceof HeaderParameter) {
-                    HeaderParameter p = (HeaderParameter)parameter;
-                    type = p.getType();
-                    if (p.getType().equalsIgnoreCase("array")){
-                        Property ap = p.getItems();
-                        type = ap.getType();
-                    }
-                    type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
-                    defaultValue = p.getDefaultValue();
-                    collectionFormat = p.getCollectionFormat();
-                } else if (parameter instanceof CookieParameter) {
-                    CookieParameter p = (CookieParameter) parameter;
-                    type = p.getType();
-                    if (p.getType().equalsIgnoreCase("array")){
-                        Property ap = p.getItems();
-                        type = ap.getType();
-                    }
-                    type = SwaggerTypeManager.teiidType(type, p.getFormat(), p.getItems() != null);
-                    defaultValue = p.getDefaultValue();
-                    collectionFormat = p.getCollectionFormat();
-                }
+                } else {
+                    throw new MetadataException("Unknown property type" + parameter.getClass().getName()); //$NON-NLS-1$
+                } 
                 
                 pp = mf.addProcedureParameter(name, type, Type.In, procedure);
                 pp.setProperty(PARAMETER_TYPE, parameter.getIn());
                 
                 boolean required = parameter.getRequired();
-                pp.setNullType(required ? NullType.No_Nulls : NullType.Nullable);  
+                if (!required) {
+                    pp.setProperty(BaseColumn.DEFAULT_HANDLING, BaseColumn.OMIT_DEFAULT);
+                }
+                pp.setNullType(NullType.No_Nulls);
                 
                 pp.setAnnotation(parameter.getDescription());
                 if (defaultValue != null) {
-                    pp.setDefaultValue(defaultValue);
+                    pp.setDefaultValue(defaultValue.toString());
                 }
                 if (collectionFormat != null) {
                     pp.setProperty(COLLECION_FORMAT, collectionFormat);
@@ -608,13 +675,13 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         	if( swaggerFile != null &&  !swaggerFile.isEmpty()) {        		 
                 File f = new File(swaggerFile);
 
-                if(f == null || !f.exists() || !f.isFile()) {
+                if(!f.exists() || !f.isFile()) {
 	                throw new TranslatorException(SwaggerPlugin.Event.TEIID28019,
 	                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28019, swaggerFile));
                 }
                 	
                 SwaggerParser parser = new SwaggerParser();
-                swagger =  parser.read(f.getAbsolutePath());
+                swagger =  parser.read(f.getAbsolutePath(), null, true);
         	} else {        	
 	            BaseQueryExecution execution = new BaseQueryExecution(this.ef, null, null, conn);
 	            Map<String, List<String>> headers = new HashMap<String, List<String>>();
@@ -628,7 +695,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
 	            Blob out = (Blob)call.getOutputParameterValues().get(0);
 	            ObjectMapper objectMapper = new ObjectMapper();
 	            JsonNode rootNode = objectMapper.readTree(out.getBinaryStream());
-	            swagger =  new SwaggerParser().read(rootNode);
+	            swagger =  new SwaggerParser().read(rootNode, true);
         	}
         } catch (Exception e) {
             throw new TranslatorException(SwaggerPlugin.Event.TEIID28016, e,

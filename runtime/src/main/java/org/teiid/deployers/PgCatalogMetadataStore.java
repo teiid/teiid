@@ -747,7 +747,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			return encoding;
 		}
 		
-		public static Integer regClass(org.teiid.CommandContext cc, String name) throws TeiidComponentException, QueryResolverException {
+		public static Integer regClass(org.teiid.CommandContext cc, String name) throws TeiidComponentException, QueryResolverException, org.teiid.query.parser.ParseException {
             VDBMetaData metadata = (VDBMetaData) cc.getVdb();
             TransformationMetadata tm = metadata.getAttachment(TransformationMetadata.class);
             GroupSymbol symbol = new GroupSymbol(SQLParserUtil.normalizeId(name));

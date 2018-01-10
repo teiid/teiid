@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -164,11 +165,12 @@ public class TestDQPCore {
     }
     
     @Test public void testRequestMaxActive() throws Exception {
-        agds.latch = new CountDownLatch(1);
+        agds.latch = new CountDownLatch(3);
         int toRun = 2;
         CountDownLatch submitted = new CountDownLatch(toRun);
         ExecutorService es = Executors.newCachedThreadPool();
         final DQPWorkContext context = DQPWorkContext.getWorkContext();
+        final AtomicInteger counter = new AtomicInteger();
         es.invokeAll(Collections.nCopies(toRun, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -177,9 +179,13 @@ public class TestDQPCore {
                 DQPWorkContext.getWorkContext().getSession().setSessionId("1");
                 DQPWorkContext.getWorkContext().getSession().setUserName("a");
 
-                Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+                Future<ResultsMessage> message = null;
+                try {
+                    message = core.executeRequest(counter.getAndIncrement(), reqMsg);
+                } finally {
+                    submitted.countDown();    
+                }
                 assertNotNull(core.getClientState("1", false));
-                submitted.countDown();
                 submitted.await(); //after this, both will be submitted
                 agds.latch.countDown(); //allow the execution to proceed
                 message.get(500000, TimeUnit.MILLISECONDS);

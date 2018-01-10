@@ -18,16 +18,17 @@
 package org.teiid.translator.swagger;
 
 import static org.junit.Assert.*;
-import io.swagger.models.Swagger;
-import io.swagger.parser.SwaggerParser;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
 import org.junit.Test;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
@@ -47,6 +48,12 @@ import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.models.Swagger;
+import io.swagger.parser.SwaggerParser;
+
 @SuppressWarnings("nls")
 public class TestSwaggerMetadataProcessor {
     
@@ -63,32 +70,25 @@ public class TestSwaggerMetadataProcessor {
     }
     
     static MetadataFactory swaggerMetadata(SwaggerExecutionFactory ef) throws TranslatorException {
-        SwaggerMetadataProcessor processor = new SwaggerMetadataProcessor(ef) {
-            protected Swagger getSchema(WSConnection conn) throws TranslatorException {
-                File f = new File(UnitTestUtil.getTestDataPath()+"/swagger.json");
-                SwaggerParser parser = new SwaggerParser();
-                return parser.read(f.getAbsolutePath());
-            }           
-        };
-        processor.setPreferredProduces("application/json");
-        processor.setPreferredConsumes("application/json");
-        processor.setPreferredScheme("http");
-        Properties props = new Properties();
-        MetadataFactory mf = new MetadataFactory("vdb", 1, "swagger",
-                SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
-        processor.process(mf, null);
-        //String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        //System.out.println(ddl);    
-        
-        return mf;
+        return getMetadata(ef, UnitTestUtil.getTestDataPath()+"/swagger.json");
     }
     
     static MetadataFactory petstoreMetadata(SwaggerExecutionFactory ef) throws TranslatorException {
+        return getMetadata(ef, UnitTestUtil.getTestDataPath()+"/petstore.json");
+    }
+
+    private static MetadataFactory getMetadata(SwaggerExecutionFactory ef,
+            final String file) throws TranslatorException {
         SwaggerMetadataProcessor processor = new SwaggerMetadataProcessor(ef) {
             protected Swagger getSchema(WSConnection conn) throws TranslatorException {
-                File f = new File(UnitTestUtil.getTestDataPath()+"/petstore.json");
-                SwaggerParser parser = new SwaggerParser();
-                return parser.read(f.getAbsolutePath());
+                File f = new File(file);
+                ObjectMapper objectMapper = new ObjectMapper();
+                try (FileInputStream fis = new FileInputStream(f)) {
+                    JsonNode rootNode = objectMapper.readTree(fis);
+                    return new SwaggerParser().read(rootNode, true);
+                } catch (IOException e) {
+                    throw new TranslatorException(e);
+                }
             }           
         };
         processor.setPreferredProduces("application/json");
@@ -393,7 +393,9 @@ public class TestSwaggerMetadataProcessor {
         
         pa = p.getParameterByName("tags_Tag_id");
         assertEquals("tags[]/Tag/id", pa.getNameInSource());
-        assertEquals("body", pa.getProperty("teiid_rest:PARAMETER_TYPE", false));        
+        assertEquals("body", pa.getProperty("teiid_rest:PARAMETER_TYPE", false));
+        //TODO: the logic could support this as a long array as well
+        assertEquals("long", pa.getRuntimeType());
     }     
     
     @Test
@@ -444,5 +446,53 @@ public class TestSwaggerMetadataProcessor {
         
         List<Column> columns = p.getResultSet().getColumns();
         assertEquals(2, columns.size());        
+    }
+    
+    @Test
+    public void testRefParameter() throws Exception {
+        SwaggerExecutionFactory translator = new SwaggerExecutionFactory();
+        translator.start();
+        MetadataFactory mf = getMetadata(translator, UnitTestUtil.getTestDataPath()+"/redis-swagger.json");
+        
+        Procedure p = mf.getSchema().getProcedure("Operations_List");
+        assertNotNull(p);
+        assertEquals("GET", p.getProperty(RestMetadataExtension.METHOD, false).toUpperCase());
+        assertEquals("https://management.azure.comnull/providers/Microsoft.Cache/operations", p.getProperty(RestMetadataExtension.URI, false));
+        assertNotNull(p.getResultSet());
+        
+        assertNotNull(p.getParameterByName("api-version"));
+    }
+    
+    @Test
+    public void testEndpointAsName() throws Exception {
+        SwaggerExecutionFactory translator = new SwaggerExecutionFactory();
+        translator.start();
+        MetadataFactory mf = getMetadata(translator, UnitTestUtil.getTestDataPath()+"/fahrplan-swagger.json");
+        
+        Procedure p = mf.getSchema().getProcedure("arrivalBoard/id");
+        assertNotNull(p);
+        assertEquals("GET", p.getProperty(RestMetadataExtension.METHOD, false).toUpperCase());
+        assertEquals("http://api.deutschebahn.com/freeplan/v1/arrivalBoard/{id}", p.getProperty(RestMetadataExtension.URI, false));
+        assertNotNull(p.getResultSet());
+    }
+    
+    @Test
+    public void testObjectArrayTypes() throws Exception {
+        SwaggerExecutionFactory translator = new SwaggerExecutionFactory();
+        translator.start();
+        MetadataFactory mf = getMetadata(translator, UnitTestUtil.getTestDataPath()+"/doubleclick-swagger.json");
+        
+       Procedure p = mf.getSchema().getProcedure("doubleclicksearch.reports.request");
+       ProcedureParameter param = p.getParameterByName("filters_values");
+       assertEquals("string[]", param.getRuntimeType());
+    }
+    
+    @Test
+    public void testRecursiveProperty() throws Exception {
+        SwaggerExecutionFactory translator = new SwaggerExecutionFactory();
+        translator.start();
+        MetadataFactory mf = getMetadata(translator, UnitTestUtil.getTestDataPath()+"/magento-swagger.json");
+        
+        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("magento.ddl")), DDLStringVisitor.getDDLString(mf.getSchema(), null, null));
     }
 }

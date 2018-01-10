@@ -321,7 +321,12 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         }
         
         if(groupID instanceof TempMetadataID && !(actualMetadata instanceof TempMetadataAdapter)) {
-        	return ((TempMetadataID)groupID).getQueryNode();
+            TempMetadataID tid = (TempMetadataID)groupID;
+            QueryNode queryNode = tid.getQueryNode();
+            if (queryNode != null) {
+                return queryNode;
+            }
+            throw new QueryMetadataException(QueryPlugin.Event.TEIID31265, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31265, tid.getName()));
         }            
    		return this.actualMetadata.getVirtualPlan(groupID);
 	}
@@ -528,15 +533,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.groupSupports(groupID, groupConstant);
     }
     
-    public boolean isXMLGroup(Object groupID)
-        throws TeiidComponentException, QueryMetadataException {
-
-        if(groupID instanceof TempMetadataID) {
-            return ((TempMetadataID)groupID).getMetadataType() == Type.XML;
-        }
-        return this.actualMetadata.isXMLGroup(groupID);
-    }
-
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getVirtualDatabaseName()
      */

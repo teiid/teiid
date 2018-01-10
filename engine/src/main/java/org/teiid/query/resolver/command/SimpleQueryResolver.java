@@ -270,6 +270,14 @@ public class SimpleQueryResolver implements CommandResolver {
             
             QueryResolver.setChildMetadata(command, query);
             command.pushNewResolvingContext(externalGroups);
+            for (GroupSymbol gs : externalGroups) {
+                //subquery from clauses are not valid for resolving against
+                //and they are not caught by later validation like scalar groups
+                //we can directly remove as each command has a copy of the known temp groups
+                if (!gs.isTempTable()) {
+                    command.getTemporaryMetadata().removeTempGroup(gs.getName());
+                }
+            }
             
             try {
                 QueryResolver.resolveCommand(command, metadata.getMetadata(), false);
@@ -466,9 +474,6 @@ public class SimpleQueryResolver implements CommandResolver {
             GroupSymbol group = obj.getGroup();
             visitNode(group);
             try {
-	            if (!group.isProcedure() && metadata.isXMLGroup(group.getMetadataID())) {
-	                 throw new QueryResolverException(QueryPlugin.Event.TEIID30112, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30112));
-	            }
 	            discoveredGroup(group);
 	            if (group.isProcedure()) {
 	                createProcRelational(obj);

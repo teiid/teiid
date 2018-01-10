@@ -298,9 +298,10 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         supportedFunctions.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("REPEAT"); //$NON-NLS-1$
-        if (getVersion().compareTo(TEN_0) >= 0) {
-            supportedFunctions.add("RAND"); //$NON-NLS-1$
-        }
+        //rand is evaulated deterministically by SQL Server
+        //if (getVersion().compareTo(TEN_0) >= 0) {
+            //supportedFunctions.add("RAND"); //$NON-NLS-1$
+        //}
         supportedFunctions.add("REPLACE"); //$NON-NLS-1$
         supportedFunctions.add("RIGHT"); //$NON-NLS-1$
         supportedFunctions.add("RPAD"); //$NON-NLS-1$

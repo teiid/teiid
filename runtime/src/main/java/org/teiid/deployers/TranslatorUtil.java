@@ -346,7 +346,7 @@ public class TranslatorUtil {
                 epm.allowed = new ArrayList<String>();
                 StringTokenizer st = new StringTokenizer(tp.allowed(), ","); //$NON-NLS-1$
                 while (st.hasMoreTokens()) {
-                    epm.allowed.add(st.nextToken());
+                    epm.allowed.add(st.nextToken().trim());
                 }
             }
             propertyDefns.add(epm);

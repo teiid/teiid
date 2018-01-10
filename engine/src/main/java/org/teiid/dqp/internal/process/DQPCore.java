@@ -412,7 +412,9 @@ public class DQPCore implements DQP {
     }
     
     public int getMaxWaitingPlanWatermark() {
-    	return this.maxWaitingPlans;
+        synchronized (waitingPlans) {
+            return this.maxWaitingPlans;
+        }
     }
     
     void removeRequest(final RequestWorkItem workItem) {

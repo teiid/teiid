@@ -506,20 +506,20 @@ public final class FunctionMethods {
 
 	// ================== Function = currentDate =====================
 
-	public static  Object currentDate() {
-		return TimestampWithTimezone.createDate(new Date());
+	public static  Object currentDate(CommandContext context) {
+		return context.currentDate();
 	}
 
 	// ================== Function = currentTime =====================
 
-	public static  Object currentTime() {
-		return TimestampWithTimezone.createTime(new Date());
+	public static  Object currentTime(CommandContext context) {
+	    return context.currentTime();
 	}
 
 	// ================== Function = currentTimestamp =====================
 
-	public static  Object currentTimestamp() {
-		return new Timestamp(System.currentTimeMillis());
+	public static  Object currentTimestamp(CommandContext context) {
+	    return context.currentTimestamp();
 	}
 
 	// ================== Helper for a bunch of date functions =====================

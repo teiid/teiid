@@ -335,7 +335,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(StoredProcedure obj) {
 		for (SPParameter param : obj.getInputParameters()) {
 			try {
-                if (!getMetadata().elementSupports(param.getMetadataID(), SupportConstants.Element.NULL) && EvaluatableVisitor.isFullyEvaluatable(param.getExpression(), true)) {
+                if (!param.isUsingDefault() && !getMetadata().elementSupports(param.getMetadataID(), SupportConstants.Element.NULL) && EvaluatableVisitor.isFullyEvaluatable(param.getExpression(), true)) {
 	                try {
 	                    // If nextValue is an expression, evaluate it before checking for null
 	                    Object evaluatedValue = Evaluator.evaluate(param.getExpression());
@@ -349,7 +349,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	            				}
 	            			}
 	            		}
-	                } catch(ExpressionEvaluationException e) {
+	                } catch(Exception e) {
 	                    //ignore for now, we don't have the context which could be the problem
 	                }
 	            }

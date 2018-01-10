@@ -55,6 +55,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.HardcodedDataManager;
@@ -1824,7 +1825,7 @@ public class TestProcedureProcessor {
         assertNull(plan.requiresTransaction(false));
         
         plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin loop on (select e1 from pm1.g1) as x begin insert into pm1.g1 (e1) values (x.e1); end end", RealMetadataFactory.example1Cached());
-        assertTrue(plan.requiresTransaction(false));
+        assertNull(plan.requiresTransaction(false));
         
         plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin execute immediate 'select 1'; end", RealMetadataFactory.example1Cached());
         assertFalse(plan.requiresTransaction(false));
@@ -2420,7 +2421,18 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testOmitDefault() throws Exception {
-        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign procedure f1(x string options (\"teiid_rel:default_handling\" 'omit')) RETURNS string", "x", "y");
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign procedure f1(x string not null options (\"teiid_rel:default_handling\" 'omit')) RETURNS string;", "x", "y");
+        
+        ProcessorPlan plan = helpGetPlan("exec f1()", metadata);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("EXEC f1()", Arrays.asList("a"));
+        helpProcess(plan, cc, hdm, new List[] {Arrays.asList("a")});
+    }
+    
+    @Test public void testOmitDefaultWithDefault() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign procedure f1(x string default truncate options (\"teiid_rel:default_handling\" 'omit')) RETURNS string", "x", "y");
         
         ProcessorPlan plan = helpGetPlan("exec f1()", metadata);
         CommandContext cc = TestProcessor.createCommandContext();
@@ -2467,16 +2479,21 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testTeiid5001() throws Exception {
-        String sql = "SELECT d.id FROM ( SELECT 'l1' as domain ) dim_md_domains_to_load, table(CALL testcase.proc_web_avg_visit_duration_empty(\"domain\" => domain)) x JOIN testcase.dim_md_date_ranges d ON true";
-        
-        TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE VIEW testcase.dim_md_date_ranges AS SELECT 1 as \"id\" union all select 2 "
-                + "CREATE VIRTUAL PROCEDURE proc_web_avg_visit_duration_empty( domain string ) RETURNS (i integer) AS BEGIN select 1; END", "x", "testcase");
-        
-        ProcessorPlan plan = getProcedurePlan(sql, tm);
-
-        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
-        List[] expected = new List[] { Arrays.asList(1), Arrays.asList(2) }; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataManager, tm);
+        ParseInfo.REQUIRE_UNQUALIFIED_NAMES = false;
+        try {
+            String sql = "SELECT d.id FROM ( SELECT 'l1' as domain ) dim_md_domains_to_load, table(CALL testcase.proc_web_avg_visit_duration_empty(\"domain\" => domain)) x JOIN testcase.dim_md_date_ranges d ON true";
+            
+            TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE VIEW testcase.dim_md_date_ranges AS SELECT 1 as \"id\" union all select 2 "
+                    + "CREATE VIRTUAL PROCEDURE proc_web_avg_visit_duration_empty( domain string ) RETURNS (i integer) AS BEGIN select 1; END", "x", "testcase");
+            
+            ProcessorPlan plan = getProcedurePlan(sql, tm);
+    
+            HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+            List[] expected = new List[] { Arrays.asList(1), Arrays.asList(2) }; //$NON-NLS-1$
+            helpTestProcess(plan, expected, dataManager, tm);
+        } finally {
+            ParseInfo.REQUIRE_UNQUALIFIED_NAMES = true;
+        }
     }
     
     private static final boolean DEBUG = false;
