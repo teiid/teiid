@@ -30,6 +30,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -1514,4 +1515,49 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[]{"SELECT DISTINCT g_0.IntKey AS c_0, g_0.DoubleNum AS c_1 FROM BQT1.SmallA AS g_0 ORDER BY c_0", "SELECT DISTINCT g_0.IntKey AS c_0, g_0.ByteNum AS c_1, g_0.StringNum AS c_2, g_0.StringKey AS c_3 FROM BQT1.SmallB AS g_0 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
     }
+
+    
+    @Test public void testMultipleDistinct() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, false);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, true);
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        String sql = "SELECT count(distinct bqt1.smallb.stringkey), count(distinct bqt1.smallb.stringnum) from bqt1.smallb group by intkey";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT g_0.IntKey, g_0.StringKey, g_0.StringNum FROM BQT1.SmallB AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
+        
+        //same distinct args are fine
+        sql = "SELECT count(distinct bqt1.smallb.intkey), avg(distinct bqt1.smallb.intkey) from bqt1.smallb group by stringnum";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT COUNT(DISTINCT g_0.IntKey), AVG(DISTINCT g_0.IntKey) FROM BQT1.SmallB AS g_0 GROUP BY g_0.StringNum"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testSinglePredicatePushedWithUnionAndGrouping() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        String sql = "select * from (select intnum as a from bqt1.smalla group by intnum union all select 1 as a) as x where a = 1;";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT g_0.IntNum FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 1 GROUP BY g_0.IntNum"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
+    }
+    
+    @Test public void testHavingWithSubqueryPlacement() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+        
+        String sql = "SELECT INTKEY, STRINGKEY \n" + 
+                "  FROM BQT1.SMALLA AS A \n" + 
+                "  WHERE NOT (INTKEY IN (10)) \n" + 
+                "  GROUP BY INTKEY, STRINGKEY \n" + 
+                "  HAVING INTKEY = (SELECT MIN(STRINGKEY) FROM BQT1.SMALLA AS B WHERE A.INTKEY = B.INTKEY)";
+        
+        BasicSourceCapabilities aggregateCapabilities = getAggregateCapabilities();
+        aggregateCapabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        aggregateCapabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        aggregateCapabilities.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        
+        TestOptimizer.helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(aggregateCapabilities), 
+                new String[] {"SELECT g_0.IntKey, g_0.StringKey FROM BQT1.SmallA AS g_0 WHERE (g_0.IntKey <> 10) AND (convert(g_0.IntKey, string) = (SELECT MIN(g_1.StringKey) FROM BQT1.SmallA AS g_1 WHERE g_1.IntKey = g_0.IntKey)) GROUP BY g_0.IntKey, g_0.StringKey"}, ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
 }
