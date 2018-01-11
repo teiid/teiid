@@ -1705,9 +1705,9 @@ public class RelationalPlanner {
     public static PlanNode createSelectNode(final Criteria crit, boolean isHaving) {
         PlanNode critNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
         critNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
-        //TODO: we should check for grouping expression correlations, but those are not yet set when this is 
-        // called in the planner, so we look for any subquery
-        if (isHaving && (!ElementCollectorVisitor.getAggregates(crit, false).isEmpty() || !ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty())) {
+        if (isHaving && (!ElementCollectorVisitor.getAggregates(crit, false).isEmpty() 
+            //it's not needed to check for correlated grouping expression as those will be replaced as expected when needed
+                /*|| !ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty()*/)) {
             critNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
         }
         // Add groups to crit node
