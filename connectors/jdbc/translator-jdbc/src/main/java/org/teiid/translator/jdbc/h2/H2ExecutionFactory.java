@@ -285,4 +285,9 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsUpsert() {
         return true;
     }
+
+    @Override
+    public boolean supportsFunctionsInGroupBy() {
+        return true;
+    }
 }

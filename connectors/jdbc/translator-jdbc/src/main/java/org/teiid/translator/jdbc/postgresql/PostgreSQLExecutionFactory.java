@@ -1026,4 +1026,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         super.bindValue(stmt, param, paramType, i);
     }
     
+    @Override
+    public boolean supportsFunctionsInGroupBy() {
+        return true;
+    }
 }
