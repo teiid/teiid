@@ -18,6 +18,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -58,7 +59,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
 	    boolean beforeJoinPlanning = rules.contains(RuleConstants.PLAN_JOINS);
 	    
 		while (beforeJoinPlanning?
-		        planLeftOuterJoinAssociativityWithoutPushdown(plan, metadata):
+		        planLeftOuterJoinAssociativityBeforePlanning(plan, metadata, capabilitiesFinder, analysisRecord, context):
 		        planLeftOuterJoinAssociativity(plan, metadata, capabilitiesFinder, analysisRecord, context)) {
 			//repeat
 		}
@@ -227,9 +228,13 @@ public class RulePlanOuterJoins implements OptimizerRule {
      * @param plan
      * @param metadata
      * @return
+     * @throws TeiidComponentException 
+     * @throws QueryMetadataException 
      */
-    private boolean planLeftOuterJoinAssociativityWithoutPushdown(PlanNode plan,
-            QueryMetadataInterface metadata) {
+    private boolean planLeftOuterJoinAssociativityBeforePlanning(PlanNode plan,
+            QueryMetadataInterface metadata,
+            CapabilitiesFinder capabilitiesFinder,
+            AnalysisRecord analysisRecord, CommandContext context) throws QueryMetadataException, TeiidComponentException {
         
         boolean changedAny = false;
         LinkedHashSet<PlanNode> joins = new LinkedHashSet<PlanNode>(NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)); 
@@ -237,6 +242,13 @@ public class RulePlanOuterJoins implements OptimizerRule {
             Iterator<PlanNode> i = joins.iterator();
             PlanNode join = i.next();
             i.remove();
+            
+            //check for left outer join ordering, such that we can combine for pushdown
+            if (checkLeftOrdering(metadata, capabilitiesFinder, analysisRecord,
+                    context, join)) {
+                continue;
+            }
+            
             if (!join.getProperty(Info.JOIN_TYPE).equals(JoinType.JOIN_LEFT_OUTER)) {
                 continue;
             }
@@ -287,6 +299,82 @@ public class RulePlanOuterJoins implements OptimizerRule {
             }
         }
         return changedAny;
+    }
+
+    /**
+     * Check if the current join spans inner/left outer joins, such that 
+     * a different tree structure would group the join for pushing
+     * 
+     * TODO: this is not tolerant to more complex left nesting structures
+     * 
+     * @param metadata
+     * @param capabilitiesFinder
+     * @param analysisRecord
+     * @param context
+     * @param join
+     * @return true if the current join has been restructured
+     * @throws QueryMetadataException
+     * @throws TeiidComponentException
+     */
+    private boolean checkLeftOrdering(QueryMetadataInterface metadata,
+            CapabilitiesFinder capabilitiesFinder,
+            AnalysisRecord analysisRecord, CommandContext context,
+            PlanNode join)
+            throws QueryMetadataException, TeiidComponentException {
+        if (join.getFirstChild().getType() != NodeConstants.Types.JOIN || !(join.getFirstChild().getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER || join.getFirstChild().getProperty(Info.JOIN_TYPE) == JoinType.JOIN_INNER)) {
+            return false;
+        }
+        PlanNode childJoin = null;
+        PlanNode left = join.getFirstChild();
+        PlanNode right = join.getLastChild();
+        
+        boolean nested = false;
+        boolean hasOuter = join.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER;
+        childJoin = left;
+        while (childJoin.getFirstChild().getType() != NodeConstants.Types.ACCESS) {
+            if (childJoin.getType() != NodeConstants.Types.JOIN || !(childJoin.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER || childJoin.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_INNER)) {
+                return false;
+            }
+            hasOuter |= childJoin.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER;
+            List<Criteria> childJoinCriteria = (List<Criteria>) childJoin.getProperty(Info.JOIN_CRITERIA);
+            if (!isCriteriaValid(childJoinCriteria, metadata, childJoin)) {
+                return false;
+            }
+            childJoin = childJoin.getFirstChild();
+            left = childJoin;
+            nested = true;
+        }
+        if (nested && hasOuter) {
+            if (right.getType() != NodeConstants.Types.ACCESS) {
+                return false;
+            }
+            List<Criteria> joinCriteria = (List<Criteria>) join.getProperty(Info.JOIN_CRITERIA);
+            if (!isCriteriaValid(joinCriteria, metadata, join)) {
+                return false;
+            }
+            joinCriteria = new ArrayList<>(joinCriteria);
+            RuleChooseJoinStrategy.filterOptionalCriteria(joinCriteria, false);
+            Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(joinCriteria);
+            if (groups.containsAll(left.getFirstChild().getGroups()) 
+                    && groups.containsAll(right.getGroups())
+                    && groups.size() == left.getFirstChild().getGroups().size() + right.getGroups().size()) {
+                Object modelId = RuleRaiseAccess.canRaiseOverJoin(Arrays.asList(left.getFirstChild(), right), metadata, capabilitiesFinder, joinCriteria, JoinType.JOIN_LEFT_OUTER, analysisRecord, context, false, false);
+                if (modelId == null) {
+                    return false;
+                }
+                PlanNode parent = join.getParent();
+                join.getParent().replaceChild(join, join.getFirstChild());
+                join.removeAllChildren();
+                left.getFirstChild().addAsParent(join);
+                join.addLastChild(right);
+                join.getGroups().clear();
+                updateGroups(join);
+                parent.getGroups().clear();
+                updateGroups(parent);
+                return true;
+            }
+        }
+        return false;
     }
     
     @Override
