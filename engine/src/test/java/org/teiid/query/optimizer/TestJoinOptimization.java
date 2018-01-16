@@ -1177,6 +1177,17 @@ public class TestJoinOptimization {
 	   				"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 LEFT OUTER JOIN pm2.g3 AS g_1 ON g_0.e2 = g_1.e2 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	 }
 	
+    @Test public void testLeftOuterAssocitivtyLeftLinearWithPreserve() throws Exception {
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        TestOptimizer.helpPlan("SELECT pm1.g1.e3 from /*+ preserve */ (pm1.g1 left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 left outer join pm2.g3 on pm2.g2.e2 = pm2.g3.e2)", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(),
+                new String[] {
+                    "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+                    "SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", 
+                    "SELECT g_0.e2 AS c_0 FROM pm2.g3 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+     }
+	
 	@Test public void testLeftOuterAssocitivtyLeftLinearSwap() throws Exception {
 	   	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);

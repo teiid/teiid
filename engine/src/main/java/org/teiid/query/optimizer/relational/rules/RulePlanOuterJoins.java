@@ -77,7 +77,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
     		Iterator<PlanNode> i = joins.iterator();
     		PlanNode join = i.next();
     		i.remove();
-    		if (!join.getProperty(Info.JOIN_TYPE).equals(JoinType.JOIN_LEFT_OUTER)) {
+    		if (!join.getProperty(Info.JOIN_TYPE).equals(JoinType.JOIN_LEFT_OUTER) || join.hasBooleanProperty(Info.PRESERVE)) {
     			continue;
     		}
     		PlanNode childJoin = null;
@@ -107,7 +107,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
     		}
     		
     		List<Criteria> childJoinCriteria = (List<Criteria>) childJoin.getProperty(Info.JOIN_CRITERIA);
-    		if (!isCriteriaValid(childJoinCriteria, metadata, childJoin)) {
+    		if (!isCriteriaValid(childJoinCriteria, metadata, childJoin) || childJoin.hasBooleanProperty(Info.PRESERVE)) {
     			continue;
     		}
     		
@@ -237,6 +237,11 @@ public class RulePlanOuterJoins implements OptimizerRule {
             Iterator<PlanNode> i = joins.iterator();
             PlanNode join = i.next();
             i.remove();
+
+            if (join.hasBooleanProperty(Info.PRESERVE)) {
+                continue;
+            }
+            
             if (!join.getProperty(Info.JOIN_TYPE).equals(JoinType.JOIN_LEFT_OUTER)) {
                 continue;
             }
@@ -259,7 +264,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
             }
             
             List<Criteria> childJoinCriteria = (List<Criteria>) childJoin.getProperty(Info.JOIN_CRITERIA);
-            if (!isCriteriaValid(childJoinCriteria, metadata, childJoin)) {
+            if (!isCriteriaValid(childJoinCriteria, metadata, childJoin) || join.hasBooleanProperty(Info.PRESERVE)) {
                 continue;
             }
             
