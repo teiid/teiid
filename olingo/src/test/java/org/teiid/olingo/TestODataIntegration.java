@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -65,7 +66,9 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManage
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.Update;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.RuntimeMetadata;
@@ -102,6 +105,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SuppressWarnings("nls")
 public class TestODataIntegration {
+    
+    interface CommandValidator {
+        void validate(org.teiid.language.Command c);
+    }
+    
+    private static final class AutoUpdateHardCodedExecutionFactory
+            extends HardCodedExecutionFactory {
+        CommandValidator validator;
+
+        @Override
+        public boolean supportsCompareCriteriaEquals() {
+            return true;
+        }
+
+        @Override
+        public UpdateExecution createUpdateExecution(
+                org.teiid.language.Command command,
+                ExecutionContext executionContext,
+                RuntimeMetadata metadata, Object connection)
+                throws TranslatorException {
+            addUpdate(command.toString(), new int[] {1});
+            if (validator != null) {
+                validator.validate(command);
+            }
+            return super.createUpdateExecution(command, executionContext, metadata,connection);
+        }
+    }
+
     private static final class UnitTestLocalClient extends LocalClient {
 		private final Properties properties;
 		private final TeiidDriver driver;
@@ -399,23 +430,8 @@ public class TestODataIntegration {
     
     @Test
     public void testInsertDifferentTypes() throws Exception {
-        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
-            @Override
-            public boolean supportsCompareCriteriaEquals() {
-                return true;
-            }
-
-            @Override
-            public UpdateExecution createUpdateExecution(
-                    org.teiid.language.Command command,
-                    ExecutionContext executionContext,
-                    RuntimeMetadata metadata, Object connection)
-                    throws TranslatorException {
-                addUpdate(command.toString(), new int[] {1});
-                return super.createUpdateExecution(command, executionContext, metadata,connection);
-            }
-           
-        };
+        
+        AutoUpdateHardCodedExecutionFactory hc = new AutoUpdateHardCodedExecutionFactory();
         
         hc.addUpdate("INSERT INTO PostTable (intkey, intnum, stringkey, stringval, booleanval, "
                 + "decimalval, timeval, dateval, timestampval) "
@@ -516,11 +532,24 @@ public class TestODataIntegration {
                         .send();
                 assertEquals(405, response.getStatus());
                 
+                hc.validator = (org.teiid.language.Command c) -> {
+                    Update update = (Update) c;
+                    Literal value = (Literal) update.getChanges().get(0).getValue();
+                    Clob clob = (Clob) value.getValue();
+                    try {
+                        assertEquals("clob value", clob.getSubString(1, (int)clob.length()));
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+                
                 response = http.newRequest(baseURL + "/northwind/m/PostTable(4)/clobval")
                         .method("PUT")
                         .content(new StringContentProvider("clob value"))
                         .send();
                 assertEquals(204, response.getStatus());
+                
+                hc.validator = null;
                 
                 response = http.newRequest(baseURL + "/northwind/m/PostTable(4)/clobval")
                         .method("DELETE")
