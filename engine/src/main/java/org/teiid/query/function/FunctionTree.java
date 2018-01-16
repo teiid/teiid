@@ -353,6 +353,12 @@ public class FunctionTree {
         		if (method.getAggregateAttributes() != null && !(UserDefinedAggregate.class.isAssignableFrom(invocationMethod.getDeclaringClass()))) {
     				throw new MetadataException(QueryPlugin.Event.TEIID30601, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30601, method.getName(), method.getInvocationClass(), UserDefinedAggregate.class.getName()));
         		}
+        		try {
+        		    //turn off access checks for a small performance boost
+        		    invocationMethod.setAccessible(true);
+        		} catch (SecurityException e) {
+        		    //just ignore
+        		}
 	            method.setMethod(invocationMethod);
             }
         }
