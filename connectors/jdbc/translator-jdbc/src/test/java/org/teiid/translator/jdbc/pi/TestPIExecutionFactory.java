@@ -201,5 +201,12 @@ public class TestPIExecutionFactory {
         String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("pi.ddl"));
         TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
 
-    }	
+    }
+	
+	@Test 
+    public void testIntervalFunction() throws TranslatorException {
+        String input = "select intnum from bqt1.smalla a where a.timestampvalue between pi.interval('*-14d') and pi.interval('*')";              
+        String output = "SELECT a.IntNum FROM SmallA AS a WHERE a.TimestampValue >= '*-14d' AND a.TimestampValue <= '*'"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 }

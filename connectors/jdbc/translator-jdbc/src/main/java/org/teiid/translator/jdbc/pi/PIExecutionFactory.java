@@ -36,6 +36,7 @@ import org.teiid.language.DerivedColumn;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -139,7 +140,8 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(PI, "UOMClassName", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "UOMCanonicallD", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "UOMConvert", DOUBLE, DOUBLE, STRING, STRING); //$NON-NLS-1$
-        
+        FunctionMethod f = addPushDownFunction(PI, "interval", TIMESTAMP, STRING); //$NON-NLS-1$
+        f.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, "$1"); //$NON-NLS-1$
     }
 
     @Override
