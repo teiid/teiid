@@ -78,7 +78,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
     		Iterator<PlanNode> i = joins.iterator();
     		PlanNode join = i.next();
     		i.remove();
-    		if (!join.getProperty(Info.JOIN_TYPE).equals(JoinType.JOIN_LEFT_OUTER)) {
+    		if (!join.getProperty(Info.JOIN_TYPE).equals(JoinType.JOIN_LEFT_OUTER) || join.hasBooleanProperty(Info.PRESERVE)) {
     			continue;
     		}
     		PlanNode childJoin = null;
@@ -108,7 +108,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
     		}
     		
     		List<Criteria> childJoinCriteria = (List<Criteria>) childJoin.getProperty(Info.JOIN_CRITERIA);
-    		if (!isCriteriaValid(childJoinCriteria, metadata, childJoin)) {
+    		if (!isCriteriaValid(childJoinCriteria, metadata, childJoin) || childJoin.hasBooleanProperty(Info.PRESERVE)) {
     			continue;
     		}
     		
@@ -243,6 +243,10 @@ public class RulePlanOuterJoins implements OptimizerRule {
             PlanNode join = i.next();
             i.remove();
             
+            if (join.hasBooleanProperty(Info.PRESERVE)) {
+                continue;
+            }
+            
             //check for left outer join ordering, such that we can combine for pushdown
             if (checkLeftOrdering(metadata, capabilitiesFinder, analysisRecord,
                     context, join)) {
@@ -271,7 +275,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
             }
             
             List<Criteria> childJoinCriteria = (List<Criteria>) childJoin.getProperty(Info.JOIN_CRITERIA);
-            if (!isCriteriaValid(childJoinCriteria, metadata, childJoin)) {
+            if (!isCriteriaValid(childJoinCriteria, metadata, childJoin) || join.hasBooleanProperty(Info.PRESERVE)) {
                 continue;
             }
             
@@ -344,7 +348,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
             left = childJoin;
             nested = true;
         }
-        if (nested && hasOuter) {
+        if (nested && hasOuter && !left.hasBooleanProperty(Info.PRESERVE)) {
             if (right.getType() != NodeConstants.Types.ACCESS) {
                 return false;
             }
@@ -363,7 +367,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
                     return false;
                 }
                 PlanNode parent = join.getParent();
-                join.getParent().replaceChild(join, join.getFirstChild());
+                parent.replaceChild(join, join.getFirstChild());
                 join.removeAllChildren();
                 left.getFirstChild().addAsParent(join);
                 join.addLastChild(right);
