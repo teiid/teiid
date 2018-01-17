@@ -52,7 +52,6 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.SymbolMap;
 
@@ -78,7 +77,6 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 	        resolveList(insert.getValues(), metadata, insert.getExternalGroupContexts(), null);
     	}
         boolean usingQuery = insert.getQueryExpression() != null;
-        QueryResolverException resolveQueryException = null;
         //resolve subquery if there
         if(usingQuery) {
         	QueryResolver.setChildMetadata(insert.getQueryExpression(), command);
@@ -132,16 +130,6 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             
             //ensure that the types match
             resolveTypes(insert, metadata, values, usingQuery);
-        }
-        
-        if (insert.getQueryExpression() != null && metadata.isVirtualGroup(insert.getGroup().getMetadataID())) {
-        	List<Reference> references = new ArrayList<Reference>(insert.getVariables().size());
-        	for (int i = 0; i < insert.getVariables().size(); i++) {
-        		Reference ref = new Reference(i);
-        		ref.setType(insert.getVariables().get(i).getType());
-				references.add(ref);
-			}
-        	insert.setValues(references);
         }
     }
 
