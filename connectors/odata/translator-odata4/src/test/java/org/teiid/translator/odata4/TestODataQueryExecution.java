@@ -21,7 +21,9 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -55,6 +57,7 @@ import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
@@ -651,23 +654,24 @@ public class TestODataQueryExecution {
         String expectedURL = "Airports?$select=IcaoCode,Location";
         
         FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("airport-locations.json"));
+        MetadataFactory mf = TestODataMetadataProcessor.tripPinMetadata();
         ResultSetExecution execution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
                 query, ObjectConverterUtil.convertToString(reader), expectedURL);
 
         List<?> row = execution.next();
         
-        assertEquals("187 Suffolk Ln.", row.get(1));
-        assertEquals("xyz", row.get(2));
+        assertEquals("187 Suffolk Ln.", row.get(2));
+        assertEquals("xyz", row.get(0));
         
-        GeometryInputSource gis = (GeometryInputSource)row.get(0);
+        GeometryInputSource gis = (GeometryInputSource)row.get(1);
         assertEquals("<gml:Point><gml:pos>-48.23456 20.12345</gml:pos></gml:Point>", ObjectConverterUtil.convertToString(gis.getGml()));
         assertEquals(4326, gis.getSrid().intValue());
         
         row = execution.next();
         
-        assertEquals("gso", row.get(2));
+        assertEquals("gso", row.get(0));
         
-        gis = (GeometryInputSource)row.get(0);
+        gis = (GeometryInputSource)row.get(1);
         assertEquals("<gml:Point><gml:pos>1.0 2.0</gml:pos></gml:Point>", ObjectConverterUtil.convertToString(gis.getGml()));
         
         assertNull(execution.next());
