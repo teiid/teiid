@@ -59,12 +59,12 @@ public class ODataQuery {
                 this.joinNode = node;
             } else {
                 // add the complex or expand tables                
-                String parentTable = table.getProperty(ODataMetadataProcessor.MERGE, false);
+                Table parentTable = ODataMetadataProcessor.getComplexTableParentTable(this.metadata, table);
                 if (parentTable == null) {
                     throw new TranslatorException(ODataPlugin.Event.TEIID17028, 
                             ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17028, table.getName()));
                 }
-                addRootDocument(this.metadata.getTable(parentTable));
+                addRootDocument(parentTable);
                 // if this is not complex/navigation we already added 
                 // this as the parent document; no need to join
                 if (ODataMetadataProcessor.isComplexType(table)

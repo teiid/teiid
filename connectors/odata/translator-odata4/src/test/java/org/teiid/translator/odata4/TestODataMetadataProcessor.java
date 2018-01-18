@@ -36,6 +36,7 @@ import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.*;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.junit.Test;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
@@ -95,6 +96,7 @@ public class TestODataMetadataProcessor {
         };
         Properties props = new Properties();
         props.setProperty("schemaNamespace", schemaNamespace);
+        processor.setSchemaNamespace(schemaNamespace);
         MetadataFactory mf = new MetadataFactory("vdb", 1, schema, SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         processor.process(mf, null);
 //        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
@@ -274,11 +276,11 @@ public class TestODataMetadataProcessor {
         Table addressTable = mf.getSchema().getTable("Persons_address");
         assertEquals(4, addressTable.getColumns().size());
 		
-		assertNotNull(addressTable.getColumnByName("ssn"));
-		assertNotNull(addressTable.getColumnByName("ssn").getProperty(ODataMetadataProcessor.PSEUDO, false));
-		assertTrue(addressTable.getColumnByName("ssn").isSelectable());
+		assertNotNull(addressTable.getColumnByName("Persons_ssn"));
+        assertTrue(ODataMetadataProcessor.isPseudo(addressTable.getColumnByName("Persons_ssn")));
+		assertTrue(addressTable.getColumnByName("Persons_ssn").isSelectable());
         assertEquals(1, addressTable.getForeignKeys().size());
-        assertEquals("Persons", addressTable.getForeignKeys().get(0).getReferenceTableName());
+        assertEquals("northwind.Persons", addressTable.getForeignKeys().get(0).getReferenceTableName());
 	}
 
     static MetadataFactory getEntityWithComplexProperty()
@@ -324,14 +326,14 @@ public class TestODataMetadataProcessor {
 		Table personAddress= mf.getSchema().getTable("Persons_address");
 		assertEquals(4, personAddress.getColumns().size());
 		ForeignKey fk = personAddress.getForeignKeys().get(0);
-		assertNotNull(fk.getColumnByName("ssn"));
+		assertNotNull(fk.getColumnByName("Persons_ssn"));
 		
 		Table businessTable = mf.getSchema().getTable("Corporate");
 		assertEquals(1, businessTable.getColumns().size());
         Table corporateAddress= mf.getSchema().getTable("Corporate_address");
         assertEquals(4, corporateAddress.getColumns().size());
         fk = corporateAddress.getForeignKeys().get(0);
-        assertNotNull(fk.getColumnByName("name"));
+        assertNotNull(fk.getColumnByName("Corporate_name"));
 		
 	}
 		
@@ -343,7 +345,7 @@ public class TestODataMetadataProcessor {
 		Table g2 = mf.getSchema().getTable("G2");
 
 		ForeignKey fk = g2.getForeignKeys().get(0);
-		assertEquals("one_2_one", fk.getName());
+		assertEquals("G1_one_2_one", fk.getName());
 		assertNotNull(fk.getColumnByName("e1"));
 	}
 
@@ -440,7 +442,16 @@ public class TestODataMetadataProcessor {
         
         type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
         assertEquals(ODataType.COMPLEX_COLLECTION, type);
-    }    
+    }
+    
+    @Test public void testNorthwind() throws Exception {
+        String file = "northwind_v4.xml";
+        String schema = "northwind";
+        String schemaNamespace = "ODataWebExperimental.Northwind.Model";
+        MetadataFactory mf = createMetadata(file, schema, schemaNamespace);
+        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind_v4.ddl")), metadataDDL);
+    }
 	
     private ProcedureParameter getReturnParameter(Procedure procedure) {
         for (ProcedureParameter pp:procedure.getParameters()) {
@@ -549,7 +560,7 @@ public class TestODataMetadataProcessor {
                 
         Table g1 = mf.getSchema().getTable("G1_self");
         assertNotNull(g1);
-        assertEquals("self", g1.getForeignKeys().get(0).getName());
+        assertEquals("FK0", g1.getForeignKeys().get(0).getName());
         assertNotNull(g1.getForeignKeys().get(0).getColumnByName("G1_e1"));
         assertEquals("self", g1.getNameInSource());
     }	
@@ -562,9 +573,22 @@ public class TestODataMetadataProcessor {
         Table g2 = mf.getSchema().getTable("G2");
 
         ForeignKey fk = g2.getForeignKeys().get(0);
-        assertEquals("one_2_many", fk.getName());
+        assertEquals("G1_one_2_many", fk.getName());
         assertNotNull(fk.getColumnByName("e1"));
     }
+    
+    @Test
+    public void testMultipleNavigationProperties() throws Exception {
+        MetadataFactory mf = multipleNavigationProperties();
+        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        
+        Table g1 = mf.getSchema().getTable("G1");
+        Table g2 = mf.getSchema().getTable("G2");
+
+        ForeignKey fk = g2.getForeignKeys().get(0);
+        assertEquals("G1_one_2_many", fk.getName());
+        assertNotNull(fk.getColumnByName("e1"));
+    }    
 
     static MetadataFactory oneToManyRelationMetadata() throws TranslatorException {
         ODataMetadataProcessor processor = new ODataMetadataProcessor();
@@ -596,7 +620,50 @@ public class TestODataMetadataProcessor {
         processor.getMetadata(mf, metadata);
         
         return mf;
-    }	
+    }
+    
+    static MetadataFactory multipleNavigationProperties() throws TranslatorException {
+        ODataMetadataProcessor processor = new ODataMetadataProcessor();
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
+        
+        CsdlEntityType g1Entity = entityType("g1");
+        CsdlEntityType g2Entity = entityType("g2");
+        CsdlEntityType g3Entity = entityType("g3");
+        
+        CsdlNavigationProperty navProperty = new CsdlNavigationProperty();
+        navProperty.setName("one_2_many");
+        navProperty.setType("Collection(namespace.g2)");
+        navProperty.setNullable(false);
+        navProperty.setPartner("PartnerPath");
+        navProperty.setCollection(true);
+        
+        CsdlNavigationProperty navProperty2 = new CsdlNavigationProperty();
+        navProperty2.setName("one_2_g3");
+        navProperty2.setType("namespace.g3");
+        navProperty2.setNullable(true);
+        
+        g1Entity.setNavigationProperties(Arrays.asList(navProperty, navProperty2));
+        
+        CsdlEntitySet g1Set = createES("G1", "namespace.g1");
+        CsdlEntitySet g2Set = createES("G2", "namespace.g2");
+        CsdlEntitySet g3Set = createES("G3", "namespace.g3");
+        
+        CsdlNavigationPropertyBinding navBinding = new CsdlNavigationPropertyBinding();
+        navBinding.setPath("one_2_many");
+        navBinding.setTarget("G2");
+        CsdlNavigationPropertyBinding navBinding2 = new CsdlNavigationPropertyBinding();
+        navBinding2.setPath("one_2_g3");
+        navBinding2.setTarget("G3");
+        
+        g1Set.setNavigationPropertyBindings(Arrays.asList(navBinding, navBinding2));
+        
+        XMLMetadata metadata = buildXmlMetadata(g1Entity, g1Set, g2Entity, g2Set, g3Entity, g3Set);
+        processor.getMetadata(mf, metadata);
+        
+        return mf;
+    }    
     
     static MetadataFactory multiplePKMetadata() throws TranslatorException {
         ODataMetadataProcessor processor = new ODataMetadataProcessor();
@@ -675,10 +742,10 @@ public class TestODataMetadataProcessor {
 		assertNotNull(g1);
 		assertNotNull(g2);
 		
-		ForeignKey fk = g2.getForeignKeys().get(0);
-		assertEquals("one_2_one", fk.getName());
-		assertNotNull(fk.getColumnByName("e2"));
-		assertEquals("g2e2", fk.getReferenceColumns().get(0));
+		ForeignKey fk = g1.getForeignKeys().get(0);
+		assertEquals("G1_one_2_one", fk.getName());
+		assertNotNull(fk.getColumnByName("g2e2"));
+		assertEquals("e2", fk.getReferenceColumns().get(0));
 	}	
 	
 	static CsdlEntityType entityType(String name) {

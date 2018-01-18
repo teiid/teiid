@@ -181,16 +181,13 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     @Override
     public void visit(ColumnReference obj) {
         Column column = obj.getMetadataObject();
-        // check if the column on psedo column, then move it to the parent.
-        String pseudo = ODataMetadataProcessor.getPseudo(column);
-        
+
         ODataDocumentNode schemaElement = this.query.getSchemaElement((Table)column.getParent());
-        if (pseudo != null) {
+        // check if the column on pseudo column, then move it to the parent.
+        if (ODataMetadataProcessor.isPseudo(column)) {
             try {
-                Table columnParent = (Table)column.getParent();
-                Table pseudoColumnParent = this.metadata.getTable(
-                        ODataMetadataProcessor.getMerge(columnParent));
-                schemaElement = this.query.getSchemaElement(pseudoColumnParent);
+                Column realColumn = ODataMetadataProcessor.normalizePseudoColumn(this.metadata, column);
+                schemaElement = this.query.getSchemaElement((Table)realColumn.getParent());
             } catch (TranslatorException e) {
                 this.exceptions.add(e);
             }
@@ -202,18 +199,24 @@ public class ODataFilterVisitor extends HierarchyVisitor {
             this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17026)));
         }
         
-        if (this.filterOnElement.isComplexType()) {            
-            if (pseudo == null) {
-                this.filter.append(this.filterOnElement.getName()).append("/").append(column.getName());
+        try {
+            if (this.filterOnElement.isComplexType()) {            
+                if (ODataMetadataProcessor.isPseudo(column)) {
+                    Column realColumn = ODataMetadataProcessor.normalizePseudoColumn(this.metadata, column);
+                    this.filter.append(realColumn.getName());
+                } else {
+                    this.filter.append(this.filterOnElement.getName()).append("/").append(column.getName());
+                }
             } else {
-                this.filter.append(pseudo);
+                if (ODataMetadataProcessor.isPseudo(column)) {
+                    Column realColumn = ODataMetadataProcessor.normalizePseudoColumn(this.metadata, column);
+                    this.filter.append(realColumn.getName());
+                } else {
+                    this.filter.append(column.getName());
+                }
             }
-        } else {
-            if (pseudo == null) {
-                this.filter.append(column.getName());
-            } else {
-                this.filter.append(pseudo);
-            }
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
         }        
     }
         
