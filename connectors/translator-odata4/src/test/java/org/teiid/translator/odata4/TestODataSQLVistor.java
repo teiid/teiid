@@ -159,7 +159,7 @@ public class TestODataSQLVistor {
     @Test
     public void testComplexTableJoin() throws Exception {
         helpExecute(TestODataMetadataProcessor.getEntityWithComplexProperty(),
-                "select p.name, pa.city from Persons p JOIN Persons_address pa ON p.ssn = pa.ssn",
+                "select p.name, pa.city from Persons p JOIN Persons_address pa ON p.ssn = pa.Persons_ssn",
                 "Persons?$select=name,address");
     }
     
@@ -167,7 +167,7 @@ public class TestODataSQLVistor {
     public void testComplexTableJoinWithPK() throws Exception {
         helpExecute(TestODataMetadataProcessor.getEntityWithComplexProperty(),
                 "select p.name, pa.city from Persons p "
-                + "JOIN Persons_address pa ON p.ssn = pa.ssn WHERE p.ssn=12",
+                + "JOIN Persons_address pa ON p.ssn = pa.Persons_ssn WHERE p.ssn=12",
                 "Persons?$select=name,address&$filter=ssn eq 12");
     }
     
@@ -175,8 +175,8 @@ public class TestODataSQLVistor {
     public void testTwoComplexTableJoinWithPK() throws Exception {
         helpExecute(TestODataMetadataProcessor.getEntityWithComplexProperty(),
                 "select p.name, pa.city, ps.city from Persons p "
-                + "JOIN Persons_address pa ON p.ssn = pa.ssn "
-                + "JOIN Persons_secondaddress ps ON p.ssn = ps.ssn "
+                + "JOIN Persons_address pa ON p.ssn = pa.Persons_ssn "
+                + "JOIN Persons_secondaddress ps ON p.ssn = ps.Persons_ssn "
                 + "WHERE p.ssn=12",
                 "Persons?$select=name,address,secondaddress&$filter=ssn eq 12");
     }    

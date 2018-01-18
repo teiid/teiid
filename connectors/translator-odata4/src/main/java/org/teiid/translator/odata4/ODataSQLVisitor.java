@@ -45,6 +45,7 @@ import org.teiid.language.SortSpecification;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
@@ -184,7 +185,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         }
         ColumnReference column = (ColumnReference)obj.getExpression();
         try {
-            Column c = normalizePseudoColumn(column.getMetadataObject());
+            Column c = ODataMetadataProcessor.normalizePseudoColumn(this.metadata, column.getMetadataObject());
             this.orderBy.append(c.getName());
         } catch (TranslatorException e) {
             this.exceptions.add(e);
@@ -213,7 +214,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
                         .gs(ODataPlugin.Event.TEIID17006, column.getName())));
             }
             try {
-                this.projectedColumns.add(normalizePseudoColumn(column));
+                this.projectedColumns.add(ODataMetadataProcessor.normalizePseudoColumn(this.metadata, column));
             } catch (TranslatorException e) {
                 this.exceptions.add(e);
             }
@@ -232,21 +233,6 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         }
     }
     
-    private Column normalizePseudoColumn(Column column) throws TranslatorException {
-        String pseudo = ODataMetadataProcessor.getPseudo(column);
-        if (pseudo != null) {
-            try {
-                Table columnParent = (Table)column.getParent();
-                Table pseudoColumnParent = this.metadata.getTable(
-                        ODataMetadataProcessor.getMerge(columnParent));
-                return pseudoColumnParent.getColumnByName(pseudo);
-            } catch (TranslatorException e) {
-                this.exceptions.add(e);
-            }
-        }
-        return column;
-    }
-
     public void append(LanguageObject obj) {
         visitNode(obj);
     }
