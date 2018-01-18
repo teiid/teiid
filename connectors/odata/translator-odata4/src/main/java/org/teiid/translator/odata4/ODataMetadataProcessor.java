@@ -31,10 +31,12 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.MetadataProcessor;
@@ -58,11 +60,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         NAVIGATION_COLLECTION
     };
     
-    // local planning properties
-    private static final String PARENT_TABLE = "PARENT_TABLE"; //$NON-NLS-1$
-    private static final String CONSTRAINT_PROPERTY = "CONSTRAINT_PROPERTY"; //$NON-NLS-1$
-    private static final String CONSTRAINT_REF_PROPERTY = "CONSTRAINT_REF_PROPERTY"; //$NON-NLS-1$
-    private static final String FK_NAME = "FK_NAME"; //$NON-NLS-1$
     private static final String NAME_SEPARATOR = "_"; //$NON-NLS-1$
     
     @ExtensionMetadataProperty(applicable = { Table.class, Procedure.class }, 
@@ -79,12 +76,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             allowed = "COMPLEX, NAVIGATION, ENTITY, ENTITY_COLLECTION, ACTION, FUNCTION, COMPLEX_COLLECTION, NAVIGATION_COLLECTION",
             required=true)
     public static final String ODATA_TYPE = MetadataFactory.ODATA_URI+"Type"; //$NON-NLS-1$
-    
-    @ExtensionMetadataProperty(applicable=Table.class, 
-            datatype=String.class, 
-            display="Merge Into Table", 
-            description="Declare the name of table that this table needs to be merged into.")
-    public static final String MERGE = MetadataFactory.ODATA_URI+"MERGE"; //$NON-NLS-1$
     
     @ExtensionMetadataProperty(applicable=Column.class, 
             datatype=String.class, 
@@ -141,23 +132,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             addNavigationProperties(mf, singleton.getName(), singleton,
                     metadata);
         }        
-        
-        // add PK colums for complex-types
-        for (Table table : mf.getSchema().getTables().values()) {
-            String parentTable = table.getProperty(PARENT_TABLE, false);
-            if (parentTable != null) {
-                addPrimaryKeyToComplexTables(mf, table, mf.getSchema().getTable(parentTable));
-            }
-        }        
-
-        // build relations between tables
-        for (Table table : mf.getSchema().getTables().values()) {
-            String parentTable = table.getProperty(PARENT_TABLE, false);
-            if (parentTable != null) {
-                table.setProperty(PARENT_TABLE, null);
-                addForeignKey(mf, table, mf.getSchema().getTable(parentTable));
-            }
-        }
         
         // add functions
         for (CsdlFunctionImport function : container.getFunctionImports()) {
@@ -227,12 +201,16 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     private void addEntityTypeProperties(MetadataFactory mf,
             XMLMetadata metadata, Table table, CsdlEntityType entityType)
             throws TranslatorException {
+
+        // add PK
+        addPrimaryKey(mf, metadata, table, entityType); //$NON-NLS-1$
+        
         // add columns; add complex types as child tables with 1-1 or 1-many
         // relation
         for (CsdlProperty property : entityType.getProperties()) {
             addProperty(mf, metadata, table, property);
         }
-
+        
         // add properties from base type; if any to flatten the model
         String baseType = entityType.getBaseType();
         while (baseType != null) {
@@ -242,29 +220,24 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             }
             baseType = baseEntityType.getBaseType();
         }
-
-        // add PK
-        addPrimaryKey(mf, table, entityType.getKey()); //$NON-NLS-1$
     }
 
     private void addProperty(MetadataFactory mf, XMLMetadata metadata,
             Table table, CsdlProperty property) throws TranslatorException {
-        if (isSimple(property.getType()) || isEnum(metadata, property.getType())) {
-            addPropertyAsColumn(mf, table, property);
-        }
-        else {
-            CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());            
-            addComplexPropertyAsTable(mf, property, childType, metadata, table);
+        if (table.getColumnByName(property.getName()) == null) {
+            if (isSimple(property.getType()) || isEnum(metadata, property.getType())) {
+                addPropertyAsColumn(mf, table, property);
+            }
+            else {
+                CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());            
+                addComplexPropertyAsTable(mf, property, childType, metadata, table);
+            }
         }
     }
     
-    static String getPseudo(Column column) {
-        return column.getProperty(ODataMetadataProcessor.PSEUDO, false);
+    static boolean isPseudo(Column column) {
+        return Boolean.parseBoolean(column.getProperty(ODataMetadataProcessor.PSEUDO, false));
     }
-    
-    static String getMerge(Table table) {
-        return table.getProperty(ODataMetadataProcessor.MERGE, false);
-    }    
     
     static boolean isComplexType(Table table) {
         ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
@@ -306,8 +279,24 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         childTable.setProperty(ODATA_TYPE, 
                 parentProperty.isCollection() ? 
                 ODataType.COMPLEX_COLLECTION.name() : ODataType.COMPLEX.name()); // complex type
-        childTable.setProperty(PARENT_TABLE, parentTable.getName());
-        childTable.setProperty(MERGE, parentTable.getFullName());
+        
+        // add a primary key to complex table
+        KeyRecord pk = parentTable.getPrimaryKey();
+        List<Column> pkColumns = new ArrayList<Column>();
+        for (Column c : pk.getColumns()) {
+            String colName = parentTable.getName() + NAME_SEPARATOR + c.getName();
+            // if the parent is already a complex, just copy the its PK
+            if (isComplexType(parentTable)) {
+                colName = c.getName();
+            }
+            Column col = addColumn(mf, childTable, c, colName);
+            pkColumns.add(col);
+            col.setProperty(PSEUDO, String.valueOf(Boolean.TRUE));
+        }
+        mf.addPrimaryKey("PK0", getColumnNames(pkColumns), childTable);
+        mf.addForiegnKey("FK0", getColumnNames(pkColumns), getColumnNames(pk.getColumns()), parentTable.getFullName(),
+                childTable);
+        
         if (isComplexType(parentTable)) {
             childTable.setNameInSource(parentTable.getNameInSource()+"/"+parentProperty.getName());
         } else {
@@ -329,10 +318,12 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         }
     }
 
-    void addPrimaryKey(MetadataFactory mf, Table table,
-            List<CsdlPropertyRef> keys) throws TranslatorException {
+    void addPrimaryKey(MetadataFactory mf, XMLMetadata metadata, Table table, CsdlEntityType entityType)
+            throws TranslatorException {
+        List<CsdlPropertyRef> keys = entityType.getKey();
         List<String> pkNames = new ArrayList<String>();
         for (CsdlPropertyRef ref : keys) {
+            addProperty(mf, metadata, table, entityType.getProperty(ref.getName()));
             pkNames.add(ref.getName());
             if (ref.getAlias() != null) {
                 throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17018, 
@@ -360,6 +351,12 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     private CsdlEntityType getEntityType(XMLMetadata metadata, String name) throws TranslatorException {
         if(name == null) {
             return null;
+        }
+        
+        if (name.startsWith("Collection")) {
+            int start = name.indexOf('(');
+            int end = name.indexOf(')');
+            name = name.substring(start+1, end).trim();
         }
         
         if (name.contains(".")) {
@@ -429,11 +426,13 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         Table fromTable = mf.getSchema().getTable(tableName);
         CsdlEntityType fromEntityType = getEntityType(metadata,entitySet.getType());
 
-        Table toTable = null;
+        
         for (CsdlNavigationProperty property : fromEntityType.getNavigationProperties()) {
             CsdlNavigationPropertyBinding binding = getNavigationPropertyBinding(
                     entitySet, property.getName());
-
+            
+            Table toTable = null;
+            
             if (binding != null) {
                 String target = binding.getTarget();
                 int index = target.lastIndexOf('/');
@@ -447,132 +446,67 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             } else {
                 // this means there is no EntitySet defined for this EntityType,
                 // or even if it is defined the set of rows are specific to this EntitySet
-                StringBuilder name = new StringBuilder()
-                        .append(fromTable.getName()).append(NAME_SEPARATOR)
-                        .append(property.getName());
-                toTable = addTable(mf, name.toString(), property.getType(), 
-                        property.isCollection()?ODataType.NAVIGATION_COLLECTION:ODataType.NAVIGATION, 
-                        metadata);
-                toTable.setNameInSource(property.getName());                
+                toTable = addNavigationAsTable(mf, metadata, fromTable, toTable, property);
             }
 
             // support for self-joins
             if (same(fromTable, toTable)) {
-                StringBuilder name = new StringBuilder()
-                        .append(fromTable.getName()).append(NAME_SEPARATOR)
-                        .append(property.getName());
-                toTable = addTable(mf, name.toString(), toTable.getProperty(NAME_IN_SCHEMA, false), 
-                        property.isCollection()?ODataType.NAVIGATION_COLLECTION:ODataType.NAVIGATION, 
-                        metadata);
-                toTable.setNameInSource(property.getName());
+                toTable = addNavigationAsTable(mf, metadata, fromTable, toTable, property);
             }
-            toTable.setProperty(PARENT_TABLE, fromTable.getName());
-            toTable.setProperty(MERGE, fromTable.getFullName());
-            toTable.setProperty(FK_NAME, property.getName());
-            
-            int i = 0;
-            for (CsdlReferentialConstraint constraint : property.getReferentialConstraints()) {
-                toTable.setProperty(CONSTRAINT_PROPERTY + i, constraint.getReferencedProperty());
-                toTable.setProperty(CONSTRAINT_REF_PROPERTY + i, constraint.getProperty());
-                i++;
-            }
-        }
-    }
-    
-    private KeyRecord getPK(MetadataFactory mf, Table table) throws TranslatorException {
-        KeyRecord record = table.getPrimaryKey();
-        if (record == null) {
-            String parentTable = table.getProperty(PARENT_TABLE, false);
-            if (parentTable == null) {
-                throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17024, 
-                        table.getName()));
-            }
-            return getPK(mf, mf.getSchema().getTable(parentTable));
-        }
-        return record;
-    }
-    
-    private void addPrimaryKeyToComplexTables(MetadataFactory mf, Table childTable, Table parentTable) 
-            throws TranslatorException {
-        KeyRecord record = null;
-        
-        if (isComplexType(childTable)) {
-            // these are complex type based tables.
-            record = getPK(mf, parentTable);
-        } else {
-            // this is entity types now.
-            record = parentTable.getPrimaryKey();
-        }
-        
-        if (record == null) {
-            throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17025, 
-                    parentTable.getName()));
-        }
 
-        int i = 0;
-        List<String> columnNames = new ArrayList<String>();
-        for (Column column:record.getColumns()) {
-            String targetColumnName = isCollection(childTable) ? 
-                    parentTable.getName() + "_" + column.getName() : column.getName();
-            if (isNavigationType(childTable)) {
-                Column c = mf.getSchema().getTable(childTable.getName()).getColumnByName(targetColumnName);
-                if (c == null) {
-                    c = addColumn(mf, childTable, column, targetColumnName);
-                    c.setProperty(PSEUDO, column.getName());
-                } else {
-                    targetColumnName = column.getName();
+            List<String> columnNames = new ArrayList<String>();
+            List<String> referenceColumnNames = new ArrayList<String>();
+            if (property.getReferentialConstraints().isEmpty()
+                    && !isComplexType(toTable) && !isNavigationType(toTable)) {
+                // implicit references
+                KeyRecord pk = getPKorUnique(fromTable);
+                for (Column c : pk.getColumns()) {
+                    referenceColumnNames.add(c.getName());
+                    if (toTable.getColumnByName(c.getName()) != null) {
+                        columnNames.add(c.getName());
+                    }
                 }
-                
             } else {
-                Column c = mf.getSchema().getTable(childTable.getName()).getColumnByName(column.getName());
-                if (c == null) {
-                    c = addColumn(mf, childTable, column, targetColumnName);
-                    c.setProperty(PSEUDO, column.getName());
-                } else {
-                    targetColumnName = column.getName();
+                for (CsdlReferentialConstraint constraint : property.getReferentialConstraints()) {
+                    columnNames.add(constraint.getReferencedProperty());
+                    referenceColumnNames.add(constraint.getProperty());
                 }
             }
-            columnNames.add(targetColumnName);
-            
-            // if there are no constraints are available then, define some implicit ones 
-            if (childTable.getProperty(CONSTRAINT_PROPERTY + i, false) == null) {
-                childTable.setProperty(CONSTRAINT_PROPERTY + i, targetColumnName);
-                childTable.setProperty(CONSTRAINT_REF_PROPERTY + i, column.getName());
+            if (!columnNames.isEmpty() && keyMatches(referenceColumnNames, fromTable.getPrimaryKey())) {
+                mf.addForiegnKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
+                        referenceColumnNames, fromTable.getFullName(), toTable);
             }
-            i++;
-        }
-        
-        if (isComplexType(childTable)) {
-            mf.addPrimaryKey("PK0", columnNames, childTable);
         }
     }
-
-    private void addForeignKey(MetadataFactory mf, Table childTable, Table parentTable) 
-            throws TranslatorException {
-        String fkName = childTable.getProperty(FK_NAME, false);
-        childTable.setProperty(FK_NAME, null);
-        if (fkName == null) {
-            fkName = "FK0";
-        }
+    
+    private Table addNavigationAsTable(MetadataFactory mf, XMLMetadata metadata, Table fromTable, Table toTable,
+            CsdlNavigationProperty property) throws TranslatorException {
+        String name = join(fromTable.getName(), NAME_SEPARATOR, property.getName());
+        toTable = addTable(mf, name, property.getType(), 
+                property.isCollection()?ODataType.NAVIGATION_COLLECTION:ODataType.NAVIGATION, 
+                metadata);
+        toTable.setNameInSource(property.getName());
         
-        int i = 0;
-        ArrayList<String> keyColumns = new ArrayList<String>();
-        ArrayList<String> refColumns = new ArrayList<String>();
-        while(true) {
-            if (childTable.getProperty(CONSTRAINT_PROPERTY + i, false) == null) {
-                break;
-            }
-            keyColumns.add(childTable.getProperty(CONSTRAINT_PROPERTY + i, false));
-            refColumns.add(childTable.getProperty(CONSTRAINT_REF_PROPERTY + i, false));
-            
-            childTable.setProperty(CONSTRAINT_PROPERTY + i, null);
-            childTable.setProperty(CONSTRAINT_REF_PROPERTY + i, null);
-            
-            i++;
+        KeyRecord pk = fromTable.getPrimaryKey();
+        List<String> columnNames = new ArrayList<String>();
+        for (Column c : pk.getColumns()) {
+            String columnName = join(fromTable.getName(), NAME_SEPARATOR, c.getName());
+            Column column = mf.addColumn(columnName, c.getRuntimeType(), toTable);
+            column.setProperty(PSEUDO, String.valueOf(Boolean.TRUE));
+            columnNames.add(columnName);
         }
-        mf.addForiegnKey(fkName, keyColumns, refColumns, parentTable.getName(), childTable); //$NON-NLS-1$
-    }    
+        mf.addForiegnKey("FK0", columnNames, getColumnNames(pk.getColumns()), fromTable.getFullName(), toTable);
+        return toTable;
+    }
 
+    static String join(String... records) {
+        StringBuffer sb = new StringBuffer();
+        for (String r: records) {
+            sb.append(r);
+        }
+        return sb.toString();
+    }
+    
     boolean same(Table x, Table y) {
         return (x.getFullName().equalsIgnoreCase(y.getFullName()));
     }
@@ -823,6 +757,48 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         }
         return names;
     }
+    
+    KeyRecord getPKorUnique(Table table) {
+        KeyRecord pk = table.getPrimaryKey();
+        if (pk == null && !table.getUniqueKeys().isEmpty()) {
+            pk = table.getUniqueKeys().get(0);
+        }
+        return pk;
+    }
+    
+    static Table getComplexTableParentTable(RuntimeMetadata metadata, Table table) throws TranslatorException {
+        for (Column c : table.getColumns()) {
+            if (ODataMetadataProcessor.isPseudo(c)) {
+                ForeignKey fk = table.getForeignKeys().get(0);
+                String tableName = fk.getReferenceTableName();
+                if (tableName.indexOf('.') == -1) {
+                    tableName = fk.getReferenceKey().getParent().getFullName();
+                }
+                return (Table)metadata.getTable(tableName);
+            }            
+        }
+        return table;
+    }
+    
+    static Column normalizePseudoColumn(RuntimeMetadata metadata, Column column) throws TranslatorException {
+        if (ODataMetadataProcessor.isPseudo(column)) {
+            Table table = (Table)column.getParent();
+            ForeignKey fk = table.getForeignKeys().get(0);
+            for (int i = 0; i < fk.getColumns().size(); i++) {
+                Column c = fk.getColumns().get(i);
+                if (c.getName().equals(column.getName())) {
+                    String refColumn = fk.getReferenceColumns().get(i);
+                    String tableName = fk.getReferenceTableName();
+                    if (tableName.indexOf('.') == -1) {
+                        tableName = fk.getReferenceKey().getParent().getFullName();
+                    }
+                    Table refTable = metadata.getTable(tableName);
+                    return refTable.getColumnByName(refColumn);
+                }
+            }
+        }
+        return column;
+    }    
 
     @TranslatorProperty(display="Schema Namespace", category=PropertyType.IMPORT, description="Namespace of the schema to import")
     public String getSchemaNamespace() {
