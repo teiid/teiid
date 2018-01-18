@@ -156,7 +156,7 @@ public class TestODataUpdateExecution {
 	
 	@Test
 	public void testInsertComplexType() throws Exception {
-		String query = "INSERT INTO Persons_address(street, city, state, ssn) "
+		String query = "INSERT INTO Persons_address(street, city, state, Persons_ssn) "
 		        + "VALUES('sesame street', 'Newyork', 'NY', 1234)";
 		String expectedURL = "Persons(1234)/address";
         
