@@ -105,6 +105,12 @@ public class TestPIExecutionFactory {
         TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
     }   
     
+    @Test public void testInlineViewJoin() throws Exception {
+        String input = "SELECT bqt2.smalla.intkey, g2.intkey, bqt2.smalla.bytenum FROM bqt2.smalla LEFT JOIN (SELECT intkey, bytenum FROM bqt2.mediuma) AS g2 ON  bqt2.smalla.bytenum = g2.bytenum";
+        String output = "SELECT SmallA.IntKey, g2.intkey, SmallA.ByteNum FROM SmallA LEFT OUTER JOIN (SELECT MediumA.IntKey, MediumA.ByteNum FROM MediumA) AS g2 ON SmallA.ByteNum = g2.bytenum"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);        
+    }
+    
     @Test 
     public void testApplyOuter() throws Exception {
         String input = "SELECT EA.ID, EAC.Path FROM ElementAttribute EA LEFT OUTER JOIN "
