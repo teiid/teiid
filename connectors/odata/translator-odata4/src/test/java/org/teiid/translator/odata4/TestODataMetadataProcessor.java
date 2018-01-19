@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -96,6 +95,7 @@ public class TestODataMetadataProcessor {
         };
         Properties props = new Properties();
         props.setProperty("schemaNamespace", schemaNamespace);
+        processor.setSchemaNamespace(schemaNamespace);
         MetadataFactory mf = new MetadataFactory("vdb", 1, schema, SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         processor.process(mf, null);
 //        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
@@ -441,7 +441,16 @@ public class TestODataMetadataProcessor {
         
         type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
         assertEquals(ODataType.COMPLEX_COLLECTION, type);
-    }    
+    }
+    
+    @Test public void testNorthwind() throws Exception {
+        String file = "northwind_v4.xml";
+        String schema = "northwind";
+        String schemaNamespace = "ODataWebExperimental.Northwind.Model";
+        MetadataFactory mf = createMetadata(file, schema, schemaNamespace);
+        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        System.out.println(metadataDDL);
+    }
 	
     private ProcedureParameter getReturnParameter(Procedure procedure) {
         for (ProcedureParameter pp:procedure.getParameters()) {
@@ -571,7 +580,6 @@ public class TestODataMetadataProcessor {
     public void testMultipleNavigationProperties() throws Exception {
         MetadataFactory mf = multipleNavigationProperties();
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(metadataDDL);
         
         Table g1 = mf.getSchema().getTable("G1");
         Table g2 = mf.getSchema().getTable("G2");

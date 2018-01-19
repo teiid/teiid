@@ -19,25 +19,14 @@ package org.teiid.translator.odata4;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.commons.api.edm.provider.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.ExtensionMetadataProperty;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
 import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
@@ -111,6 +100,10 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             throws TranslatorException {
         CsdlSchema csdlSchema = getDefaultSchema(metadata);
         CsdlEntityContainer container = csdlSchema.getEntityContainer();
+        
+        if (container == null) {
+            throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17035, csdlSchema.getNamespace()));
+        }
 
         // add entity sets as tables
         for (CsdlEntitySet entitySet : container.getEntitySets()) {
@@ -229,7 +222,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 addPropertyAsColumn(mf, table, property);
             }
             else {
-                CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());            
+                CsdlComplexType childType = getComplexType(metadata, property.getType());            
                 addComplexPropertyAsTable(mf, property, childType, metadata, table);
             }
         }
@@ -443,10 +436,13 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 if(index != -1) {
                     toTable.setNameInSource(binding.getTarget());
                 }
-            } else {
-                // this means there is no EntitySet defined for this EntityType,
-                // or even if it is defined the set of rows are specific to this EntitySet
+            } else if (property.isContainsTarget()) {
+                // it is defined the set of rows are specific to this EntitySet
                 toTable = addNavigationAsTable(mf, metadata, fromTable, toTable, property);
+            } else {
+                //cannot determine the target
+                //could also be an exception
+                continue;
             }
 
             // support for self-joins
@@ -456,25 +452,35 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 
             List<String> columnNames = new ArrayList<String>();
             List<String> referenceColumnNames = new ArrayList<String>();
-            if (property.getReferentialConstraints().isEmpty()
-                    && !isComplexType(toTable) && !isNavigationType(toTable)) {
-                // implicit references
-                KeyRecord pk = getPKorUnique(fromTable);
-                for (Column c : pk.getColumns()) {
-                    referenceColumnNames.add(c.getName());
-                    if (toTable.getColumnByName(c.getName()) != null) {
-                        columnNames.add(c.getName());
+            if (property.getReferentialConstraints().isEmpty()) {
+                if (!isNavigationType(toTable)) {
+                    // implicit references
+                    KeyRecord pk = getPKorUnique(fromTable);
+                    if (pk != null) {
+                        boolean matches = true;
+                        
+                        for (Column c : pk.getColumns()) {
+                            referenceColumnNames.add(c.getName());
+                            if (toTable.getColumnByName(c.getName()) != null) {
+                                columnNames.add(c.getName());
+                            } else {
+                                matches = false;
+                                break;
+                            }
+                        }
+                        if (matches) {
+                            mf.addForiegnKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
+                                    referenceColumnNames, fromTable.getFullName(), toTable);
+                        }
                     }
                 }
             } else {
                 for (CsdlReferentialConstraint constraint : property.getReferentialConstraints()) {
-                    columnNames.add(constraint.getReferencedProperty());
-                    referenceColumnNames.add(constraint.getProperty());
+                    columnNames.add(constraint.getProperty());
+                    referenceColumnNames.add(constraint.getReferencedProperty());
                 }
-            }
-            if (!columnNames.isEmpty() && keyMatches(referenceColumnNames, fromTable.getPrimaryKey())) {
                 mf.addForiegnKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
-                        referenceColumnNames, fromTable.getFullName(), toTable);
+                        referenceColumnNames, toTable.getFullName(), fromTable);
             }
         }
     }
@@ -509,23 +515,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     
     boolean same(Table x, Table y) {
         return (x.getFullName().equalsIgnoreCase(y.getFullName()));
-    }
-
-    boolean keyMatches(List<String> names, KeyRecord record) {
-        if (names.size() != record.getColumns().size()) {
-            return false;
-        }
-        Set<String> keyNames = new TreeSet<String>(
-                String.CASE_INSENSITIVE_ORDER);
-        for (Column c : record.getColumns()) {
-            keyNames.add(c.getName());
-        }
-        for (int i = 0; i < names.size(); i++) {
-            if (!keyNames.contains(names.get(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private Column addPropertyAsColumn(MetadataFactory mf, Table table,
@@ -675,7 +664,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                         ODataTypeManager.teiidType(property.getType(), property.isCollection()), procedure);
             }
             else if (isComplexType(metadata, property.getType())) {
-                CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());
+                CsdlComplexType childType = getComplexType(metadata, property.getType());
                 addProcedureTableReturn(mf, metadata, procedure, childType, property.getName());
             }            
             else {
