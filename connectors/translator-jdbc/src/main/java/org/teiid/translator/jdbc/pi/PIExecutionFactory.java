@@ -270,14 +270,14 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
         if (obj instanceof DerivedColumn) {
             DerivedColumn derived = (DerivedColumn)obj;
-            if (derived.getExpression() instanceof ColumnReference) {
+            if (derived.isProjected() && derived.getExpression() instanceof ColumnReference) {
                 ColumnReference elem = (ColumnReference)derived.getExpression();
-                String nativeType = elem.getMetadataObject().getNativeType();
-                if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType())
-                        && elem.getMetadataObject() != null
-                        && nativeType != null
-                        && PIMetadataProcessor.guidPattern.matcher(nativeType).find()) {
-                    return Arrays.asList("cast(", elem, " as String)"); //$NON-NLS-1$ //$NON-NLS-2$
+                if (elem.getMetadataObject() != null) {
+                    String nativeType = elem.getMetadataObject().getNativeType();
+                    if (nativeType != null && TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType())
+                            && PIMetadataProcessor.guidPattern.matcher(nativeType).find()) {
+                        return Arrays.asList("cast(", elem, " as String)"); //$NON-NLS-1$ //$NON-NLS-2$
+                    }
                 }
             }
         }
