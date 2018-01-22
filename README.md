@@ -1,4 +1,5 @@
-teiid
+teiid [![Build Status](https://hudson.jboss.org/hudson/job/Teiid%20-%20Continuous%20Build/lastBuild/buildStatus)](https://hudson.jboss.org/hudson/job/Teiid%20-%20Continuous%20Build/lastBuild/) 
+[![Build Status](https://hudson.jboss.org/hudson/job/Teiid-WeeklyBuild/lastBuild//buildStatus)](https://hudson.jboss.org/hudson/job/Teiid-WeeklyBuild/lastBuild/)
 =====
 
 Teiid is a data virtualization system that allows applications to use data from multiple, heterogeneous data stores.
@@ -33,5 +34,3 @@ The default license for all submodules is the [Apache Software License (ASL) v2.
 Where applicable individual submodules will provide additional copyright and license information.
 
 [1]: view-source:https://www.apache.org/licenses/LICENSE-2.0
-
-
