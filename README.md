@@ -1,4 +1,4 @@
-teiid
+teiid [![Build Status](https://hudson.jboss.org/hudson/job/Teiid%20-%20Continuous%20Build/lastBuild/buildStatus)](https://hudson.jboss.org/hudson/job/Teiid%20-%20Continuous%20Build/lastBuild/)
 =====
 
 Teiid is a data virtualization system that allows applications to use data from multiple, heterogeneous data stores.
@@ -35,3 +35,4 @@ Where applicable individual submodules will provide additional copyright and lic
 [1]: view-source:https://www.apache.org/licenses/LICENSE-2.0
 
 
+]
