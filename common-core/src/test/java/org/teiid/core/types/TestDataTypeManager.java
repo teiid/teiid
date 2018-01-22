@@ -231,6 +231,11 @@ public class TestDataTypeManager {
     	byte[] value = {1,2};
     	assertArrayEquals(value, (byte[])DataTypeManager.convertToRuntimeType(value, false)); 
     	assertEquals(new BinaryType(value), DataTypeManager.convertToRuntimeType(value, true));
-    }	
+    }
+
+    @Test public void testObjectTypeArray() throws Exception {
+    	Object value = new Object[] {"a", "b"};
+        DataTypeManager.transformValue(value, value.getClass(), String[].class);
+    }
 	
 }

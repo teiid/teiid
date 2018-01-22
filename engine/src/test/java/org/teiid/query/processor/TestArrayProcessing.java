@@ -20,6 +20,7 @@ package org.teiid.query.processor;
 
 import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
+import static org.teiid.query.processor.TestProcessor.helpParse;
 import static org.teiid.query.resolver.TestResolver.*;
 
 import java.util.ArrayList;
@@ -67,15 +68,21 @@ public class TestArrayProcessing {
 
         helpProcess(plan, dataManager, null);
 
-        //should fail
+        //should succeed
         sql = "select cast(cast((1,2) as object) as string[])"; //$NON-NLS-1$
         
-    	try {
-    		helpGetPlan(helpParse(sql), RealMetadataFactory.exampleBQTCached(), DefaultCapabilitiesFinder.INSTANCE, createCommandContext());
-    		fail();
-    	} catch (TeiidProcessingException e) {
-    		
-    	}
+		plan = helpGetPlan(helpParse(sql), RealMetadataFactory.exampleBQTCached(), DefaultCapabilitiesFinder.INSTANCE, createCommandContext());
+        helpProcess(plan, dataManager, null);
+    	
+    	//should fail
+        sql = "select cast(cast((1,2) as object) as time[])"; //$NON-NLS-1$
+        
+        try {
+            helpGetPlan(helpParse(sql), RealMetadataFactory.exampleBQTCached(), DefaultCapabilitiesFinder.INSTANCE, createCommandContext());
+            fail();
+        } catch (TeiidProcessingException e) {
+            
+        }
 	}
 	
 	@Test public void testArrayComparison() {

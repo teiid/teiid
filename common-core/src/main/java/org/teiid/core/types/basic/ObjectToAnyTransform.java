@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
@@ -72,7 +73,6 @@ public class ObjectToAnyTransform extends Transform {
 									targetClass, value));
 				}
         	}
-        	//TODO: allow casts from integer[] to string[], etc.
         	if (targetType.isArray()) {
         		if (value instanceof Array) {
 	    			try {
@@ -89,14 +89,33 @@ public class ObjectToAnyTransform extends Transform {
 						throw new TransformationException(e);
 					}
         		} 
-        		if (value.getClass().isArray() 
-        				&& value.getClass().getComponentType().isPrimitive() 
-        				&& targetType.getComponentType().isAssignableFrom(convertPrimitiveToObject(value.getClass().getComponentType()))) {
-					Object[] result = new Object[java.lang.reflect.Array.getLength(value)];
-					for (int i = 0; i < result.length; i++) {
-						result[i] = java.lang.reflect.Array.get(value, i);
-					}
-					return new ArrayImpl(result);
+        		if (value.getClass().isArray()) {
+        		    if (value.getClass().getComponentType().isPrimitive() 
+                            && targetType.getComponentType().isAssignableFrom(convertPrimitiveToObject(value.getClass().getComponentType()))) {
+                        Object[] result = (Object[]) java.lang.reflect.Array.newInstance(targetType.getComponentType(), java.lang.reflect.Array.getLength(value));
+                        for (int i = 0; i < result.length; i++) {
+                            result[i] = java.lang.reflect.Array.get(value, i);
+                        }
+                        return new ArrayImpl(result);
+        		    } 
+        		    Class<?> targetComponentType = targetType.getComponentType();
+                    Object[] result = (Object[]) java.lang.reflect.Array.newInstance(targetComponentType, java.lang.reflect.Array.getLength(value));
+    		        for (int i = 0; i < result.length; i++) {
+    		            Object v = java.lang.reflect.Array.get(value, i);
+    		            if (v.getClass() == targetComponentType || DefaultDataClasses.OBJECT == targetComponentType) {
+    		                result[i] = v;
+    		            } else {
+    		                Transform subTransform = DataTypeManager.getTransform(v.getClass(), targetComponentType);
+    		                if (subTransform == null) {
+    		                    valid = false;
+    		                    break;
+    		                }
+                            result[i] = subTransform.transform(v, targetComponentType);
+    		            }
+                    }
+    		        if (valid) {
+    		            return new ArrayImpl(result);
+    		        }
         		}
         	}
         	valid = false;
