@@ -11,16 +11,6 @@
   <description>Data Quality library for Teiid based on OSDQ</description>
   <packaging>bundle</packaging>
 
-  <properties>
-    <version.com.github.mpkorstanje>3.0.0</version.com.github.mpkorstanje>
-    <version.com.itextpdf>5.4.0</version.com.itextpdf>
-    <version.com.opencsv>3.5</version.com.opencsv>
-    <version.info.debatty>0.13</version.info.debatty>
-    <version.net.sourceforge.jexcelapi>2.6.12</version.net.sourceforge.jexcelapi>
-    <version.net.sourceforge.jeval>0.9.4</version.net.sourceforge.jeval>
-    <version.org.arrahtec>6.1.9</version.org.arrahtec>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.teiid</groupId>
@@ -35,7 +25,6 @@
     <dependency>
         <groupId>org.arrahtec</groupId>
         <artifactId>osdq-core</artifactId>
-        <version>${version.org.arrahtec}</version>
     </dependency>
         
     <dependency>
@@ -46,37 +35,31 @@
 	<dependency>
 	    <groupId>com.github.mpkorstanje</groupId>
 	    <artifactId>simmetrics-core</artifactId>
-	    <version>${version.com.github.mpkorstanje}</version>
 	</dependency>
 
 	<dependency>
 	    <groupId>com.itextpdf</groupId>
 	    <artifactId>itextpdf</artifactId>
-	    <version>${version.com.itextpdf}</version>
 	</dependency>
 
 	<dependency>
 	    <groupId>com.opencsv</groupId>
 	    <artifactId>opencsv</artifactId>
-	    <version>${version.com.opencsv}</version>
 	</dependency>
             
 	<dependency>
 	    <groupId>info.debatty</groupId>
 	    <artifactId>java-string-similarity</artifactId>
-	    <version>${version.info.debatty}</version>
 	</dependency>
             
 	<dependency>
 	    <groupId>net.sourceforge.jexcelapi</groupId>
 	    <artifactId>jxl</artifactId>
-	    <version>${version.net.sourceforge.jexcelapi}</version>
 	</dependency>
 
 	<dependency>
 	    <groupId>net.sourceforge.jeval</groupId>
 	    <artifactId>jeval</artifactId>
-	    <version>${version.net.sourceforge.jeval}</version>
 	</dependency>
             
     <dependency>
