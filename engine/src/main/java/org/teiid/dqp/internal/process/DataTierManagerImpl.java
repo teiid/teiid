@@ -786,11 +786,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add((key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null);
         		row.add(key.getUUID());
         		row.add(key.getParent().getUUID());
+        		row.add(key.getParent().getParent().getUUID());
+        		row.add(null);
         		row.add(null);
         		if (key instanceof ForeignKey) {
         		    KeyRecord ref = ((ForeignKey)key).getReferenceKey();
         		    if (ref != null) {
-                        row.set(row.size() - 1, ref.getParent().getUUID());
+                        row.set(row.size() - 2, ref.getParent().getUUID());
+                        row.set(row.size() - 1, ref.getParent().getParent().getUUID());
         		    }
         		}
         		List<Column> columns2 = key.getColumns();

@@ -1177,6 +1177,17 @@ public class TestJoinOptimization {
 	   				"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 LEFT OUTER JOIN pm2.g3 AS g_1 ON g_0.e2 = g_1.e2 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	 }
 	
+    @Test public void testLeftOuterAssocitivtyLeftLinearWithPreserve() throws Exception {
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        TestOptimizer.helpPlan("SELECT pm1.g1.e3 from /*+ preserve */ (pm1.g1 left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 left outer join pm2.g3 on pm2.g2.e2 = pm2.g3.e2)", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(),
+                new String[] {
+                    "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+                    "SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", 
+                    "SELECT g_0.e2 AS c_0 FROM pm2.g3 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+     }
+	
 	@Test public void testLeftOuterAssocitivtyLeftLinearSwap() throws Exception {
 	   	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
@@ -1519,7 +1530,7 @@ public class TestJoinOptimization {
         RealMetadataFactory.setCardinality("pm1.g2", 1, tm);
         RealMetadataFactory.setCardinality("pm1.g3", 1, tm);
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.e2, g_1.e2, g_3.e1, g_3.e3 FROM (pm1.g2 AS g_0 INNER JOIN (pm1.g3 AS g_1 CROSS JOIN pm1.g1 AS g_2) ON g_2.e1 = g_0.e1) LEFT OUTER JOIN pm1.g4 AS g_3 ON g_0.e4 = g_3.e4"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_2.e2, g_0.e2, g_3.e1, g_3.e3 FROM (pm1.g3 AS g_0 CROSS JOIN pm1.g1 AS g_1) INNER JOIN (pm1.g2 AS g_2 LEFT OUTER JOIN pm1.g4 AS g_3 ON g_2.e4 = g_3.e4) ON g_1.e1 = g_2.e1"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
@@ -1541,5 +1552,33 @@ public class TestJoinOptimization {
         
         plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.col1 FROM y.t1 AS g_0 LEFT OUTER JOIN y.t2 AS g_1 ON g_0.col = g_1.col WHERE g_0.col = 1"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
+	
+	@Test public void testLeftOuterAssocitivtyWithStarJoin() throws Exception {
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        TestOptimizer.helpPlan("SELECT pm1.g1.e3 from pm1.g1 "
+                + "left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 "
+                + "inner join pm1.g3 on pm1.g1.e1 = pm1.g3.e1 "
+                + "left outer join pm1.g2 on pm1.g1.e1 = pm1.g2.e1", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(),
+                new String[] {
+                    "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+                    "SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM (pm1.g1 AS g_0 INNER JOIN pm1.g3 AS g_1 ON g_0.e1 = g_1.e1) LEFT OUTER JOIN pm1.g2 AS g_2 ON g_0.e1 = g_2.e1 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+     }
+	
+	@Test public void testLeftOuterAssocitivtyWithStarJoinWithPreserve() throws Exception {
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        TestOptimizer.helpPlan("SELECT pm1.g1.e3 from /*+ preserve */ (pm1.g1 "
+                + "left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 "
+                + "inner join pm1.g3 on pm1.g1.e1 = pm1.g3.e1 "
+                + "left outer join pm1.g2 on pm1.g1.e1 = pm1.g2.e1)", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(),
+                new String[] {
+                    "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+                    "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 ORDER BY c_0", 
+                    "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 ORDER BY c_0", 
+                    "SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+     }
 	
 }

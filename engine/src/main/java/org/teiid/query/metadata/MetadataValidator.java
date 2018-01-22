@@ -48,6 +48,7 @@ import org.teiid.query.report.ReportItem;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
@@ -62,6 +63,7 @@ import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
+import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.AbstractValidationVisitor;
 import org.teiid.query.validator.ValidationVisitor;
@@ -531,6 +533,7 @@ public class MetadataValidator {
     		if (record instanceof Procedure) {
     			Procedure p = (Procedure)record;
     			Command command = parser.parseProcedure(p.getQueryPlan(), false);
+    			validateNoReferences(command, report, model);
     			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata, false);
     			resolverReport =  Validator.validate(command, metadata);
     			determineDependencies(p, command);
@@ -543,6 +546,7 @@ public class MetadataValidator {
     			QueryNode node = null;
 				if (t.isVirtual()) {
     				QueryCommand command = (QueryCommand)parser.parseCommand(selectTransformation);
+    				validateNoReferences(command, report, model);
     				QueryResolver.resolveCommand(command, metadata);
     				resolverReport =  Validator.validate(command, metadata);
     				if (!resolverReport.hasItems() && (t.getColumns() == null || t.getColumns().isEmpty())) {
@@ -586,6 +590,7 @@ public class MetadataValidator {
 	    						String exprString = c.getNameInSource();
 	    						try {
 		    						Expression ex = parser.parseExpression(exprString);
+		    						validateNoReferences(ex, report, model);
 									ResolverVisitor.resolveLanguageObject(ex, groups, metadata);
 									if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex).isEmpty()) {
 										log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31114, exprString, fbi.getFullName()));
@@ -711,12 +716,18 @@ public class MetadataValidator {
 			Table t, String plan, int type) throws QueryParserException, QueryResolverException,
 			TeiidComponentException {
 		Command command = parser.parseProcedure(plan, true);
-		
+		validateNoReferences(command, report, model);
 		QueryResolver.resolveCommand(command, new GroupSymbol(t.getFullName()), type, metadata, false);
 		
 		//determineDependencies(t, command); -- these should be tracked against triggers
 		ValidatorReport resolverReport = Validator.validate(command, metadata);
 		processReport(model, t, report, resolverReport);
+	}
+	
+	private void validateNoReferences(LanguageObject lo, ValidatorReport report, ModelMetaData model) {
+	    if (!ReferenceCollectorVisitor.getReferences(lo).isEmpty()) {
+	        log(report, model, Severity.ERROR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30491) + ": " + lo); //$NON-NLS-1$
+	    }
 	}
 
 	private void processReport(ModelMetaData model,

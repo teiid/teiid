@@ -178,4 +178,57 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 	
+	@Test public void testNPGSqlTypeMetadata() throws Exception {
+	    String sql = "SELECT ns.nspname, a.typname, a.oid, a.typrelid, a.typbasetype,\n" + 
+	            "CASE WHEN pg_proc.proname = 'array_recv' THEN 'a'\n" + 
+	            "ELSE a.typtype\n" + 
+	            "END AS type,\n" + 
+	            "CASE WHEN pg_proc.proname = 'array_recv' THEN a.typelem\n" + 
+	            "ELSE 0\n" + 
+	            "END AS elemoid,\n" + 
+	            "CASE WHEN pg_proc.proname IN ('array_recv', 'oidvectorrecv') THEN 3\n" + 
+	            "WHEN a.typtype = 'r' THEN 2\n" + 
+	            "WHEN a.typtype = 'd' THEN 1\n" + 
+	            "ELSE 0\n" + 
+	            "END AS ord\n" + 
+	            "FROM ((pg_type AS a INNER JOIN pg_namespace AS ns ON ns.oid = a.typnamespace) INNER JOIN pg_proc ON pg_proc.oid = a.typreceive)\n" + 
+	            "LEFT OUTER JOIN pg_type AS b ON b.oid = a.typelem\n" + 
+	            "WHERE ((a.typtype IN ('b', 'r', 'e', 'd')) AND ((b.typtype IS NULL) OR (b.typtype IN ('b', 'r', 'e', 'd')))) OR ((a.typname IN ('record', 'void')) AND (a.typtype = 'p')) ORDER BY ord";
+	    
+	    execute(sql);
+	    TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+	}
+	
+	@Test public void testNPGSqlDatabaseMetadata() throws Exception {
+	    String sql = "SELECT d.datname AS database_name, u.usename AS owner, pg_catalog.pg_encoding_to_char(d.encoding) AS encoding FROM pg_catalog.pg_database d LEFT JOIN pg_catalog.pg_user u ON d.datdba = u.usesysid";
+	    
+	    execute(sql);
+	    TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+	}
+
+	@Test public void testNPGSqlConstraintMetadata() throws Exception {
+        String sql = "select\n" + 
+                "  current_database() as \"CONSTRAINT_CATALOG\",\n" + 
+                "  pgn.nspname as \"CONSTRAINT_SCHEMA\",\n" + 
+                "  pgc.conname as \"CONSTRAINT_NAME\",\n" + 
+                "  current_database() as \"TABLE_CATALOG\",\n" + 
+                "  pgtn.nspname as \"TABLE_SCHEMA\",\n" + 
+                "  pgt.relname as \"TABLE_NAME\",\n" + 
+                "  \"CONSTRAINT_TYPE\",\n" + 
+                "  pgc.condeferrable as \"IS_DEFERRABLE\",\n" + 
+                "  pgc.condeferred as \"INITIALLY_DEFERRED\"\n" + 
+                "from pg_catalog.pg_constraint pgc\n" + 
+                "inner join pg_catalog.pg_namespace pgn on pgc.connamespace = pgn.oid\n" + 
+                "inner join pg_catalog.pg_class pgt on pgc.conrelid = pgt.oid\n" + 
+                "inner join pg_catalog.pg_namespace pgtn on pgt.relnamespace = pgtn.oid\n" + 
+                "inner join (\n" + 
+                "select 'PRIMARY KEY' as \"CONSTRAINT_TYPE\", 'p' as \"contype\" union all\n" + 
+                "select 'FOREIGN KEY' as \"CONSTRAINT_TYPE\", 'f' as \"contype\" union all\n" + 
+                "select 'UNIQUE KEY' as \"CONSTRAINT_TYPE\", 'u' as \"contype\"\n" + 
+                ") mapping_table on mapping_table.contype = pgc.contype";
+        
+        execute(sql);
+        TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+	}
+	
 }

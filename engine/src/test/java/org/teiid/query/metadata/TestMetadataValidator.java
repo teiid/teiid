@@ -496,6 +496,11 @@ public class TestMetadataValidator {
 		helpTest(ddl, true);
     }
     
+    @Test public void testReferenceCheck() throws Exception {
+        String ddl = "CREATE view G1(e1 integer, e2 varchar) as select cast(? as integer), 'a'";
+        helpTest(ddl, true);
+    }
+    
     @Test public void testViewKeys() throws Exception {
     	buildModel("phy1", true, this.vdb, this.store, "CREATE FOREIGN TABLE t1 ( col1 string, col2 integer ) options (updatable true)");
     	buildModel("phy2", true, this.vdb, this.store, "CREATE FOREIGN TABLE t2 ( col1 string, col2 integer ) options (updatable true)");

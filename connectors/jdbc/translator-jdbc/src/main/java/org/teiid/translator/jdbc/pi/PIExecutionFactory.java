@@ -36,6 +36,7 @@ import org.teiid.language.DerivedColumn;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -139,7 +140,8 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(PI, "UOMClassName", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "UOMCanonicallD", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "UOMConvert", DOUBLE, DOUBLE, STRING, STRING); //$NON-NLS-1$
-        
+        FunctionMethod f = addPushDownFunction(PI, "interval", TIMESTAMP, STRING); //$NON-NLS-1$
+        f.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, "$1"); //$NON-NLS-1$
     }
 
     @Override
@@ -270,14 +272,14 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
         if (obj instanceof DerivedColumn) {
             DerivedColumn derived = (DerivedColumn)obj;
-            if (derived.getExpression() instanceof ColumnReference) {
+            if (derived.isProjected() && derived.getExpression() instanceof ColumnReference) {
                 ColumnReference elem = (ColumnReference)derived.getExpression();
-                String nativeType = elem.getMetadataObject().getNativeType();
-                if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType())
-                        && elem.getMetadataObject() != null
-                        && nativeType != null
-                        && PIMetadataProcessor.guidPattern.matcher(nativeType).find()) {
-                    return Arrays.asList("cast(", elem, " as String)"); //$NON-NLS-1$ //$NON-NLS-2$
+                if (elem.getMetadataObject() != null) {
+                    String nativeType = elem.getMetadataObject().getNativeType();
+                    if (nativeType != null && TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType())
+                            && PIMetadataProcessor.guidPattern.matcher(nativeType).find()) {
+                        return Arrays.asList("cast(", elem, " as String)"); //$NON-NLS-1$ //$NON-NLS-2$
+                    }
                 }
             }
         }

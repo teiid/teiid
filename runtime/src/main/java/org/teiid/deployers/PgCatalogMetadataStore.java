@@ -111,10 +111,11 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addFunction("pg_table_is_visible", "pg_table_is_visible"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("pg_get_constraintdef", "pg_get_constraintdef"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("pg_type_is_visible", "pg_type_is_visible"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_encoding_to_char", "pg_encoding_to_char"); //$NON-NLS-1$ //$NON-NLS-2$
 		FunctionMethod func = addFunction("asPGVector", "asPGVector"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setProperty(ResolverVisitor.TEIID_PASS_THROUGH_TYPE, Boolean.TRUE.toString());
 		addFunction("getOid", "getOid").setNullOnNull(true);; //$NON-NLS-1$ //$NON-NLS-2$
-		addFunction("version", "version"); //$NON-NLS-1$ //$NON-NLS-1$
+		addFunction("version", "version"); //$NON-NLS-1$ //$NON-NLS-2$
 		func = addFunction("pg_client_encoding", "pg_client_encoding"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
 	}
@@ -124,14 +125,18 @@ public class PgCatalogMetadataStore extends MetadataFactory {
         
 	    addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 	    addColumn("conname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("connamespace", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 	    addColumn("contype", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("condeferrable", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
+	    addColumn("condeferred", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
 	    addColumn("consrc", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 	    addColumn("conrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 	    addColumn("confrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 	    addColumn("conkey", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.SHORT)), t); //$NON-NLS-1$ 
         
-        String transformation = "SELECT pg_catalog.getOid(UID) as oid, name as conname, lower(left(Type, 1)) as contype, " //$NON-NLS-1$
-                + "null as consrc, " //$NON-NLS-1$
+        String transformation = "SELECT pg_catalog.getOid(UID) as oid, name as conname, pg_catalog.getOid(SchemaUID), " //$NON-NLS-1$
+                + "lower(left(Type, 1)) as contype, false as condeferrable, " //$NON-NLS-1$
+                + "false as condeferred, null as consrc, " //$NON-NLS-1$
                 + "pg_catalog.getOid(TableUID) as conrelid, pg_catalog.getOid(RefTableUID) as confrelid, " //$NON-NLS-1$
                 + "ColPositions as conkey " + //$NON-NLS-1$
                 "FROM Sys.Keys WHERE Type in ('Primary', 'Unique', 'Foreign')"; //$NON-NLS-1$
@@ -475,6 +480,17 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		"pg_catalog.getOid(t1.SchemaUID) as pronamespace " + //$NON-NLS-1$
 		"FROM SYS.Procedures as t1";//$NON-NLS-1$			
 		
+		//add in internal conversion functions that don't actually exist
+		//some of the recv names don't match, but only oidvectorrecv and array_recv are called out specifically by the npgsql driver
+		transformation += " union all SELECT typreceive as oid, case when kind = 'a' then 'array_recv' else kind end as proname, " //$NON-NLS-1$
+		        + "false as proretset, oid as prorettype, " //$NON-NLS-1$
+		        + "cast(case when kind = 'a' then 3 else 1 end as short) as pronargs," //$NON-NLS-1$
+		        + "case when kind = 'a' then (2281, 26, 23) else (2281,) end as proargtypes," //$NON-NLS-1$
+		        + "null as proargnames, null as proargmodes, null as proallargtypes," //$NON-NLS-1$
+		        + "(select oid from pg_catalog.pg_namespace where nspname = 'pg_catalog') as pronamespace FROM" //$NON-NLS-1$
+		        + "(SELECT typreceive, case when typelem <> 0 and typname like '\\__%' escape '\\' then 'a' else typname || 'recv' end as kind, oid " //$NON-NLS-1$
+		        + "from pg_catalog.pg_type where typname not in ('internal', 'anyelement')) v"; //$NON-NLS-1$
+		
 		t.setSelectTransformation(transformation);
 		return t;		
 	}
@@ -543,6 +559,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("typrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("typelem", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("typinput", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("typreceive", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("typdefault", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
 		//non-pg column to associate the teiid type name - this is expected to be unique.
@@ -550,7 +567,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("teiid_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
 		String transformation =
-			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput, null as typdefault, teiid_name from texttable('" + //$NON-NLS-1$
+			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, "  //$NON-NLS-1$
+			+ "typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, " //$NON-NLS-1$
+			+ "typelem, null as typeinput, 2147483647 - row_number() over (order by typname) as typereceive, null as typdefault, teiid_name from texttable('" + //$NON-NLS-1$
 			"16,bool,1,b,0,-1,0,0,boolean\n" + //$NON-NLS-1$
 			"17,bytea,-1,b,0,-1,0,0,blob\n" + //$NON-NLS-1$
 			"1043,varchar,-1,b,0,-1,0,0,string\n" + //$NON-NLS-1$
@@ -594,6 +613,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"2287,_record,-1,b,0,-1,0,2249,\n" + //$NON-NLS-1$
 			"2283,anyelement,4,p,0,-1,0,0,\n" + //$NON-NLS-1$
 			"22,int2vector,-1,b,0,-1,0,0," + //$NON-NLS-1$
+			"2281,internal,8,p,0,-1,0,0," + //$NON-NLS-1$
 			"' columns oid integer, typname string, typlen short, typtype char, typbasetype integer, typtypmod integer, typrelid integer, typelem integer, teiid_name string) AS t"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);		
 		t.setMaterialized(true);
@@ -615,7 +635,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("dattablespace", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		
 		String transformation = "SELECT 0 as oid, " + //$NON-NLS-1$
-				"'teiid' as datname, " + //$NON-NLS-1$
+				"current_database() as datname, " + //$NON-NLS-1$
 				"6 as encoding, " + //$NON-NLS-1$
 				"100000 as datlastsysoid, " + //$NON-NLS-1$
 				"convert('t', char) as datallowconn, " + //$NON-NLS-1$
@@ -630,12 +650,13 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	private Table add_pg_user()  {
 		Table t = createView("pg_user"); //$NON-NLS-1$ 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
-		addColumn("usename", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+		addColumn("usename", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		addColumn("usesysid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("usecreatedb", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
 		addColumn("usesuper", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
 		
 		String transformation = "SELECT 0 as oid, " + //$NON-NLS-1$
-				"null as usename, " + //$NON-NLS-1$
+				"user(false) as usename, 0 as usesysid," + //$NON-NLS-1$
 				"false as usecreatedb, " + //$NON-NLS-1$
 				"false as usesuper "; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);	
@@ -880,6 +901,13 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	    
 	    public static String version() {
 	        return POSTGRESQL_VERSION;
+	    }
+	    
+	    public static String pg_encoding_to_char(int code) {
+	        if (code == 6) {
+	            return "UTF8"; //$NON-NLS-1$
+	        }
+	        throw new AssertionError("Unknown encoding"); //$NON-NLS-1$
 	    }
 		
 	}
