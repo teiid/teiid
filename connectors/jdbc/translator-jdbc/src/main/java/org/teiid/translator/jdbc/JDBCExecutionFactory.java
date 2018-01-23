@@ -573,6 +573,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY && l.getValue() != null) {
                 return translateGeometryLiteral(l);
             }
+        } else if (obj instanceof Parameter) {
+            Parameter p = (Parameter) obj;
+            if (p.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
+                return translateGeometryParameter(p);
+            }
         }
     	if (!supportsBooleanExpressions() && obj instanceof Condition) {
             Condition c = (Condition)obj;
@@ -625,6 +630,25 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         return Arrays.asList(getLanguageFactory().createFunction(
                 SourceSystemFunctions.ST_GEOMFROMWKB, 
                 new Expression[] { l, srid }, 
+                TypeFacility.RUNTIME_TYPES.GEOMETRY)
+        );
+    }
+    
+    /**
+     * Translate GEOMETRY parameter into an expression that will convert to database 
+     * geometry type.
+     * 
+     * @param p
+     * @return 
+     */
+    public List<?> translateGeometryParameter(Parameter p) {
+        Parameter srid = new Parameter();
+        srid.setType(TypeFacility.RUNTIME_TYPES.INTEGER);
+        srid.setValueIndex(p.getValueIndex());
+        
+        return Arrays.asList(getLanguageFactory().createFunction(
+                SourceSystemFunctions.ST_GEOMFROMWKB, 
+                new Expression[] { p, srid }, 
                 TypeFacility.RUNTIME_TYPES.GEOMETRY)
         );
     }
@@ -961,6 +985,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         //not all drivers handle the setObject call with BigDecimal correctly (namely jConnect 6.05)
         if (TypeFacility.RUNTIME_TYPES.BIG_DECIMAL.equals(paramType)) {
         	stmt.setBigDecimal(i, (BigDecimal)param);
+            return;
+        }
+        
+        //special handling for the srid parameter
+        if (paramType == TypeFacility.RUNTIME_TYPES.INTEGER && param instanceof GeometryType) {
+            stmt.setInt(i, ((GeometryType)param).getSrid());
             return;
         }
         

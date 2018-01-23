@@ -978,7 +978,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public void bindValue(PreparedStatement stmt, Object param,
             Class<?> paramType, int i) throws SQLException {
-        if (param == null && paramType == TypeFacility.RUNTIME_TYPES.BLOB) {
+        if (param == null && (paramType == TypeFacility.RUNTIME_TYPES.BLOB 
+                || paramType == TypeFacility.RUNTIME_TYPES.GEOMETRY)) {
             //the blob sql type causes a failure with nulls
             paramType = TypeFacility.RUNTIME_TYPES.VARBINARY;
         }

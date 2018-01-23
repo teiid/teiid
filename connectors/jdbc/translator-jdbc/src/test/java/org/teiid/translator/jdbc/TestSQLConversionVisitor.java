@@ -550,4 +550,11 @@ public class TestSQLConversionVisitor {
                         true);
     }
     
+    @Test
+    public void testSTInsert() throws Exception {
+        String input = "insert into cola_markets(name,shape) values('foo124', ST_GeomFromText('POINT (300 100)', 8307))"; //$NON-NLS-1$
+        String output = "INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES ('foo124', st_geomfromwkb(?, 8307))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
 }
