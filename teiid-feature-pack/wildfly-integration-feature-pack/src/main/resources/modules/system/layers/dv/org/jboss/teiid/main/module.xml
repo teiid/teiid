@@ -59,7 +59,6 @@
         <module name="org.jboss.ironjacamar.impl"/>
         <module name="org.jgroups"/>
         <module name="nu.xom"/>
-        <module name="nux.nux"/>
         <module name="net.sf.saxon"/>
         <module name="com.vividsolutions.jts"/>
         <module name="org.osgeo.proj4j"/>
