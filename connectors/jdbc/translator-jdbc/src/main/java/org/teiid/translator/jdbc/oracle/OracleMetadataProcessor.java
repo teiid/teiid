@@ -166,5 +166,10 @@ public final class OracleMetadataProcessor extends
     protected String getSequenceNextSQL(String fullyQualifiedName) {
         return fullyQualifiedName + ".nextval"; //$NON-NLS-1$
     }
+    
+    @Override
+    public boolean isHiddenSchema(String catalog, String schema) {
+        return "SYS".equalsIgnoreCase(schema); //$NON-NLS-1$
+    }
 
 }

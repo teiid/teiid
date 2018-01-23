@@ -104,8 +104,6 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	private Pattern excludeProcedures;
 	private Pattern excludeSequences;
 	
-	private int excludedTables;
-	
 	private boolean useAnyIndexCardinality;
 	private boolean importStatistics;
 	
@@ -240,7 +238,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 				}
 			}
 			String fullProcedureName = getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName);
-			if (excludeProcedures != null && excludeProcedures.matcher(fullProcedureName).matches()) {
+			if ((excludeProcedures != null && excludeProcedures.matcher(fullProcedureName).matches()) || isHiddenSchema(procedureCatalog, procedureSchema)) {
 				continue;
 			}
 			Procedure procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);
@@ -342,8 +340,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			String tableName = tables.getString(3);
 			String remarks = tables.getString(5);
 			String fullName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
-			if (shouldExclude(fullName)) {
-				excludedTables++;
+			if (shouldExclude(fullName) || isHiddenSchema(tableCatalog, tableSchema)) {
 				continue;
 			}
 			Table table = addTable(metadataFactory, tableCatalog, tableSchema,
@@ -401,22 +398,13 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap, Connection conn)
 			throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
-		boolean singleSchema = schemaPattern != null && !schemaPattern.contains("_") && !schemaPattern.contains("%"); //$NON-NLS-1$ //$NON-NLS-2$
-		if ((excludeTables == null && schemaPattern == null && tableNamePattern == null) //getting everything
-			|| (singleSchema && tableNamePattern == null && 
-					(excludeTables == null //getting all from a single schema 
-					|| tableMap.size()/2 > Math.sqrt(tableMap.size()/2 + excludedTables)))) {  //not excluding enough from a single schema
-			ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
+		for (TableInfo ti : new LinkedHashSet<TableInfo>(tableMap.values())) {
+			ResultSet columns = metadata.getColumns(ti.catalog, ti.schema, ti.name, columnNamePattern);
 			processColumns(metadataFactory, tableMap, columns, conn);
-		} else {
-			for (TableInfo ti : new LinkedHashSet<TableInfo>(tableMap.values())) {
-				ResultSet columns = metadata.getColumns(ti.catalog, ti.schema, ti.name, columnNamePattern);
-				processColumns(metadataFactory, tableMap, columns, conn);
-			}
 		}
 	}
 
-	private void processColumns(MetadataFactory metadataFactory,
+    private void processColumns(MetadataFactory metadataFactory,
 			Map<String, TableInfo> tableMap, ResultSet columns, Connection conn)
 			throws SQLException {
 		int rsColumns = columns.getMetaData().getColumnCount();
@@ -812,6 +800,9 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
                 String sequenceCatalog = sequences.getString(1);
                 String sequenceSchema = sequences.getString(2);
                 String sequenceName = sequences.getString(3);
+                if (isHiddenSchema(sequenceCatalog, sequenceSchema)) {
+                    continue;
+                }
                 //TODO: type
                 String sequenceTeiidName = getFullyQualifiedName(sequenceCatalog, sequenceSchema, sequenceName);
                 if (excludeSequences != null && excludeSequences.matcher(sequenceTeiidName).matches()) {
@@ -1163,6 +1154,16 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     
     public void setUseIntegralTypes(boolean useIntegralTypes) {
         this.useIntegralTypes = useIntegralTypes;
+    }
+    
+    /**
+     * If the schema is hidden regardless of the specified schema pattern
+     * @param catalog
+     * @param schema
+     * @return true if no objects should be imported from the given schema
+     */
+    protected boolean isHiddenSchema(String catalog, String schema) {
+        return false;
     }
        
 }
