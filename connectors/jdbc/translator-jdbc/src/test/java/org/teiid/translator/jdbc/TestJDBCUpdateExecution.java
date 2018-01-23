@@ -26,6 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,6 +35,7 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
@@ -70,6 +72,34 @@ public class TestJDBCUpdateExecution {
 		updateExecution.execute();
 		Mockito.verify(p, Mockito.times(2)).addBatch();
 	}
+	
+   @Test public void testPreparedInsertWithGeometry() throws Exception {
+        Insert command = (Insert)TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "insert into cola_markets(name,shape) values('foo124', ST_GeomFromText('POINT (300 100)', 8307))"); //$NON-NLS-1$
+        Parameter param = new Parameter();
+        param.setType(DataTypeManager.DefaultDataClasses.STRING);
+        param.setValueIndex(0);
+        List<Expression> values = ((ExpressionValueSource)command.getValueSource()).getValues();
+        values.set(0, param);
+        param = new Parameter();
+        param.setType(DataTypeManager.DefaultDataClasses.GEOMETRY);
+        param.setValueIndex(1);
+        values.set(1, param);
+        GeometryType value = new GeometryType();
+        value.setSrid(123);
+        command.setParameterValues(Arrays.asList(Arrays.asList("a", value)).iterator());
+        Connection connection = Mockito.mock(Connection.class);
+        PreparedStatement p = Mockito.mock(PreparedStatement.class);
+        Mockito.stub(p.executeBatch()).toReturn(new int [] {1});
+        Mockito.stub(connection.prepareStatement("INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES (?, st_geomfromwkb(?, ?))")).toReturn(p); //$NON-NLS-1$
+        
+        JDBCExecutionFactory config = new JDBCExecutionFactory();
+        
+        JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(command, connection, new FakeExecutionContextImpl(), config);
+        updateExecution.execute();
+        Mockito.verify(p, Mockito.times(1)).addBatch();
+        Mockito.verify(p, Mockito.times(1)).setObject(1, "a", Types.VARCHAR);
+        Mockito.verify(p, Mockito.times(1)).setInt(3, 123);
+    }
 	
 	@Test public void testAutoGeneretionKeys() throws Exception {
 		Insert command = (Insert)TranslationHelper.helpTranslate("create foreign table SmallA (IntKey integer primary key, IntNum integer)", "insert into SmallA (IntKey, IntNum) values (1, 2)"); //$NON-NLS-1$
