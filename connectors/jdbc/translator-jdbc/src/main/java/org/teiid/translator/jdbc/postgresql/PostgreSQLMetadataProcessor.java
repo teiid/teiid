@@ -121,7 +121,9 @@ public final class PostgreSQLMetadataProcessor
             String remarks, String fullName, ResultSet tables)
             throws SQLException {
         String type = tables.getString(4);
-        if (type == null || type.contains("INDEX")) { //$NON-NLS-1$
+        if (type == null || type.contains("INDEX") //$NON-NLS-1$
+                || type.equalsIgnoreCase("TYPE") //$NON-NLS-1$
+                || type.equalsIgnoreCase("SEQUENCE")) { //$NON-NLS-1$ 
             return null;
         }
         return super.addTable(metadataFactory, tableCatalog, tableSchema, tableName,
