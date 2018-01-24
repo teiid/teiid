@@ -195,13 +195,14 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             XMLMetadata metadata, Table table, CsdlEntityType entityType)
             throws TranslatorException {
 
-        // add PK
-        addPrimaryKey(mf, metadata, table, entityType); //$NON-NLS-1$
         
         // add columns; add complex types as child tables with 1-1 or 1-many
         // relation
+        List<CsdlProperty> complexTypes = new ArrayList<CsdlProperty>();
         for (CsdlProperty property : entityType.getProperties()) {
-            addProperty(mf, metadata, table, property);
+            if (!addProperty(mf, metadata, table, property)) {
+                complexTypes.add(property);
+            }
         }
         
         // add properties from base type; if any to flatten the model
@@ -209,23 +210,31 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         while (baseType != null) {
             CsdlEntityType baseEntityType = getEntityType(metadata, baseType);
             for (CsdlProperty property : baseEntityType.getProperties()) {
-                addProperty(mf, metadata, table, property);
+                if (!addProperty(mf, metadata, table, property)) {
+                    complexTypes.add(property);
+                }
             }
             baseType = baseEntityType.getBaseType();
         }
+        
+        // add PK
+        addPrimaryKey(mf, metadata, table, entityType); 
+        
+        // add properties that depend on the pk
+        for (CsdlProperty property : complexTypes) {
+            addComplexPropertyAsTable(mf, property, getComplexType(metadata, property.getType()), metadata, table);
+        }
     }
 
-    private void addProperty(MetadataFactory mf, XMLMetadata metadata,
+    private boolean addProperty(MetadataFactory mf, XMLMetadata metadata,
             Table table, CsdlProperty property) throws TranslatorException {
-        if (table.getColumnByName(property.getName()) == null) {
-            if (isSimple(property.getType()) || isEnum(metadata, property.getType())) {
+        if (isSimple(property.getType()) || isEnum(metadata, property.getType())) {
+            if (table.getColumnByName(property.getName()) == null) {
                 addPropertyAsColumn(mf, table, property);
             }
-            else {
-                CsdlComplexType childType = getComplexType(metadata, property.getType());            
-                addComplexPropertyAsTable(mf, property, childType, metadata, table);
-            }
+            return true;
         }
+        return false;            
     }
     
     static boolean isPseudo(Column column) {
@@ -296,8 +305,11 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             childTable.setNameInSource(parentProperty.getName());
         }
         
-        for (CsdlProperty property:complexType.getProperties()) {
-            addProperty(mf, metadata, childTable, property);
+        List<CsdlProperty> complexTypes = new ArrayList<CsdlProperty>();
+        for (CsdlProperty property : complexType.getProperties()) {
+            if (!addProperty(mf, metadata, childTable, property)) {
+                complexTypes.add(property);
+            }
         }
         
         // add properties from base type; if any to flatten the model
@@ -305,9 +317,15 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         while(baseType != null) {
             CsdlComplexType baseComplexType = getComplexType(metadata, baseType);
             for (CsdlProperty property:baseComplexType.getProperties()) {
-                addProperty(mf, metadata, childTable, property);
+                if (!addProperty(mf, metadata, childTable, property)) {
+                    complexTypes.add(property);
+                }
             }
             baseType = baseComplexType.getBaseType();
+        }
+        
+        for (CsdlProperty property : complexTypes) {
+            addComplexPropertyAsTable(mf, property, getComplexType(metadata, property.getType()), metadata, childTable);
         }
     }
 
@@ -316,7 +334,9 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         List<CsdlPropertyRef> keys = entityType.getKey();
         List<String> pkNames = new ArrayList<String>();
         for (CsdlPropertyRef ref : keys) {
-            addProperty(mf, metadata, table, entityType.getProperty(ref.getName()));
+            if (!addProperty(mf, metadata, table, entityType.getProperty(ref.getName()))) {
+                throw new AssertionError("Complex type not allowed as part of primary key"); //$NON-NLS-1$
+            }
             pkNames.add(ref.getName());
             if (ref.getAlias() != null) {
                 throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17018, 
