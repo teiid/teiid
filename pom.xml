@@ -104,6 +104,7 @@
         <version.org.wildfly.build-tools>1.1.6.Final</version.org.wildfly.build-tools>
         <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>   	
         <version.xerces>2.11.0</version.xerces>
+        <version.xml-apis>1.4.01</version.xml-apis>
         
         <!-- Infinispan Translator -->
         <version.org.infinispan>9.1.2.Final</version.org.infinispan>
@@ -1287,17 +1288,16 @@
                 <artifactId>commons-net</artifactId>
                 <version>${version.commons-net}</version>
             </dependency>
-	      <dependency>
-	        <groupId>xerces</groupId>
-	        <artifactId>xercesImpl</artifactId>
-	        <version>${version.xerces}</version>
-	        <exclusions>
-	          <exclusion>
-	            <artifactId>xml-apis</artifactId>
-	            <groupId>xml-apis</groupId>
-	          </exclusion>
-	        </exclusions>
-	      </dependency>            
+	        <dependency>
+		        <groupId>xerces</groupId>
+		        <artifactId>xercesImpl</artifactId>
+		        <version>${version.xerces}</version>
+	        </dependency>
+	        <dependency>
+		        <groupId>xml-apis</groupId>
+		        <artifactId>xml-apis</artifactId>
+		        <version>${version.xml-apis}</version>
+		    </dependency>            
         </dependencies>
 	</dependencyManagement>
 	<modules>
