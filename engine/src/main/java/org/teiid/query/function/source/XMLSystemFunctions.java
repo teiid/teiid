@@ -55,20 +55,6 @@ import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import net.sf.saxon.expr.JPConverter;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.Name11Checker;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.QNameException;
-import net.sf.saxon.sxpath.XPathEvaluator;
-import net.sf.saxon.sxpath.XPathExpression;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.AtomicValue;
-import net.sf.saxon.value.DateTimeValue;
-import net.sf.saxon.value.DateValue;
-import net.sf.saxon.value.DayTimeDurationValue;
-import net.sf.saxon.value.TimeValue;
-
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
@@ -96,6 +82,20 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.translator.WSConnection.Util;
 import org.teiid.util.StAXSQLXML;
 import org.teiid.util.StAXSQLXML.StAXSourceProvider;
+
+import net.sf.saxon.expr.JPConverter;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.Name11Checker;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.QNameException;
+import net.sf.saxon.sxpath.XPathEvaluator;
+import net.sf.saxon.sxpath.XPathExpression;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.AtomicValue;
+import net.sf.saxon.value.DateTimeValue;
+import net.sf.saxon.value.DateValue;
+import net.sf.saxon.value.DayTimeDurationValue;
+import net.sf.saxon.value.TimeValue;
 
 
 /** 
@@ -1173,10 +1173,10 @@ public class XMLSystemFunctions {
 				XMLEvent start = null;
 				if (xs.getVersion() != null) {
 					start = xmlEventFactory.createStartDocument(encoding.name(), xs.getVersion());
-				} else if (xs.getEncoding() != null) {
-					start = xmlEventFactory.createStartDocument(encoding.name());
 				} else {
-					start = xmlEventFactory.createStartDocument();
+				    //use the encoding regardless as different stax impls have different default
+				    //behavior
+					start = xmlEventFactory.createStartDocument(encoding.name());
 				}
 				StAXSourceProvider sourceProvider = new DeclarationStaxSourceProvider(start, value);
 				value = new XMLType(new StAXSQLXML(sourceProvider, encoding));

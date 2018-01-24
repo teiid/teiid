@@ -14,7 +14,7 @@
 
     <version>10.1.0.Alpha1-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
-	<properties>
+	<properties>		
 	    <site.url>http://www.jboss.org/teiid</site.url>
 	    <jdk.min.version>1.8</jdk.min.version>
 	    <maven.compiler.source>1.8</maven.compiler.source>
@@ -55,7 +55,6 @@
         <version.com.force.api>22.0.0</version.com.force.api>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.com.force.api.41>41.0.0</version.com.force.api.41>
-        <version.nux>1.6</version.nux>
         <version.gdata-core>1.47.1</version.gdata-core>
         <version.olap4j>1.1.0</version.olap4j>
         <version.hadoop-common>2.2.0</version.hadoop-common>
@@ -104,6 +103,8 @@
         <version.javax.validation>1.1.0.Final</version.javax.validation>
         <version.org.wildfly.build-tools>1.1.6.Final</version.org.wildfly.build-tools>
         <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>   	
+        <version.xerces>2.11.0</version.xerces>
+        <version.xml-apis>1.4.01</version.xml-apis>
         
         <!-- Infinispan Translator -->
         <version.org.infinispan>9.1.2.Final</version.org.infinispan>
@@ -797,12 +798,6 @@
                 <artifactId>hibernate-core</artifactId>
                 <version>${version.org.hibernate}</version>
             </dependency>                    
-  
-            <dependency>
-                <groupId>nux</groupId>
-                <artifactId>nux</artifactId>
-                <version>${version.nux}</version>
-            </dependency>
                           
             <dependency>
 		        <groupId>com.google.guava</groupId>
@@ -1293,6 +1288,16 @@
                 <artifactId>commons-net</artifactId>
                 <version>${version.commons-net}</version>
             </dependency>
+	        <dependency>
+		        <groupId>xerces</groupId>
+		        <artifactId>xercesImpl</artifactId>
+		        <version>${version.xerces}</version>
+	        </dependency>
+	        <dependency>
+		        <groupId>xml-apis</groupId>
+		        <artifactId>xml-apis</artifactId>
+		        <version>${version.xml-apis}</version>
+		    </dependency>            
         </dependencies>
 	</dependencyManagement>
 	<modules>
