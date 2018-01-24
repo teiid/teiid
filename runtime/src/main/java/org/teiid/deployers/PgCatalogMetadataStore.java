@@ -69,6 +69,8 @@ import org.teiid.transport.PgBackendProtocol;
 public class PgCatalogMetadataStore extends MetadataFactory {
 	private static final long serialVersionUID = 2158418324376966987L;
 	
+	public static final String POSTGIS_LIB_VERSION = "2.0.0 USE_GEOS=0 USE_PROJ=1 USE_STATS=0"; //$NON-NLS-1$
+	
 	public static final String POSTGRESQL_VERSION = System.getProperties().getProperty("org.teiid.pgVersion", "PostgreSQL 8.2"); //$NON-NLS-1$ //$NON-NLS-2$
 
 	public static final String TYPMOD = "(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN 4+(65536*(case when (t1.Precision>32767) then 32767 else t1.Precision end)+(case when (t1.Scale>32767) then 32767 else t1.Scale end)) " + //$NON-NLS-1$
@@ -106,10 +108,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addFunction("colDescription", "col_description"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("pgHasRole", "pg_has_role"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("asBinary2", "ST_asBinary"); //$NON-NLS-1$ //$NON-NLS-2$
-		addFunction("postgisLibVersion", "PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
-		addFunction("postgisGeosVersion", "postgis_geos_version"); //$NON-NLS-1$ //$NON-NLS-2$
-		addFunction("postgisProjVersion", "postgis_proj_version"); //$NON-NLS-1$ //$NON-NLS-2$
-		addFunction("postgisVersion", "postgis_version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisLibVersion", "public.PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisGeosVersion", "public.postgis_geos_version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisProjVersion", "public.postgis_proj_version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisVersion", "public.postgis_version"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -726,7 +728,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		}
 		
 		public static String postgisLibVersion() {
-			return "2.0.0 USE_GEOS=0 USE_PROJ=1 USE_STATS=0"; //$NON-NLS-1$
+			return POSTGIS_LIB_VERSION; 
 		}
 		
 		public static String postgisVersion() {

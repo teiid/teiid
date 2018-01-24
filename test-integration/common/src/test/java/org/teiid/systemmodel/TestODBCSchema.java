@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
@@ -202,4 +203,12 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 	
+	@Test public void testPostgisFunctionResolving() throws Exception {
+        String sql = "select PostGIS_Lib_Version(), public.PostGIS_Lib_Version()";
+        
+        execute(sql);
+        this.internalResultSet.next();
+        assertEquals(PgCatalogMetadataStore.POSTGIS_LIB_VERSION, this.internalResultSet.getString(1));
+        assertEquals(PgCatalogMetadataStore.POSTGIS_LIB_VERSION, this.internalResultSet.getString(2));
+    }
 }
