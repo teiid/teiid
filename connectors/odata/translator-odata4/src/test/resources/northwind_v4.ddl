@@ -138,8 +138,6 @@ CREATE FOREIGN TABLE Territories (
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Territory', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
 CREATE FOREIGN TABLE Alphabetical_list_of_products (
-	CategoryName string(15) NOT NULL,
-	Discontinued boolean NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Boolean'),
 	ProductID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	ProductName string(40) NOT NULL,
 	SupplierID integer OPTIONS (NATIVE_TYPE 'Edm.Int32'),
@@ -149,6 +147,8 @@ CREATE FOREIGN TABLE Alphabetical_list_of_products (
 	UnitsInStock short OPTIONS (NATIVE_TYPE 'Edm.Int16'),
 	UnitsOnOrder short OPTIONS (NATIVE_TYPE 'Edm.Int16'),
 	ReorderLevel short OPTIONS (NATIVE_TYPE 'Edm.Int16'),
+	Discontinued boolean NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Boolean'),
+	CategoryName string(15) NOT NULL,
 	PRIMARY KEY(CategoryName, Discontinued, ProductID, ProductName)
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Alphabetical_list_of_product', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
@@ -165,23 +165,14 @@ CREATE FOREIGN TABLE Current_Product_Lists (
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Current_Product_List', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
 CREATE FOREIGN TABLE Customer_and_Suppliers_by_Cities (
-	CompanyName string(40) NOT NULL,
-	Relationship string(9) NOT NULL,
 	City string(15),
+	CompanyName string(40) NOT NULL,
 	ContactName string(30),
+	Relationship string(9) NOT NULL,
 	PRIMARY KEY(CompanyName, Relationship)
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Customer_and_Suppliers_by_City', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
 CREATE FOREIGN TABLE Invoices (
-	CustomerName string(40) NOT NULL,
-	Discount float NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Single'),
-	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
-	ProductID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
-	ProductName string(40) NOT NULL,
-	Quantity short NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int16'),
-	Salesperson string(31) NOT NULL,
-	ShipperName string(40) NOT NULL,
-	UnitPrice bigdecimal(19,4) NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Decimal'),
 	ShipName string(40),
 	ShipAddress string(60),
 	ShipCity string(15),
@@ -189,26 +180,35 @@ CREATE FOREIGN TABLE Invoices (
 	ShipPostalCode string(10),
 	ShipCountry string(15),
 	CustomerID string(5),
+	CustomerName string(40) NOT NULL,
 	Address string(60),
 	City string(15),
 	Region string(15),
 	PostalCode string(10),
 	Country string(15),
+	Salesperson string(31) NOT NULL,
+	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	OrderDate timestamp OPTIONS (NATIVE_TYPE 'Edm.DateTimeOffset'),
 	RequiredDate timestamp OPTIONS (NATIVE_TYPE 'Edm.DateTimeOffset'),
 	ShippedDate timestamp OPTIONS (NATIVE_TYPE 'Edm.DateTimeOffset'),
+	ShipperName string(40) NOT NULL,
+	ProductID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
+	ProductName string(40) NOT NULL,
+	UnitPrice bigdecimal(19,4) NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Decimal'),
+	Quantity short NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int16'),
+	Discount float NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Single'),
 	ExtendedPrice bigdecimal(19,4) OPTIONS (NATIVE_TYPE 'Edm.Decimal'),
 	Freight bigdecimal(19,4) OPTIONS (NATIVE_TYPE 'Edm.Decimal'),
 	PRIMARY KEY(CustomerName, Discount, OrderID, ProductID, ProductName, Quantity, Salesperson, ShipperName, UnitPrice)
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Invoice', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
 CREATE FOREIGN TABLE Order_Details_Extendeds (
-	Discount float NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Single'),
 	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	ProductID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	ProductName string(40) NOT NULL,
-	Quantity short NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int16'),
 	UnitPrice bigdecimal(19,4) NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Decimal'),
+	Quantity short NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int16'),
+	Discount float NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Single'),
 	ExtendedPrice bigdecimal(19,4) OPTIONS (NATIVE_TYPE 'Edm.Decimal'),
 	PRIMARY KEY(Discount, OrderID, ProductID, ProductName, Quantity, UnitPrice)
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Order_Details_Extended', "teiid_odata:Type" 'ENTITY_COLLECTION');
@@ -220,7 +220,6 @@ CREATE FOREIGN TABLE Order_Subtotals (
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Order_Subtotal', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
 CREATE FOREIGN TABLE Orders_Qries (
-	CompanyName string(40) NOT NULL,
 	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	CustomerID string(5),
 	EmployeeID integer OPTIONS (NATIVE_TYPE 'Edm.Int32'),
@@ -235,6 +234,7 @@ CREATE FOREIGN TABLE Orders_Qries (
 	ShipRegion string(15),
 	ShipPostalCode string(10),
 	ShipCountry string(15),
+	CompanyName string(40) NOT NULL,
 	Address string(60),
 	City string(15),
 	Region string(15),
@@ -258,10 +258,10 @@ CREATE FOREIGN TABLE Products_Above_Average_Prices (
 
 CREATE FOREIGN TABLE Products_by_Categories (
 	CategoryName string(15) NOT NULL,
-	Discontinued boolean NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Boolean'),
 	ProductName string(40) NOT NULL,
 	QuantityPerUnit string(20),
 	UnitsInStock short OPTIONS (NATIVE_TYPE 'Edm.Int16'),
+	Discontinued boolean NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Boolean'),
 	PRIMARY KEY(CategoryName, Discontinued, ProductName)
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Products_by_Category', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
@@ -274,23 +274,23 @@ CREATE FOREIGN TABLE Sales_by_Categories (
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Sales_by_Category', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
 CREATE FOREIGN TABLE Sales_Totals_by_Amounts (
-	CompanyName string(40) NOT NULL,
-	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	SaleAmount bigdecimal(19,4) OPTIONS (NATIVE_TYPE 'Edm.Decimal'),
+	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
+	CompanyName string(40) NOT NULL,
 	ShippedDate timestamp OPTIONS (NATIVE_TYPE 'Edm.DateTimeOffset'),
 	PRIMARY KEY(CompanyName, OrderID)
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Sales_Totals_by_Amount', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
 CREATE FOREIGN TABLE Summary_of_Sales_by_Quarters (
-	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	ShippedDate timestamp OPTIONS (NATIVE_TYPE 'Edm.DateTimeOffset'),
+	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	Subtotal bigdecimal(19,4) OPTIONS (NATIVE_TYPE 'Edm.Decimal'),
 	PRIMARY KEY(OrderID)
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Summary_of_Sales_by_Quarter', "teiid_odata:Type" 'ENTITY_COLLECTION');
 
 CREATE FOREIGN TABLE Summary_of_Sales_by_Years (
-	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	ShippedDate timestamp OPTIONS (NATIVE_TYPE 'Edm.DateTimeOffset'),
+	OrderID integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	Subtotal bigdecimal(19,4) OPTIONS (NATIVE_TYPE 'Edm.Decimal'),
 	PRIMARY KEY(OrderID)
 ) OPTIONS (UPDATABLE TRUE, "teiid_odata:NameInSchema" 'NorthwindModel.Summary_of_Sales_by_Year', "teiid_odata:Type" 'ENTITY_COLLECTION');
