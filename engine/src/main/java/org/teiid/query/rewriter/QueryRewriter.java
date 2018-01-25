@@ -3357,7 +3357,7 @@ public class QueryRewriter {
 		newUpdate.setConstraint(constraint);
 		newUpdate.setChangeList(setClauseList);
 		newUpdate.setGroup(group.clone());
-		List<Criteria> pkCriteria = createPkCriteria(group, correlationName, query, varGroup);
+		List<Criteria> pkCriteria = createPkCriteria(update.getGroup(), group, correlationName, query, varGroup);
 		newUpdate.setCriteria(new CompoundCriteria(pkCriteria));
 		return asLoopProcedure(update.getGroup(), query, newUpdate, varGroup, Command.TYPE_UPDATE);
 	}
@@ -3400,10 +3400,14 @@ public class QueryRewriter {
 		return rewrite(cupc, metadata, context);
 	}
 
-	private List<Criteria> createPkCriteria(GroupSymbol group, String correlationName, Query query, GroupSymbol varGroup) throws TeiidComponentException, QueryMetadataException {
+	private List<Criteria> createPkCriteria(GroupSymbol viewGroup, GroupSymbol group, String correlationName, Query query, GroupSymbol varGroup) throws TeiidComponentException, QueryMetadataException, QueryValidatorException {
 		Object pk = metadata.getPrimaryKey(group.getMetadataID());
 		if (pk == null) {
-			pk = metadata.getUniqueKeysInGroup(group.getMetadataID()).iterator().next();
+			Collection uniqueKeysInGroup = metadata.getUniqueKeysInGroup(group.getMetadataID());
+			if (uniqueKeysInGroup.isEmpty()) {
+			    throw new QueryValidatorException(QueryPlugin.Event.TEIID31267, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31267, viewGroup, group));
+			}
+            pk = uniqueKeysInGroup.iterator().next();
 		}
 		int i = query.getSelect().getSymbols().size();
 		List<Object> ids = metadata.getElementIDsInKey(pk);
@@ -3564,7 +3568,7 @@ public class QueryRewriter {
 		Delete newUpdate = new Delete();
 		newUpdate.setGroup(group.clone());
 		GroupSymbol varGroup = getVarGroup(delete);
-		List<Criteria> pkCriteria = createPkCriteria(group, correlationName, query, varGroup);
+		List<Criteria> pkCriteria = createPkCriteria(delete.getGroup(), group, correlationName, query, varGroup);
 		newUpdate.setCriteria(new CompoundCriteria(pkCriteria));
 		return asLoopProcedure(delete.getGroup(), query, newUpdate, varGroup, Command.TYPE_DELETE);
 	}
