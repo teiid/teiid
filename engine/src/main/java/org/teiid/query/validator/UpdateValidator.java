@@ -508,12 +508,21 @@ public class UpdateValidator {
     	if (this.updateInfo.updateType == UpdateType.INHERENT && !updatable) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0005"), true, false, false); //$NON-NLS-1$
     	}
-    	if (this.updateInfo.deleteType == UpdateType.INHERENT && this.updateInfo.deleteTarget == null) {
-    		if (this.updateInfo.isSimple && updatable) {
-    			this.updateInfo.deleteTarget = this.updateInfo.updatableGroups.values().iterator().next();
-    		} else {
-    			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0014"), false, false, true); //$NON-NLS-1$
-    		}
+    	if (this.updateInfo.deleteType == UpdateType.INHERENT) {
+    	    if (this.updateInfo.deleteTarget == null) {
+        		if (this.updateInfo.isSimple && updatable) {
+        			this.updateInfo.deleteTarget = this.updateInfo.updatableGroups.values().iterator().next();
+        		} else {
+        			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0014"), false, false, true); //$NON-NLS-1$
+        		}
+    	    }
+    	    if (this.updateInfo.deleteTarget != null) {
+    	        GroupSymbol group = this.updateInfo.deleteTarget.group;
+                if (!this.updateInfo.isSimple && metadata.getPrimaryKey(group.getMetadataID()) == null && 
+    	                metadata.getUniqueKeysInGroup(group.getMetadataID()).isEmpty()) {
+                    handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31267, viewSymbols.iterator().next().getGroupSymbol(), group), false, false, true); 
+    	        }
+    	    }
     	}
     }
 
