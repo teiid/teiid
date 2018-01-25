@@ -144,5 +144,28 @@ public class TestSetProcessing {
         
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
+    
+    @Test public void testExceptInlineView() throws Exception {
+        String sql = "SELECT case when a_id is null then 'Y' else 'N' end a_id  from "
+                + "(SELECT a_id from a_dim where a_id>100 except( SELECT a_id from a_dim where a_id=100)) a";
+
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table a_dim(a_id integer);", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+                sql, metadata, 
+                new String[] {"SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id > 100", 
+                        "SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id = 100"}, 
+                new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); 
+        
+        HardcodedDataManager manager = new HardcodedDataManager();
+        manager.addData("SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id > 100", Arrays.asList(101), Arrays.asList(102), Arrays.asList(103));
+        manager.addData("SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id = 100", Arrays.asList(100));
+        
+        List<?>[] expected = new List[] {Arrays.asList("N"), Arrays.asList("N"), Arrays.asList("N")};
+        
+        TestProcessor.helpProcess(plan, manager, expected);
+    }
 
 }
