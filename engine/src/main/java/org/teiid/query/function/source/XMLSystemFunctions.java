@@ -85,7 +85,7 @@ import org.teiid.util.StAXSQLXML.StAXSourceProvider;
 
 import net.sf.saxon.expr.JPConverter;
 import net.sf.saxon.om.Item;
-import net.sf.saxon.om.Name11Checker;
+import net.sf.saxon.om.NameChecker;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.QNameException;
 import net.sf.saxon.sxpath.XPathEvaluator;
@@ -889,14 +889,14 @@ public class XMLSystemFunctions {
     
     public static String[] validateQName(String name) throws TeiidProcessingException {
         try {
-            return Name11Checker.getInstance().getQNameParts(name);
+            return NameChecker.getQNameParts(name);
         } catch (QNameException e) {
             throw new TeiidProcessingException(e);
         }
     }
     
     public static boolean isValidNCName(String prefix) { 
-        return Name11Checker.getInstance().isValidNCName(prefix);
+        return NameChecker.isValidNCName(prefix);
     }
     
     public static String escapeName(String name, boolean fully) {
@@ -927,11 +927,11 @@ public class XMLSystemFunctions {
     			//TODO: there should be handling for surrogates
     			//      and invalid chars
     			if (i == 0) {
-    				if (!Name11Checker.getInstance().isNCNameStartChar(chr)) {
+    				if (!NameChecker.isNCNameStartChar(chr)) {
     					sb.append(escapeChar(chr));
     					continue;
     				}
-    			} else if (!Name11Checker.getInstance().isNCNameChar(chr)) {
+    			} else if (!NameChecker.isNCNameChar(chr)) {
     				sb.append(escapeChar(chr));
     				continue;
     			}

@@ -21,19 +21,6 @@ package org.teiid.query.xquery.saxon;
 import java.io.IOException;
 import java.util.Map;
 
-import net.sf.saxon.Configuration;
-import net.sf.saxon.event.ContentHandlerProxy;
-import net.sf.saxon.event.FilterFactory;
-import net.sf.saxon.event.ProxyReceiver;
-import net.sf.saxon.event.Receiver;
-import net.sf.saxon.lib.AugmentedSource;
-import net.sf.saxon.om.Name11Checker;
-import net.sf.saxon.om.NamespaceBinding;
-import net.sf.saxon.om.NodeName;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.type.SchemaType;
-import net.sf.saxon.type.SimpleType;
-
 import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.EntityResolver;
@@ -44,6 +31,19 @@ import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.ext.LexicalHandler;
+
+import net.sf.saxon.Configuration;
+import net.sf.saxon.event.ContentHandlerProxy;
+import net.sf.saxon.event.FilterFactory;
+import net.sf.saxon.event.ProxyReceiver;
+import net.sf.saxon.event.Receiver;
+import net.sf.saxon.lib.AugmentedSource;
+import net.sf.saxon.om.NameChecker;
+import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NodeName;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.SchemaType;
+import net.sf.saxon.type.SimpleType;
 
 final class StreamingUtils {
 	/**
@@ -93,7 +93,7 @@ final class StreamingUtils {
 			} // end if
 			
 			localNames[i] = localNames[i].substring(k + 1).trim();
-			if (!localNames[i].equals("*") && !Name11Checker.getInstance().isValidNCName(localNames[i])) { //$NON-NLS-1$
+			if (!localNames[i].equals("*") && !NameChecker.isValidNCName(localNames[i])) { //$NON-NLS-1$
 			    throw new IllegalArgumentException(localNames[i] + " is not a valid local name."); //$NON-NLS-1$
 			}
 			fixedPath += localNames[i];
