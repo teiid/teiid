@@ -73,7 +73,7 @@ public class ProcedureParameter extends BaseColumn {
 	}
 	
     public String toString() { 
-        return getName()+(isVarArg?"... ":" ")+" "+getType(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        return getType()+(isVarArg?"... ":" ")+" "+super.toString(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }	
     
     @Override

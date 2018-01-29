@@ -165,7 +165,20 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+on cn.conrelid = ref.confrelid" +  //$NON-NLS-1$
 			"\\s+and cn.contype = 'p'\\)" +  //$NON-NLS-1$
 			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-		
+	
+	public static final String TYPE_QUERY = "SELECT typinput='array_in'::regproc, typtype   FROM pg_catalog.pg_type   LEFT   JOIN (select ns.oid as nspoid, ns.nspname, r.r           from pg_namespace as ns           " //$NON-NLS-1$
+	        + "join ( select s.r, (current_schemas(false))[s.r] as nspname                    from generate_series(1, array_upper(current_schemas(false), 1)) as s(r) ) as r          using ( nspname )        ) as sp     " //$NON-NLS-1$
+	        + "ON sp.nspoid = typnamespace  WHERE typname = $1  ORDER BY sp.r, pg_type.oid DESC LIMIT 1"; //$NON-NLS-1$
+	
+	private static final String PK_QUERY = "SELECT NULL AS TABLE_CAT, n.nspname AS TABLE_SCHEM,   ct.relname AS TABLE_NAME, a.attname AS COLUMN_NAME,   (i.keys).n AS KEY_SEQ, ci.relname AS PK_NAME " //$NON-NLS-1$
+	        + "FROM pg_catalog.pg_class ct   JOIN pg_catalog.pg_attribute a ON (ct.oid = a.attrelid)   JOIN pg_catalog.pg_namespace n ON (ct.relnamespace = n.oid)   JOIN (SELECT i.indexrelid, i.indrelid, i.indisprimary, " //$NON-NLS-1$
+	        + "             information_schema._pg_expandarray(i.indkey) AS keys         FROM pg_catalog.pg_index i) i" //$NON-NLS-1$
+	        + "     ON (a.attnum = (i.keys).x AND a.attrelid = i.indrelid)   JOIN pg_catalog.pg_class ci ON (ci.oid = i.indexrelid) WHERE true"; //$NON-NLS-1$
+	
+	private static final String PK_REPLACEMENT_QUERY = "SELECT NULL AS TABLE_CAT, n.nspname AS TABLE_SCHEM, ct.relname AS TABLE_NAME, a.attname AS COLUMN_NAME, a.attnum AS KEY_SEQ, ci.relname AS PK_NAME\n" + //$NON-NLS-1$ 
+            "FROM pg_catalog.pg_namespace n, pg_catalog.pg_class ct, pg_catalog.pg_class ci, pg_catalog.pg_attribute a, pg_catalog.pg_index i \n" + //$NON-NLS-1$
+            "WHERE ct.oid=i.indrelid AND ci.oid=i.indexrelid AND a.attrelid=ci.oid AND ct.relnamespace = n.oid "; //$NON-NLS-1$
+
 	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+(\\S+)(\\s+BINARY)?(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern fetchPattern = Pattern.compile("FETCH(?:(?:\\s+(FORWARD|ABSOLUTE|RELATIVE))?\\s+(\\d+)\\s+(?:IN|FROM))?\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern fetchFirstLastPattern = Pattern.compile("FETCH\\s+(FIRST|LAST)\\s+(?:IN|FROM)\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -792,6 +805,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 						+ " case t.typtype when 'd' then t.typbasetype else 0 end, t.typtypmod, c.relhasoids from sys.columns as t1, pg_catalog.matpg_datatype as t, pg_catalog.pg_class c where c.relnspname=t1.schemaname and c.relname=t1.tablename and t1.DataType = t.Name and c.oid = " //$NON-NLS-1$
 						+ m.group(1)
 						+ " order by nspname, relname, attnum"; //$NON-NLS-1$
+			}
+			//we don't support generate_series or the natural join syntax
+			if (modified.equals(TYPE_QUERY)) {
+			    return "select typname like '_%', typname from pg_catalog.pg_type where typname = $1"; //$NON-NLS-1$
+			}
+			//we don't support _pg_expandarray and referencing elements by name
+			if (modified.startsWith(PK_QUERY)) {
+			    return PK_REPLACEMENT_QUERY + modified.substring(PK_QUERY.length()); 
 			}
 		}
 		else if (sql.equalsIgnoreCase("show max_identifier_length")){ //$NON-NLS-1$

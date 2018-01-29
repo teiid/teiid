@@ -240,7 +240,7 @@ public class ScriptReader {
                         					builder.setLength(expressionStart);
                             				builder.append(name.toUpperCase());
                         				}
-                            			builder.insert(expressionStart, "(SELECT oid FROM pg_proc WHERE upper(proname) = "); //$NON-NLS-1$
+                            			builder.insert(expressionStart, "(SELECT oid FROM pg_catalog.pg_proc WHERE upper(proname) = "); //$NON-NLS-1$
                             			builder.append(")"); //$NON-NLS-1$
                             		} else {
 	                            		builder.insert(expressionStart, "cast("); //$NON-NLS-1$

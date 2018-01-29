@@ -19,15 +19,6 @@
 package org.teiid.transport;
 
 import static org.teiid.odbc.PGUtil.*;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufOutputStream;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
-import io.netty.handler.ssl.SslHandler;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -70,6 +61,16 @@ import org.teiid.query.function.GeometryUtils;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.pg.PGbytea;
 import org.teiid.transport.pg.TimestampUtils;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
+import io.netty.handler.ssl.SslHandler;
 /**
  * Represents the messages going from Server --> PG ODBC Client  
  * Some parts of this code is taken from H2's implementation of ODBC
@@ -275,7 +276,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		sendParameterStatus("integer_datetimes", "off");
 		sendParameterStatus("is_superuser", "off");
 		sendParameterStatus("server_encoding", "SQL_ASCII");
-		sendParameterStatus("server_version", "8.1.4");
+		sendParameterStatus("server_version", "8.2");
 		sendParameterStatus("session_authorization", this.props.getProperty("user"));
 		sendParameterStatus("standard_conforming_strings", "on");
 		sendParameterStatus(APPLICATION_NAME, this.props.getProperty(APPLICATION_NAME, DEFAULT_APPLICATION_NAME));
@@ -551,6 +552,11 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	private void getContent(ResultSet rs, PgColInfo col, int column) throws SQLException, TeiidSQLException, IOException {
 		switch (col.type) {
 			case PG_TYPE_BOOL:
+	            boolean b = rs.getBoolean(column);
+                if (!rs.wasNull()) {
+                    writer.write(b?"t":"f"); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                break;
 			case PG_TYPE_BPCHAR:
 		    case PG_TYPE_DATE:
 		    case PG_TYPE_FLOAT4:
