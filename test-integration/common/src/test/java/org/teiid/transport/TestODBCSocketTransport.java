@@ -39,7 +39,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
-import org.postgresql.core.v3.ExtendedQueryExectutorImpl;
+import org.postgresql.core.v3.ExtendedQueryExecutorImpl;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -314,7 +314,7 @@ public class TestODBCSocketTransport {
 	
 	@Test public void testCursor() throws Exception {
 		Statement stmt = conn.createStatement();
-		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		ExtendedQueryExecutorImpl.simplePortal = "foo";
 		try {
 			assertFalse(stmt.execute("declare \"foo\" cursor for select * from pg_proc limit 13;"));
 			
@@ -350,14 +350,14 @@ public class TestODBCSocketTransport {
 				
 			}
 		} finally {
-			ExtendedQueryExectutorImpl.simplePortal = null;
+			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
 		
 	}	
 	
 	@Test public void testCursorUnquoted() throws Exception {
 		Statement stmt = conn.createStatement();
-		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		ExtendedQueryExecutorImpl.simplePortal = "foo";
 		try {
 			assertFalse(stmt.execute("declare foo cursor for select * from pg_proc limit 13;"));
 			
@@ -384,14 +384,14 @@ public class TestODBCSocketTransport {
 			
 			stmt.execute("close foo");			
 		} finally {
-			ExtendedQueryExectutorImpl.simplePortal = null;
+			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
 		
 	}
 	
 	@Test public void testScrollCursor() throws Exception {
 		Statement stmt = conn.createStatement();
-		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		ExtendedQueryExecutorImpl.simplePortal = "foo";
 		try {
 			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for select * from pg_proc limit 11;"));
 			assertFalse(stmt.execute("move 5 in \"foo\""));
@@ -418,14 +418,14 @@ public class TestODBCSocketTransport {
 			
 			stmt.execute("close \"foo\"");
 		} finally {
-			ExtendedQueryExectutorImpl.simplePortal = null;
+			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
 		
 	}
 	
 	@Test public void testScrollCursorWithHold() throws Exception {
 		Statement stmt = conn.createStatement();
-		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		ExtendedQueryExecutorImpl.simplePortal = "foo";
 		try {
 			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor with hold for select * from pg_proc;"));
 			assertFalse(stmt.execute("move 5 in \"foo\""));
@@ -438,14 +438,14 @@ public class TestODBCSocketTransport {
 			assertEquals(7, rowCount);
 			stmt.execute("close \"foo\"");
 		} finally {
-			ExtendedQueryExectutorImpl.simplePortal = null;
+			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
 		
 	}
 	
 	@Test public void testScrollCursorOtherFetches() throws Exception {
 		Statement stmt = conn.createStatement();
-		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		ExtendedQueryExecutorImpl.simplePortal = "foo";
 		try {
 			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for values (1), (2), (3);"));
 			stmt.execute("fetch first in \"foo\"");
@@ -473,7 +473,7 @@ public class TestODBCSocketTransport {
 			assertFalse(rs.next());
 			
 		} finally {
-			ExtendedQueryExectutorImpl.simplePortal = null;
+			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
 	}
 	
@@ -562,7 +562,7 @@ public class TestODBCSocketTransport {
 	
 	@Test public void testInt2Vector() throws Exception {
 		Statement s = conn.createStatement();
-		ResultSet rs = s.executeQuery("select indkey FROM pg_index order by oid");
+		ResultSet rs = s.executeQuery("select indkey FROM pg_index order by indexrelid");
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}
 	
@@ -587,6 +587,19 @@ public class TestODBCSocketTransport {
 		ResultSet rs = metadata.getTables(null, null, "pg_index", null);
 		assertTrue(rs.next());
 	}
+	
+	@Test public void testIndexInfo() throws Exception {
+        DatabaseMetaData metadata = conn.getMetaData();
+        ResultSet rs = metadata.getIndexInfo(null, null, "pg_index", false, false);
+        assertTrue(rs.next());
+    }
+	
+    @Test public void testPkMetadata() throws Exception {
+        DatabaseMetaData metadata = conn.getMetaData();
+        ResultSet rs = metadata.getPrimaryKeys(null, null, "pg_index");
+        assertTrue(rs.next());
+        assertFalse(rs.next());
+    }
 	
 	@Test public void test_pg_cast() throws Exception {
 		Statement s = conn.createStatement();
@@ -777,6 +790,16 @@ public class TestODBCSocketTransport {
         ResultSet rs = s.getResultSet();
         rs.next();
         assertEquals(PgCatalogMetadataStore.POSTGRESQL_VERSION, rs.getString(1));
+    }
+    
+    @Test public void testBooleanValues() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT true, false, unknown");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        assertTrue(rs.getBoolean(1));
+        assertFalse(rs.getBoolean(2));
+        assertTrue(!rs.getBoolean(3) && rs.wasNull());
     }
 
     private void checkApplicationName(Statement s, String value) throws SQLException {

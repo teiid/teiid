@@ -140,7 +140,7 @@ public class FunctionParameter extends BaseColumn {
      * @return String representation of function parameter
      */ 
     public String toString() { 
-        return getRuntimeType() + (isVarArg?"... ":" ") + getName(); //$NON-NLS-1$ //$NON-NLS-2$
+        return getRuntimeType() + (isVarArg?"... ":" ") + super.toString(); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 	public void setVarArg(boolean isVarArg) {

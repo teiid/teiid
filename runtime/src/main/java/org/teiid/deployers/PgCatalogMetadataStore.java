@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.CommandContext;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -42,6 +44,7 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.StringUtil;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
@@ -49,6 +52,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.Type;
 import org.teiid.odbc.ODBCServerRemoteImpl;
@@ -120,6 +124,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addFunction("version", "version"); //$NON-NLS-1$ //$NON-NLS-2$
 		func = addFunction("pg_client_encoding", "pg_client_encoding"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
+		addFunction("current_schemas", "current_schemas"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_get_indexdef", "pg_get_indexdef"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private Table add_pg_constraint() {
@@ -379,7 +385,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	// additional index information
 	private Table add_pg_index() {
 		Table t = createView("pg_index"); //$NON-NLS-1$ 
-		
+		//teiid specific - there's no oid in pg
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		
 		// 	The OID of the pg_class entry for this index
@@ -404,7 +410,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("indexprs", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
 		addColumn("indpred", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
-		addPrimaryKey("pk_pg_index", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
+		//teiid specific column for pg_index_def
+		addColumn("indkey_names", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.STRING)), t); //$NON-NLS-1$
+		
+		addPrimaryKey("pk_pg_index", Arrays.asList("indexrelid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, " + //$NON-NLS-1$
 				"pg_catalog.getOid(t1.uid) as indexrelid, " + //$NON-NLS-1$
@@ -415,9 +424,11 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"(CASE t1.KeyType WHEN 'Primary' THEN true ELSE false END) as indisprimary, " + //$NON-NLS-1$
 				"asPGVector(" + //$NON-NLS-1$
 				arrayAgg("(select at.attnum FROM pg_catalog.pg_attribute as at WHERE at.attname = t1.Name AND at.attrelid = pg_catalog.getOid(t1.TableUID))", "t1.position") +") as indkey, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				"null as indexprs, null as indpred " + //$NON-NLS-1$
+				"null as indexprs, null as indpred, " + //$NON-NLS-1$
+                arrayAgg("t1.Name", "t1.position") +" as indkey_names " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				"FROM Sys.KeyColumns as t1 GROUP BY t1.TableUID, t1.uid, t1.KeyType, t1.KeyName"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
+		t.setMaterialized(true);
 		return t;		
 	}
 
@@ -569,9 +580,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("teiid_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
 		String transformation =
-			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, "  //$NON-NLS-1$
+			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, "  //$NON-NLS-1$ --we use SYS, but pg uses public
 			+ "typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, " //$NON-NLS-1$
-			+ "typelem, null as typeinput, 2147483647 - row_number() over (order by typname) as typereceive, null as typdefault, teiid_name from texttable('" + //$NON-NLS-1$
+			+ "typelem, null as typinput, 2147483647 - row_number() over (order by typname) as typreceive, null as typdfault, teiid_name from texttable('" + //$NON-NLS-1$
 			"16,bool,1,b,0,-1,0,0,boolean\n" + //$NON-NLS-1$
 			"17,bytea,-1,b,0,-1,0,0,blob\n" + //$NON-NLS-1$
 			"1043,varchar,-1,b,0,-1,0,0,string\n" + //$NON-NLS-1$
@@ -910,6 +921,41 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	            return "UTF8"; //$NON-NLS-1$
 	        }
 	        throw new AssertionError("Unknown encoding"); //$NON-NLS-1$
+	    }
+	    
+	    public static String[] current_schemas(CommandContext cc, boolean include_implicit) {
+	        //TODO: when schemas are hidden we should use the system metadata or other logic to hide them here as well
+	        if (include_implicit) {
+	            VDBMetaData metadata = (VDBMetaData) cc.getVdb();
+	            TransformationMetadata tm = metadata.getAttachment(TransformationMetadata.class);
+	            List<Schema> schemas = tm.getMetadataStore().getSchemaList();
+	            String[] results = new String[schemas.size()];
+	            for (int i = 0; i < results.length; i++) {
+	                results[i] = schemas.get(i).getName();
+	            }
+	            return results;
+	        }
+	        List<Model> models = cc.getVdb().getModels();
+	        String[] results = new String[models.size()];
+	        for (int i = 0; i < results.length; i++) {
+	            results[i] = models.get(i).getName();
+	        }
+	        return results;
+	    }
+	    
+	    public static String pg_get_indexdef(CommandContext cc, int index_oid, short column_no, boolean pretty_bool) throws TeiidSQLException, SQLException {
+	        //TODO: account for function based index
+	        try (Connection c = cc.getConnection(); PreparedStatement ps = c.prepareStatement("select indkey_names[?] from pg_index where indexrelid = ?")) { //$NON-NLS-1$
+                ps.setShort(1, column_no);
+                ps.setInt(2, index_oid);
+                ps.execute();
+                ResultSet rs = ps.getResultSet();
+                String result = null;
+                if (rs.next()) {
+                    result = rs.getString(1);
+                }
+                return result;
+            }
 	    }
 		
 	}
