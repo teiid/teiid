@@ -18,13 +18,12 @@
 
 package org.postgresql.core.v3;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Deque;
 import java.util.Properties;
 
-import org.postgresql.core.Logger;
 import org.postgresql.core.PGStream;
 import org.postgresql.core.ParameterList;
 import org.postgresql.core.Query;
@@ -37,25 +36,24 @@ import org.postgresql.core.ResultHandler;
  *
  */
 @SuppressWarnings({"rawtypes", "nls"})
-public class ExtendedQueryExectutorImpl extends QueryExecutorImpl {
+public class ExtendedQueryExecutorImpl extends QueryExecutorImpl {
 
 	public static String simplePortal;
 	
 	public PGStream stream;
-	public List pendingExecute = new ArrayList();
-	public List pendingDescribe = new ArrayList();
+	public Deque<ExecuteRequest> pendingExecute;
+	public Deque<SimpleQuery> pendingDescribe;
 	
-	public ExtendedQueryExectutorImpl(ProtocolConnectionImpl protoConnection,
-			PGStream pgStream, Properties info, Logger logger) {
-		super(protoConnection, pgStream, info, logger);
+	public ExtendedQueryExecutorImpl(PGStream pgStream, String user, String database, int cancelSignalTimeout, Properties info) throws SQLException, IOException {
+		super(pgStream, user, database, cancelSignalTimeout, info);
 		this.stream = pgStream;
 		try {
 			Field f = QueryExecutorImpl.class.getDeclaredField("pendingExecuteQueue");
 			f.setAccessible(true);
-			pendingExecute = (List) f.get(this);
+			pendingExecute = (Deque<ExecuteRequest>) f.get(this);
 			f = QueryExecutorImpl.class.getDeclaredField("pendingDescribePortalQueue");
 			f.setAccessible(true);
-			pendingDescribe = (List) f.get(this);
+			pendingDescribe = (Deque<SimpleQuery>) f.get(this);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -69,16 +67,16 @@ public class ExtendedQueryExectutorImpl extends QueryExecutorImpl {
 			try {
 				byte[] bytes = query.toString().getBytes("UTF-8");
 				
-				stream.SendChar('Q');
-				stream.SendInteger4(bytes.length + 6);
-				stream.Send(bytes);
-				stream.SendInteger2(0);
+				stream.sendChar('Q');
+				stream.sendInteger4(bytes.length + 6);
+				stream.send(bytes);
+				stream.sendInteger2(0);
 				stream.flush();
 				if (pendingExecute.isEmpty()) {
-					pendingExecute.add(new Object[] { query, new Portal((SimpleQuery)query, simplePortal) });
+					pendingExecute.add(new ExecuteRequest((SimpleQuery)query, new Portal((SimpleQuery)query, simplePortal), true));
 				}
 				if (pendingDescribe.isEmpty()) {
-					pendingDescribe.add(query);
+					pendingDescribe.add((SimpleQuery)query);
 				}
 				processResults(handler, flags);
 				handler.handleCompletion();

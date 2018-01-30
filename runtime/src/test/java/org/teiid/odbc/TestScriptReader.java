@@ -99,5 +99,12 @@ public class TestScriptReader {
         String result = sr.readStatement();
         assertEquals("select \"ltrunc('a')\", left('a')", result);
     }
+    
+    @Test public void testRegProc() throws Exception {
+        ScriptReader sr = new ScriptReader("SELECT 1 FROM pg_catalog.pg_type WHERE typname = $1 AND typinput='array_in'::regproc");
+        sr.setRewrite(true);
+        String result = sr.readStatement();
+        assertEquals("SELECT 1 FROM pg_catalog.pg_type WHERE typname = $1 AND typinput=(SELECT oid FROM pg_catalog.pg_proc WHERE upper(proname) = 'ARRAY_IN')", result);
+    }
 	
 }

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -186,6 +187,31 @@ public class TestInherintlyUpdatableViews {
         dataManager.addData("SELECT y.SmallA.StringKey FROM y.SmallA WHERE CONVERT(y.SmallA.IntValue, integer) = 12", new List<?>[] {Arrays.asList("a")});
         dataManager.addData("UPDATE y.SmallA SET StringKey = 'b' WHERE y.SmallA.StringKey = 'a'", new List<?>[] {Arrays.asList(1)});
         TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)});
+    }
+    
+    @Test(expected=QueryValidatorException.class) public void testDeleteWithoutPrimaryKey() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE smalla_source(\n" + 
+                "        charvalue string OPTIONS (NATIVE_TYPE 'STRING'),\n" + 
+                "        intkey integer OPTIONS (NATIVE_TYPE 'NUMBER')\n" + 
+                "        ) OPTIONS (UPDATABLE 'TRUE', NAMEINSOURCE 'smalla_${label}');"
+                + ""
+                + "CREATE VIEW SmallA (IntKey integer,\n" + 
+                "            CharValue char\n" + 
+                "            )\n" + 
+                " \n" + 
+                "            OPTIONS (UPDATABLE 'TRUE')\n" + 
+                "        AS\n" + 
+                "        SELECT\n" + 
+                "          intkey, convert(charvalue, char)\n" + 
+                "        FROM\n" + 
+                "          smalla_source;";
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        
+        TestProcessor.helpGetPlan(helpParse("DELETE FROM smalla WHERE CharValue IN ('2', '3')"), metadata, new DefaultCapabilitiesFinder(caps), createCommandContext());
     }
 
 }

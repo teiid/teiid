@@ -646,7 +646,15 @@ public class PlanToProcessConverter {
                 		//update the project cols based upon the original output
                 		child.setProperty(NodeConstants.Info.PROJECT_COLS, child.getProperty(NodeConstants.Info.OUTPUT_COLS));
                 	}
-                    child.setProperty(NodeConstants.Info.OUTPUT_COLS, node.getProperty(NodeConstants.Info.OUTPUT_COLS));
+                	if (child.getType() != NodeConstants.Types.SET_OP || child.getProperty(Info.SET_OPERATION) == Operation.UNION) {
+                	    child.setProperty(NodeConstants.Info.OUTPUT_COLS, node.getProperty(NodeConstants.Info.OUTPUT_COLS));
+                	} else {
+                        //else we cannot directly update the child properties as the child will get converted to a join
+                	    //create a projection instead for initialization purposes, but won't impact performance
+                        ProjectNode pNode = new ProjectNode(getID());
+                        pNode.setSelectSymbols((List<? extends Expression>) child.getProperty(NodeConstants.Info.OUTPUT_COLS));
+                        return prepareToAdd(node, pNode);
+                	}
 				}
 				return null;
     		case NodeConstants.Types.SET_OP:

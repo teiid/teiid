@@ -29,15 +29,15 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.KeyRecord.Type;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.KeyRecord.Type;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
@@ -144,6 +144,8 @@ public class TestUpdateValidator {
         
         pm1g3e.get(2).setNullType(NullType.No_Nulls);
         pm1g3e.get(2).setDefaultValue("xyz"); //$NON-NLS-1$
+        
+        RealMetadataFactory.createKey(Type.Primary, "pk", pm1g3, pm1g3e.subList(0, 1));
 
 		// Create virtual groups
 		QueryNode vm1g1n1 = new QueryNode("SELECT e1 as a, e2 FROM pm1.g1 WHERE e3 > 5"); //$NON-NLS-1$ //$NON-NLS-2$

@@ -12,7 +12,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>10.1.0.Alpha1-SNAPSHOT</version>
+    <version>10.2.0-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>		
 	    <site.url>http://www.jboss.org/teiid</site.url>
@@ -66,7 +66,7 @@
         <version.aws-java-sdk>1.11.0</version.aws-java-sdk>
         <version.cassandra-driver-core>3.1.3</version.cassandra-driver-core>
         <version.org.jboss.resteasy.tjws>3.0.11.Final</version.org.jboss.resteasy.tjws>        
-        <version.postgresql>9.2-1004-jdbc4</version.postgresql>
+        <version.postgresql>42.1.4</version.postgresql>
         <derby.version>10.2.1.6</derby.version>
 	    <mysql.connector.version>5.1.5</mysql.connector.version>
         <version.org.codehaus.groovy>2.4.4</version.org.codehaus.groovy>

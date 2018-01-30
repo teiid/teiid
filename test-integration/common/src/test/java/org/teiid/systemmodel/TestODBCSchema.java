@@ -2,6 +2,7 @@ package org.teiid.systemmodel;
 
 import static org.junit.Assert.*;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import org.junit.After;
@@ -239,6 +240,32 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
         this.internalResultSet.next();
         assertEquals(PgCatalogMetadataStore.POSTGIS_LIB_VERSION, this.internalResultSet.getString(1));
         assertEquals(PgCatalogMetadataStore.POSTGIS_LIB_VERSION, this.internalResultSet.getString(2));
+    }
+	
+	@Test public void testCurrentSchemas() throws SQLException {
+	    String sql = "select current_schemas(true), current_schemas(false)";
+	    execute(sql);
+        this.internalResultSet.next();
+        assertArrayEquals(new String[] {"PartsSupplier", "SYS", "SYSADMIN", "pg_catalog"}, (String[])this.internalResultSet.getArray(1).getArray());
+        assertArrayEquals(new String[] {"PartsSupplier"}, (String[])this.internalResultSet.getArray(2).getArray());
+	}
+	
+    @Test public void testTypeLookup() throws Exception {
+        //42 driver sql
+        String sql = "SELECT n.nspname = ANY(current_schemas(true)), n.nspname, t.typname "
+                + "FROM pg_catalog.pg_type t "
+                + "JOIN pg_catalog.pg_namespace n ON t.typnamespace = n.oid WHERE t.oid = 32816";
+        execute(sql);
+        assertResults(new String[] {"expr1[boolean]\tnspname[string]\ttypname[string]\n" + 
+                "true\tSYS\tgeometry"});
+    }
+    
+    @Test public void testIndexDef() throws Exception {
+        //42 driver function
+        String sql = "select pg_get_indexdef((select indexrelid from pg_index where indrelid = (select oid from pg_class where relname = 'PARTSSUPPLIER.PARTS')), 1, false)";
+        execute(sql);
+        assertResults(new String[] {"expr1[string]\n" + 
+                "PART_ID"});
     }
 	
 }
