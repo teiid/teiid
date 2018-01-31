@@ -16,7 +16,9 @@
 
 package org.teiid.query.xquery.saxon;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
@@ -100,17 +102,8 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 	}
 
 	public int getNamespaceCount() {
-		Iterator namespaces;
-		if (event.isStartElement()) {
-			namespaces = event.asStartElement().getNamespaces();
-		}
-		else if (event.isEndElement()) {
-			namespaces = event.asEndElement().getNamespaces();
-		}
-		else {
-			throw new IllegalStateException();
-		}
-		return countIterator(namespaces);
+		initNamespaces();
+		return namespacesList.size();
 	}
 
 	public NamespaceContext getNamespaceContext() {
@@ -151,11 +144,8 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 	}
 
 	public int getAttributeCount() {
-		if (!event.isStartElement()) {
-			throw new IllegalStateException();
-		}
-		Iterator attributes = event.asStartElement().getAttributes();
-		return countIterator(attributes);
+		initAttributes();
+		return attributesList.size();
 	}
 
 	public void close() throws XMLStreamException {
@@ -204,54 +194,55 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 		}
 	}
 
-	private int countIterator(Iterator iterator) {
-		int count = 0;
-		while (iterator.hasNext()) {
-			iterator.next();
-			count++;
-		}
-		return count;
-	}
+	private XMLEvent attributesEvent;
+	List<Attribute> attributesList;
 
 	private Attribute getAttribute(int index) {
-		if (!event.isStartElement()) {
-			throw new IllegalStateException();
-		}
-		int count = 0;
-		Iterator attributes = event.asStartElement().getAttributes();
-		while (attributes.hasNext()) {
-			Attribute attribute = (Attribute) attributes.next();
-			if (count == index) {
-				return attribute;
-			}
-			else {
-				count++;
-			}
-		}
-		throw new IllegalArgumentException();
+		initAttributes();
+		return attributesList.get(index);
 	}
 
-	private Namespace getNamespace(int index) {
-		Iterator namespaces;
-		if (event.isStartElement()) {
-			namespaces = event.asStartElement().getNamespaces();
-		}
-		else if (event.isEndElement()) {
-			namespaces = event.asEndElement().getNamespaces();
-		}
-		else {
+    private void initAttributes() {
+        if (!event.isStartElement()) {
 			throw new IllegalStateException();
 		}
-		int count = 0;
-		while (namespaces.hasNext()) {
-			Namespace namespace = (Namespace) namespaces.next();
-			if (count == index) {
-				return namespace;
-			}
-			else {
-				count++;
-			}
+		if (event != attributesEvent) {
+	        attributesEvent = event;
+	        attributesList = new ArrayList<>();
+	        Iterator attributes = event.asStartElement().getAttributes();
+	        while (attributes.hasNext()) {
+	            Attribute attribute = (Attribute) attributes.next();
+	            attributesList.add(attribute);
+	        }
 		}
-		throw new IllegalArgumentException();
+    }
+    
+    private XMLEvent namespacesEvent;
+    List<Namespace> namespacesList;
+
+	private Namespace getNamespace(int index) {
+	    initNamespaces();
+		return namespacesList.get(index);
 	}
+
+    private void initNamespaces() {
+        if (event != namespacesEvent) {
+	        namespacesEvent = event;
+    		Iterator namespaces;
+    		if (event.isStartElement()) {
+    			namespaces = event.asStartElement().getNamespaces();
+    		}
+    		else if (event.isEndElement()) {
+    			namespaces = event.asEndElement().getNamespaces();
+    		}
+    		else {
+    			throw new IllegalStateException();
+    		}
+    		namespacesList = new ArrayList<>();
+            while (namespaces.hasNext()) {
+	            Namespace namespace = (Namespace) namespaces.next();
+	            namespacesList.add(namespace);
+	        }
+	    }
+    }
 }

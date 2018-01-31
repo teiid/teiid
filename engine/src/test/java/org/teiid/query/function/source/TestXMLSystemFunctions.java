@@ -37,9 +37,9 @@ import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.events.EndElement;
+import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
-
-import net.sf.saxon.trans.XPathException;
+import javax.xml.transform.stax.StAXSource;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -53,6 +53,8 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
+
+import net.sf.saxon.trans.XPathException;
 
 @SuppressWarnings("nls")
 public class TestXMLSystemFunctions {
@@ -279,6 +281,26 @@ public class TestXMLSystemFunctions {
 		writer.close();
 		assertEquals("<b xmlns=\"\" xmlns:x=\"http://foo\" x:y=\"1\"></b>", new String(baos.toByteArray(), "UTF-8"));
 	}
+	
+	@Test public void testJsonEvents() throws Exception {
+        String json = "{ \"firstName\": null }"; 
+        CommandContext cc = new CommandContext();
+        cc.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        SQLXML xml = XMLSystemFunctions.jsonToXml(cc, "x", new SerialClob(json.toCharArray()), true);
+        StAXSource source = xml.getSource(StAXSource.class);
+        XMLEventReader reader = source.getXMLEventReader();
+        assertTrue(reader.nextEvent().isStartDocument());
+        StartElement start = reader.nextEvent().asStartElement();
+        //should declare the ns, but no attributes
+        assertTrue(start.getNamespaces().hasNext());
+        assertFalse(start.getAttributes().hasNext());
+        start = reader.nextEvent().asStartElement();
+        //should be nil, but no namespace
+        assertFalse(start.getNamespaces().hasNext());
+        assertTrue(start.getAttributes().hasNext());
+        assertTrue(reader.nextEvent().isEndElement());
+        assertTrue(reader.nextEvent().isEndElement());
+    }
 	
 	@BeforeClass static public void setUpOnce() {
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-6:00"));

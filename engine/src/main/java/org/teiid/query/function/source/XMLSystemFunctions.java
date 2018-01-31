@@ -29,7 +29,9 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -45,6 +47,8 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 import javax.xml.transform.Source;
@@ -227,16 +231,21 @@ public class XMLSystemFunctions {
 		public boolean startObject() throws org.teiid.json.simple.ParseException,
 				IOException {
 			parentArray.push(false);
-			start();
+			start(null);
 			return false;
 		}
 
-		private void start() {
-			eventStack.add(eventFactory.createStartElement("", "", nameStack.peek())); //$NON-NLS-1$ //$NON-NLS-2$ 
+		private void start(Attribute attribute) {
+		    Iterator<Namespace> namespaces = null;
+		    Iterator<Attribute> attributes = null;
 			if (!declaredNs) {
-				eventStack.add(eventFactory.createNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)); //$NON-NLS-1$
-				declaredNs = true;
+			    namespaces = Arrays.asList(eventFactory.createNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)).iterator(); //$NON-NLS-1$
+			    declaredNs = true;
 			}
+			if (attribute != null) {
+			    attributes = Arrays.asList(attribute).iterator();
+			}
+			eventStack.add(eventFactory.createStartElement("", "", nameStack.peek(), attributes, namespaces)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		@Override
@@ -250,7 +259,7 @@ public class XMLSystemFunctions {
 		public boolean startArray() throws org.teiid.json.simple.ParseException,
 				IOException {
 			if ((nameStack.size() == 1 && parentArray.isEmpty()) || parentArray.peek()) {
-				start();
+				start(null);
 			}
 			parentArray.push(true);
 			return false;
@@ -259,7 +268,6 @@ public class XMLSystemFunctions {
 		@Override
 		public boolean primitive(Object value)
 				throws org.teiid.json.simple.ParseException, IOException {
-			start();
 			if (value != null) {
 				String type = "decimal"; //$NON-NLS-1$
 				if (value instanceof String) {
@@ -269,18 +277,24 @@ public class XMLSystemFunctions {
 				}
 				if (type != null) {
 					//we need to differentiate boolean/decimal entries from their string counter parts
-					eventStack.add(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "type", type)); //$NON-NLS-1$ //$NON-NLS-2$
+					start(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "type", type)); //$NON-NLS-1$ //$NON-NLS-2$
+				} else {
+				    start(null);
 				}
 				eventStack.add(eventFactory.createCharacters(value.toString()));
 			} else {
-				eventStack.add(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "nil", "true")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			    start(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "nil", "true")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 			end();
 			return true; //return true, otherwise we don't get the endObjectEntry
 		}
 
 		private void end() {
-			eventStack.add(eventFactory.createEndElement("", "", nameStack.peek())); //$NON-NLS-1$ //$NON-NLS-2$ 
+		    Iterator<Namespace> namespaces = null;
+            if (nameStack.size() == 1) {
+                namespaces = Arrays.asList(eventFactory.createNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)).iterator(); //$NON-NLS-1$
+            }
+			eventStack.add(eventFactory.createEndElement("", "", nameStack.peek(), namespaces)); //$NON-NLS-1$ //$NON-NLS-2$ 
 		}
 
 		@Override
