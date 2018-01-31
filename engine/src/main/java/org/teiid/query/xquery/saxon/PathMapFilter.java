@@ -27,11 +27,12 @@ import org.teiid.logging.MessageLevel;
 
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.expr.parser.Location;
 import net.sf.saxon.expr.parser.PathMap.PathMapArc;
 import net.sf.saxon.expr.parser.PathMap.PathMapNode;
 import net.sf.saxon.expr.parser.PathMap.PathMapRoot;
 import net.sf.saxon.om.AxisInfo;
-import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NamespaceBindingSet;
 import net.sf.saxon.om.NodeName;
 import net.sf.saxon.pattern.NodeTest;
 import net.sf.saxon.trans.XPathException;
@@ -124,13 +125,13 @@ class PathMapFilter extends ProxyReceiver {
 	
 	@Override
 	public void startElement(NodeName elemName, SchemaType typeCode,
-			int locationId, int properties) throws XPathException {
+			Location locationId, int properties) throws XPathException {
 		MatchContext mc = matchContext.getLast();
 		MatchContext newContext = new MatchContext();
 		if (mc.elementArcs != null) {
 			for (PathMapArc arc : mc.elementArcs) {
 				NodeTest test = arc.getNodeTest();
-				if (test == null || test.matches(Type.ELEMENT, elemName, typeCode.getFingerprint())) {
+				if (test == null || test.matches(Type.ELEMENT, elemName, typeCode)) {
 					newContext.bulidContext(arc.getTarget());
 					newContext.matchedElement = true;
 					if (arc.getTarget().isAtomized() && arc.getTarget().getArcs().length == 0) {
@@ -153,20 +154,20 @@ class PathMapFilter extends ProxyReceiver {
 	
 	@Override
 	public void attribute(NodeName nameCode, SimpleType typeCode,
-			CharSequence value, int locationId, int properties)
+			CharSequence value, Location locationId, int properties)
 			throws XPathException {
 		MatchContext mc = matchContext.getLast();
 		if (!mc.matchedElement) {
 			return;
 		}
-		if (nameCode.isInNamespace(javax.xml.XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)) {
+		if (nameCode.hasURI(javax.xml.XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)) {
 			super.attribute(nameCode, typeCode, value, locationId, properties);
 			return;
 		}
 		if (mc.attributeArcs != null) {
 			for (PathMapArc arc : mc.attributeArcs) {
 				NodeTest test = arc.getNodeTest();
-				if (test == null || test.matches(Type.ATTRIBUTE, nameCode, typeCode.getFingerprint())) {
+				if (test == null || test.matches(Type.ATTRIBUTE, nameCode, typeCode)) {
 					super.attribute(nameCode, typeCode, value, locationId, properties);
 					return;
 				} 
@@ -175,7 +176,7 @@ class PathMapFilter extends ProxyReceiver {
 	}
 
 	@Override
-	public void characters(CharSequence chars, int locationId,
+	public void characters(CharSequence chars, Location locationId,
 			int properties) throws XPathException {
 		MatchContext context = matchContext.getLast();
 		if (context.matchedElement && context.matchesText) {
@@ -184,7 +185,7 @@ class PathMapFilter extends ProxyReceiver {
 	}
 
 	@Override
-	public void comment(CharSequence chars, int locationId,
+	public void comment(CharSequence chars, Location locationId,
 			int properties) throws XPathException {
 		MatchContext context = matchContext.getLast();
 		if (context.matchedElement && context.matchesComment) {
@@ -194,20 +195,20 @@ class PathMapFilter extends ProxyReceiver {
 
 	@Override
 	public void processingInstruction(String target,
-			CharSequence data, int locationId, int properties)
+			CharSequence data, Location locationId, int properties)
 			throws XPathException {
 		MatchContext context = matchContext.getLast();
 		if (context.matchedElement) {
 			super.processingInstruction(target, data, locationId, properties);
 		}
 	}
-
+	
 	@Override
-	public void namespace(NamespaceBinding namespaceBinding, int properties)
-			throws XPathException {
+	public void namespace(NamespaceBindingSet namespaceBindings, int properties)
+	        throws XPathException {
 		MatchContext context = matchContext.getLast();
 		if (context.matchedElement) {
-			super.namespace(namespaceBinding, properties);
+			super.namespace(namespaceBindings, properties);
 		}
 	}
 

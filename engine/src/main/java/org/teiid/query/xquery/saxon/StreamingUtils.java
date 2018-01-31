@@ -37,9 +37,10 @@ import net.sf.saxon.event.ContentHandlerProxy;
 import net.sf.saxon.event.FilterFactory;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.expr.parser.Location;
 import net.sf.saxon.lib.AugmentedSource;
 import net.sf.saxon.om.NameChecker;
-import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NamespaceBindingSet;
 import net.sf.saxon.om.NodeName;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.SchemaType;
@@ -172,7 +173,7 @@ final class SaxonReader implements XMLReader {
 			}
 		});
 		try {
-			config.buildDocument(source);
+			config.buildDocumentTree(source);
 		} catch (XPathException e) {
 			throw new SAXException(e);
 		}
@@ -227,13 +228,13 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 	
 	@Override
 	public void attribute(NodeName nameCode, SimpleType typeCode,
-			CharSequence value, int locationId, int properties)
+			CharSequence value, Location locationId, int properties)
 			throws XPathException {
 		reciever.attribute(nameCode, typeCode, value, locationId,
 				properties);
 	}
 
-	public void characters(CharSequence chars, int locationId,
+	public void characters(CharSequence chars, Location locationId,
 			int properties) throws XPathException {
 		reciever.characters(chars, locationId, properties);
 	}
@@ -243,7 +244,7 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 		super.close();
 	}
 
-	public void comment(CharSequence content, int locationId, int properties)
+	public void comment(CharSequence content, Location locationId, int properties)
 			throws XPathException {
 		reciever.comment(content, locationId, properties);
 	}
@@ -262,9 +263,9 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 	}
 	
 	@Override
-	public void namespace(NamespaceBinding namespaceBinding, int properties)
-			throws XPathException {
-		reciever.namespace(namespaceBinding, properties);
+	public void namespace(NamespaceBindingSet namespaceBindings, int properties)
+	        throws XPathException {
+		reciever.namespace(namespaceBindings, properties);
 	}
 
 	public void open() throws XPathException {
@@ -273,7 +274,7 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 	}
 
 	public void processingInstruction(String name, CharSequence data,
-			int locationId, int properties) throws XPathException {
+			Location locationId, int properties) throws XPathException {
 		reciever.processingInstruction(name, data, locationId, properties);
 	}
 
@@ -298,7 +299,7 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 	
 	@Override
 	public void startElement(NodeName elemName, SchemaType typeCode,
-			int locationId, int properties) throws XPathException {
+			Location locationId, int properties) throws XPathException {
 		reciever.startElement(elemName, typeCode, locationId, properties);
 	}
 	

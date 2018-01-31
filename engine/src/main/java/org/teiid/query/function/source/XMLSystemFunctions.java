@@ -23,13 +23,12 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -45,6 +44,8 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 import javax.xml.transform.Source;
@@ -79,23 +80,19 @@ import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.translator.WSConnection.Util;
 import org.teiid.util.StAXSQLXML;
 import org.teiid.util.StAXSQLXML.StAXSourceProvider;
 
-import net.sf.saxon.expr.JPConverter;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NameChecker;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.QNameException;
+import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.AtomicValue;
-import net.sf.saxon.value.DateTimeValue;
-import net.sf.saxon.value.DateValue;
-import net.sf.saxon.value.DayTimeDurationValue;
-import net.sf.saxon.value.TimeValue;
 
 
 /** 
@@ -227,16 +224,21 @@ public class XMLSystemFunctions {
 		public boolean startObject() throws org.teiid.json.simple.ParseException,
 				IOException {
 			parentArray.push(false);
-			start();
+			start(null);
 			return false;
 		}
 
-		private void start() {
-			eventStack.add(eventFactory.createStartElement("", "", nameStack.peek())); //$NON-NLS-1$ //$NON-NLS-2$ 
+		private void start(Attribute attribute) {
+		    Iterator<Namespace> namespaces = null;
+		    Iterator<Attribute> attributes = null;
 			if (!declaredNs) {
-				eventStack.add(eventFactory.createNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)); //$NON-NLS-1$
-				declaredNs = true;
+			    namespaces = Arrays.asList(eventFactory.createNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)).iterator(); //$NON-NLS-1$
+			    declaredNs = true;
 			}
+			if (attribute != null) {
+			    attributes = Arrays.asList(attribute).iterator();
+			}
+			eventStack.add(eventFactory.createStartElement("", "", nameStack.peek(), attributes, namespaces)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		@Override
@@ -250,7 +252,7 @@ public class XMLSystemFunctions {
 		public boolean startArray() throws org.teiid.json.simple.ParseException,
 				IOException {
 			if ((nameStack.size() == 1 && parentArray.isEmpty()) || parentArray.peek()) {
-				start();
+				start(null);
 			}
 			parentArray.push(true);
 			return false;
@@ -259,7 +261,6 @@ public class XMLSystemFunctions {
 		@Override
 		public boolean primitive(Object value)
 				throws org.teiid.json.simple.ParseException, IOException {
-			start();
 			if (value != null) {
 				String type = "decimal"; //$NON-NLS-1$
 				if (value instanceof String) {
@@ -269,18 +270,24 @@ public class XMLSystemFunctions {
 				}
 				if (type != null) {
 					//we need to differentiate boolean/decimal entries from their string counter parts
-					eventStack.add(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "type", type)); //$NON-NLS-1$ //$NON-NLS-2$
+					start(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "type", type)); //$NON-NLS-1$ //$NON-NLS-2$
+				} else {
+				    start(null);
 				}
 				eventStack.add(eventFactory.createCharacters(value.toString()));
 			} else {
-				eventStack.add(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "nil", "true")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			    start(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "nil", "true")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 			end();
 			return true; //return true, otherwise we don't get the endObjectEntry
 		}
 
 		private void end() {
-			eventStack.add(eventFactory.createEndElement("", "", nameStack.peek())); //$NON-NLS-1$ //$NON-NLS-2$ 
+		    Iterator<Namespace> namespaces = null;
+            if (nameStack.size() == 1) {
+                namespaces = Arrays.asList(eventFactory.createNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)).iterator(); //$NON-NLS-1$
+            }
+			eventStack.add(eventFactory.createEndElement("", "", nameStack.peek(), namespaces)); //$NON-NLS-1$ //$NON-NLS-2$ 
 		}
 
 		@Override
@@ -537,7 +544,7 @@ public class XMLSystemFunctions {
 		if (attributes != null) {
 			for (Evaluator.NameValuePair<?> nameValuePair : attributes) {
 				if (nameValuePair.value != null) {
-					eventWriter.add(eventFactory.createAttribute(new QName(nameValuePair.name), convertToAtomicValue(nameValuePair.value).getStringValue()));
+					eventWriter.add(eventFactory.createAttribute(new QName(nameValuePair.name), XQueryEvaluator.convertToAtomicValue(nameValuePair.value).getStringValue()));
 				}
 			}
 		}
@@ -665,24 +672,6 @@ public class XMLSystemFunctions {
 		return result;
 	}
 	
-	public static AtomicValue convertToAtomicValue(Object value) throws TransformerException {
-		if (value instanceof java.util.Date) { //special handling for time types
-        	java.util.Date d = (java.util.Date)value;
-        	DateTimeValue tdv = DateTimeValue.fromJavaDate(d);
-        	if (value instanceof Date) {
-        		value = new DateValue(tdv.getYear(), tdv.getMonth(), tdv.getDay(), tdv.getTimezoneInMinutes(), true);
-        	} else if (value instanceof Time) {
-        		value = new TimeValue(tdv.getHour(), tdv.getMinute(), tdv.getSecond(), tdv.getMicrosecond(), tdv.getTimezoneInMinutes());
-        	} else if (value instanceof Timestamp) {
-        		Timestamp ts = (Timestamp)value;
-        		value = tdv.add(DayTimeDurationValue.fromMicroseconds(ts.getNanos() / 1000));
-        	}
-        	return (AtomicValue)value;
-        }
-		JPConverter converter = JPConverter.allocate(value.getClass(), null);
-		return (AtomicValue)converter.convert(value, null);
-	}
-	
 	static void convertValue(Writer writer, XMLEventWriter eventWriter, XMLEventFactory eventFactory, Object object) throws IOException,
 			FactoryConfigurationError, XMLStreamException,
 			TransformerException {
@@ -724,7 +713,7 @@ public class XMLSystemFunctions {
 				r = clob.getCharacterStream();
 				convertReader(writer, eventWriter, r, Type.TEXT, null);
 			} else {
-				String val = convertToAtomicValue(object).getStringValue();
+				String val = XQueryEvaluator.convertToAtomicValue(object).getStringValue();
 				eventWriter.add(eventFactory.createCharacters(val));
 			}
 		} catch (SQLException e) {
@@ -835,7 +824,8 @@ public class XMLSystemFunctions {
             XPathEvaluator eval = new XPathEvaluator();
             // Wrap the string() function to force a string return             
             XPathExpression expr = eval.createExpression(xpath);
-            Object o = expr.evaluateSingle(s);
+            XPathDynamicContext context = expr.createDynamicContext(eval.getConfiguration().buildDocumentTree(s).getRootNode());
+            Object o = expr.evaluateSingle(context);
             
             if(o == null) {
                 return null;
