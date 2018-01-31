@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2013 Saxonica Limited.
+// Copyright (c) 2017 Saxonica Limited.
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 // This Source Code Form is "Incompatible With Secondary Licenses", as defined by the Mozilla Public License, v. 2.0.
@@ -9,20 +9,13 @@ package net.sf.saxon.option.xom;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.Receiver;
-import net.sf.saxon.om.AtomicSequence;
-import net.sf.saxon.om.DocumentInfo;
-import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.NamespaceBinding;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.Sequence;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.expr.parser.Location;
+import net.sf.saxon.om.*;
 import net.sf.saxon.pattern.AnyNodeTest;
-import net.sf.saxon.pattern.NameTest;
-import net.sf.saxon.pattern.NodeKindTest;
 import net.sf.saxon.pattern.NodeTest;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.tree.iter.AxisIterator;
-import net.sf.saxon.tree.iter.EmptyAxisIterator;
+import net.sf.saxon.tree.iter.EmptyIterator;
 import net.sf.saxon.tree.iter.SingletonIterator;
 import net.sf.saxon.tree.util.FastStringBuffer;
 import net.sf.saxon.tree.util.Navigator;
@@ -30,22 +23,13 @@ import net.sf.saxon.tree.util.SteppingNavigator;
 import net.sf.saxon.tree.util.SteppingNode;
 import net.sf.saxon.tree.wrapper.AbstractNodeWrapper;
 import net.sf.saxon.tree.wrapper.SiblingCountingNode;
-import net.sf.saxon.tree.wrapper.VirtualNode;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.SchemaType;
 import net.sf.saxon.type.Type;
 import net.sf.saxon.type.Untyped;
 import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.UntypedAtomicValue;
-import nu.xom.Attribute;
-import nu.xom.Comment;
-import nu.xom.DocType;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.Node;
-import nu.xom.ParentNode;
-import nu.xom.ProcessingInstruction;
-import nu.xom.Text;
+import nu.xom.*;
 
 /**
  * A node in the XML parse tree representing an XML element, character content,
@@ -58,7 +42,7 @@ import nu.xom.Text;
  * @author Wolfgang Hoschek (ported net.sf.saxon.jdom to XOM)
  */
 
-public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, SiblingCountingNode, SteppingNode {
+public class XOMNodeWrapper extends AbstractNodeWrapper implements SiblingCountingNode, SteppingNode<XOMNodeWrapper> {
 
     protected Node node;
 
@@ -80,7 +64,7 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
      * @param parent The XOMNodeWrapper that wraps the parent of this node
      * @param index  Position of this node among its siblings
      */
-    protected XOMNodeWrapper(Node node, XOMNodeWrapper parent, int index) {
+    XOMNodeWrapper(Node node, XOMNodeWrapper parent, int index) {
         short kind;
         if (node instanceof Element) {
             kind = Type.ELEMENT;
@@ -133,6 +117,7 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
         if (node == docWrapper.node) return docWrapper;
         XOMNodeWrapper wrapper = new XOMNodeWrapper(node, parent, index);
         wrapper.docWrapper = docWrapper;
+        wrapper.treeInfo = docWrapper;
         return wrapper;
     }
 
@@ -212,15 +197,6 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
     }
 
     /**
-     * Get the type annotation
-     */
-
-    public int getTypeAnnotation() {
-        SchemaType st = getSchemaType();
-        return (st == null ? -1 : st.getFingerprint());
-    }
-
-    /**
      * Get the type annotation of this node, if any. The type annotation is represented as
      * SchemaType object.
      * <p/>
@@ -296,12 +272,9 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
      */
 
     public String getSystemId() {
-        return docWrapper.baseURI;
+        return docWrapper.getBaseURI();
     }
 
-    public void setSystemId(String uri) {
-        docWrapper.baseURI = uri;
-    }
 
     /**
      * Get the Base URI for the node, that is, the URI used for resolving a
@@ -489,41 +462,6 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
     }
 
     /**
-     * Get name code. The name code is a coded form of the node name: two nodes
-     * with the same name code have the same namespace URI, the same local name,
-     * and the same prefix. By masking the name code with &0xfffff, you get a
-     * fingerprint: two nodes with the same fingerprint have the same local name
-     * and namespace URI.
-     *
-     * @see net.sf.saxon.om.NamePool#allocate allocate
-     */
-
-    public int getNameCode() {
-        switch (nodeKind) {
-            case Type.ELEMENT:
-            case Type.ATTRIBUTE:
-            case Type.PROCESSING_INSTRUCTION:
-                return docWrapper.getNamePool().allocate(getPrefix(), getURI(),
-                        getLocalPart());
-            default:
-                return -1;
-        }
-    }
-
-    /**
-     * Get fingerprint. The fingerprint is a coded form of the expanded name of
-     * the node: two nodes with the same name code have the same namespace URI
-     * and the same local name. A fingerprint of -1 should be returned for a
-     * node with no name.
-     */
-
-    public int getFingerprint() {
-        int nc = getNameCode();
-        if (nc == -1) return -1;
-        return nc & 0xfffff;
-    }
-
-    /**
      * Get the local part of the name of this node. This is the name after the
      * ":" if any.
      *
@@ -605,7 +543,7 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
      * Get the NodeInfo object representing the parent of this node
      */
 
-    public SteppingNode getParent() {
+    public XOMNodeWrapper getParent() {
         if (parent == null) {
             ParentNode p = node.getParent();
             if (p != null) parent = makeWrapper(p, docWrapper);
@@ -613,7 +551,7 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
         return parent;
     }
 
-    public SteppingNode getNextSibling() {
+    public XOMNodeWrapper getNextSibling() {
         ParentNode parenti = node.getParent();
         if (parenti == null) {
             return null;
@@ -633,7 +571,7 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
         return null;
     }
 
-    public SteppingNode getPreviousSibling() {
+    public XOMNodeWrapper getPreviousSibling() {
         ParentNode parenti = node.getParent();
         if (parenti == null) {
             return null;
@@ -652,9 +590,9 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
         return null;
     }
 
-    public SteppingNode getFirstChild() {
+    public XOMNodeWrapper getFirstChild() {
         if (node.getChildCount() > 0) {
-            for (int i=0; i<node.getChildCount(); i++) {
+            for (int i = 0; i < node.getChildCount(); i++) {
                 Node n = node.getChild(i);
                 if (!(n instanceof DocType)) {
                     return makeWrapper(n, docWrapper, this, 0);
@@ -664,8 +602,8 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
         return null;
     }
 
-    public SteppingNode getSuccessorElement(SteppingNode anchor, String uri, String local) {
-        Node stop = (anchor == null ? null : ((XOMNodeWrapper) anchor).node);
+    public XOMNodeWrapper getSuccessorElement(XOMNodeWrapper anchor, String uri, String local) {
+        Node stop = (anchor == null ? null : anchor.node);
         Node next = node;
         do {
             next = getSuccessorNode(next, stop);
@@ -701,7 +639,7 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
             if (q == null) {
                 return null;
             }
-            int i = q.indexOf(p) + 1;   // TODO: inefficient if a node has a large number of children
+            int i = q.indexOf(p) + 1;
             if (i < q.getChildCount()) {
                 return q.getChild(i);
             }
@@ -743,170 +681,47 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
         }
     }
 
-    /**
-     * Return an iteration over the nodes reached by the given axis from this
-     * node
-     *
-     * @param axisNumber
-     *            the axis to be used
-     * @return a SequenceIterator that scans the nodes reached by the axis in
-     *         turn.
-     */
-
-    /*public AxisIterator iterateAxis(byte axisNumber) {
-         return iterateAxis(axisNumber, AnyNodeTest.getInstance());
-     } */
-
-    /**
-     * Return an iteration over the nodes reached by the given axis from this
-     * node
-     * <p/>
-     * // * @param axisNumber
-     * the axis to be used
-     *
-     * @param nodeTest A pattern to be matched by the returned nodes
-     * @return a SequenceIterator that scans the nodes reached by the axis in
-     *         turn.
-     */
-
-/*	public AxisIterator iterateAxis(byte axisNumber, NodeTest nodeTest) {
-		// for clarifications, see the W3C specs or:
-		// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/xmlsdk/html/xmrefaxes.asp
-		switch (axisNumber) {
-		case AxisInfo.ANCESTOR:
-			return new AncestorAxisIterator(this, false, nodeTest);
-
-		case AxisInfo.ANCESTOR_OR_SELF:
-			return new AncestorAxisIterator(this, true, nodeTest);
-
-		case AxisInfo.ATTRIBUTE:
-			if (nodeKind != Type.ELEMENT || ((Element) node).getAttributeCount() == 0) {
-				return EmptyAxisIterator.emptyAxisIterator();
-			} else {
-				return new AttributeAxisIterator(this, nodeTest);
-			}
-
-		case AxisInfo.CHILD:
-			if (hasChildNodes()) {
-				return new ChildAxisIterator(this, true, true, nodeTest);
-			} else {
-				return EmptyAxisIterator.emptyAxisIterator();
-			}
-
-		case AxisInfo.DESCENDANT:
-			if (hasChildNodes()) {
-				return new DescendantAxisIterator(this, false, false, nodeTest);
-			} else {
-				return EmptyAxisIterator.emptyAxisIterator();
-			}
-
-		case AxisInfo.DESCENDANT_OR_SELF:
-			if (hasChildNodes()) {
-				return new DescendantAxisIterator(this, true, false, nodeTest);
-			} else {
-				return Navigator.filteredSingleton(this, nodeTest);
-			}
-
-		case AxisInfo.FOLLOWING:
-			if (getParent() == null) {
-				return EmptyAxisIterator.emptyAxisIterator();
-			} else {
-				return new DescendantAxisIterator(this, false, true, nodeTest);
-			}
-
-		case AxisInfo.FOLLOWING_SIBLING:
-			if (nodeKind == Type.ATTRIBUTE || getParent() == null) {
-				return EmptyAxisIterator.emptyAxisIterator();
-			} else {
-				return new ChildAxisIterator(this, false, true, nodeTest);
-			}
-
-		case AxisInfo.NAMESPACE:
-			if (nodeKind == Type.ELEMENT) {
-				return NamespaceNode.makeIterator(this, nodeTest);
-			} else {
-				return EmptyAxisIterator.emptyAxisIterator();
-			}
-
-		case AxisInfo.PARENT:
-			if (getParent() == null) {
-				return EmptyAxisIterator.emptyAxisIterator();
-			} else {
-				return Navigator.filteredSingleton(getParent(), nodeTest);
-			}
-
-		case AxisInfo.PRECEDING:
-			return new PrecedingAxisIterator(this, false, nodeTest);
-//			return new Navigator.AxisFilter(
-//					new Navigator.PrecedingEnumeration(this, false), nodeTest);
-
-		case AxisInfo.PRECEDING_SIBLING:
-			if (nodeKind == Type.ATTRIBUTE || getParent() == null) {
-				return EmptyAxisIterator.emptyAxisIterator();
-			} else {
-				return new ChildAxisIterator(this, false, false, nodeTest);
-			}
-
-		case AxisInfo.SELF:
-			return Navigator.filteredSingleton(this, nodeTest);
-
-		case AxisInfo.PRECEDING_OR_ANCESTOR:
-			// This axis is used internally by saxon for the xsl:number implementation,
-			// it returns the union of the preceding axis and the ancestor axis.
-			return new PrecedingAxisIterator(this, true, nodeTest);
-//			return new Navigator.AxisFilter(new Navigator.PrecedingEnumeration(
-//					this, true), nodeTest);
-
-		default:
-			throw new IllegalArgumentException("Unknown axis number " + axisNumber);
-		}
-	}  */
     @Override
-    protected AxisIterator<NodeInfo> iterateAttributes(NodeTest nodeTest) {
+    protected AxisIterator iterateAttributes(NodeTest nodeTest) {
         return new Navigator.AxisFilter(
                 new AttributeAxisIterator(this, nodeTest),
                 nodeTest);
     }
 
     @Override
-    protected AxisIterator<NodeInfo> iterateChildren(NodeTest nodeTest) {
+    protected AxisIterator iterateChildren(NodeTest nodeTest) {
         if (hasChildNodes()) {
             return new Navigator.AxisFilter(
                     new ChildAxisIterator(this, true, true, nodeTest),
                     nodeTest);
         } else {
-            return EmptyAxisIterator.emptyAxisIterator();
+            return EmptyIterator.OfNodes.THE_INSTANCE;
         }
     }
 
     @Override
-    protected AxisIterator<NodeInfo> iterateSiblings(NodeTest nodeTest, boolean forwards) {
+    protected AxisIterator iterateSiblings(NodeTest nodeTest, boolean forwards) {
         return new Navigator.AxisFilter(
                 new ChildAxisIterator(this, false, forwards, nodeTest),
                 nodeTest);
     }
 
     @Override
-    protected AxisIterator<NodeInfo> iterateDescendants(NodeTest nodeTest, boolean includeSelf) {
+    protected AxisIterator iterateDescendants(NodeTest nodeTest, boolean includeSelf) {
         if (includeSelf) {
-            return new SteppingNavigator.DescendantAxisIterator(this, true, nodeTest);
+            return new SteppingNavigator.DescendantAxisIterator<XOMNodeWrapper>(
+                    this, true, nodeTest);
 
         } else {
             if (hasChildNodes()) {
-                return new SteppingNavigator.DescendantAxisIterator(this, false, nodeTest);
+                return new SteppingNavigator.DescendantAxisIterator<XOMNodeWrapper>(
+                        this, false, nodeTest);
             } else {
-                return EmptyAxisIterator.emptyAxisIterator();
+                return EmptyIterator.OfNodes.THE_INSTANCE;
             }
 
         }
     }
-
-//	private static AxisIterator makeSingleIterator(XOMNodeWrapper wrapper, NodeTest nodeTest) {
-//		if (nodeTest == AnyNodeTest.getInstance() || nodeTest.matches(wrapper))
-//			return SingletonIterator.makeIterator(wrapper);
-//		else
-//			return EmptyIterator.getInstance();
-//	}
 
     /**
      * Get the string value of a given attribute of this node
@@ -941,20 +756,6 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
     }
 
     /**
-     * Get the root node, if it is a document node.
-     *
-     * @return the DocumentInfo representing the containing document.
-     */
-
-    public DocumentInfo getDocumentRoot() {
-        if (docWrapper.node instanceof Document) {
-            return docWrapper;
-        } else {
-            return null;
-        }
-    }
-
-    /**
      * Determine whether the node has any children. <br />
      * Note: the result is equivalent to <br />
      * getEnumeration(Axis.CHILD, AnyNodeTest.getInstance()).hasNext()
@@ -977,20 +778,11 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
     }
 
     /**
-     * Get the document number of the document containing this node. For a
-     * free-standing orphan node, just return the hashcode.
-     */
-
-    public long getDocumentNumber() {
-        return docWrapper.getDocumentNumber();
-    }
-
-    /**
      * Copy this node to a given outputter (deep copy)
      */
 
     public void copy(Receiver out, int copyOptions,
-                     int locationId) throws XPathException {
+                     Location locationId) throws XPathException {
         Navigator.copy(this, out, copyOptions, locationId);
     }
 
@@ -1064,288 +856,11 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
         return false;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // Methods to support update access
-    ///////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Delete this node (that is, detach it from its parent)
-     */
-
-    public void delete() throws XPathException {
-        if (parent != null) {
-            if (nodeKind == Type.ATTRIBUTE) {
-                ((Element) parent.node).removeAttribute((Attribute) node);
-            } else {
-                ((ParentNode) parent.node).removeChild(node);
-            }
-        }
-    }
-
-    /**
-     * Insert a sequence of nodes as the first children of the target node
-     * @param content  the nodes to be inserted.
-     */
-
-//    public void insertAsFirst(SequenceIterator content) throws XPathException {
-//        if (!(node instanceof ParentNode)) {
-//            throw new XPathException("Cannot insert children unless parent is an element or document node");
-//        }
-//        int i = 0;
-//        while (true) {
-//            NodeInfo next = (NodeInfo)content.next();
-//            if (next == null) {
-//                break;
-//            }
-//            if (next instanceof XOMNodeWrapper) {
-//                Node nextNode = ((XOMNodeWrapper)next).node;
-//                ParentNode existingParent = nextNode.getParent();
-//                if (existingParent != null) {
-//                    existingParent.removeChild(nextNode);
-//                }
-//                ((ParentNode)node).insertChild(nextNode, i++);
-//            } else {
-//                throw new XPathException("Cannot insert non-XOM node");
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Insert a sequence of nodes as the last children of the target node
-//     * @param content  the nodes to be inserted.
-//     */
-//
-//    public void insertAsLast(SequenceIterator content) throws XPathException {
-//        if (!(node instanceof ParentNode)) {
-//            throw new XPathException("Cannot insert children unless parent is an element or document node");
-//        }
-//        while (true) {
-//            NodeInfo next = (NodeInfo)content.next();
-//            if (next == null) {
-//                break;
-//            }
-//            if (next instanceof XOMNodeWrapper) {
-//                Node nextNode = ((XOMNodeWrapper)next).node;
-//                ParentNode existingParent = nextNode.getParent();
-//                if (existingParent != null) {
-//                    existingParent.removeChild(nextNode);
-//                }
-//                ((ParentNode)node).appendChild(nextNode);
-//            } else {
-//                throw new XPathException("Cannot insert non-XOM node");
-//            }
-//        }
-//    }
-//
-//
-//    /**
-//     * Add attributes to this node
-//     *
-//     * @param content the attributes to be added
-//     */
-//
-//    public void insertAttributes(SequenceIterator content) throws XPathException {
-//        if (nodeKind == Type.ELEMENT) {
-//            while (true) {
-//            NodeInfo next = (NodeInfo)content.next();
-//            if (next == null) {
-//                break;
-//            }
-//            if (next.getNodeKind() != Type.ATTRIBUTE) {
-//                throw new XPathException("Node to be inserted is not an attribute");
-//            }
-//            if (next instanceof XOMNodeWrapper) {
-//                Node node = ((XOMNodeWrapper)next).node;
-//                if (node.getParent() != null) {
-//                    node = node.copy();
-//                }
-//                ((Element)node).addAttribute((Attribute)node);
-//            } else {
-//                throw new XPathException("Cannot insert non-XOM node");
-//            }
-//        }
-//        } else {
-//            throw new XPathException("Cannot insert attributes unless parent is an element node");
-//        }
-//    }
-//
-//    /**
-//     * Rename this node
-//     *
-//     * @param newName the new name
-//     */
-//
-//    public void rename(StructuredQName newName) throws XPathException {
-//        if (node instanceof Element) {
-//            ((Element)node).setNamespaceURI(newName.getNamespaceURI());
-//            ((Element)node).setLocalName(newName.getLocalName());
-//            ((Element)node).setNamespacePrefix(newName.getPrefix());
-//        } else if (node instanceof Attribute) {
-//            ((Attribute)node).setNamespace(newName.getPrefix(), newName.getNamespaceURI());
-//            ((Attribute)node).setLocalName(newName.getLocalName());
-//        }
-//    }
-
-    /**
-     * Replace this node with a given sequence of nodes
-     *
-     * @param replacement the replacement nodes
-     */
-
-//    public void replace(SequenceIterator replacement) throws XPathException {
-//        XOMNodeWrapper parentNode = ((XOMNodeWrapper))
-//        if (getPar) {
-//            throw new XPathException("Cannot replace node unless parent is an element or document node");
-//        }
-//        while (true) {
-//            NodeInfo next = (NodeInfo)content.next();
-//            if (next == null) {
-//                break;
-//            }
-//            if (next instanceof XOMNodeWrapper) {
-//                Node nextNode = ((XOMNodeWrapper)next).node;
-//                ParentNode existingParent = nextNode.getParent();
-//                if (existingParent != null) {
-//                    existingParent.removeChild(nextNode);
-//                }
-//                ((ParentNode)node).appendChild(nextNode);
-//            } else {
-//                throw new XPathException("Cannot insert non-XOM node");
-//            }
-//        }
-//    }
-
-    /**
-     * Replace the string-value of this node
-     *
-     * @param stringValue the new string value
-     */
-
-//    public void replaceStringValue(CharSequence stringValue) throws XPathException {
-//        switch (nodeKind) {
-//            case Type.ATTRIBUTE:
-//                ((Attribute)node).setValue(stringValue.toString());
-//            case Type.
-//        }
-//    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Axis enumeration classes
     ///////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Handles the ancestor axis in a rather direct manner.
-     */
-    private final class AncestorAxisIterator implements AxisIterator {
-
-        private XOMNodeWrapper start;
-        private boolean includeSelf;
-
-        private NodeInfo current;
-
-        private NodeTest nodeTest;
-        private int position;
-
-        public AncestorAxisIterator(XOMNodeWrapper start, boolean includeSelf, NodeTest test) {
-            // use lazy instead of eager materialization (performance)
-            this.start = start;
-            if (test == AnyNodeTest.getInstance()) test = null;
-            nodeTest = test;
-            if (!includeSelf) {
-                current = start;
-            }
-            this.includeSelf = includeSelf;
-            position = 0;
-        }
-
-        /**
-         * Move to the next node, without returning it. Returns true if there is
-         * a next node, false if the end of the sequence has been reached. After
-         * calling this method, the current node may be retrieved using the
-         * current() function.
-         */
-
-        public boolean moveNext() {
-            return (next() != null);
-        }
-
-        public NodeInfo next() {
-            NodeInfo curr;
-            do { // until we find a match
-                curr = advance();
-            }
-            while (curr != null && nodeTest != null && (!nodeTest.matches(curr)));
-
-            if (curr != null) position++;
-            current = curr;
-            return curr;
-        }
-
-        private NodeInfo advance() {
-            if (current == null)
-                current = start;
-            else
-                current = current.getParent();
-
-            return current;
-        }
-
-        public NodeInfo current() {
-            return current;
-        }
-
-        public int position() {
-            return position;
-        }
-
-        public void close() {
-        }
-
-        /**
-         * Return an iterator over an axis, starting at the current node.
-         *
-         * @param axis the axis to iterate over, using a constant such as
-         *             {@link net.sf.saxon.om.AxisInfo#CHILD}
-         * @param test a predicate to apply to the nodes before returning them.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public AxisIterator iterateAxis(byte axis, NodeTest test) {
-            return current.iterateAxis(axis, test);
-        }
-
-        /**
-         * Return the atomized value of the current node.
-         *
-         * @return the atomized value.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public Sequence atomize() throws XPathException {
-            return current.atomize();
-        }
-
-        /**
-         * Return the string value of the current node.
-         *
-         * @return the string value, as an instance of CharSequence.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public CharSequence getStringValue() {
-            return current.getStringValue();
-        }
-
-        /*@NotNull*/
-        public AxisIterator getAnother() {
-            return new AncestorAxisIterator(start, includeSelf, nodeTest);
-        }
-
-        public int getProperties() {
-            return 0;
-        }
-
-    } // end of class AncestorAxisIterator
 
     /**
      * Handles the attribute axis in a rather direct manner.
@@ -1354,30 +869,16 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
 
         private XOMNodeWrapper start;
 
-        private NodeInfo current;
         private int cursor;
 
         private NodeTest nodeTest;
-        private int position;
 
-        public AttributeAxisIterator(XOMNodeWrapper start, NodeTest test) {
+        AttributeAxisIterator(XOMNodeWrapper start, NodeTest test) {
             // use lazy instead of eager materialization (performance)
             this.start = start;
             if (test == AnyNodeTest.getInstance()) test = null;
             nodeTest = test;
-            position = 0;
             cursor = 0;
-        }
-
-        /**
-         * Move to the next node, without returning it. Returns true if there is
-         * a next node, false if the end of the sequence has been reached. After
-         * calling this method, the current node may be retrieved using the
-         * current() function.
-         */
-
-        public boolean moveNext() {
-            return (next() != null);
         }
 
 
@@ -1385,71 +886,21 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
             NodeInfo curr;
             do { // until we find a match
                 curr = advance();
-            }
-            while (curr != null && nodeTest != null && (!nodeTest.matches(curr)));
-
-            if (curr != null) position++;
-            current = curr;
+            } while (curr != null && nodeTest != null && (!nodeTest.matchesNode(curr)));
             return curr;
         }
 
         private NodeInfo advance() {
             Element elem = (Element) start.node;
-            if (cursor == elem.getAttributeCount()) return null;
+            if (cursor == elem.getAttributeCount()) {
+                return null;
+            }
             NodeInfo curr = makeWrapper(elem.getAttribute(cursor), docWrapper, start, cursor);
             cursor++;
             return curr;
         }
 
-        public NodeInfo current() {
-            return current;
-        }
-
-        public int position() {
-            return position;
-        }
-
         public void close() {
-        }
-
-        /**
-         * Return an iterator over an axis, starting at the current node.
-         *
-         * @param axis the axis to iterate over, using a constant such as
-         *             {@link net.sf.saxon.om.AxisInfo#CHILD}
-         * @param test a predicate to apply to the nodes before returning them.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public AxisIterator iterateAxis(byte axis, NodeTest test) {
-            return current.iterateAxis(axis, test);
-        }
-
-        /**
-         * Return the atomized value of the current node.
-         *
-         * @return the atomized value.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public Sequence atomize() throws XPathException {
-            return current.atomize();
-        }
-
-        /**
-         * Return the string value of the current node.
-         *
-         * @return the string value, as an instance of CharSequence.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public CharSequence getStringValue() {
-            return current.getStringValue();
-        }
-
-        /*@NotNull*/
-        public AxisIterator getAnother() {
-            return new AttributeAxisIterator(start, nodeTest);
         }
 
         public int getProperties() {
@@ -1467,36 +918,30 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
      */
     private final class ChildAxisIterator implements AxisIterator {
 
-        private XOMNodeWrapper start;
         private XOMNodeWrapper commonParent;
         private int ix;
-        private boolean downwards; // iterate children of start node (not siblings)
         private boolean forwards; // iterate in document order (not reverse order)
 
-        private NodeInfo current;
         private ParentNode par;
         private int cursor;
 
         private NodeTest nodeTest;
-        private int position;
 
         private ChildAxisIterator(XOMNodeWrapper start, boolean downwards, boolean forwards, NodeTest test) {
-            this.start = start;
-            this.downwards = downwards;
             this.forwards = forwards;
 
-            if (test == AnyNodeTest.getInstance()) test = null;
+            if (test == AnyNodeTest.getInstance()) {
+                test = null;
+            }
             nodeTest = test;
-            position = 0;
 
-            commonParent = downwards ? start : (XOMNodeWrapper) start.getParent();
+            commonParent = downwards ? start : start.getParent();
 
             par = (ParentNode) commonParent.node;
             if (downwards) {
                 ix = (forwards ? 0 : par.getChildCount());
             } else {
                 // find the start node among the list of siblings
-//				ix = start.getSiblingPosition();
                 ix = par.indexOf(start.node);
                 if (forwards) ix++;
             }
@@ -1504,27 +949,12 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
             if (!downwards && !forwards) ix--;
         }
 
-        /**
-         * Move to the next node, without returning it. Returns true if there is
-         * a next node, false if the end of the sequence has been reached. After
-         * calling this method, the current node may be retrieved using the
-         * current() function.
-         */
-
-        public boolean moveNext() {
-            return (next() != null);
-        }
-
 
         public NodeInfo next() {
             NodeInfo curr;
             do { // until we find a match
                 curr = advance();
-            }
-            while (curr != null && nodeTest != null && (!nodeTest.matches(curr)));
-
-            if (curr != null) position++;
-            current = curr;
+            } while (curr != null && nodeTest != null && (!nodeTest.matchesNode(curr)));
             return curr;
         }
 
@@ -1532,69 +962,25 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
             Node nextChild;
             do {
                 if (forwards) {
-                    if (cursor == par.getChildCount()) return null;
+                    if (cursor == par.getChildCount()) {
+                        return null;
+                    }
                     nextChild = par.getChild(cursor++);
                 } else { // backwards
-                    if (cursor == 0) return null;
+                    if (cursor == 0) {
+                        return null;
+                    }
                     nextChild = par.getChild(--cursor);
                 }
             } while (nextChild instanceof DocType);
             // DocType is not an XPath node; can occur for /child::node()
 
             NodeInfo curr = makeWrapper(nextChild, docWrapper, commonParent, ix);
-            ix += (forwards ? 1 : -1);
+            ix += forwards ? 1 : -1;
             return curr;
         }
 
-        public NodeInfo current() {
-            return current;
-        }
-
-        public int position() {
-            return position;
-        }
-
         public void close() {
-        }
-
-        /**
-         * Return an iterator over an axis, starting at the current node.
-         *
-         * @param axis the axis to iterate over, using a constant such as
-         *             {@link net.sf.saxon.om.AxisInfo#CHILD}
-         * @param test a predicate to apply to the nodes before returning them.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public AxisIterator iterateAxis(byte axis, NodeTest test) {
-            return current.iterateAxis(axis, test);
-        }
-
-        /**
-         * Return the atomized value of the current node.
-         *
-         * @return the atomized value.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public Sequence atomize() throws XPathException {
-            return current.atomize();
-        }
-
-        /**
-         * Return the string value of the current node.
-         *
-         * @return the string value, as an instance of CharSequence.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public CharSequence getStringValue() {
-            return current.getStringValue();
-        }
-
-        /*@NotNull*/
-        public AxisIterator getAnother() {
-            return new ChildAxisIterator(start, downwards, forwards, nodeTest);
         }
 
         public int getProperties() {
@@ -1602,391 +988,5 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements VirtualNode, 
         }
     }
 
-/*	*//**
-     * A bit of a misnomer; efficiently takes care of descendants,
-     * descentants-or-self as well as "following" axis.
-     * "includeSelf" must be false for the following axis.
-     * Uses simple and effective O(1) backtracking via indexOf().
-     *//*
-    private final class DescendantAxisIterator implements AxisIterator {
-
-		private XOMNodeWrapper start;
-		private boolean includeSelf;
-		private boolean following;
-
-		private Node anchor; // so we know where to stop the scan
-		private Node currNode;
-		private boolean moveToNextSibling;
-
-		private NodeInfo current;
-		private NodeTest nodeTest;
-		private int position;
-
-		private String testLocalName;
-		private String testURI;
-
-		public DescendantAxisIterator(XOMNodeWrapper start, boolean includeSelf, boolean following, NodeTest test) {
-			this.start = start;
-			this.includeSelf = includeSelf;
-			this.following = following;
-			moveToNextSibling = following;
-
-			if (!following) anchor = start.node;
-			if (!includeSelf) currNode = start.node;
-
-			if (test == AnyNodeTest.getInstance()) { // performance hack
-				test = null; // mark as AnyNodeTest
-			}
-			else if (test instanceof NameTest) {
-				NameTest nt = (NameTest) test;
-				if (nt.getPrimitiveType() == Type.ELEMENT) { // performance hack
-					// mark as element name test
-                    testLocalName = nt.getLocalPart();
-                    testURI = nt.getNamespaceURI();
-				}
-			}
-			else if (test instanceof NodeKindTest) {
-				if (test.getPrimitiveType() == Type.ELEMENT) { // performance hack
-					// mark as element type test
-					testLocalName = "";
-					testURI = null;
-				}
-			}
-			nodeTest = test;
-			position = 0;
-		}
-
-        *//**
-     * Move to the next node, without returning it. Returns true if there is
-     * a next node, false if the end of the sequence has been reached. After
-     * calling this method, the current node may be retrieved using the
-     * current() function.
-     *//*
-
-        public boolean moveNext() {
-            return (next() != null);
-        }
-
-
-		public NodeInfo next() {
-			NodeInfo curr;
-			do { // until we find a match
-				curr = advance();
-			}
-			while (curr != null && nodeTest != null && (! nodeTest.matches(curr)));
-
-			if (curr != null) position++;
-			current = curr;
-			return curr;
-		}
-
-		// might look expensive at first glance - but it's not
-		private NodeInfo advance() {
-			if (currNode == null) { // if includeSelf
-				currNode = start.node;
-				return start;
-			}
-
-			int i;
-			do {
-				i = 0;
-				Node p = currNode;
-
-				if (p.getChildCount() == 0 || moveToNextSibling) { // move to next sibling
-
-					moveToNextSibling = false; // do it just once
-					while (true) {
-						// if we've reached the root we're done scanning
-						p = currNode.getParent();
-						if (p == null) return null;
-
-						// Note: correct even if currNode is an attribute.
-						// Performance is particularly good with the O(1) patch
-						// for XOM's ParentNode.indexOf()
-						i = currNode.getParent().indexOf(currNode) + 1;
-
-						if (i < p.getChildCount()) {
-							break; // break out of while(true) loop; move to next sibling
-						}
-						else { // reached last sibling; move up
-							currNode = p;
-							// if we've come all the way back to the start anchor we're done
-							if (p == anchor) return null;
-						}
-					}
-				}
-				currNode = p.getChild(i);
-			} while (!conforms(currNode));
-
-			// note the null here: makeNodeWrapper(parent, ...) is fast, so it
-			// doesn't really matter that we don't keep a link to it.
-			// In fact, it makes objects more short lived, easing pressure on
-			// the VM allocator and collector for tenured heaps.
-			return makeWrapper(currNode, docWrapper, null, i);
-		}
-
-		// avoids XOMNodeWrapper allocation when there's clearly a mismatch (common case)
-		private boolean conforms(Node node) {
-			if (testLocalName != null) { // element test?
-				if (!(node instanceof Element)) return false;
-				if (testURI == null) return true; // pure element type test
-
-				// element name test
-				Element elem = (Element) node;
-				return testLocalName.equals(elem.getLocalName()) &&
-					testURI.equals(elem.getNamespaceURI());
-			}
-			else { // DocType is not an XPath node; can occur for /descendants::node()
-				return !(node instanceof DocType);
-			}
-		}
-
-		public NodeInfo current() {
-			return current;
-		}
-
-		public int position() {
-			return position;
-		}
-
-        public void close() {
-        }
-
-        *//**
-     * Return an iterator over an axis, starting at the current node.
-     *
-     * @param axis the axis to iterate over, using a constant such as
-     *             {@link net.sf.saxon.om.AxisInfo#CHILD}
-     * @param test a predicate to apply to the nodes before returning them.
-     * @throws NullPointerException if there is no current node
-     *//*
-
-         public AxisIterator iterateAxis(byte axis, NodeTest test) {
-             return current.iterateAxis(axis, test);
-         }
-
-         *//**
-     * Return the atomized value of the current node.
-     *
-     * @return the atomized value.
-     * @throws NullPointerException if there is no current node
-     *//*
-
-         public Sequence atomize() throws XPathException {
-             return current.atomize();
-         }
-
-         *//**
-     * Return the string value of the current node.
-     *
-     * @return the string value, as an instance of CharSequence.
-     * @throws NullPointerException if there is no current node
-     *//*
-
-         public CharSequence getStringValue() {
-             return current.getStringValue();
-         }
-
-		*//*@NotNull*//*
-        public AxisIterator getAnother() {
-			return new DescendantAxisIterator(start, includeSelf, following, nodeTest);
-		}
-
- 		public int getProperties() {
-			return 0;
-		}
-	}*/
-
-    /**
-     * Efficiently takes care of preceding axis and Saxon internal preceding-or-ancestor axis.
-     * Uses simple and effective O(1) backtracking via indexOf().
-     * Implemented along similar lines as DescendantAxisIterator.
-     */
-    private final class PrecedingAxisIterator implements AxisIterator {
-
-        private XOMNodeWrapper start;
-        private boolean includeAncestors;
-
-        private Node currNode;
-        private ParentNode nextAncestor; // next ancestors to skip if !includeAncestors
-
-        private NodeInfo current;
-        private NodeTest nodeTest;
-        private int position;
-
-        private String testLocalName;
-        private String testURI;
-
-        public PrecedingAxisIterator(XOMNodeWrapper start, boolean includeAncestors, NodeTest test) {
-            this.start = start;
-            this.includeAncestors = includeAncestors;
-            currNode = start.node;
-            nextAncestor = includeAncestors ? null : start.node.getParent();
-
-            if (test == AnyNodeTest.getInstance()) { // performance hack
-                test = null; // mark as AnyNodeTest
-            } else if (test instanceof NameTest) {
-                NameTest nt = (NameTest) test;
-                if (nt.getPrimitiveType() == Type.ELEMENT) { // performance hack
-                    // mark as element name test
-                    NamePool pool = getNamePool();
-                    testLocalName = pool.getLocalName(nt.getFingerprint());
-                    testURI = pool.getURI(nt.getFingerprint());
-                }
-            } else if (test instanceof NodeKindTest) {
-                if (test.getPrimitiveType() == Type.ELEMENT) { // performance hack
-                    // mark as element type test
-                    testLocalName = "";
-                    testURI = null;
-                }
-            }
-            nodeTest = test;
-            position = 0;
-        }
-
-        /**
-         * Move to the next node, without returning it. Returns true if there is
-         * a next node, false if the end of the sequence has been reached. After
-         * calling this method, the current node may be retrieved using the
-         * current() function.
-         */
-
-        public boolean moveNext() {
-            return (next() != null);
-        }
-
-        public NodeInfo next() {
-            NodeInfo curr;
-            do { // until we find a match
-                curr = advance();
-            }
-            while (curr != null && nodeTest != null && (!nodeTest.matches(curr)));
-
-            if (curr != null) position++;
-            current = curr;
-            return curr;
-        }
-
-        // might look expensive at first glance - but it's not
-        private NodeInfo advance() {
-            int i;
-            do {
-                Node p;
-
-                while (true) {
-                    // if we've reached the root we're done scanning
-//					System.out.println("p="+p);
-                    p = currNode.getParent();
-                    if (p == null) return null;
-
-                    // Note: correct even if currNode is an attribute.
-                    // Performance is particularly good with the O(1) patch
-                    // for XOM's ParentNode.indexOf()
-                    i = currNode.getParent().indexOf(currNode) - 1;
-
-                    if (i >= 0) { // move to next sibling's last descendant node
-                        p = p.getChild(i); // move to next sibling
-                        int j;
-                        while ((j = p.getChildCount() - 1) >= 0) { // move to last descendant node
-                            p = p.getChild(j);
-                            i = j;
-                        }
-                        break; // break out of while(true) loop
-                    } else { // there are no more siblings; move up
-                        // if !includeAncestors skip the ancestors of the start node
-                        // assert p != null
-                        if (p != nextAncestor) break; // break out of while(true) loop
-
-                        nextAncestor = nextAncestor.getParent();
-                        currNode = p;
-                    }
-                }
-                currNode = p;
-
-            } while (!conforms(currNode));
-
-            // note the null here: makeNodeWrapper(parent, ...) is fast, so it
-            // doesn't really matter that we don't keep a link to it.
-            // In fact, it makes objects more short lived, easing pressure on
-            // the VM allocator and collector for tenured heaps.
-            return makeWrapper(currNode, docWrapper, null, i);
-        }
-
-        // avoids XOMNodeWrapper allocation when there's clearly a mismatch (common case)
-        // same as for DescendantAxisIterator
-        private boolean conforms(Node node) {
-            if (testLocalName != null) { // element test?
-                if (!(node instanceof Element)) {
-                    return false;
-                }
-                if (testURI == null) {
-                    return true; // pure element type test
-                }
-
-                // element name test
-                Element elem = (Element) node;
-                return testLocalName.equals(elem.getLocalName()) &&
-                        testURI.equals(elem.getNamespaceURI());
-            } else { // DocType is not an XPath node
-                return !(node instanceof DocType);
-            }
-        }
-
-        public NodeInfo current() {
-            return current;
-        }
-
-        public int position() {
-            return position;
-        }
-
-        public void close() {
-        }
-
-        /**
-         * Return an iterator over an axis, starting at the current node.
-         *
-         * @param axis the axis to iterate over, using a constant such as
-         *             {@link net.sf.saxon.om.AxisInfo#CHILD}
-         * @param test a predicate to apply to the nodes before returning them.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public AxisIterator iterateAxis(byte axis, NodeTest test) {
-            return current.iterateAxis(axis, test);
-        }
-
-        /**
-         * Return the atomized value of the current node.
-         *
-         * @return the atomized value.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public Sequence atomize() throws XPathException {
-            return current.atomize();
-        }
-
-        /**
-         * Return the string value of the current node.
-         *
-         * @return the string value, as an instance of CharSequence.
-         * @throws NullPointerException if there is no current node
-         */
-
-        public CharSequence getStringValue() {
-            return current.getStringValue();
-        }
-
-        /*@NotNull*/
-        public AxisIterator getAnother() {
-            return new PrecedingAxisIterator(start, includeAncestors, nodeTest);
-        }
-
-        public int getProperties() {
-            return 0;
-        }
-    }
 
 }
-
