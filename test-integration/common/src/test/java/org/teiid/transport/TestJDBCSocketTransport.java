@@ -435,5 +435,14 @@ public class TestJDBCSocketTransport {
             assertEquals(0, e.getUpdateCounts().length);
         }
     }
+    
+    @Test(expected=TeiidSQLException.class) public void testSessionKilling() throws Exception {
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("select session_id()");
+        rs.next();
+        String session = rs.getString(1);
+        server.getAdmin().terminateSession(session);
+        s.execute("select 1");
+    }
 	
 }
