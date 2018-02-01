@@ -60,6 +60,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private transient Map<String, Object> sessionVariables = Collections.synchronizedMap(new HashMap<String, Object>(2));
 	private volatile boolean closed;
 	private AtomicLong bytesUsed = new AtomicLong();
+	private volatile boolean active = true;
 
 	@Override
 	public String getApplicationName() {
@@ -236,5 +237,13 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	public long addAndGetBytesUsed(long bytes) {
         return this.bytesUsed.addAndGet(bytes);
     }
+	
+	public boolean isActive() {
+	    return active;
+	}
+	
+	public void setActive(boolean active) {
+	    this.active = active;
+	}
 	
 }

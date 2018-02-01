@@ -225,12 +225,16 @@ public class LogonImpl implements ILogon {
 		}		
 	}
 	
-	private String updateDQPContext(SessionMetadata s) {
-		String sessionID = s.getSessionId();
-		
+	private void updateDQPContext(SessionMetadata s) {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		SessionMetadata old = workContext.getSession();
+		if (old.getSessionId() != null) {
+		    old.setActive(false);
+		}
 		workContext.setSession(s);
-		return sessionID;
+		if (s.getSessionId() != null) {
+		    s.setActive(true);
+		}
 	}
 		
 	public ResultsFuture<?> logoff() throws InvalidSessionException {

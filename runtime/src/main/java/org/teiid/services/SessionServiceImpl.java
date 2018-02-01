@@ -106,7 +106,7 @@ public class SessionServiceImpl implements SessionService {
 		long currentTime = System.currentTimeMillis();
 		for (SessionMetadata info : sessionCache.values()) {
 			try {
-    			if (CHECK_PING && !info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
+    			if (CHECK_PING && !info.isEmbedded() && !info.isActive() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
     				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40007, info.getSessionId()));
     				closeSession(info.getSessionId());
     			} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getCreatedTime() > sessionExpirationTimeLimit) {
@@ -310,7 +310,6 @@ public class SessionServiceImpl implements SessionService {
 	public void pingServer(String sessionID) throws InvalidSessionException {
 		SessionMetadata info = getSessionInfo(sessionID, false);
 		info.setLastPingTime(System.currentTimeMillis());
-		this.sessionCache.put(sessionID, info);
 		LogManager.logDetail(LogConstants.CTX_SECURITY, "Keep-alive ping received for session:", sessionID); //$NON-NLS-1$
 	}
 

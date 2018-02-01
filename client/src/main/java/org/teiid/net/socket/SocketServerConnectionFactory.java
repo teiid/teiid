@@ -57,7 +57,9 @@ import org.teiid.net.TeiidURL;
  */
 public class SocketServerConnectionFactory implements ServerConnectionFactory, SocketServerInstanceFactory {
 
-	private static final String URL = "URL"; //$NON-NLS-1$
+	private static final String V_10_2 = "10.02"; //$NON-NLS-1$
+
+    private static final String URL = "URL"; //$NON-NLS-1$
 	
 	private static SocketServerConnectionFactory INSTANCE;
 	private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
@@ -330,6 +332,9 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	
 	@Override
 	public void connected(SocketServerInstance instance, SessionToken session) {
+	    if (instance.getServerVersion().compareTo(V_10_2) >= 0) {
+	        return;
+	    }
 		synchronized (sessions) {
 			Set<SessionToken> instanceSessions = sessions.get(instance.getHostInfo());
 			if (instanceSessions == null) {
@@ -342,6 +347,9 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	
 	@Override
 	public void disconnected(SocketServerInstance instance, SessionToken session) {
+	    if (instance.getServerVersion().compareTo(V_10_2) >= 0) {
+            return;
+        }
 		synchronized (sessions) {
 			Set<SessionToken> instanceSessions = sessions.get(instance.getHostInfo());
 			if (instanceSessions != null) {
