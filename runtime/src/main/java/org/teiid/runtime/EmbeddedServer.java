@@ -433,6 +433,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		    this.services.setAuthenticationType(this.config.getAuthenticationType());
 		    this.sessionService.setAuthenticationType(this.config.getAuthenticationType());
 		}
+		this.sessionService.start();
 		this.services.setVDBRepository(this.repo);
 		this.materializationMgr = getMaterializationManager();		
 		this.repo.addListener(this.materializationMgr);
