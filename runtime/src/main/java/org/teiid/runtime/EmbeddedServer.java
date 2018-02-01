@@ -443,7 +443,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.logon = new LogonImpl(sessionService, null);
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
-		services.registerClientService(DQP.class, dqp, LogConstants.CTX_DQP);
+		DQP dqpProxy = DQP.class.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {DQP.class}, new SessionCheckingProxy(dqp, LogConstants.CTX_DQP, MessageLevel.TRACE)));
+		services.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
 		initDriver();
 		List<SocketConfiguration> transports = config.getTransports();
 		if ( transports != null && !transports.isEmpty()) {

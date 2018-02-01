@@ -17,8 +17,6 @@
  */
 package org.teiid.jboss;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.util.Properties;
@@ -30,16 +28,11 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
-import org.teiid.client.security.InvalidSessionException;
-import org.teiid.client.util.ExceptionUtil;
-import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.ConnectionProfile;
@@ -51,12 +44,12 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
-import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
 import org.teiid.transport.ODBCSocketListener;
+import org.teiid.transport.SessionCheckingProxy;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
 import org.teiid.transport.WireProtocol;
@@ -193,35 +186,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	 */
 	private <T> T proxyService(final Class<T> iface, final T instance, String context) {
 
-		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new LogManager.LoggingProxy(instance, context, MessageLevel.TRACE) {
-
-			@Override
-			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-				Throwable exception = null;
-				try {
-					DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-					if (workContext.getSession().isClosed() || workContext.getSessionId() == null) {
-						if (method.getName().equals("closeRequest")) { //$NON-NLS-1$
-							//the client can issue close request effectively concurrently with close session
-							//there's no need for this to raise an exception
-							return ResultsFuture.NULL_FUTURE;
-						}
-						String sessionID = workContext.getSession().getSessionId();
-						if (sessionID == null) {
-							 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40041, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40041));
-						}
-						workContext.setSession(new SessionMetadata());
-						throw new InvalidSessionException(RuntimePlugin.Event.TEIID40042, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40042, sessionID));
-					}
-					return super.invoke(proxy, method, args);
-				} catch (InvocationTargetException e) {
-					exception = e.getTargetException();
-				} catch(Throwable t){
-					exception = t;
-				}
-				throw ExceptionUtil.convertException(method, exception);
-			}
-		}));
+		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new SessionCheckingProxy(instance, context, MessageLevel.TRACE)));
 	}	
 	
 	public InjectedValue<SocketBinding> getSocketBindingInjector() {
