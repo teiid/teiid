@@ -46,7 +46,7 @@
         <version.org.mongodb.mongo-java-driver>3.4.2</version.org.mongodb.mongo-java-driver>
         <version.com.couchbase.client>2.4.2</version.com.couchbase.client>
         <version.teiid.console>3.0.1</version.teiid.console>
-        <version.net.sourceforge.saxon>9.5.1-6</version.net.sourceforge.saxon>
+        <version.net.sourceforge.saxon>9.8.0-7</version.net.sourceforge.saxon>
         <version.jta>1.1</version.jta>
         <version.org.jboss.oreva>1.0.0</version.org.jboss.oreva>
         <wildfly-module-root>modules/system/layers/dv</wildfly-module-root>

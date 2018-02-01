@@ -30,23 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import net.sf.saxon.Configuration;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.om.SequenceTool;
-import net.sf.saxon.sxpath.XPathDynamicContext;
-import net.sf.saxon.sxpath.XPathExpression;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.tree.iter.EmptyIterator;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.ConversionResult;
-import net.sf.saxon.type.Converter;
-import net.sf.saxon.type.ValidationException;
-import net.sf.saxon.value.AtomicValue;
-import net.sf.saxon.value.CalendarValue;
-import net.sf.saxon.value.StringValue;
-
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
@@ -70,9 +53,27 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.xquery.saxon.PushBackSequenceIterator;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
+
+import net.sf.saxon.Configuration;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.SequenceTool;
+import net.sf.saxon.sxpath.XPathDynamicContext;
+import net.sf.saxon.sxpath.XPathExpression;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.iter.EmptyIterator;
+import net.sf.saxon.type.BuiltInAtomicType;
+import net.sf.saxon.type.ConversionResult;
+import net.sf.saxon.type.Converter;
+import net.sf.saxon.type.ValidationException;
+import net.sf.saxon.value.AtomicValue;
+import net.sf.saxon.value.CalendarValue;
+import net.sf.saxon.value.StringValue;
 
 /**
  * Handles xml table processing.
@@ -307,7 +308,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				try {
 					XPathExpression path = proColumn.getPathExpression();
 					XPathDynamicContext dynamicContext = path.createDynamicContext(item);
-					SequenceIterator pathIter = path.iterate(dynamicContext);
+					final SequenceIterator pathIter = path.iterate(dynamicContext);
 					Item colItem = pathIter.next();
 					if (colItem == null) {
 						if (proColumn.getDefaultExpression() != null) {
@@ -318,7 +319,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						continue;
 					}
 					if (proColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-						XMLType value = table.getXQueryExpression().createXMLType(pathIter.getAnother(), this.getBufferManager(), false, getContext());
+					    SequenceIterator pushBack = new PushBackSequenceIterator(pathIter, colItem);
+						XMLType value = table.getXQueryExpression().createXMLType(pushBack, this.getBufferManager(), false, getContext());
 						tuple.add(value);
 						continue;
 					}

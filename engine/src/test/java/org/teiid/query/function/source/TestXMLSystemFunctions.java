@@ -53,6 +53,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.xquery.saxon.XQueryEvaluator;
 
 @SuppressWarnings("nls")
 public class TestXMLSystemFunctions {
@@ -173,15 +174,15 @@ public class TestXMLSystemFunctions {
     }
     
 	@Test public void testAtomicValueTimestamp() throws Exception {
-		assertEquals("1910-04-01T07:01:02.000055Z", XMLSystemFunctions.convertToAtomicValue(TimestampUtil.createTimestamp(10, 3, 1, 1, 1, 2, 55001)).getStringValue());
+		assertEquals("1910-04-01T07:01:02.000055Z", XQueryEvaluator.convertToAtomicValue(TimestampUtil.createTimestamp(10, 3, 1, 1, 1, 2, 55001)).getStringValue());
     }
 	
 	@Test public void testAtomicValueTime() throws Exception {
-		assertEquals("16:03:01Z", XMLSystemFunctions.convertToAtomicValue(TimestampUtil.createTime(10, 3, 1)).getStringValue());
+		assertEquals("16:03:01Z", XQueryEvaluator.convertToAtomicValue(TimestampUtil.createTime(10, 3, 1)).getStringValue());
     }
 
 	@Test public void testAtomicValueDate() throws Exception {
-		assertEquals("1920-03-03Z", XMLSystemFunctions.convertToAtomicValue(TimestampUtil.createDate(20, 2, 3)).getStringValue());
+		assertEquals("1920-03-03Z", XQueryEvaluator.convertToAtomicValue(TimestampUtil.createDate(20, 2, 3)).getStringValue());
     }
 	
 	@Test public void testNameEscaping() throws Exception {

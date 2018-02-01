@@ -43,7 +43,7 @@ public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
         String buf = url.toExternalForm();
         try {
             buf = extractURI(url, proxyBaseURI);
-            encodedURI = URI.create(buf);
+            encodedURI = (new URL(buf)).toURI();
         } catch (Exception e) {
             throw new RuntimeException("Unable to create URI: " + buf, e); //$NON-NLS-1$
         }
@@ -60,13 +60,13 @@ public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
 
         buffer.append(baseURI);
         if (url.getPath() != null) {
-            buffer.append(URLEncoder.encode(url.getPath(), "UTF-8")); //$NON-NLS-1$
+            buffer.append(url.getPath()); //$NON-NLS-1$
         }
         if (url.getQuery() != null) {
             buffer.append("?").append(url.getQuery()); //$NON-NLS-1$
         }
         if (url.getRef() != null) {
-            buffer.append("#").append(URLEncoder.encode(url.getRef(), "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
+            buffer.append("#").append(url.getRef()); //$NON-NLS-1$ //$NON-NLS-2$
         }
         String buf = buffer.toString();
         return buf;

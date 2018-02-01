@@ -36,35 +36,6 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stax.StAXSource;
 
-import net.sf.saxon.Configuration;
-import net.sf.saxon.expr.ContextItemExpression;
-import net.sf.saxon.expr.Expression;
-import net.sf.saxon.expr.RootExpression;
-import net.sf.saxon.expr.parser.PathMap;
-import net.sf.saxon.expr.parser.PathMap.PathMapArc;
-import net.sf.saxon.expr.parser.PathMap.PathMapNode;
-import net.sf.saxon.expr.parser.PathMap.PathMapNodeSet;
-import net.sf.saxon.expr.parser.PathMap.PathMapRoot;
-import net.sf.saxon.om.AxisInfo;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.pattern.AnyNodeTest;
-import net.sf.saxon.pattern.NodeKindTest;
-import net.sf.saxon.query.QueryResult;
-import net.sf.saxon.query.StaticQueryContext;
-import net.sf.saxon.query.XQueryExpression;
-import net.sf.saxon.sxpath.IndependentContext;
-import net.sf.saxon.sxpath.XPathEvaluator;
-import net.sf.saxon.sxpath.XPathExpression;
-import net.sf.saxon.trace.ExpressionPresenter;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.type.ItemType;
-import net.sf.saxon.type.TypeHierarchy;
-import net.sf.saxon.value.EmptySequence;
-import net.sf.saxon.value.SequenceType;
-
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.common.buffer.BufferManager;
@@ -86,6 +57,35 @@ import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.WSConnection.Util;
+
+import net.sf.saxon.Configuration;
+import net.sf.saxon.expr.ContextItemExpression;
+import net.sf.saxon.expr.Expression;
+import net.sf.saxon.expr.RootExpression;
+import net.sf.saxon.expr.parser.PathMap;
+import net.sf.saxon.expr.parser.PathMap.PathMapArc;
+import net.sf.saxon.expr.parser.PathMap.PathMapNode;
+import net.sf.saxon.expr.parser.PathMap.PathMapNodeSet;
+import net.sf.saxon.expr.parser.PathMap.PathMapRoot;
+import net.sf.saxon.expr.parser.RebindingMap;
+import net.sf.saxon.om.AxisInfo;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.pattern.AnyNodeTest;
+import net.sf.saxon.pattern.NodeKindTest;
+import net.sf.saxon.query.QueryResult;
+import net.sf.saxon.query.StaticQueryContext;
+import net.sf.saxon.query.XQueryExpression;
+import net.sf.saxon.sxpath.IndependentContext;
+import net.sf.saxon.sxpath.XPathEvaluator;
+import net.sf.saxon.sxpath.XPathExpression;
+import net.sf.saxon.trace.ExpressionPresenter;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.ItemType;
+import net.sf.saxon.value.EmptySequence;
+import net.sf.saxon.value.SequenceType;
 
 @SuppressWarnings("serial")
 public class SaxonXQueryExpression {
@@ -137,19 +137,6 @@ public class SaxonXQueryExpression {
 	}
 	
 	private static final Expression DUMMY_EXPRESSION = new Expression() {
-		@Override
-		public ItemType getItemType(TypeHierarchy th) {
-			return null;
-		}
-
-		@Override
-		public void explain(ExpressionPresenter out) {
-		}
-
-		@Override
-		public Expression copy() {
-			return null;
-		}
 
 		@Override
 		protected int computeCardinality() {
@@ -159,6 +146,26 @@ public class SaxonXQueryExpression {
 		public PathMapNodeSet addToPathMap(PathMap arg0, PathMapNodeSet arg1) {
 			return arg1;
 		}
+
+        @Override
+        public int getImplementationMethod() {
+            return 0;
+        }
+
+        @Override
+        public ItemType getItemType() {
+            return null;
+        }
+
+        @Override
+        public void export(ExpressionPresenter out) throws XPathException {
+            
+        }
+
+        @Override
+        public Expression copy(RebindingMap rebindings) {
+            return null;
+        }
 	};
 
 	// Create a default error listener to use when compiling - this prevents 
@@ -253,13 +260,7 @@ public class SaxonXQueryExpression {
 			}
 		}
 		this.contextRoot = null;
-		//we'll use a new pathmap, since we don't want to modify the one associated with the xquery.
-		PathMap map = null;
-		if (columns == null) {
-			map = this.xQuery.getPathMap();
-		} else {
-			map = new PathMap(this.xQuery.getExpression());
-		}
+		PathMap map = new PathMap(this.xQuery.getExpression());
 		PathMapRoot parentRoot;
 		try {
 			parentRoot = map.getContextDocumentRoot();
@@ -491,7 +492,7 @@ public class SaxonXQueryExpression {
 	}
 	
     public XMLType createXMLType(final SequenceIterator iter, BufferManager bufferManager, boolean emptyOnEmpty, CommandContext context) throws XPathException, TeiidComponentException, TeiidProcessingException {
-		Item item = iter.next();
+		final Item item = iter.next();
 		if (item == null && !emptyOnEmpty) {
 			return null;
 		}
@@ -500,7 +501,7 @@ public class SaxonXQueryExpression {
 			NodeInfo info = (NodeInfo)item;
 			type = getType(info);
 		}
-		Item next = iter.next();
+		final Item next = iter.next();
 		if (next != null) {
 			type = Type.CONTENT;
 		}
@@ -509,7 +510,7 @@ public class SaxonXQueryExpression {
 			@Override
 			public void translate(Writer writer) throws TransformerException,
 					IOException {
-			    QueryResult.serializeSequence(iter.getAnother(), config, writer, DEFAULT_OUTPUT_PROPERTIES);
+			    QueryResult.serializeSequence(new PushBackSequenceIterator(iter, item, next), config, writer, DEFAULT_OUTPUT_PROPERTIES);
 			}
 		}, context);
 		XMLType value = new XMLType(xml);
