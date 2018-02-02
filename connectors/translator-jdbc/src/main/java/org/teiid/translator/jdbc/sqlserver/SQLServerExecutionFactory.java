@@ -237,6 +237,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         supportedFunctions.add("ASIN"); //$NON-NLS-1$
         supportedFunctions.add("ATAN"); //$NON-NLS-1$
         supportedFunctions.add("ATAN2"); //$NON-NLS-1$
+        if (getVersion().compareTo(TEN_0) >= 0) {
+            supportedFunctions.add(SourceSystemFunctions.COALESCE);
+        }
         supportedFunctions.add("COS"); //$NON-NLS-1$
         supportedFunctions.add("COT"); //$NON-NLS-1$
         supportedFunctions.add("DEGREES"); //$NON-NLS-1$
