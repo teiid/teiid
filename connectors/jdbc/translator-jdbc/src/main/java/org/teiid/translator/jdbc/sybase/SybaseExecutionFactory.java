@@ -316,6 +316,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("ASIN"); //$NON-NLS-1$
         supportedFunctions.add("ATAN"); //$NON-NLS-1$
         supportedFunctions.add("ATAN2"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.COALESCE);
         supportedFunctions.add("COS"); //$NON-NLS-1$
         supportedFunctions.add("COT"); //$NON-NLS-1$
         supportedFunctions.add("DEGREES"); //$NON-NLS-1$
