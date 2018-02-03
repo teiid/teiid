@@ -37,6 +37,7 @@ public class FunctionParameter extends BaseColumn {
 	public static final String OUTPUT_PARAMETER_NAME = "result"; //$NON-NLS-1$
 	
     private boolean isVarArg;
+    private FunctionMethod parent;
 
     /**
      * Construct a function parameter with no attributes.
@@ -142,7 +143,7 @@ public class FunctionParameter extends BaseColumn {
      * @return String representation of function parameter
      */ 
     public String toString() { 
-        return getRuntimeType() + (isVarArg?"... ":" ") + getName(); //$NON-NLS-1$ //$NON-NLS-2$
+        return getRuntimeType() + (isVarArg?"... ":" ") + super.toString(); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 	public void setVarArg(boolean isVarArg) {
@@ -152,5 +153,14 @@ public class FunctionParameter extends BaseColumn {
 	public boolean isVarArg() {
 		return isVarArg;
 	}
+
+    public void setParent(FunctionMethod functionMethod) {
+        this.parent = functionMethod;
+    }
+    
+    @Override
+    public FunctionMethod getParent() {
+        return parent;
+    }
         
 }
