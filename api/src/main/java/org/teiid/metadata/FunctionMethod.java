@@ -269,7 +269,10 @@ public class FunctionMethod extends AbstractMetadataRecord {
     public void setInputParameters(List<FunctionParameter> params) { 
         this.inParameters.clear();
         if (params != null) {
-        	this.inParameters.addAll(params);
+            for (FunctionParameter param : params) {
+                param.setParent(this);
+                this.inParameters.add(param);
+            }
         }
     }
     
@@ -288,6 +291,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
     public void setOutputParameter(FunctionParameter param) {
     	if (param != null) {
     		param.setName(FunctionParameter.OUTPUT_PARAMETER_NAME);
+    		param.setParent(this);
     	}
         this.outputParameter = param;
     }
