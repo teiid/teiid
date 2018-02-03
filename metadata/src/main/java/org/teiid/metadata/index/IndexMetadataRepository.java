@@ -428,6 +428,7 @@ public class IndexMetadataRepository extends MetadataRepository {
 					fp.setDescription(param.getAnnotation());
 					fp.setRuntimeType(param.getRuntimeType());
 					fp.setDatatype(param.getDatatype(), true, param.getArrayDimensions());
+					fp.setUUID(param.getUUID());
 					switch (param.getType()) {
 					case ReturnValue:
 						if (outputParam != null) {
@@ -445,6 +446,7 @@ public class IndexMetadataRepository extends MetadataRepository {
 	        	if (valid && outputParam != null) {
 	        	    FunctionMethod function = new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), procedureRecord.isVirtual()?PushDown.CAN_PUSHDOWN:PushDown.MUST_PUSHDOWN, 
 		        			null, null, args, outputParam, false, Determinism.DETERMINISTIC);
+	        	    function.setUUID(procedureRecord.getUUID());
 		        	FunctionMethod.convertExtensionMetadata(procedureRecord, function);
 		        	if (function.getInvocationMethod() != null) {
 		        		function.setPushdown(PushDown.CAN_PUSHDOWN);
