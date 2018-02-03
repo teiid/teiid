@@ -73,8 +73,11 @@ public class TestMultipleModelIndexes {
 		Map<String, FunctionMethod> functions = tm.getMetadataStore().getSchema("TEIIDDES992").getFunctions();
 		assertEquals(1, functions.size());
 		FunctionMethod fm = functions.values().iterator().next();
+		assertEquals("mmuuid:5c2cede9-0e18-4e4c-a531-34507abf0ff8", fm.getUUID());
 		assertEquals("sampleFunction", fm.getName());
 		assertEquals(1, fm.getInputParameters().size());
+		assertEquals("mmuuid:f9ded2ae-9652-414e-b5a9-74185f8703c0", fm.getOutputParameter().getUUID());
+		assertNotNull(fm.getInputParameters().get(0).getParent());
 	}
 	
 }
