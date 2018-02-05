@@ -666,4 +666,10 @@ public class TestPostgreSQLTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
+    @Test public void testPredicateFunctions() throws TranslatorException {
+        String input = "select stringnum FROM bqt1.SmallA where ilike(stringkey, 'a_') and not(iregexp(stringkey, '_b'))";
+        String output = "SELECT SmallA.StringNum FROM SmallA WHERE (SmallA.StringKey ilike 'a_') = TRUE AND (SmallA.StringKey ~* '_b') <> TRUE"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);        
+    }
+    
 }

@@ -18,6 +18,8 @@
 
 package org.teiid.translator.jdbc.postgresql;
 
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -38,6 +40,7 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.language.*;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
@@ -68,6 +71,8 @@ import org.teiid.util.Version;
  */
 @Translator(name="postgresql", description="A translator for postgreSQL Database")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
+    
+    public static String POSTGRESQL = "postgresql"; //$NON-NLS-1$
 	
 	static final String UUID_TYPE = "uuid"; //$NON-NLS-1$
     private static final String INTEGER_TYPE = "integer"; //$NON-NLS-1$
@@ -290,6 +295,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 			}
 		}, FunctionModifier.BOOLEAN);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier); 
+    	
+        //standard function form of several predicates
+        addPushDownFunction(POSTGRESQL, "ilike", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 ilike $2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        addPushDownFunction(POSTGRESQL, "rlike", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 ~ $2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        addPushDownFunction(POSTGRESQL, "iregexp", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 ~* $2)"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
     @Override
