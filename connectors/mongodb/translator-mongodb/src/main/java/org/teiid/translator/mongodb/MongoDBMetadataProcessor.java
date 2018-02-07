@@ -20,6 +20,7 @@ package org.teiid.translator.mongodb;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -58,9 +59,18 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     static final String ID = "_id"; //$NON-NLS-1$
     private static final String TOP_LEVEL_DOC = "TOP_LEVEL_DOC"; //$NON-NLS-1$
     private static final String ASSOSIATION = "ASSOSIATION"; //$NON-NLS-1$
-
+    
+    private static Set<String> STRING_COMPATIBLE_TYPES = new HashSet<String>(Arrays.asList(TypeFacility.RUNTIME_NAMES.INTEGER, 
+            TypeFacility.RUNTIME_NAMES.DOUBLE, 
+            TypeFacility.RUNTIME_NAMES.BOOLEAN,
+            TypeFacility.RUNTIME_NAMES.LONG,
+            TypeFacility.RUNTIME_NAMES.STRING,
+            TypeFacility.RUNTIME_NAMES.TIMESTAMP));
+    
     private Pattern excludeTables;
     private Pattern includeTables;
+    
+    private int sampleSize = 1;
     
     @Override
     public void process(MetadataFactory metadataFactory, MongoDBConnection connection) throws TranslatorException {
@@ -87,6 +97,8 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                     if (table != null) {
                         // top level documents can not be seen as merged
                         table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));                    
+                    }         
+                    if (cursor.numSeen() >= sampleSize) {
                         break;
                     }                
                 }
@@ -117,14 +129,16 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     }
 
     private Table addTable(MetadataFactory metadataFactory, String tableName, BasicDBObject row) {
+        Table table = null;
         if (metadataFactory.getSchema().getTable(tableName) != null) {
-            Table t = metadataFactory.getSchema().getTable(tableName);
-            return t;
+            table = metadataFactory.getSchema().getTable(tableName);
         }
         Set<String> keys = row.keySet();
         if (keys != null && !keys.isEmpty()) {
-            Table table = metadataFactory.addTable(tableName);
-            table.setSupportsUpdate(true);
+            if (table == null) {
+                table = metadataFactory.addTable(tableName);
+                table.setSupportsUpdate(true);
+            }
             
             for (String columnKey:keys) {
                 Object value = row.get(columnKey);
@@ -171,7 +185,14 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                 }
             }
             else {
-                column = metadataFactory.addColumn(columnKey, TypeFacility.RUNTIME_NAMES.OBJECT+"[]", table); //$NON-NLS-1$
+                column = table.getColumnByName(columnKey);
+                if (column == null) {
+                    column = metadataFactory.addColumn(columnKey, TypeFacility.RUNTIME_NAMES.OBJECT+"[]", table); //$NON-NLS-1$
+                } else if (!column.getRuntimeType().equals(TypeFacility.RUNTIME_NAMES.OBJECT+"[]")) { //$NON-NLS-1$
+                    //type conflict
+                    MetadataFactory.setDataType(TypeFacility.RUNTIME_NAMES.OBJECT, column, metadataFactory.getDataTypes(), false);
+                    column.setNativeType(null);
+                }
                 column.setSearchType(SearchType.Unsearchable);
             }                
         }
@@ -182,8 +203,21 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             metadataFactory.addForiegnKey("FK_"+columnKey, Arrays.asList(columnKey), ref, table); //$NON-NLS-1$
         }
         else {
-            column = metadataFactory.addColumn(columnKey, getDataType(value), table);
-            setNativeType(column, value);
+            column = table.getColumnByName(columnKey);
+            String dataType = getDataType(value);
+            if (column == null) {
+                column = metadataFactory.addColumn(columnKey, dataType, table);
+                setNativeType(column, value);
+            } else if (!column.getRuntimeType().equals(getDataType(value))) { 
+                //type conflict
+                if (STRING_COMPATIBLE_TYPES.contains(column.getRuntimeType()) && STRING_COMPATIBLE_TYPES.contains(dataType)) {
+                    MetadataFactory.setDataType(TypeFacility.RUNTIME_NAMES.STRING, column, metadataFactory.getDataTypes(), false);
+                } else {
+                    MetadataFactory.setDataType(TypeFacility.RUNTIME_NAMES.OBJECT, column, metadataFactory.getDataTypes(), false);
+                }
+                column.setNativeType(null);
+                column.setSearchType(SearchType.Unsearchable);
+            }
         }
         
         // create a PK out of _id
@@ -271,7 +305,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         if (value instanceof Binary ) {
         	column.setNativeType(Binary.class.getName());
         }
-        else if (column.getName().equals("_id") && value instanceof org.bson.types.ObjectId ) {
+        else if (column.getName().equals("_id") && value instanceof org.bson.types.ObjectId ) { //$NON-NLS-1$
         	column.setNativeType(org.bson.types.ObjectId.class.getName());
         	column.setAutoIncremented(true);
         }		
@@ -307,5 +341,14 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     
     public void setIncludeTables(String tableNamePattern) {
         this.includeTables = Pattern.compile(tableNamePattern, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);;
-    }    
+    }
+    
+    @TranslatorProperty(display="Sample Size", category=PropertyType.IMPORT, description="The number of top level documents of a given collection name to sample.")
+    public int getSampleSize() {
+        return sampleSize;
+    }
+    
+    public void setSampleSize(int sampleSize) {
+        this.sampleSize = sampleSize;
+    }
 }

@@ -47,6 +47,96 @@ public class TestMongoDBMetadataProcessor {
     public void testMetadata() throws TranslatorException {
         MongoDBMetadataProcessor mp = new MongoDBMetadataProcessor();
         
+        MetadataFactory mf = processExampleMetadata(mp);
+
+        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
+                "CREATE FOREIGN TABLE \"table\" (\n" + 
+                "\t\"_id\" integer,\n" + 
+                "\tcol2 double,\n" + 
+                "\tcol3 long,\n" + 
+                "\tcol5 boolean,\n" + 
+                "\tcol6 string,\n" + 
+                "\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
+                "\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n"+
+                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
+                ") OPTIONS (UPDATABLE TRUE);\n" +
+                "\n" + 
+                "CREATE FOREIGN TABLE child (\n" + 
+        		"\tcol1 string,\n" + 
+        		"\tcol2 string,\n" + 
+        	    "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n"+
+        	    "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n"+       
+        	    "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
+        		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 
+        		"\n" + 
+        		"CREATE FOREIGN TABLE embedded (\n" + 
+        		"\tcol1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+        		"\tcol2 object OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+        		"\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
+        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+        		"\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
+        		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true');\n" + 
+        		"\n" +
+        		"CREATE FOREIGN TABLE emptyFirst (\n" + 
+        		"\t\"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" + 
+        		"\tcol2 double,\n" + 
+        		"\tcol3 long,\n" + 
+        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
+        		") OPTIONS (UPDATABLE TRUE);";
+        assertEquals(expected, metadataDDL);
+    }
+    
+    @Test
+    public void testMetadataMoreSamples() throws TranslatorException {
+        MongoDBMetadataProcessor mp = new MongoDBMetadataProcessor();
+        mp.setSampleSize(2);
+        
+        MetadataFactory mf = processExampleMetadata(mp);
+
+        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
+                "CREATE FOREIGN TABLE \"table\" (\n" + 
+                "\t\"_id\" integer,\n" + 
+                "\tcol2 double,\n" + 
+                "\tcol3 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "\tcol5 boolean,\n" + 
+                "\tcol6 string,\n" + 
+                "\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" + 
+                "\tcol9 string,\n" + 
+                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
+                ") OPTIONS (UPDATABLE TRUE);\n" +
+                "\n" + 
+                "CREATE FOREIGN TABLE child (\n" + 
+                "\tcol1 string,\n" + 
+                "\tcol2 string,\n" + 
+                "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n"+
+                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n"+       
+                "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 
+                "\n" + 
+                "CREATE FOREIGN TABLE embedded (\n" + 
+                "\tcol1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "\tcol2 object OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
+                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true');\n" + 
+                "\n" +
+                "CREATE FOREIGN TABLE emptyFirst (\n" + 
+                "\t\"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" + 
+                "\tcol2 double,\n" + 
+                "\tcol3 long,\n" + 
+                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
+                ") OPTIONS (UPDATABLE TRUE);";
+        assertEquals(expected, metadataDDL);
+    }
+
+    private MetadataFactory processExampleMetadata(MongoDBMetadataProcessor mp)
+            throws TranslatorException {
         MetadataFactory mf = new MetadataFactory("vdb", 1, "mongodb", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
         MongoDBConnection conn = Mockito.mock(MongoDBConnection.class);
         DBCollection tableDBCollection = Mockito.mock(DBCollection.class);
@@ -86,8 +176,8 @@ public class TestMongoDBMetadataProcessor {
         emptyFirstRow.append("col3", new Long(3L));
         
         BasicDBObject embedded = new BasicDBObject();
-        embedded.append("col1", "one");
-        embedded.append("col2", "two");
+        embedded.append("col1", 1);
+        embedded.append("col2", new byte[0]);
         row.append("embedded", embedded);
         
         Mockito.stub(db.getCollectionNames()).toReturn(tables);
@@ -96,9 +186,17 @@ public class TestMongoDBMetadataProcessor {
         Mockito.stub(db.getCollection(Mockito.eq("empty"))).toReturn(emptyDBCollection);
         Mockito.stub(db.getCollection(Mockito.eq("emptyFirst"))).toReturn(emptyFirstDBCollection);
         
+        BasicDBObject nextRow = new BasicDBObject();
+        nextRow.append("_id", new Integer(2));
+        nextRow.append("col2", new Double(3.0));
+        nextRow.append("col3", "A");
+        nextRow.append("col5", Boolean.TRUE);
+        nextRow.append("col9", "another");
+        
         DBCursor tableCursor = Mockito.mock(DBCursor.class);
-        Mockito.when(tableCursor.hasNext()).thenReturn(true).thenReturn(false);
-        Mockito.when(tableCursor.next()).thenReturn(row);
+        Mockito.when(tableCursor.numSeen()).thenReturn(1).thenReturn(2);
+        Mockito.when(tableCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        Mockito.when(tableCursor.next()).thenReturn(row).thenReturn(nextRow);
         Mockito.when(tableDBCollection.find()).thenReturn(tableCursor);
         
         DBCursor embeddedCursor = Mockito.mock(DBCursor.class);
@@ -119,44 +217,7 @@ public class TestMongoDBMetadataProcessor {
         Mockito.stub(conn.getDatabase()).toReturn(db);
         
         mp.process(mf, conn);
-
-        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
-                "CREATE FOREIGN TABLE \"table\" (\n" + 
-                "\t\"_id\" integer,\n" + 
-                "\tcol2 double,\n" + 
-                "\tcol3 long,\n" + 
-                "\tcol5 boolean,\n" + 
-                "\tcol6 string,\n" + 
-                "\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
-                "\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n"+
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-                "\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
-                ") OPTIONS (UPDATABLE TRUE);\n" +
-                "\n" + 
-                "CREATE FOREIGN TABLE child (\n" + 
-        		"\tcol1 string,\n" + 
-        		"\tcol2 string,\n" + 
-        	    "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n"+
-        	    "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n"+       
-        	    "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-        		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 
-        		"\n" + 
-        		"CREATE FOREIGN TABLE embedded (\n" + 
-        		"\tcol1 string,\n" + 
-        		"\tcol2 string,\n" + 
-        		"\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
-        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-        		"\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-        		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true');\n" + 
-        		"\n" +
-        		"CREATE FOREIGN TABLE emptyFirst (\n" + 
-        		"\t\"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" + 
-        		"\tcol2 double,\n" + 
-        		"\tcol3 long,\n" + 
-        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
-        		") OPTIONS (UPDATABLE TRUE);";
-        assertEquals(expected, metadataDDL);
+        return mf;
     }
     
     @Test
