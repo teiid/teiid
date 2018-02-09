@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -67,7 +66,6 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 	}
 
 	private static final int WAITTIME = 60000;
-	public abstract Executor getExecutor();
     public abstract ScheduledExecutorService getScheduledExecutorService();
     public abstract DQPCore getDQP();
     public abstract VDBRepository getVDBRepository();

@@ -68,8 +68,6 @@ import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.Phase;
-import org.jboss.as.threads.ThreadFactoryResolver;
-import org.jboss.as.threads.ThreadsServices;
 import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -505,7 +503,6 @@ class TeiidAdd extends AbstractAddStepHandler {
 		MaterializationManagementService matviewService = new MaterializationManagementService(shutdownListener, scheduler);
 		ServiceBuilder<MaterializationManager> matviewBuilder = target.addService(TeiidServiceNames.MATVIEW_SERVICE, matviewService);
 		matviewBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class,  matviewService.dqpInjector);
-		matviewBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  matviewService.executorInjector);
 		matviewBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, matviewService.vdbRepositoryInjector);
 		matviewBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.NODE_TRACKER_SERVICE, NodeTracker.class, matviewService.nodeTrackerInjector);
 		matviewBuilder.install();
@@ -636,16 +633,6 @@ class TeiidAdd extends AbstractAddStepHandler {
         }
     }
 
-    static class TeiidThreadFactoryResolver extends ThreadFactoryResolver.SimpleResolver{
-        private TeiidThreadFactoryResolver() {
-            super(ThreadsServices.FACTORY);
-        }
-        @Override
-        protected String getThreadGroupName(String threadPoolName) {
-            return "Teiid Async Thread";
-        }
-    }
-    
     static <T> T buildService(Class<T> type, String moduleName) throws OperationFailedException {
         final ModuleIdentifier moduleId;
         final Module module;

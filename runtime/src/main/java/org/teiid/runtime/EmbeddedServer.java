@@ -605,11 +605,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	    	}
 
             @Override
-            public ScheduledExecutorService getExecutor() {
-                return scheduler;
-            }
-            
-            @Override
             public DQPCore getDQP() {
             	return dqp;
             }
