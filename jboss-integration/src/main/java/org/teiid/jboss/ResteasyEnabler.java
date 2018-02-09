@@ -19,9 +19,7 @@ package org.teiid.jboss;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.ModelController;
 import org.jboss.msc.service.Service;
@@ -40,43 +38,42 @@ import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.vdb.runtime.VDBKey;
 
 public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
+    
+    static class DeploymentTag extends Object {};
+    
 	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
 	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	final InjectedValue<VDBRepository> vdbRepoInjector = new InjectedValue<VDBRepository>();
 	
-	private HashMap<VDBKey, AtomicBoolean> deployed = new HashMap<VDBKey, AtomicBoolean>();
-	private RestWarGenerator generator;
-	private boolean started = false;
+	final private RestWarGenerator generator;
 	
 	public ResteasyEnabler(RestWarGenerator generator) {
 		this.generator = generator;
 	}
 	
 	@Override
-	public synchronized void added(String name, CompositeVDB vdb) {
-		this.deployed.put(vdb.getVDBKey(), new AtomicBoolean(false));
+	public void added(String name, CompositeVDB vdb) {
 	}
 	
 	@Override
 	public void beforeRemove(String name, CompositeVDB cvdb) {
 		if (cvdb != null) {
-			this.deployed.remove(cvdb.getVDBKey());
+			//TODO: remove the war
 		}
 	}	
 	
 	@Override
-	public synchronized void finishedDeployment(String name, CompositeVDB cvdb) {
+	public void finishedDeployment(String name, CompositeVDB cvdb) {
 		final VDBMetaData vdb = cvdb.getVDB();
 		
-		if (!vdb.getStatus().equals(Status.ACTIVE) || !started) {
+		if (!vdb.getStatus().equals(Status.ACTIVE)) {
 			return;
 		}
-
+		
 		final String warName = buildName(name, cvdb.getVDB().getVersion());
-		if (generator.hasRestMetadata(vdb) && this.deployed.get(cvdb.getVDBKey()).compareAndSet(false, true)) {
+		if (generator.hasRestMetadata(vdb)) {
 			final Runnable job = new Runnable() {
 				@Override
 				public void run() {
@@ -103,7 +100,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
 	}
 	
 	@Override
-	public synchronized void removed(String name, CompositeVDB cvdb) {
+	public void removed(String name, CompositeVDB cvdb) {
 
 	}
 	
@@ -118,13 +115,13 @@ public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
 
 	@Override
 	public void start(StartContext arg0) throws StartException {
-		started = true;
-		this.vdbRepoInjector.getValue().addListener(this);
+		for (CompositeVDB cvdb : this.vdbRepoInjector.getValue().addListener(this)) {
+		    finishedDeployment(cvdb.getVDBKey().getName(), cvdb);
+		}
 	}
 
 	@Override
 	public void stop(StopContext arg0) {
-		started = false;
 	}
 	
 	Admin getAdmin() {
