@@ -73,6 +73,9 @@ import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
 import org.jboss.msc.service.ValueService;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.CommandContext;
@@ -90,6 +93,7 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -98,6 +102,7 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.services.InternalEventDistributorFactory;
+import org.teiid.services.SessionServiceImpl;
 
 class TeiidAdd extends AbstractAddStepHandler {
 	
@@ -446,7 +451,6 @@ class TeiidAdd extends AbstractAddStepHandler {
 		MaterializationManagementService matviewService = new MaterializationManagementService(shutdownListener);
 		ServiceBuilder<MaterializationManager> matviewBuilder = target.addService(TeiidServiceNames.MATVIEW_SERVICE, matviewService);
 		matviewBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class,  matviewService.dqpInjector);
-		matviewBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  matviewService.executorInjector);
 		matviewBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, matviewService.vdbRepositoryInjector);
 		newControllers.add(matviewBuilder.install());
 		
