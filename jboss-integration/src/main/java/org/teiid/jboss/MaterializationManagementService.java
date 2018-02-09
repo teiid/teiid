@@ -17,7 +17,6 @@
  */
 package org.teiid.jboss;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.jboss.msc.service.Service;
@@ -25,6 +24,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.runtime.MaterializationManager;
@@ -34,7 +34,6 @@ class MaterializationManagementService implements Service<MaterializationManager
 	private ScheduledExecutorService scheduler;
 	private MaterializationManager manager;
 	protected final InjectedValue<DQPCore> dqpInjector = new InjectedValue<DQPCore>();
-	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	protected final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	protected final InjectedValue<NodeTracker> nodeTrackerInjector = new InjectedValue<NodeTracker>();
 	private JBossLifeCycleListener shutdownListener;
@@ -53,11 +52,6 @@ class MaterializationManagementService implements Service<MaterializationManager
 			}
 			
 			@Override
-			public Executor getExecutor() {
-				return executorInjector.getValue();
-			}
-			
-			@Override
 			public DQPCore getDQP() {
 				return dqpInjector.getValue();
 			}
@@ -68,7 +62,9 @@ class MaterializationManagementService implements Service<MaterializationManager
             }
 		};
 		
-		vdbRepositoryInjector.getValue().addListener(manager);
+		for (CompositeVDB cvdb : vdbRepositoryInjector.getValue().addListener(manager)) {
+		    manager.finishedDeployment(cvdb.getVDBKey().getName(), cvdb);
+		}
 		
 		if (nodeTrackerInjector.getValue() != null) {
 		    nodeTrackerInjector.getValue().addNodeListener(manager);
