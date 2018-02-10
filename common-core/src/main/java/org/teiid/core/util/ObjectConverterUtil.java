@@ -84,10 +84,17 @@ public class ObjectConverterUtil {
     }
 
     public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length) throws IOException {
-        return write(out, is, l_buffer, length, true);
+        return write(out, is, l_buffer, length, true, true);
     }
     
-    public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length, boolean close) throws IOException {
+    public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length, boolean closeBoth) throws IOException {
+        return write(out, is, l_buffer, length, closeBoth, closeBoth);
+    }
+    
+    public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length, boolean closeOutput, boolean closeInput) throws IOException {
+        if (is == null) {
+            return 0;
+        }
     	int writen = 0;
         try {
 	        int l_nbytes = 0;  
@@ -121,13 +128,15 @@ public class ObjectConverterUtil {
         	}
 	        return writen;
         } finally {
-        	if (close) {
-	        	try {
-	       			is.close();
-	        	} finally {
-	        		out.close();
-	        	}
-        	}
+            try {
+            	if (closeInput) {
+           			is.close();
+            	}
+            } finally {
+                if (closeOutput) {
+                    out.close();
+                }
+            }
         }
     }
 
@@ -136,7 +145,11 @@ public class ObjectConverterUtil {
     }    
     
     public static int write(final OutputStream out, final InputStream is, int length, boolean close) throws IOException {
-    	return write(out, is, new byte[DEFAULT_READING_SIZE], length, close); // buffer holding bytes to be transferred
+    	return write(out, is, new byte[DEFAULT_READING_SIZE], length, close, close); // buffer holding bytes to be transferred
+    }
+    
+    public static int write(final OutputStream out, final InputStream is, int length, boolean closeOutput, boolean closeInput) throws IOException {
+        return write(out, is, new byte[DEFAULT_READING_SIZE], length, closeOutput, closeInput); // buffer holding bytes to be transferred
     }
     
     public static int write(final Writer out, final Reader is, int length, boolean close) throws IOException {

@@ -65,7 +65,8 @@ public abstract class TeiidRSProvider {
 					conn = getConnection(vdbName, version, passthroughAuth);
 			        LinkedHashMap<String, Object> updatedParameters = convertParameters(conn, vdbName, procedureName, parameters);
 			        InputStream is = executeProc(conn, procedureName, updatedParameters, charSet, usingReturn);
-			        ObjectConverterUtil.write(output, is, -1);
+			        ObjectConverterUtil.write(output, is, -1, false, true);
+			        output.flush();
 				} catch (SQLException e) {
 					throw new WebApplicationException(e);
 				} finally {
@@ -92,7 +93,8 @@ public abstract class TeiidRSProvider {
 					conn = getConnection(vdbName, version, passthroughAuth);
 					LinkedHashMap<String, Object> updatedParameters = convertParameters(conn, vdbName, procedureName, parameters);
 			        InputStream is = executeProc(conn, procedureName, updatedParameters, charSet, usingReturn);
-			        ObjectConverterUtil.write(output, is, -1);
+			        ObjectConverterUtil.write(output, is, -1, false, true);
+                    output.flush();
 				} catch (SQLException e) {
 					throw new WebApplicationException(e);
 				} finally {
@@ -356,7 +358,8 @@ public abstract class TeiidRSProvider {
 		                }
 		            }
 					InputStream is = handleResult(Charset.defaultCharset().name(), result);
-					ObjectConverterUtil.write(output, is, -1);
+					ObjectConverterUtil.write(output, is, -1, false, true);
+                    output.flush();
 				} catch (SQLException e) {
 					throw new WebApplicationException(e);
 				} finally {
