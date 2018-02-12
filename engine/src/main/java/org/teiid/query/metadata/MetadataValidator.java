@@ -658,7 +658,7 @@ public class MetadataValidator {
         Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(lo, true);
         for (GroupSymbol group : groups) {
             Object mid = group.getMetadataID();
-            if (mid instanceof TempMetadataAdapter) {
+            if (mid instanceof TempMetadataID) {
                 mid = ((TempMetadataID)mid).getOriginalMetadataID();
             }
             if (mid instanceof AbstractMetadataRecord) {
