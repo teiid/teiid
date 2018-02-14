@@ -196,7 +196,7 @@ public final class RuleMergeVirtual implements
         }
         
         //we don't have to check for null dependent with no source without criteria since there must be a row
-        if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, metadata, sources, !sources.isEmpty() || frame.getParent() != parentJoin)) {
+        if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, metadata, sources, !sources.isEmpty() || frame.getParent() != parentJoin, parentProject)) {
         	//TODO: propagate constants if just inhibited by subquery/non-deterministic expressions
             return root;
         }
@@ -412,13 +412,24 @@ public final class RuleMergeVirtual implements
     
     /**
      * Check to ensure that we are not projecting a subquery or null dependent expressions
+     * @param parentProject2 
      */
     private static boolean checkProjectedSymbols(PlanNode projectNode,
                                                  GroupSymbol virtualGroup,
                                                  PlanNode parentJoin,
-                                                 QueryMetadataInterface metadata, List<PlanNode> sources, boolean checkForNullDependent) {
+                                                 QueryMetadataInterface metadata, List<PlanNode> sources, boolean checkForNullDependent, PlanNode parentProject) {
         if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
-        	return false;
+            boolean allow = false;
+            PlanNode source = NodeEditor.findParent(parentProject, NodeConstants.Types.SOURCE);
+            if (source != null) {
+                PlanNode grandparentProject = NodeEditor.findParent(source, NodeConstants.Types.PROJECT);
+                if (grandparentProject != null && grandparentProject.hasProperty(Info.INTO_GROUP)) {
+                    allow = true;
+                }
+            }
+            if (!allow) {
+                return false;
+            }
         }
 
         List<Expression> selectSymbols = (List<Expression>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
