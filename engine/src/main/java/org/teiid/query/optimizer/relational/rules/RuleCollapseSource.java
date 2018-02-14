@@ -99,8 +99,6 @@ public final class RuleCollapseSource implements OptimizerRule {
             	Set<Object> toCheck = (Set<Object>)commandRoot.getProperty(NodeConstants.Info.CHECK_MAT_VIEW);
             	if (intoGroup != null) {
             		commandRoot = NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.SOURCE).getFirstChild();
-            		//the project into source is effectively the accessNode for the inline view check
-            		plan = removeUnnecessaryInlineView(plan, commandRoot.getParent());
             	} else {
             		plan = removeUnnecessaryInlineView(plan, commandRoot);
             	}
