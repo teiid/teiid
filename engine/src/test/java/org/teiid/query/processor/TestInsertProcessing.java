@@ -716,5 +716,32 @@ public class TestInsertProcessing {
         secondResult[0] = Arrays.asList(2, null, null, null, null, null, null, null, null, null, null, null, '+', null, null, null, null);
         helpProcess(plan, dataManager, expected);
     }
+    
+    /**
+     * The inline view is not needed, but currently not removed.  As the source has indicated support, this is
+     * a high priority to change.
+     */
+    @Test public void testInsertWithRemovableInlineView() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table test_rank(a integer);"
+                + "create foreign table test_rank_copy(a integer) options (updatable true);"
+                + "create view v as select rank() over (order by a) from test_rank", "x", "y");
+        
+        String sql = "select * into test_rank_copy from v";
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("INSERT INTO test_rank_copy (a) SELECT v_0.c_0 FROM"
+                + " (SELECT RANK() OVER (ORDER BY g_0.a) AS c_0 FROM test_rank AS g_0) AS v_0", Arrays.asList(2));
+        
+        List<?>[] expected = new List[] { 
+                Arrays.asList(2)
+        }; 
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        ProcessorPlan plan = helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(bsc));
+        helpProcess(plan, dataManager, expected);
+    }
 
 }
