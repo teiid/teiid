@@ -49,7 +49,7 @@ import org.teiid.translator.UpdateExecution;
 @Translator(name = "infinispan-hotrod", description = "The Infinispan Translator Using Protobuf & Hotrod")
 public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFactory, InfinispanConnection>{
 	public static final int MAX_SET_SIZE = 1024;
-	public static final String TEIID_ALIAS_NAMING_CACHE = "teiid-alias-naming-cache"; //$NON-NLS-1$
+	public static final String TEIID_ALIAS_NAMING_CACHE = System.getProperty("org.teiid.aliasCacheName", "teiid-alias-naming-cache"); //$NON-NLS-1$ //$NON-NLS-2$
 
 	private boolean supportsCompareCriteriaOrdered = true;
 	private boolean supportsUpsert = true;
