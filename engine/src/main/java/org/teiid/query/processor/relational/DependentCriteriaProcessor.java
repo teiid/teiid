@@ -110,6 +110,9 @@ public class DependentCriteriaProcessor {
 			                List<Boolean> sortDirection = Collections.nCopies(sortSymbols.size(), OrderBy.ASC);
 			                this.sortUtility = new SortUtility(null, sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getSchema());
 			            	this.sortUtility.setWorkingBuffer(originalVs.getTupleBuffer());
+			            	//having this sort throw a blocked exception is a problem for 
+			            	//the logic that declines the source sort operation
+			            	this.sortUtility.setNonBlocking(true);
 		                }
 	            	}
 	            	if (sortUtility != null) {

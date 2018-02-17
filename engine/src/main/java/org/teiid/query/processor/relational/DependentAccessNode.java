@@ -143,18 +143,23 @@ public class DependentAccessNode extends AccessNode {
 
         Query query = (Query)atomicCommand;
         
-        if (this.criteriaProcessor == null) {
-            this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this.maxPredicates, this, query.getCriteria());
-            this.criteriaProcessor.setPushdown(pushdown);
-            this.criteriaProcessor.setUseBindings(useBindings);
-            this.criteriaProcessor.setComplexQuery(complexQuery);
+        try {
+            if (this.criteriaProcessor == null) {
+                this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this.maxPredicates, this, query.getCriteria());
+                this.criteriaProcessor.setPushdown(pushdown);
+                this.criteriaProcessor.setUseBindings(useBindings);
+                this.criteriaProcessor.setComplexQuery(complexQuery);
+            }
+            
+            if (this.dependentCrit == null) {
+                dependentCrit = criteriaProcessor.prepareCriteria();
+            }
+            
+            query.setCriteria(dependentCrit);
+        } catch (BlockedException be) {
+            throw new AssertionError("Should not block prior to declining the sort"); //$NON-NLS-1$
+            //TODO: the logic could proactively decline the sort rather than throwing an exception
         }
-        
-        if (this.dependentCrit == null) {
-            dependentCrit = criteriaProcessor.prepareCriteria();
-        }
-        
-        query.setCriteria(dependentCrit);
         
         //walk up the tree and notify the parent join it is responsible for the sort
         if (sort && query.getOrderBy() != null && criteriaProcessor.hasNextCommand()) {
@@ -178,6 +183,9 @@ public class DependentAccessNode extends AccessNode {
         RelationalNode child = this;
         while (parent != null && !(parent instanceof JoinNode)) {
         	child = parent;
+        	if (parent instanceof SortNode) {
+        	    return;
+        	}
             parent = parent.getParent();
         }
         if (parent != null) {
