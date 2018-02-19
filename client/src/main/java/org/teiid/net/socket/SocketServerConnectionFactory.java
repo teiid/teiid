@@ -33,7 +33,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.client.security.ILogon;
-import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
@@ -205,23 +204,12 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 					try {
 						instance = getServerInstance(entry.getKey());
 						ILogon logon = instance.getService(ILogon.class);
-						if ("07.01.01".compareTo(instance.getServerVersion()) > 0) { //$NON-NLS-1$
-							for (SessionToken session : entries) {
-								try {
-									logon.assertIdentity(session);
-									logon.ping();
-									log.log(Level.FINER, "issueing ping for session:", session); //$NON-NLS-1$
-								} catch (InvalidSessionException e) {
-								}
-							}
-						} else {
-							ArrayList<String> sessionStrings = new ArrayList<String>(entry.getValue().size());
-							for (SessionToken session : entries) {
-								sessionStrings.add(session.getSessionID());
-							}
-							logon.ping(sessionStrings);
-							log.log(Level.FINER, "issueing ping for sessions:", sessionStrings); //$NON-NLS-1$
+						ArrayList<String> sessionStrings = new ArrayList<String>(entry.getValue().size());
+						for (SessionToken session : entries) {
+							sessionStrings.add(session.getSessionID());
 						}
+						logon.ping(sessionStrings);
+						log.log(Level.FINER, "issueing ping for sessions:", sessionStrings); //$NON-NLS-1$
 					} catch (Exception e) {
 						log.log(Level.WARNING, "Error performing keep-alive ping", e); //$NON-NLS-1$
 					} finally {

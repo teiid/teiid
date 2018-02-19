@@ -5202,11 +5202,11 @@ public class TestProcessor {
 			QueryMetadataInterface metadata, List<?> values) throws Exception {
 		Command command = helpParse(sql);   
         CommandContext context = createCommandContext();
-        context.setMetadata(metadata);        
-        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
-        
+        context.setMetadata(metadata);       
         // Collect reference, set value
         setParameterValues(values, command, context);
+        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
+        
         // Run query
         helpProcess(plan, context, dataManager, expected);
 	}

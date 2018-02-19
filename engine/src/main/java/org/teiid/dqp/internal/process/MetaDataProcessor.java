@@ -35,7 +35,6 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.XMLType;
-import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.query.QueryPlugin;
@@ -51,8 +50,16 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
@@ -96,7 +103,6 @@ public class MetaDataProcessor {
         this.requestID = requestId;
         
         this.metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
-        this.labelAsName = workContext.getClientVersion().compareTo(Version.SEVEN_3) <= 0;
         
         RequestWorkItem workItem = null;
         try {

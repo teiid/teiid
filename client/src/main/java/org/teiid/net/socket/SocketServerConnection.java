@@ -193,11 +193,8 @@ public class SocketServerConnection implements ServerConnection {
 		}
 		
 		if (logoff) {
-			if ("07.03".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
-				//just remove the current instance - the server has already logged off the current user
-				LogonResult old = this.logonResults.remove(this.serverInstance.getHostInfo());
-				this.connectionFactory.disconnected(this.serverInstance, old.getSessionToken());
-			}
+			LogonResult old = this.logonResults.remove(this.serverInstance.getHostInfo());
+			this.connectionFactory.disconnected(this.serverInstance, old.getSessionToken());
 			logoffAll();
 		}
 		

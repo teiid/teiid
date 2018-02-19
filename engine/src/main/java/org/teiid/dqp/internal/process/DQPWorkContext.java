@@ -61,9 +61,6 @@ public class DQPWorkContext implements Serializable {
 	private static final boolean longDatesTimes = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.longDatesTimes", false); //$NON-NLS-1$
 	
 	public enum Version {
-		SEVEN_1("07.01", (byte)0), //$NON-NLS-1$
-		SEVEN_3("07.03", (byte)0), //$NON-NLS-1$
-		SEVEN_4("07.04", (byte)0), //$NON-NLS-1$
 		EIGHT_0("08.00", (byte)(longDatesTimes?0:1)), //$NON-NLS-1$
 		EIGHT_2("08.02", (byte)2), //$NON-NLS-1$
 		EIGHT_4("08.04.00.CR3", (byte)2), //$NON-NLS-1$
@@ -98,7 +95,7 @@ public class DQPWorkContext implements Serializable {
 		public static Version getVersion(String version) {
 			Map.Entry<String, Version> v = versionMap.floorEntry(version);
 			if (v == null) {
-				return SEVEN_1;
+				return EIGHT_0;
 			}
 			return v.getValue();
 		}

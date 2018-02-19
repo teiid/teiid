@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -35,7 +34,6 @@ import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
-import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
@@ -52,12 +50,6 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings({"nls", "unchecked"})
 public class TestMetaDataProcessor {
 	
-	private boolean asLegacyClient;
-	
-	@Before public void setup() {
-		asLegacyClient = false;
-	}
-
 	public Map[] helpGetMetadata(String sql, QueryMetadataInterface metadata, VDBMetaData vdb) throws Exception {
         // Prepare sql 
         Command command = QueryParser.getQueryParser().parseCommand(sql);
@@ -69,9 +61,6 @@ public class TestMetaDataProcessor {
         requestMgr.setTransactionService(new FakeTransactionService());
 
         DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
-        if (asLegacyClient) {
-        	workContext.setClientVersion(Version.SEVEN_3);
-        }
 
         // Initialize components
         RequestID requestID = workContext.getRequestID(1);  
@@ -91,15 +80,6 @@ public class TestMetaDataProcessor {
         assertEquals("e1", metadata[0].get(ResultsMetadataConstants.ELEMENT_LABEL)); //$NON-NLS-1$
     }
     
-    @Test public void testLegacyClient() throws Exception {
-    	asLegacyClient = true;
-        Map[] metadata = helpGetMetadata("SELECT e1 as e2 FROM pm1.g1", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
-        assertNotNull(metadata);
-        assertEquals(1, metadata.length);
-        assertEquals("e2", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
-        assertEquals("e2", metadata[0].get(ResultsMetadataConstants.ELEMENT_LABEL)); //$NON-NLS-1$
-    }
-
     @Test public void testSimpleUpdate() throws Exception {
         Map[] metadata = helpGetMetadata("INSERT INTO pm1.g1 (e1) VALUES ('x')", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
