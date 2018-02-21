@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.teiid</groupId>
         <artifactId>project-bom-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>  
     
     <modelVersion>4.0.0</modelVersion>
@@ -319,7 +319,7 @@
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>teiid-bom</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>1.0.1-SNAPSHOT</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
