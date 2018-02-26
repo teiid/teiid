@@ -1,7 +1,6 @@
 /subsystem=resource-adapters/resource-adapter=google:add(module=org.jboss.teiid.resource-adapter.google)
 /subsystem=resource-adapters/resource-adapter=google/connection-definitions=googleDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.google.SpreadsheetManagedConnectionFactory, enabled=true, use-java-context=true)
-/subsystem=resource-adapters/resource-adapter=google/connection-definitions=googleDS/config-properties=AuthMethod:add(value="${auth.method}" )
-/subsystem=resource-adapters/resource-adapter=google/connection-definitions=googleDS/config-properties=SpreadsheetName:add(value="${spreadsheet.name}" )
+/subsystem=resource-adapters/resource-adapter=google/connection-definitions=googleDS/config-properties=SpreadsheetId:add(value="${spreadsheet.id}" )
 /subsystem=resource-adapters/resource-adapter=google/connection-definitions=googleDS/config-properties=RefreshToken:add(value="${refresh.token}" )
 /subsystem=resource-adapters/resource-adapter=google/connection-definitions=googleDS/config-properties=BatchSize:add(value="${batch.size}" )
 /subsystem=resource-adapters/resource-adapter=google:activate

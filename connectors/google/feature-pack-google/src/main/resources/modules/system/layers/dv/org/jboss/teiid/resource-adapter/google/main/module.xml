@@ -17,6 +17,7 @@
         <module name="org.jboss.teiid.translator.google.api"/>
         <module name="javax.xml.bind.api" />
         <module name="com.google.gdata"/>       
+        <module name="com.google.apis.google-api-services-sheets"/>
         <module name="org.apache.httpcomponents" />
         <module name="com.google.guava"/>
     </dependencies>

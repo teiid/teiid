@@ -29,6 +29,9 @@
              with the bom. In most cases that will will need migrated
              into a new release of the bom.   
         -->
+        
+        <version.google-api-services-sheets>v4-rev502-1.23.0</version.google-api-services-sheets>
+        <version.google-api-client>1.23.0</version.google-api-client>
         	    
 	</properties>
 	<scm>
@@ -609,7 +612,38 @@
                <groupId>org.teiid</groupId>
                <artifactId>teiid-data-quality</artifactId>
                <version>${project.version}</version>
-           </dependency>            
+           </dependency>
+                      
+           <dependency>
+               <groupId>com.google.apis</groupId>
+               <artifactId>google-api-services-sheets</artifactId>
+               <version>${version.google-api-services-sheets}</version>
+           </dependency>
+
+           <dependency>
+               <groupId>com.google.api-client</groupId>
+               <artifactId>google-api-client</artifactId>
+               <version>${version.google-api-client}</version>
+           </dependency>   
+           
+           <dependency>
+               <groupId>com.google.http-client</groupId>
+               <artifactId>google-http-client</artifactId>
+               <version>${version.google-api-client}</version>
+           </dependency>   
+           
+           <dependency>
+               <groupId>com.google.oauth-client</groupId>
+               <artifactId>google-oauth-client</artifactId>
+               <version>${version.google-api-client}</version>
+           </dependency>
+           
+            <dependency>
+	            <groupId>com.google.http-client</groupId>
+	            <artifactId>google-http-client-jackson2</artifactId>
+	            <version>${version.google-api-client}</version>
+	        </dependency>
+	                                  
         </dependencies>
 	</dependencyManagement>
 	<modules>

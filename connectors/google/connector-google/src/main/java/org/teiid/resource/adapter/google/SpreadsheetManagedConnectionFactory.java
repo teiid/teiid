@@ -23,41 +23,49 @@ import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
 import org.teiid.core.BundleUtil;
+import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionFactory {
 	
+    public static final String V_3 = "v3"; //$NON-NLS-1$
+    public static final String V_4 = "v4"; //$NON-NLS-1$
+    
 	private static final long serialVersionUID = -1832915223199053471L;
-	public static final String OAUTH2_LOGIN = "OAuth2"; //$NON-NLS-1$
 	private Integer batchSize = 4096;
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetManagedConnectionFactory.class);
 	public static final String SPREADSHEET_NAME = "SpreadsheetName"; //$NON-NLS-1$
 
 	private String spreadsheetName;
 	
-	private String authMethod = SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN;
+	private String spreadsheetId;
+	
+	private String apiVersion = V_3;
+	
 	private String refreshToken;
 	
 	private String clientId;
 	private String clientSecret;
 	
-	private Boolean key = false;
-	
 	@Override
 	@SuppressWarnings("serial")
-	public BasicConnectionFactory<SpreadsheetConnectionImpl> createConnectionFactory() throws ResourceException {
+	public BasicConnectionFactory<BasicConnection> createConnectionFactory() throws ResourceException {
 	    checkConfig();
 	    
-		return new BasicConnectionFactory<SpreadsheetConnectionImpl>() {
+		return new BasicConnectionFactory<BasicConnection>() {
 		    
 		    //share the spreadsheet info among all connections
 		    private AtomicReference<SpreadsheetInfo> spreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
+		    private AtomicReference<SpreadsheetInfo> v2SpreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
 		    
 			@Override
-			public SpreadsheetConnectionImpl getConnection() throws ResourceException {
-				return new SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo);
+			public BasicConnection getConnection() throws ResourceException {
+			    if (apiVersion.equals(V_3)) {
+			        return new SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo);
+			    }
+			    return new SpreadsheetConnectionImpl4(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo, v2SpreadsheetInfo);
 			}
 		};
 	}
@@ -65,37 +73,37 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
    private void checkConfig() throws ResourceException {
 
         //SpreadsheetName should be set
-        if (getSpreadsheetName()==null ||  getSpreadsheetName().trim().equals("")){ //$NON-NLS-1$
+        if ((getSpreadsheetName()==null ||  getSpreadsheetName().trim().equals("")) && getSpreadsheetId() == null){ //$NON-NLS-1$
             throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.
                     getString("provide_spreadsheetname",SpreadsheetManagedConnectionFactory.SPREADSHEET_NAME));      //$NON-NLS-1$
         }
         
-        //Auth method must be OAUTH2
-        if (getAuthMethod()!=null && !getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN)){
-            throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.
-                    getString("provide_auth", //$NON-NLS-1$
-                            SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN));     
+        if (apiVersion == null || !(apiVersion.equals(V_3) || apiVersion.equals(V_4))) {
+            throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("invalid_protocol"));   //$NON-NLS-1$
         }
         
-        //OAuth login requires refreshToken
-        //if (config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN)){
-            if (getRefreshToken() == null || getRefreshToken().trim().equals("")){ //$NON-NLS-1$
-                throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("oauth_requires_pass"));   //$NON-NLS-1$
+        if (getRefreshToken() == null || getRefreshToken().trim().equals("")){ //$NON-NLS-1$
+            throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("oauth_requires"));   //$NON-NLS-1$
+        }
+        
+        if (apiVersion.equals(V_4)) {
+            if (getClientId() == null || getClientSecret() == null) {
+                throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("oauth_requires"));   //$NON-NLS-1$
             }
-        //}
+            if (getSpreadsheetId() == null) {
+                throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("v4_sheet_id"));   //$NON-NLS-1$
+            }
+        }
     }
 
 	@Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result
-                + ((authMethod == null) ? 0 : authMethod.hashCode());
         result = prime * result + ((batchSize == null) ? 0 : batchSize.hashCode());
         result = prime * result + ((clientId == null) ? 0 : clientId.hashCode());
         result = prime * result
                 + ((clientSecret == null) ? 0 : clientSecret.hashCode());
-        result = prime * result + ((key == null) ? 0 : key.hashCode());
         result = prime * result
                 + ((refreshToken == null) ? 0 : refreshToken.hashCode());
         result = prime * result
@@ -112,11 +120,6 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
         if (getClass() != obj.getClass())
             return false;
         SpreadsheetManagedConnectionFactory other = (SpreadsheetManagedConnectionFactory) obj;
-        if (authMethod == null) {
-            if (other.authMethod != null)
-                return false;
-        } else if (!authMethod.equals(other.authMethod))
-            return false;
         if (batchSize == null) {
             if (other.batchSize != null)
                 return false;
@@ -132,11 +135,6 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
                 return false;
         } else if (!clientSecret.equals(other.clientSecret))
             return false;
-        if (key == null) {
-            if (other.key != null)
-                return false;
-        } else if (!key.equals(other.key))
-            return false;
         if (refreshToken == null) {
             if (other.refreshToken != null)
                 return false;
@@ -147,6 +145,16 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
                 return false;
         } else if (!spreadsheetName.equals(other.spreadsheetName))
             return false;
+        if (spreadsheetId == null) {
+            if (other.spreadsheetId != null)
+                return false;
+        } else if (!spreadsheetId.equals(other.spreadsheetId))
+            return false;
+        if (apiVersion == null) {
+            if (other.apiVersion != null)
+                return false;
+        } else if (!apiVersion.equals(other.apiVersion))
+            return false;
         return true;
     }
 
@@ -156,14 +164,6 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 
 	public void setBatchSize(Integer batchSize) {
 		this.batchSize = batchSize;
-	}
-
-	public String getAuthMethod() {
-		return authMethod;
-	}
-
-	public void setAuthMethod(String authMethod) {
-		this.authMethod = authMethod;
 	}
 
 	public String getSpreadsheetName() {
@@ -182,17 +182,6 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 		this.refreshToken = refreshToken;
 	}
 
-	public Boolean getKey() {
-        return key;
-    }
-	
-	public void setKey(Boolean key) {
-	    if (key == null) {
-	        key = false;
-	    }
-        this.key = key;
-    }
-
     public String getClientId() {
         return clientId;
     }
@@ -208,5 +197,21 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
     public void setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;
     }
-	
+    
+    public String getSpreadsheetId() {
+        return spreadsheetId;
+    }
+    
+    public void setSpreadsheetId(String spreadsheetId) {
+        this.spreadsheetId = spreadsheetId;
+    }
+    
+    public String getApiVersion() {
+        return apiVersion;
+    }
+    
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
+    }
+    
 }

@@ -21,7 +21,6 @@ package org.teiid.translator.google.visitor;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
@@ -39,7 +38,7 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
  */
 public class SpreadsheetInsertVisitor extends SQLStringVisitor {
 	private String worksheetKey;
-	private Map<String, String> columnNameValuePair = new LinkedHashMap<String, String>();
+	private Map<String, Object> columnNameValuePair = new LinkedHashMap<String, Object>();
 	SpreadsheetInfo info;
 	private String worksheetTitle;
 
@@ -63,17 +62,8 @@ public class SpreadsheetInsertVisitor extends SQLStringVisitor {
 		    if (l.getValue() == null) {
 		        continue;
 	        }
-	        Class<?> type = l.getType();
-	        String value = null;
-	        if (Number.class.isAssignableFrom(type)) {
-	            value = l.getValue().toString();
-	        } else if (type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
-	            value = "'"+l.getValue().toString();
-	        } else {
-	            value = l.getValue().toString();
-	        }		
 	        ColumnReference columnReference = obj.getColumns().get(i);
-	        columnNameValuePair.put(columnReference.getMetadataObject().getSourceName(), value);
+	        columnNameValuePair.put(columnReference.getMetadataObject().getSourceName(), l.getValue());
 		}
 	}
 
@@ -81,7 +71,7 @@ public class SpreadsheetInsertVisitor extends SQLStringVisitor {
 		return worksheetKey;
 	}
 
-	public Map<String, String> getColumnNameValuePair() {
+	public Map<String, Object> getColumnNameValuePair() {
 		return columnNameValuePair;
 	}
 

@@ -1,0 +1,23 @@
+<module xmlns="urn:jboss:module:1.3" name="com.google.apis.google-api-services-sheets">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+       
+    <resources>
+        <artifact name="${com.google.apis:google-api-services-sheets}"/>
+        <artifact name="${com.google.api-client:google-api-client}"/>
+        <artifact name="${com.google.http-client:google-http-client}"/>
+        <artifact name="${com.google.oauth-client:google-oauth-client}"/>
+        <artifact name="${com.google.http-client:google-http-client-jackson2}"/>
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="javax.xml.bind.api" />       
+        <module name="org.apache.httpcomponents" />
+        <module name="com.google.guava"/>
+        <module name="com.fasterxml.jackson.core.jackson-core"/>
+    </dependencies>
+</module>

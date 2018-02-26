@@ -6,17 +6,14 @@
             <transaction-support>NoTransaction</transaction-support>
             <connection-definitions>
                 <connection-definition class-name="org.teiid.resource.adapter.google.SpreadsheetManagedConnectionFactory" jndi-name="java:/google" enabled="true" use-java-context="true" pool-name="google">
-                    <config-property name="AuthMethod">
-                        OAuth2
-                    </config-property>
-                    <config-property name="SpreadsheetName">
-                        spreadsheetName
+                    <config-property name="SpreadsheetId">
+                        spreadsheetId
                     </config-property>
                     <config-property name="RefreshToken">
                         ...
                     </config-property>
                     <config-property name="BatchSize">
-                        100
+                        4096
                     </config-property>
                 </connection-definition>
             </connection-definitions>

@@ -34,9 +34,9 @@ import org.teiid.translator.google.api.result.UpdateResult;
  */
 public interface GoogleSpreadsheetConnection extends Connection {
 	public RowsResult executeQuery(String worksheetTitle, String query, Integer offset, Integer limit, int batchSize);
-	public UpdateResult executeListFeedUpdate(String worksheetTitle, String criteria, List<UpdateSet> set);
+	public UpdateResult updateRows(String worksheetTitle, String criteria, List<UpdateSet> set);
 	public UpdateResult deleteRows(String worksheetTitle, String criteria);
-	public UpdateResult executeRowInsert(String worksheetTitle, Map<String,String> pair);
+	public UpdateResult executeRowInsert(String worksheetTitle, Map<String,Object> pair);
 	/**
 	 * Returns information about existing Spreadsheets and worksheets.
 	 * @return

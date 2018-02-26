@@ -37,7 +37,7 @@ public class OAuth2HeaderFactory implements AuthHeaderFactory {
         this.clientSecret = clientSecret;
     }
 	
-	public void login() {
+	public void refreshToken() {
 		tokens = authenticator.refreshToken(tokens, clientId, clientSecret);
 	}
 	

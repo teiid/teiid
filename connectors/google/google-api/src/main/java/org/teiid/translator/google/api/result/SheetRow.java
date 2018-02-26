@@ -76,7 +76,7 @@ public class SheetRow {
 //	
 	@Override
 	public String toString(){
-		return Arrays.toString(row.toArray());
+		return row.toString();
 	}
 
 	

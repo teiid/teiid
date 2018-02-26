@@ -44,10 +44,6 @@ import org.teiid.translator.google.api.SpreadsheetAuthException;
  *  - Allowing refreshing the access token using the refresh token.
  *  
  *  
- * <code>
-		OAuth2Authenticator oauth = new OAuth2Authenticator();
-		AuthUrlResponse authResponse = oauth.getAuthUrl();	
- * </code>
  * The authResponse contains link which user has to type into the browser. Then he has to enter
  * userCode.
  * 

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
@@ -130,7 +131,7 @@ public class GDataClientLoginAPI {
     }
 
 	private void reauthenticate() {
-		headerFactory.login();
+		headerFactory.refreshToken();
 		service.setHeader("Authorization", headerFactory.getAuthHeader()); //$NON-NLS-1$
 	}
 /**
@@ -231,7 +232,7 @@ public class GDataClientLoginAPI {
  * @param pair name - value pair that should be inserted into spreadsheet
  * @return 1 if the row is successfully inserted
  */
-	public UpdateResult listFeedInsert(String spreadsheetKey, String worksheetID, Map<String, String> pair) {
+	public UpdateResult listFeedInsert(String spreadsheetKey, String worksheetID, Map<String, Object> pair) {
 		SpreadsheetQuery query = null;
 		try {
 			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -241,8 +242,16 @@ public class GDataClientLoginAPI {
 		}
 
 		ListEntry row = new ListEntry();
-		for (Entry<String, String> entry : pair.entrySet()) {
-			row.getCustomElements().setValueLocal(entry.getKey(), entry.getValue());
+		for (Entry<String, Object> entry : pair.entrySet()) {
+		    Object value = entry.getValue();
+		    Class<?> type = value.getClass();
+		    String valString = null;
+            if (type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
+                valString = "'"+value; //$NON-NLS-1$
+            } else {
+                valString = value.toString();
+            }
+			row.getCustomElements().setValueLocal(entry.getKey(), valString);
 		}
 
 		try {

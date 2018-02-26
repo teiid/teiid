@@ -59,7 +59,7 @@ import org.teiid.translator.google.api.result.SheetRow;
 public class GoogleDataProtocolAPI {
 	private AuthHeaderFactory headerFactory = null;
 	public static String ENCODING = "UTF-8"; //$NON-NLS-1$
-	private GoogleJSONParser parser = new GoogleJSONParser();
+	private static GoogleJSONParser PARSER = new GoogleJSONParser();
 	
 	public AuthHeaderFactory getHeaderFactory() {
 		return headerFactory;
@@ -142,7 +142,6 @@ public class GoogleDataProtocolAPI {
 				throw new SpreadsheetOperationException(e);
 			}
 			HttpGet get = new HttpGet("https://spreadsheets.google.com/tq?key="+spreadsheetKey+"&sheet="+worksheet+"&tqx=responseHandler:x;out:json&tq="+boundariedQuery);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			get.setHeader("GData-Version", "3.0");  //$NON-NLS-1$ //$NON-NLS-2$
 			get.setHeader("Authorization", headerFactory.getAuthHeader()); //$NON-NLS-1$
 			
 			try {
@@ -151,7 +150,7 @@ public class GoogleDataProtocolAPI {
 					return executeAndParse(client, get);
 				} catch (SpreadsheetAuthException e) {
 					// relogin
-					headerFactory.login();
+					headerFactory.refreshToken();
 					get.setHeader("Authorization", headerFactory.getAuthHeader()); //$NON-NLS-1$
 					return executeAndParse(client, get);
 				}
@@ -169,7 +168,7 @@ public class GoogleDataProtocolAPI {
 				Reader reader = null;
 				try {
 					reader = new InputStreamReader(response.getEntity().getContent(), Charset.forName(ENCODING));  
-					Map<?, ?> jsonResponse = (Map<?, ?>)parser.parseObject(reader, true);
+					Map<?, ?> jsonResponse = (Map<?, ?>)PARSER.parseObject(reader, true);
 					String status = (String)jsonResponse.get("status"); //$NON-NLS-1$
 					if ("error".equals(status)) { //$NON-NLS-1$
 						//TODO: better formatting

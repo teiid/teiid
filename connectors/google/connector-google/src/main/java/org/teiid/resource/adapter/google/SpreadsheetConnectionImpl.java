@@ -56,7 +56,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 		}
 		gdata=new GDataClientLoginAPI();
 		dataProtocol = new GoogleDataProtocolAPI();
-		authHeaderFactory.login();
+		authHeaderFactory.refreshToken();
 		dataProtocol.setHeaderFactory(authHeaderFactory);
 		gdata.setHeaderFactory(authHeaderFactory);
 		
@@ -99,7 +99,11 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
     	            SpreadsheetMetadataExtractor metadataExtractor = new SpreadsheetMetadataExtractor();
     	            metadataExtractor.setGdataAPI(gdata);
     	            metadataExtractor.setVisualizationAPI(dataProtocol);
-    	            info = metadataExtractor.extractMetadata(config.getSpreadsheetName(), config.getKey());
+    	            if (config.getSpreadsheetId() == null) {
+                        info = metadataExtractor.extractMetadata(config.getSpreadsheetName(), false);
+    	            } else {
+    	                info = metadataExtractor.extractMetadata(config.getSpreadsheetId(), true);
+    	            }
     	            spreadsheetInfo.set(info);
 	            }                
             }
@@ -108,7 +112,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 	}
 
 	@Override
-	public UpdateResult executeListFeedUpdate(String worksheetTitle, String criteria, List<UpdateSet> set) {
+	public UpdateResult updateRows(String worksheetTitle, String criteria, List<UpdateSet> set) {
 	    SpreadsheetInfo info = getSpreadsheetInfo();
 	    org.teiid.translator.google.api.metadata.Worksheet sheet = info.getWorksheetByName(worksheetTitle);
 		return gdata.listFeedUpdate(info.getSpreadsheetKey(), sheet.getId(), criteria, set, sheet.getColumnsAsList());
@@ -119,7 +123,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 		return gdata.listFeedDelete(getSpreadsheetInfo().getSpreadsheetKey(), getSpreadsheetInfo().getWorksheetByName(worksheetTitle).getId(), criteria);
 	}
 	@Override
-	public UpdateResult executeRowInsert(String worksheetTitle, Map<String,String> pair){
+	public UpdateResult executeRowInsert(String worksheetTitle, Map<String,Object> pair){
 		return gdata.listFeedInsert(getSpreadsheetInfo().getSpreadsheetKey(), getSpreadsheetInfo().getWorksheetByName(worksheetTitle).getId(), pair);
 	}
 

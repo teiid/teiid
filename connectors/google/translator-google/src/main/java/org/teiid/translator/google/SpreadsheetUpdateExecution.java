@@ -69,7 +69,7 @@ public class SpreadsheetUpdateExecution extends AbstractSpreadsheetExecution {
 		SpreadsheetUpdateVisitor updateVisitor = new SpreadsheetUpdateVisitor(info);
 		updateVisitor.visit((Update) command);
 		checkHeaders(updateVisitor.getWorksheetTitle());
-		result = connection.executeListFeedUpdate(updateVisitor.getWorksheetTitle(), updateVisitor.getCriteriaQuery(), updateVisitor.getChanges());
+		result = connection.updateRows(updateVisitor.getWorksheetTitle(), updateVisitor.getCriteriaQuery(), updateVisitor.getChanges());
 		return result;
 	}
 

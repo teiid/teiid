@@ -208,9 +208,9 @@ public class TestSQLtoSpreadsheetQuery {
         SpreadsheetInsertVisitor visitor=new SpreadsheetInsertVisitor(people);
         visitor.visit((Insert)getCommand(sql));
         assertEquals(3, visitor.getColumnNameValuePair().size());
-        assertEquals("'String,String",visitor.getColumnNameValuePair().get("A"));
-        assertEquals("'String@String",visitor.getColumnNameValuePair().get("B"));
-        assertEquals("15.5",visitor.getColumnNameValuePair().get("C"));
+        assertEquals("String,String",visitor.getColumnNameValuePair().get("A"));
+        assertEquals("String@String",visitor.getColumnNameValuePair().get("B"));
+        assertEquals(15.5,visitor.getColumnNameValuePair().get("C"));
 	}
 	
 	@Test
@@ -219,8 +219,8 @@ public class TestSQLtoSpreadsheetQuery {
         SpreadsheetInsertVisitor visitor=new SpreadsheetInsertVisitor(people);
         visitor.visit((Insert)getCommand(sql));
         assertEquals(2, visitor.getColumnNameValuePair().size());
-        assertEquals("'String,String",visitor.getColumnNameValuePair().get("A"));
-        assertEquals("15.5",visitor.getColumnNameValuePair().get("C"));
+        assertEquals("String,String",visitor.getColumnNameValuePair().get("A"));
+        assertEquals(15.5,visitor.getColumnNameValuePair().get("C"));
     }
 	
 	@Test
@@ -233,10 +233,10 @@ public class TestSQLtoSpreadsheetQuery {
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
         SpreadsheetUpdateExecution sue = new SpreadsheetUpdateExecution(insert, gsc, ec, rm);
         sue.execute();
-        LinkedHashMap<String, String> vals = new LinkedHashMap<String, String>();
-        vals.put("A", "'String,String");
-        vals.put("B", "'val");
-        vals.put("C", "15.5");
+        LinkedHashMap<String, Object> vals = new LinkedHashMap<String, Object>();
+        vals.put("A", "String,String");
+        vals.put("B", "val");
+        vals.put("C", 15.5);
         Mockito.verify(gsc).executeRowInsert("PeopleList", vals);
     }
 	

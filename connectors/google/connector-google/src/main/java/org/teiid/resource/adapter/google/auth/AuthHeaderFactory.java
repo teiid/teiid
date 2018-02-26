@@ -33,6 +33,6 @@ public interface AuthHeaderFactory {
 	 * Gets the authorization header. Typically performs the login (interaction
 	 * with google services). Should be called only when necessary (first login, google session expires) 
 	 */
-	public void login();
+	public void refreshToken();
 	public String getAuthHeader();
 }

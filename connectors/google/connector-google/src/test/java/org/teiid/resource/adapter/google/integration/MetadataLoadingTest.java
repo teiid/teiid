@@ -1,7 +1,5 @@
 package org.teiid.resource.adapter.google.integration;
 
-import junit.framework.Assert;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
@@ -10,6 +8,8 @@ import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+
+import junit.framework.Assert;
 
 /**
  * Testing of metadata loading. For metadata loading we use GData API.
@@ -27,7 +27,7 @@ public class MetadataLoadingTest extends IntegrationTest {
 	
 	{
 		AuthHeaderFactory auth= new OAuth2HeaderFactory(refreshToken);
-		auth.login();
+		auth.refreshToken();
 		gdata = new GDataClientLoginAPI();
 		gdata.setHeaderFactory(auth);
 		visualizationAPI = new GoogleDataProtocolAPI();
