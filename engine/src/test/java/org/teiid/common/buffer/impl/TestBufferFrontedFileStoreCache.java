@@ -29,6 +29,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.common.buffer.CacheEntry;
+import org.teiid.common.buffer.CacheKey;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.Serializer;
 import org.teiid.common.buffer.StorageManager;
@@ -38,7 +39,7 @@ public class TestBufferFrontedFileStoreCache {
 	
 	private BufferFrontedFileStoreCache cache;
 
-	private final static class SimpleSerializer implements Serializer<Integer> {
+	private static class SimpleSerializer implements Serializer<Integer> {
 		@Override
 		public Integer deserialize(ObjectInput ois)
 				throws IOException, ClassNotFoundException {
@@ -150,6 +151,29 @@ public class TestBufferFrontedFileStoreCache {
 		assertEquals(0, cache.getDataBlocksInUse());
 		assertEquals(0, cache.getInodesInUse());
 	}
+	
+	@Test public void testMultipleAdds() throws Exception {
+        cache = createLayeredCache(1 << 18, 1 << 18, true, true);
+        
+        Serializer<Integer> s = new SimpleSerializer() {
+            @Override
+            public void serialize(Integer obj, ObjectOutput oos)
+                    throws IOException {
+                throw new IOException();
+            }
+        };
+        CacheEntry ce = new CacheEntry(new CacheKey(31l, 0, 0), 1000000, null, null, false);
+        cache.createCacheGroup(s.getId());
+        Integer cacheObject = Integer.valueOf(50000);
+        ce.setObject(cacheObject);
+        cache.addToCacheGroup(s.getId(), ce.getId());
+        assertTrue(cache.add(ce, s));
+        
+        s = new SimpleSerializer();
+        assertTrue(cache.add(ce, s));
+        
+        assertNotNull(get(cache, ce.getId(), s));
+    }
 
 	private static CacheEntry get(BufferFrontedFileStoreCache cache, Long oid,
 			Serializer<Integer> s) throws TeiidComponentException {

@@ -643,13 +643,14 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 					if (info.adding) {
 						return false; //someone else is responsible for adding this cache entry
 					}
-					if (info.evicting || info.inode != EMPTY_ADDRESS
-							|| !shouldPlaceInMemoryBuffer(0, info)) {
+					if (!shouldPlaceInMemoryBuffer(info)) {
 						return true; //safe to remove from tier 1 
 					}
 					info.adding = true;
 					//second chance re-add to the cache, we assume that serialization would be faster than a disk read
-					memoryBlocks = info.memoryBlockCount;
+					if (info.memoryBlockCount != 0) {
+					    memoryBlocks = info.memoryBlockCount;
+					}
 				}
 			}
 			checkForLowMemory();
@@ -691,8 +692,13 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
                 } catch (IOException e1) {
                     
                 }
-				LogManager.logError(LogConstants.CTX_BUFFER_MGR, 
-				        QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30001,s.getId(), entry.getId(), entry.getSizeEstimate(), size[0], s.describe(entry.getObject()))); 
+			    if (!newEntry && memoryBlocks < maxMemoryBlocks) {
+			        //entries are mutable after adding, the original should be removed shortly so just ignore
+	                LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Object ", entry.getId(), " changed size since first persistence, keeping the original."); //$NON-NLS-1$ //$NON-NLS-2$
+			    } else {
+			        LogManager.logError(LogConstants.CTX_BUFFER_MGR, 
+				        QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30001, entry.getId(), s.getId(), entry.getSizeEstimate(), size[0], s.describe(entry.getObject())));
+			    }
 			} else {
 				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30002,s.getId(), entry.getId()));
 			}
@@ -874,17 +880,22 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 
 	/**
 	 * Determine if an object should be in the memory buffer.
-	 * Adds are indicated by a current time of 0.
 	 * @param currentTime
 	 * @param info
 	 * @return
 	 */
-	private boolean shouldPlaceInMemoryBuffer(long currentTime, PhysicalInfo info) {
+	private boolean shouldPlaceInMemoryBuffer(PhysicalInfo info) {
+	    if (info.evicting || info.inode != EMPTY_ADDRESS) {
+	        return false;
+	    }
+	    if (info.block == EMPTY_ADDRESS) {
+	        return true;
+	    }
 		PhysicalInfo lowest = memoryBufferEntries.firstEntry(false);
 		CacheKey key = info.getKey();
 		return (blocksInuse.getTotalBits() - blocksInuse.getBitsSet()) > (cleaningThreshold + info.memoryBlockCount)
 				|| (lowest != null && lowest.block != EMPTY_ADDRESS 
-						&& lowest.getKey().getOrderingValue() < (currentTime>0?memoryBufferEntries.computeNextOrderingValue(currentTime, key.getLastAccess(), key.getOrderingValue()):key.getOrderingValue()));
+						&& lowest.getKey().getOrderingValue() < key.getOrderingValue());
 	}
 	
 	@Override
