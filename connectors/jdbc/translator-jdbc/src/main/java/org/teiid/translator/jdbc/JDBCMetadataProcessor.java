@@ -663,7 +663,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 				}
 				
 				KeyRecord record = autoCreateUniqueKeys(autoCreateUniqueConstraints, metadataFactory, entry.getKey(), info.referencedKeyColumns, info.pkTable.table);
-				ForeignKey fk = metadataFactory.addForiegnKey(entry.getKey(), new ArrayList<String>(info.keyColumns.values()), new ArrayList<String>(info.referencedKeyColumns.values()), info.pkTable.table.getName(), tableInfo.table);
+				ForeignKey fk = metadataFactory.addForeignKey(entry.getKey(), new ArrayList<String>(info.keyColumns.values()), new ArrayList<String>(info.referencedKeyColumns.values()), info.pkTable.table.getName(), tableInfo.table);
 				if (record != null) {
 					fk.setReferenceKey(record);
 				}

@@ -292,7 +292,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                     keyColumns.add(addedColumn.getName());
                     List<String> refColumns = new ArrayList<String>();
                     refColumns.add(parentColumn.getName());
-                    mf.addForiegnKey("FK_"+table.getName().toUpperCase(), keyColumns, refColumns, table.getName(), nestedTable); //$NON-NLS-1$
+                    mf.addForeignKey("FK_"+table.getName().toUpperCase(), keyColumns, refColumns, table.getName(), nestedTable); //$NON-NLS-1$
 
                     // since this nested table can not be reached directly, put a access
                     // pattern on it.

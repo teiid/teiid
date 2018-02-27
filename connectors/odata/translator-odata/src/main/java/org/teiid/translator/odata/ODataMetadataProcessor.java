@@ -27,23 +27,7 @@ import java.util.TreeSet;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.odata4j.edm.EdmAssociation;
-import org.odata4j.edm.EdmAssociationEnd;
-import org.odata4j.edm.EdmCollectionType;
-import org.odata4j.edm.EdmComplexType;
-import org.odata4j.edm.EdmDataServices;
-import org.odata4j.edm.EdmEntityContainer;
-import org.odata4j.edm.EdmEntitySet;
-import org.odata4j.edm.EdmEntityType;
-import org.odata4j.edm.EdmFunctionImport;
-import org.odata4j.edm.EdmFunctionParameter;
-import org.odata4j.edm.EdmMultiplicity;
-import org.odata4j.edm.EdmNavigationProperty;
-import org.odata4j.edm.EdmProperty;
-import org.odata4j.edm.EdmReferentialConstraint;
-import org.odata4j.edm.EdmSchema;
-import org.odata4j.edm.EdmSimpleType;
-import org.odata4j.edm.EdmType;
+import org.odata4j.edm.*;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.logging.LogConstants;
@@ -240,8 +224,8 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 					mf.addPrimaryKey("PK", allKeys, linkTable); //$NON-NLS-1$
 
 					// add fks for both left and right table
-					mf.addForiegnKey(fromTable.getName() + "_FK", leftNames, fromTable.getName(), linkTable); //$NON-NLS-1$
-					mf.addForiegnKey(toTable.getName() + "_FK", rightNames, toTable.getName(), linkTable); // //$NON-NLS-1$
+					mf.addForeignKey(fromTable.getName() + "_FK", leftNames, fromTable.getName(), linkTable); //$NON-NLS-1$
+					mf.addForeignKey(toTable.getName() + "_FK", rightNames, toTable.getName(), linkTable); // //$NON-NLS-1$
 				}
 
 			} else if (isMultiplicityOne(fromEnd)) {
@@ -312,7 +296,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 				toKeys = refConstaint.getPrincipalReferences();
 			}
 			if (matchesWithPkOrUnique(fromKeys, fromTable)) {
-				mf.addForiegnKey(association.getName(), toKeys, fromKeys, fromTable.getName(), toTable);
+				mf.addForeignKey(association.getName(), toKeys, fromKeys, fromTable.getName(), toTable);
 			}
 			else {
 				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17015, association.getName(), toTable.getName(), fromTable.getName()));
@@ -327,7 +311,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 
 			if (hasColumns(fromKeys, toTable)) {
 				// create a FK on the columns added
-				mf.addForiegnKey(association.getName(), fromKeys, fromTable.getName(), toTable);
+				mf.addForeignKey(association.getName(), fromKeys, fromTable.getName(), toTable);
 			}
 			else {
 				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17015, association.getName(), toTable.getName(), fromTable.getName()));

@@ -73,7 +73,7 @@ public abstract class SourceCacheAdapter {
 	  }
 
 	  protected KeyRecord addForeignKey(String name, List<String> columnNames, Table pktable, Table table) throws TranslatorException {
-		  return metadataFactory.addForiegnKey(name, columnNames, pktable, table);
+		  return metadataFactory.addForeignKey(name, columnNames, pktable, table);
 	  }
 	  
 	  protected void addColumn(String columnName, String nameInSource, String dataType, Table t) throws TranslatorException {

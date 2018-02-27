@@ -5927,7 +5927,7 @@ AbstractMetadataRecord foreignKey(MetadataFactory factory, Table table, String n
     viewName = id(null)
     [pkColumnNames = columnList(true, false)]
     {
-	    return factory.addForiegnKey(name != null?name:("FK"+table.getForeignKeys().size()), columnNames, pkColumnNames, viewName, table);   
+	    return factory.addForeignKey(name != null?name:("FK"+table.getForeignKeys().size()), columnNames, pkColumnNames, viewName, table);   
     }
 }
 

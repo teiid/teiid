@@ -350,7 +350,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             table.setProperty(IS_ARRAY_TABLE, TRUE_VALUE);
             Column column = mf.addColumn(DOCUMENTID, STRING, table);
             column.setUpdatable(true);
-            mf.addForiegnKey("FK0", Arrays.asList(DOCUMENTID), referenceTableName, table); //$NON-NLS-1$
+            mf.addForeignKey("FK0", Arrays.asList(DOCUMENTID), referenceTableName, table); //$NON-NLS-1$
             
             for(int i = 1 ; i <= dimension.dimension ; i ++) {
                 String idxName = buildArrayTableIdxName(nameInSource, i);

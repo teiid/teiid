@@ -54,7 +54,7 @@ import org.teiid.translator.TypeFacility;
 @SuppressWarnings("nls")
 public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
     
-    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Foriegn Table Name", description="Applicable on Forign Key columns")
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Foreign Table Name", description="Applicable on Foreign Key columns")
 	public static final String KEY_ASSOSIATED_WITH_FOREIGN_TABLE = MetadataFactory.JPA_URI+"assosiated_with_table";
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
@@ -100,8 +100,8 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 		return entityTable.getColumnByName(name);
 	}
 	
-	private void addForiegnKey(MetadataFactory mf, String name, List<String> columnNames, String referenceTable, Table table) throws TranslatorException {
-		ForeignKey fk = mf.addForiegnKey("FK_"+name, columnNames, referenceTable, table);
+	private void addForeignKey(MetadataFactory mf, String name, List<String> columnNames, String referenceTable, Table table) throws TranslatorException {
+		ForeignKey fk = mf.addForeignKey("FK_"+name, columnNames, referenceTable, table);
 		for (String column:columnNames) {
 			Column c = table.getColumnByName(column);
 			c.setProperty(KEY_ASSOSIATED_WITH_FOREIGN_TABLE, mf.getName()+Tokens.DOT+referenceTable);
@@ -145,7 +145,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 										keys.add(column.getName());
 									}
 									if (!foreignKeyExists(keys, entityTable)) {
-										addForiegnKey(mf, attr.getName(), keys, attributeTable.getName(), entityTable);
+										addForeignKey(mf, attr.getName(), keys, attributeTable.getName(), entityTable);
 									}
 								}
 								else {
@@ -199,7 +199,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 				}
 
 				if (!foreignKeyExists(keys, forignTable)) {
-					addForiegnKey(mf, attr.getName(), keys, entityTable.getName(), forignTable);
+					addForeignKey(mf, attr.getName(), keys, entityTable.getName(), forignTable);
 				}
 			}
 		}

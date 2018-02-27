@@ -248,7 +248,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				String name = "FK_" + parent.getName() + "_" + col.getName();//$NON-NLS-1$ //$NON-NLS-2$
 				ArrayList<String> columnNames = new ArrayList<String>();
 				columnNames.add(col.getName());	
-				ForeignKey fk = metadataFactory.addForiegnKey(name, columnNames, parent.getName(), child);
+				ForeignKey fk = metadataFactory.addForeignKey(name, columnNames, parent.getName(), child);
 				fk.setNameInSource(relationship.getRelationshipName()); //TODO: only needed for custom relationships
 			}
 		}

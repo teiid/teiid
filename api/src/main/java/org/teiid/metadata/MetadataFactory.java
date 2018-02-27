@@ -391,8 +391,13 @@ public class MetadataFactory extends NamespaceContainer {
 	 * @return
 	 * @throws MetadataException
 	 */
+	public ForeignKey addForeignKey(String name, List<String> columnNames, String referenceTable, Table table) {
+	    return addForeignKey(name, columnNames, null, referenceTable, table);
+	}
+	
+	@Deprecated
 	public ForeignKey addForiegnKey(String name, List<String> columnNames, String referenceTable, Table table) {
-		return addForiegnKey(name, columnNames, null, referenceTable, table);
+		return addForeignKey(name, columnNames, null, referenceTable, table);
 	}
 
 	/**
@@ -407,17 +412,22 @@ public class MetadataFactory extends NamespaceContainer {
 	 * @return
 	 * @throws MetadataException
 	 */
+	public ForeignKey addForeignKey(String name, List<String> columnNames, List<String> referencedColumnNames, String referenceTable, Table table) {
+	    ForeignKey foreignKey = new ForeignKey();
+        foreignKey.setParent(table);
+        foreignKey.setColumns(new ArrayList<Column>(columnNames.size()));
+        assignColumns(columnNames, table, foreignKey);
+        foreignKey.setReferenceTableName(referenceTable);
+        foreignKey.setReferenceColumns(referencedColumnNames);
+        foreignKey.setName(name);
+        setUUID(foreignKey);
+        table.getForeignKeys().add(foreignKey);
+        return foreignKey;
+	}
+	
+	@Deprecated
 	public ForeignKey addForiegnKey(String name, List<String> columnNames, List<String> referencedColumnNames, String referenceTable, Table table) {
-		ForeignKey foreignKey = new ForeignKey();
-		foreignKey.setParent(table);
-		foreignKey.setColumns(new ArrayList<Column>(columnNames.size()));
-		assignColumns(columnNames, table, foreignKey);
-		foreignKey.setReferenceTableName(referenceTable);
-		foreignKey.setReferenceColumns(referencedColumnNames);
-		foreignKey.setName(name);
-		setUUID(foreignKey);
-		table.getForeignKeys().add(foreignKey);
-		return foreignKey;
+	    return addForeignKey(name, columnNames, referencedColumnNames, referenceTable, table);
 	}
 
 	/**

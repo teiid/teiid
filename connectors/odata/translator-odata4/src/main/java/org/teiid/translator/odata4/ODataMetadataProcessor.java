@@ -296,7 +296,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             col.setProperty(PSEUDO, String.valueOf(Boolean.TRUE));
         }
         mf.addPrimaryKey("PK0", getColumnNames(pkColumns), childTable);
-        mf.addForiegnKey("FK0", getColumnNames(pkColumns), getColumnNames(pk.getColumns()), parentTable.getFullName(),
+        mf.addForeignKey("FK0", getColumnNames(pkColumns), getColumnNames(pk.getColumns()), parentTable.getFullName(),
                 childTable);
         
         if (isComplexType(parentTable)) {
@@ -490,7 +490,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                             }
                         }
                         if (matches) {
-                            mf.addForiegnKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
+                            mf.addForeignKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
                                     referenceColumnNames, fromTable.getFullName(), toTable);
                         }
                     }
@@ -500,7 +500,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                     columnNames.add(constraint.getProperty());
                     referenceColumnNames.add(constraint.getReferencedProperty());
                 }
-                mf.addForiegnKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
+                mf.addForeignKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
                         referenceColumnNames, toTable.getFullName(), fromTable);
             }
         }
@@ -557,7 +557,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             column.setProperty(PSEUDO, String.valueOf(Boolean.TRUE));
             columnNames.add(columnName);
         }
-        mf.addForiegnKey("FK0", columnNames, getColumnNames(pk.getColumns()), fromTable.getFullName(), toTable);
+        mf.addForeignKey("FK0", columnNames, getColumnNames(pk.getColumns()), fromTable.getFullName(), toTable);
         return toTable;
     }
 

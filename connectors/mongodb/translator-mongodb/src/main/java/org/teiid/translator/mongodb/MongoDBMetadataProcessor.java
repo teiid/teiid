@@ -200,7 +200,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             Object obj = ((DBRef)value).getId();
             column = addColumn(metadataFactory, table, columnKey, obj);
             String ref = ((DBRef)value).getCollectionName();
-            metadataFactory.addForiegnKey("FK_"+columnKey, Arrays.asList(columnKey), ref, table); //$NON-NLS-1$
+            metadataFactory.addForeignKey("FK_"+columnKey, Arrays.asList(columnKey), ref, table); //$NON-NLS-1$
         }
         else {
             column = table.getColumnByName(columnKey);
@@ -252,7 +252,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                     pkColumns.add(c.getName());
                 }
                 metadataFactory.addPrimaryKey("PK0", pkColumns, childTable); //$NON-NLS-1$
-                metadataFactory.addForiegnKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$
+                metadataFactory.addForeignKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$
             }
         }
         else {
@@ -266,7 +266,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                     }
                     pkColumns.add(c.getName());
                 }
-                metadataFactory.addForiegnKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$                
+                metadataFactory.addForeignKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$                
             }            
         }
     }

@@ -295,7 +295,7 @@ public class IndexMetadataRepository extends MetadataRepository {
 				loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 				columnSetRecordImpl.setParent(tableRecord);
 			}
-	        tableRecord.setForiegnKeys(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.FOREIGN_KEY, ForeignKey.class, false));
+	        tableRecord.setForeignKeys(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.FOREIGN_KEY, ForeignKey.class, false));
 	        for (ForeignKey foreignKeyRecord : tableRecord.getForeignKeys()) {
 	        	KeyRecord pk = (KeyRecord) getRecordByType(foreignKeyRecord.getUniqueKeyID(), MetadataConstants.RECORD_TYPE.PRIMARY_KEY, false);
 	        	if (pk == null) {
