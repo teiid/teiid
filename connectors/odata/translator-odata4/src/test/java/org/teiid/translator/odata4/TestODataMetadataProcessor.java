@@ -339,14 +339,30 @@ public class TestODataMetadataProcessor {
 		
 	@Test
 	public void testOneToOneAssosiation() throws Exception {
-		MetadataFactory mf = oneToOneRelationMetadata();
+		MetadataFactory mf = oneToOneRelationMetadata(true);
 		
 		Table g1 = mf.getSchema().getTable("G1");
 		Table g2 = mf.getSchema().getTable("G2");
 
-		ForeignKey fk = g2.getForeignKeys().get(0);
-		assertEquals("G1_one_2_one", fk.getName());
+		ForeignKey fk = g1.getForeignKeys().get(0);
+		assertEquals("G2_one_2_one", fk.getName());
 		assertNotNull(fk.getColumnByName("e1"));
+		
+		fk = g2.getForeignKeys().get(0);
+        assertEquals("G1_one_2_one", fk.getName());
+        assertNotNull(fk.getColumnByName("e1"));
+
+        mf = oneToOneRelationMetadata(false);
+
+        g1 = mf.getSchema().getTable("G1");
+        g2 = mf.getSchema().getTable("G2");
+
+        fk = g1.getForeignKeys().get(0);
+        assertEquals("G2_one_2_one", fk.getName());
+        assertNotNull(fk.getColumnByName("e1"));
+        
+        //TODO: could infer this, but for now it's not in the metadata
+        assertTrue(g2.getForeignKeys().isEmpty());
 	}
 
 	@Test
@@ -452,6 +468,15 @@ public class TestODataMetadataProcessor {
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind_v4.ddl")), metadataDDL);
     }
+    
+    @Test public void testTeiidImplicitFk() throws Exception {
+        String file = "teiid-implicit.xml";
+        String schema = "teiid";
+        String schemaNamespace = "teiid5221data.1.data";
+        MetadataFactory mf = createMetadata(file, schema, schemaNamespace);
+        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("teiid-implicit.ddl")), metadataDDL);
+    }
 	
     private ProcedureParameter getReturnParameter(Procedure procedure) {
         for (ProcedureParameter pp:procedure.getParameters()) {
@@ -462,7 +487,7 @@ public class TestODataMetadataProcessor {
         return null;
     }
     
-    static MetadataFactory oneToOneRelationMetadata()
+    static MetadataFactory oneToOneRelationMetadata(boolean bothDirections)
             throws TranslatorException {
         ODataMetadataProcessor processor = new ODataMetadataProcessor();
         MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
@@ -480,6 +505,16 @@ public class TestODataMetadataProcessor {
 		
 		g1Entity.setNavigationProperties(Arrays.asList(navProperty));
 		
+		if (bothDirections) {
+    		CsdlNavigationProperty nav2Property = new CsdlNavigationProperty();
+            nav2Property.setName("one_2_one");
+            nav2Property.setType("namespace.g1");
+            nav2Property.setNullable(false);
+            nav2Property.setPartner("PartnerPath");
+            
+            g2Entity.setNavigationProperties(Arrays.asList(nav2Property));
+		}
+		
 		CsdlEntitySet g1Set = createES("G1", "namespace.g1");
 		CsdlEntitySet g2Set = createES("G2", "namespace.g2");
 		
@@ -487,6 +522,13 @@ public class TestODataMetadataProcessor {
 		navBinding.setPath("one_2_one");
 		navBinding.setTarget("G2");
 		g1Set.setNavigationPropertyBindings(Arrays.asList(navBinding));
+		
+		if (bothDirections) {
+    		CsdlNavigationPropertyBinding nav2Binding = new CsdlNavigationPropertyBinding();
+            nav2Binding.setPath("one_2_one");
+            nav2Binding.setTarget("G1");
+            g2Set.setNavigationPropertyBindings(Arrays.asList(nav2Binding));
+		}
 		
 		XMLMetadata metadata = buildXmlMetadata(g1Entity, g1Set, g2Entity, g2Set);
 		processor.getMetadata(mf, metadata);

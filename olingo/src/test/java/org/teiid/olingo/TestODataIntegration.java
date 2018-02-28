@@ -2920,4 +2920,31 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }
+    
+    @Test public void testReferentialConstraints() throws Exception {
+        try {
+            String ddl = "CREATE VIEW A(a_id integer PRIMARY KEY, a_value string) AS SELECT 1, 'a1' UNION ALL SELECT 2, 'a2';\n" + 
+                    "            CREATE VIEW B(b_id integer PRIMARY KEY, b_value string) AS SELECT 3, 'b1' UNION ALL SELECT 4, 'b2';\n" + 
+                    "            CREATE VIEW C(c_id integer PRIMARY KEY, a_ref integer, b_ref integer,\n" + 
+                    "            FOREIGN KEY (a_ref) REFERENCES A(a_id),\n" + 
+                    "            FOREIGN KEY (b_ref) REFERENCES B(b_id))\n" + 
+                    "            AS SELECT 5, 1, 3 UNION ALL SELECT 6, 2, 4;";
+            
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", ddl);
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+            
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/$metadata");
+            assertEquals(200, response.getStatus());
+            assertTrue(response.getContentAsString().contains("<NavigationProperty Name=\"FK1\" Type=\"vw.B\"><ReferentialConstraint Property=\"b_ref\" ReferencedProperty=\"b_id\"/>"));
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
 }
