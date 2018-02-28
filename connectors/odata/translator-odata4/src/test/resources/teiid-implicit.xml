@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
+  <edmx:Reference Uri="http://localhost:8080/odata4/static/org.apache.olingo.v1.xml">
+    <edmx:Include Namespace="org.apache.olingo.v1" Alias="olingo-extensions"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="teiid5221data.1.data" Alias="data">
+      <EntityType Name="A">
+        <Key>
+          <PropertyRef Name="a_id"/>
+        </Key>
+        <Property Name="a_id" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="a_value" Type="Edm.String" MaxLength="4000"/>
+        <NavigationProperty Name="C_FK0" Type="Collection(data.C)"/>
+      </EntityType>
+      <EntityType Name="C">
+        <Key>
+          <PropertyRef Name="c_id"/>
+        </Key>
+        <Property Name="c_id" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="a_id" Type="Edm.Int32"/>
+        <NavigationProperty Name="FK0" Type="data.A"/>
+      </EntityType>
+      <EntityContainer Name="data">
+        <EntitySet Name="A" EntityType="data.A">
+          <NavigationPropertyBinding Path="C_FK0" Target="C"/>
+        </EntitySet>
+        <EntitySet Name="C" EntityType="data.C">
+          <NavigationPropertyBinding Path="FK0" Target="A"/>
+        </EntitySet>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
