@@ -268,9 +268,7 @@ public class ODataSchemaBuilder {
             Map<String, CsdlEntitySet> entitySets, Table table, ForeignKey fk, boolean onetoone) {
         CsdlNavigationProperty navigaton = null;
         CsdlNavigationPropertyBinding navigationBinding = null;
-        String entityTypeName = null;
-        
-        entityTypeName = table.getName();
+        String entityTypeName = table.getName();
         navigaton = buildNavigation(fk);                
         navigationBinding = buildNavigationBinding(fk);                    
         
@@ -284,6 +282,14 @@ public class ODataSchemaBuilder {
                 }
             }
         }
+
+        List<CsdlReferentialConstraint> constraints = new ArrayList<CsdlReferentialConstraint>();
+        KeyRecord key = fk.getReferenceKey();
+        for (int i = 0; i < key.getColumns().size(); i++) {
+            constraints.add(new CsdlReferentialConstraint().setReferencedProperty(key.getColumns().get(i).getName())
+                    .setProperty(fk.getColumns().get(i).getName()));
+        }
+        navigaton.setReferentialConstraints(constraints);
             
         CsdlEntityType entityType = entityTypes.get(entityTypeName);
         entityType.getNavigationProperties().add(navigaton);
