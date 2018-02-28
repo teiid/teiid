@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -134,7 +135,8 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 	        if (arguments.size() > 5
 	        		//designer modeled the return value as an out, which will add an argument in the 5th position that is an out
 	        		&& this.procedure.getMetadataObject() != null
-	        		&& this.procedure.getMetadataObject().getParameters().get(0).getType() == Type.ReturnValue) {
+	        		&& (this.procedure.getMetadataObject().getParameters().get(0).getType() == Type.ReturnValue
+	        		|| arguments.get(5).getMetadataObject().getSourceName().equalsIgnoreCase("headers"))) { //$NON-NLS-1$
 	        	Clob headers = (Clob)arguments.get(5).getArgumentValue().getValue();
 	        	if (headers != null) {
 	        		parseHeader(httpHeaders, headers);
@@ -252,6 +254,10 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     	return this.responseContext.get(name);
     }
 
+    public Map<String, Object> getResponseHeaders(){
+        return new HashMap<String, Object>(this.responseContext) ;
+    }
+    
     public int getResponseCode() {
     	return this.responseCode;
     }
