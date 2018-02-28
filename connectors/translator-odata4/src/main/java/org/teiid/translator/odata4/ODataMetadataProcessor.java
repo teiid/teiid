@@ -479,24 +479,12 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             if (property.getReferentialConstraints().isEmpty()) {
                 if (!isNavigationType(toTable) && !hasReverseNavigation(mf, metadata, container,
                         fromTable, property, binding, toTable)) {
-                    // implicit references
-                    KeyRecord pk = getPKorUnique(fromTable);
-                    if (pk != null) {
-                        boolean matches = true;
-                        
-                        for (Column c : pk.getColumns()) {
-                            referenceColumnNames.add(c.getName());
-                            if (toTable.getColumnByName(c.getName()) != null) {
-                                columnNames.add(c.getName());
-                            } else {
-                                matches = false;
-                                break;
-                            }
-                        }
-                        if (matches) {
-                            mf.addForiegnKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
-                                    referenceColumnNames, fromTable.getFullName(), toTable);
-                        }
+                    if (property.isCollection()) {
+                        addImplicitFk(mf, fromTable, property, toTable,
+                                columnNames, referenceColumnNames);
+                    } else {
+                        addImplicitFk(mf, toTable, property, fromTable,
+                                columnNames, referenceColumnNames);
                     }
                 }
             } else if (!property.isCollection()) { //sanity check - it should not be a collection
@@ -506,6 +494,29 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 }
                 mf.addForiegnKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
                         referenceColumnNames, toTable.getFullName(), fromTable);
+            }
+        }
+    }
+
+    private void addImplicitFk(MetadataFactory mf, Table fromTable,
+            CsdlNavigationProperty property, Table toTable,
+            List<String> columnNames, List<String> referenceColumnNames) {
+        KeyRecord pk = getPKorUnique(fromTable);
+        if (pk != null) {
+            boolean matches = true;
+            
+            for (Column c : pk.getColumns()) {
+                referenceColumnNames.add(c.getName());
+                if (toTable.getColumnByName(c.getName()) != null) {
+                    columnNames.add(c.getName());
+                } else {
+                    matches = false;
+                    break;
+                }
+            }
+            if (matches) {
+                mf.addForiegnKey(join(fromTable.getName(), NAME_SEPARATOR, property.getName()), columnNames,
+                        referenceColumnNames, fromTable.getFullName(), toTable);
             }
         }
     }
