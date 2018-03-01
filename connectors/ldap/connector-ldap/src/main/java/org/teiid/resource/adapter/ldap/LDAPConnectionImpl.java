@@ -66,7 +66,6 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 	private InitialLdapContext initCtx;
 
 	// LDAP-specific properties
-    public static final String LDAP_AUTH_TYPE = "simple"; //$NON-NLS-1$
     public static final String LDAP_USER_OBJECT_TYPE = "person"; //$NON-NLS-1$
     public static final String LDAP_REFERRAL_MODE = "follow"; //$NON-NLS-1$
 
@@ -110,6 +109,8 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 		
 		String userName = this.config.getLdapAdminUserDN();
 		String password = this.config.getLdapAdminUserPassword();
+		
+		String authType = this.config.getLdapAuthType();
 
 		// if security-domain is specified and caller identity is used; then use
 		// credentials from subject
@@ -119,25 +120,20 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 			password = ConnectionContext.getPassword(subject, this.config, userName, password);
 		}
 		
-		if (userName == null) {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserDNPropNotFound"); //$NON-NLS-1$
-            throw new ResourceException(msg);
-		}
-		
-		if (password == null) {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserPassPropNotFound"); //$NON-NLS-1$
-            throw new ResourceException(msg);
-		}
-		
-		// If username is blank, we will perform an anonymous bind.
-		// Note: This is not supported when using Sun's VLVs, so remove this if VLVs are used.
-		if(!userName.equals("")) { //$NON-NLS-1$
-			connenv.put(Context.SECURITY_AUTHENTICATION, LDAP_AUTH_TYPE);
-			connenv.put(Context.SECURITY_PRINCIPAL, userName);
-			connenv.put(Context.SECURITY_CREDENTIALS, password);
-		} else {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "LDAP Username DN was blank; performing anonymous bind."); //$NON-NLS-1$
-			connenv.put(Context.SECURITY_AUTHENTICATION, "none"); //$NON-NLS-1$
+		connenv.put(Context.SECURITY_AUTHENTICATION, authType);
+		if (!authType.equals("none")) {
+		    if (userName == null) {
+	            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserDNPropNotFound"); //$NON-NLS-1$
+	            throw new ResourceException(msg);
+	        }
+	        
+	        if (password == null) {
+	            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserPassPropNotFound"); //$NON-NLS-1$
+	            throw new ResourceException(msg);
+	        }
+		    
+    		connenv.put(Context.SECURITY_PRINCIPAL, userName);
+    		connenv.put(Context.SECURITY_CREDENTIALS, password);
 		}
 		
 		if(this.config.getLdapTxnTimeoutInMillis() != null && this.config.getLdapTxnTimeoutInMillis() != -1) { 
