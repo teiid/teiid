@@ -37,7 +37,6 @@ import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 
 import org.jboss.as.cli.CliInitializationException;
-import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandContextFactory;
 import org.jboss.as.cli.Util;
 import org.jboss.as.cli.batch.impl.DefaultBatch;

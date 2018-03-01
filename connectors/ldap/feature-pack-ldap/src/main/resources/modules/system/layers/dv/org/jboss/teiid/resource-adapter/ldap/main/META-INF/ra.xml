@@ -37,7 +37,7 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.ldap.LDAPManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
-               <description>{$display:"Ldap Admin User DN",$description:"User DN for the LDAP admin account.  Use an empty string for anonymous binds.",$required:"true"}</description>
+               <description>{$display:"Ldap Admin User DN",$description:"User DN for the LDAP admin account.",$required:"true"}</description>
                <config-property-name>LdapAdminUserDN</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>cn=&lt;&gt;,ou=&lt;&gt;,dc=&lt;&gt;</config-property-value>
@@ -69,6 +69,13 @@
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>com.sun.jndi.ldap.LdapCtxFactory</config-property-value>
             </config-property>              
+            
+            <config-property>
+               <description>{$display:"Ldap Auth Type",$description:"LDAP Auth Type. Use none for anonymous authentication."}</description>
+               <config-property-name>LdapAuthType</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+               <config-property-value>simple</config-property-value>
+            </config-property>
             
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>

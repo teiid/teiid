@@ -31,7 +31,7 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 	private String ldapUrl;
 	private Long ldapTxnTimeoutInMillis;
 	private String ldapContextFactory = "com.sun.jndi.ldap.LdapCtxFactory"; //$NON-NLS-1$
-	
+	private String ldapAuthType = "simple"; //$NON-NLS-1$
 	
 	@Override
 	@SuppressWarnings("serial")
@@ -127,7 +127,18 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 		if (!checkEquals(this.ldapUrl, other.ldapUrl)) {
 			return false;
 		}
+		if (!checkEquals(this.ldapAuthType, other.ldapAuthType)) {
+            return false;
+        }
 		return true;
-	}	
+	}
+
+    public String getLdapAuthType() {
+        return ldapAuthType;
+    }	
+    
+    public void setLdapAuthType(String ldapAuthType) {
+        this.ldapAuthType = ldapAuthType;
+    }
 	
 }
