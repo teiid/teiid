@@ -18,10 +18,13 @@
 
 package org.teiid.resource.adapter.ldap;
 
+import static org.junit.Assert.*;
+
 import java.util.Hashtable;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
+import javax.naming.ldap.LdapContext;
 import javax.naming.spi.InitialContextFactory;
 
 import org.junit.Test;
@@ -34,6 +37,8 @@ public class TestLDAPConnection {
 		@Override
 		public Context getInitialContext(Hashtable<?, ?> environment)
 				throws NamingException {
+		    assertEquals(environment.get(LdapContext.SECURITY_AUTHENTICATION), "other");
+		    assertEquals(environment.get(LdapContext.SECURITY_PRINCIPAL), "admin");
 			return Mockito.mock(Context.class);
 		}
 	}
@@ -45,7 +50,7 @@ public class TestLDAPConnection {
 		config.setLdapAdminUserDN("admin");
 		config.setLdapAdminUserPassword("password");
 		config.setLdapContextFactory(FakeFactory.class.getName());
-		
+		config.setLdapAuthType("other");
         
 		new LDAPConnectionImpl(config);
 	}
