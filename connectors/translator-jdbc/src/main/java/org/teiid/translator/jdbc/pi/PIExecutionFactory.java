@@ -305,6 +305,11 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         return false;
     }
     
+    @Override
+    public boolean supportsOnlyLateralJoinProcedure() {
+        return true;
+    }
+    
     /**
      * 
      * @return

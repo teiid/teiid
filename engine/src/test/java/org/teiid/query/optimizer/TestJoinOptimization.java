@@ -1355,6 +1355,7 @@ public class TestJoinOptimization {
         bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, true);
         bsc.setCapabilitySupport(Capability.QUERY_FROM_PROCEDURE_TABLE, true);
         bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE, true);
         
         TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table smallb (intkey integer, stringkey string); "
         		+ "create foreign procedure spTest5 (param integer) returns table(stringkey string, intkey integer)", "x", "y");
@@ -1379,6 +1380,26 @@ public class TestJoinOptimization {
         hdm.addData("EXEC spTest5(1)", Arrays.asList("2", 1));
         
         TestProcessor.helpProcess(plan, hdm, new List<?>[] { Arrays.asList(1, "2", 1)});
+    }
+    
+    @Test public void testLateralOnlyProcedurePushdown() throws Exception {
+        String sql = "select smallb.intkey, x.stringkey, x.intkey "
+                + "from smallb left outer join lateral (select * from smalla where intkey = smallb.intkey) as x on (true)"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_PROCEDURE_TABLE, true);
+        bsc.setCapabilitySupport(Capability.QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table smallb (intkey integer, stringkey string); "
+                + "create foreign table smalla (intkey integer, stringkey string);", "x", "y");
+        TestOptimizer.helpPlan(sql, metadata, 
+                new String[] {"SELECT g_0.stringkey, g_0.intkey FROM y.smalla AS g_0 WHERE g_0.intkey = y.smallb.intkey", "SELECT g_0.intkey FROM y.smallb AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        bsc.setCapabilitySupport(Capability.QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE, false);
+        
+        TestOptimizer.helpPlan(sql, metadata, 
+                new String[] {"SELECT g_0.intkey, v_0.c_0, v_0.c_1 FROM y.smallb AS g_0 LEFT OUTER JOIN LATERAL(SELECT g_1.stringkey AS c_0, g_1.intkey AS c_1 FROM y.smalla AS g_1 WHERE g_1.intkey = g_0.intkey) AS v_0 ON 1 = 1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
 	
 	@Test public void testCrossSourceOuterWithOffset() throws Exception {

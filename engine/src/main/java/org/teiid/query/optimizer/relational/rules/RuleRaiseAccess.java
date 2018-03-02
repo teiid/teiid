@@ -680,6 +680,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 
 		for (PlanNode childNode : children) {
 			boolean lateral = false;
+			boolean procedure = false;
 			if (considerLateral && childNode.getType() == NodeConstants.Types.SOURCE
 					&& childNode.getFirstChild() != null
 					&& childNode.getProperty(Info.CORRELATED_REFERENCES) != null) {
@@ -690,6 +691,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 Command command = FrameUtil.getNonQueryCommand(childNode.getFirstChild());
                 
                 if (command instanceof StoredProcedure) {
+                    procedure = true;
                 	if (!CapabilitiesUtil.supports(Capability.QUERY_FROM_PROCEDURE_TABLE, modelID, metadata, capFinder)) {
                 		return null;
                 	}
@@ -870,9 +872,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
 					return null;
 				}
 			}
-			if (lateral && (!CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_LATERAL, modelID, metadata, capFinder) 
-					|| (crits != null && !crits.isEmpty() && !CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_LATERAL_CONDITION, accessModelID, metadata, capFinder)))) {
-				return null;
+			if (lateral) {
+		        if ((!CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_LATERAL, modelID, metadata, capFinder) 
+		                || (crits != null && !crits.isEmpty() && !CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_LATERAL_CONDITION, accessModelID, metadata, capFinder)))) {
+		            return null;
+		        }
+		        if (!procedure && CapabilitiesUtil.supports(Capability.QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE, accessModelID, metadata, capFinder)) {
+                    return null;
+		        }
 			}
 		} // end walking through join node's children
 
