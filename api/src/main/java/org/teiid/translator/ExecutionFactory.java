@@ -1393,6 +1393,14 @@ public class ExecutionFactory<F, C> {
 	
 	/**
 	 * 
+	 * @return true if lateral joins are restricted to only procedures / table valued functions
+	 */
+	public boolean supportsOnlyLateralJoinProcedure() {
+	    return false;
+	}
+	
+	/**
+	 * 
 	 * @return
 	 */
 	public boolean supportsProcedureTable() {

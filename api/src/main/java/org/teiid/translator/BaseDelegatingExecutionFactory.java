@@ -1449,4 +1449,18 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsIsDistinctCriteria(boolean value) {
         supportsIsDistinctCriteria = value;
     }
+    
+    Boolean supportsOnlyLateralJoinProcedure;
+    @TranslatorProperty(display="Supports Only Lateral Join Procedure", advanced=true)
+    @Override
+    public boolean supportsOnlyLateralJoinProcedure() {
+        if (supportsOnlyLateralJoinProcedure != null) {
+            return supportsOnlyLateralJoinProcedure;
+        }
+        return delegate.supportsOnlyLateralJoinProcedure();
+    }
+    public void setSupportsOnlyLateralJoinProcedure(
+            boolean supportsOnlyLateralJoinProcedure) {
+        this.supportsOnlyLateralJoinProcedure = supportsOnlyLateralJoinProcedure;
+    }
 }

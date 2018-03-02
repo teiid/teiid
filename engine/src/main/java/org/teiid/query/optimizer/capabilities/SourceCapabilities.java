@@ -355,7 +355,8 @@ public interface SourceCapabilities {
         QUERY_FROM_PROCEDURE_TABLE, 
         QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, 
         UPSERT, 
-        QUERY_SELECT_EXPRESSION_ARRAY_TYPE;
+        QUERY_SELECT_EXPRESSION_ARRAY_TYPE, 
+        QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE;
         
         private final String toString;
         
