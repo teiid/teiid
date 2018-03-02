@@ -5,7 +5,8 @@
         <artifact name="org.teiid:teiid-wildfly-integration-feature-pack" />
     </dependencies>
     <copy-artifacts>
-        <copy-artifact artifact="org.teiid:teiid-olingo::odata4" 
-        to-location="modules/system/layers/dv/org/jboss/teiid/main/deployments/teiid-olingo-odata4.war"/>
+        <copy-artifact artifact="org.teiid:teiid-olingo::odata4" to-location="modules/system/layers/dv/org/jboss/teiid/main/deployments/teiid-olingo-odata4.war">
+                <filter pattern="*.war" include="true"/>
+        </copy-artifact>
     </copy-artifacts>
 </build>
