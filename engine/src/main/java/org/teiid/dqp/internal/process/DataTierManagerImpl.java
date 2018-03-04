@@ -529,6 +529,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(param.getUUID());
 				row.add(param.getAnnotation());
 				addTypeInfo(row, param, dt);
+				row.add(param.getDefaultValue());
         	}
         	
         	@Override

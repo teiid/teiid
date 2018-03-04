@@ -122,6 +122,7 @@ CREATE FOREIGN TABLE ProcedureParams (
 	TypeName string(100),
     TypeCode integer,
     ColumnSize integer,
+    DefaultValue string(255),
 	PRIMARY KEY (VDBName, SchemaName, ProcedureName, Name),
 	FOREIGN KEY (VDBName, SchemaName, ProcedureName) REFERENCES Procedures (VDBName, SchemaName, Name),
 	UNIQUE (UID)	

@@ -257,7 +257,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
           .append(", TypeName AS TYPE_NAME, ColumnSize AS \"PRECISION\", TypeLength  AS LENGTH, convert(case when scale > 32767 then 32767 else Scale end, short) AS SCALE") //$NON-NLS-1$
           .append(", Radix AS RADIX, convert(decodeString(NullType, '") //$NON-NLS-1$
           .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
-          .append(", p.Description AS REMARKS, NULL AS COLUMN_DEF") //$NON-NLS-1$
+          .append(", p.Description AS REMARKS, %s AS COLUMN_DEF") //$NON-NLS-1$
           .append(", NULL AS SQL_DATA_TYPE, NULL AS SQL_DATETIME_SUB, NULL AS CHAR_OCTET_LENGTH, p.Position AS ORDINAL_POSITION") //$NON-NLS-1$
           .append(", "+IS_NULLABLE+", p.ProcedureName as SPECIFIC_NAME FROM ") //$NON-NLS-1$ //$NON-NLS-2$
           .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME)
@@ -1270,7 +1270,16 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         boolean newMetadata = driverConnection.getServerConnection().getServerVersion().compareTo("09.03") >= 0; //$NON-NLS-1$
 
         try {
-            prepareQuery = driverConnection.prepareStatement(newMetadata?QUERY_PROCEDURE_COLUMNS:QUERY_PROCEDURE_COLUMNS_OLD);
+            String query = QUERY_PROCEDURE_COLUMNS_OLD;
+            if (newMetadata) {
+                query = QUERY_PROCEDURE_COLUMNS;
+                if (driverConnection.getServerConnection().getServerVersion().compareTo("10.02") >= 0) { //$NON-NLS-1$
+                    query = String.format(query, "DefaultValue"); //$NON-NLS-1$
+                } else {
+                    query = String.format(query, "NULL"); //$NON-NLS-1$
+                }
+            }
+            prepareQuery = driverConnection.prepareStatement(query);
             prepareQuery.setObject(1, catalog.toUpperCase());
             prepareQuery.setObject(2, schemaPattern.toUpperCase());
             prepareQuery.setObject(3, procedureNamePattern.toUpperCase());
