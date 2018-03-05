@@ -100,8 +100,17 @@ public final class RuleMergeVirtual implements
         List<PlanNode> sources = NodeEditor.findAllNodes(frame.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE);
         
         SymbolMap references = (SymbolMap)frame.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-        if (references != null && !sources.isEmpty()) {
-        	return root; //correlated nested table commands should not be merged
+        if (references != null) {
+            if (!sources.isEmpty()) {
+                return root; //correlated nested table commands should not be merged
+            }
+            
+            //this is ok only if all of the references go above the correlating join
+            //currently this check is simplistic - just look at the parent join more nested scenarios won't work
+            PlanNode parentJoin = NodeEditor.findParent(frame, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP);
+            if (parentJoin != null && !parentJoin.getGroups().containsAll(GroupsUsedByElementsVisitor.getGroups(references.getValues()))) {
+                return root;
+            }
         }
 
         PlanNode parentProject = NodeEditor.findParent(frame, NodeConstants.Types.PROJECT);
@@ -212,10 +221,8 @@ public final class RuleMergeVirtual implements
         	RuleMergeCriteria.ReferenceReplacementVisitor rrv = new RuleMergeCriteria.ReferenceReplacementVisitor(references);
         	for (Map.Entry<ElementSymbol, Expression> entry : symbolMap.asUpdatableMap().entrySet()) {
         		if (entry.getValue() instanceof Reference) {
-        			Expression ex = references.getMappedExpression(((Reference)entry.getValue()).getExpression());
-        			if (ex != null) {
-        				entry.setValue(ex);
-        			}
+        			Expression ex = rrv.replaceExpression(entry.getValue());
+    				entry.setValue(ex);
         		} else {
         			PreOrPostOrderNavigator.doVisit(entry.getValue(), rrv, PreOrPostOrderNavigator.PRE_ORDER);
         		}
