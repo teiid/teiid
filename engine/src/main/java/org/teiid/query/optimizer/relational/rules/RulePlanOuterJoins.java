@@ -335,7 +335,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
         boolean nested = false;
         boolean hasOuter = join.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER;
         childJoin = left;
-        while (childJoin.getFirstChild().getType() != NodeConstants.Types.ACCESS) {
+        while (childJoin.getFirstChild() != null && childJoin.getFirstChild().getType() != NodeConstants.Types.ACCESS) {
             if (childJoin.getType() != NodeConstants.Types.JOIN || !(childJoin.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER || childJoin.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_INNER)) {
                 return false;
             }

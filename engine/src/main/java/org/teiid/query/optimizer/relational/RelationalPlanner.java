@@ -1667,7 +1667,7 @@ public class RelationalPlanner {
 			LanguageObject lo) {
 		PlanNode rootJoin = parent;
 		Set<GroupSymbol> groups = new HashSet<GroupSymbol>(rootJoin.getGroups());
-		while (rootJoin.getParent() != null && rootJoin.getParent().getType() == NodeConstants.Types.JOIN && !rootJoin.getParent().getGroups().isEmpty()) {
+		while (rootJoin.getParent() != null && rootJoin.getParent().getType() == NodeConstants.Types.JOIN) {
 			rootJoin = rootJoin.getParent();
 			//accumulate groups as we go, as intermediate joins may not contribute groups to the final join
 			groups.addAll(rootJoin.getGroups());
