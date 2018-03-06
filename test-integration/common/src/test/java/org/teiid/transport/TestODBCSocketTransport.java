@@ -201,6 +201,15 @@ public class TestODBCSocketTransport {
 		assertEquals("abc", new String(bytes, Charset.forName("UTF-16")));
 	}
 	
+	@Test public void testTextCat() throws Exception {
+        Statement s = conn.createStatement();
+        assertTrue(s.execute("SELECT textcat('a','b')"));
+        ResultSet rs = s.getResultSet();
+        assertTrue(rs.next());
+        String val = rs.getString(1);
+        assertEquals("ab", val);
+    }
+	
 	@Test public void testClob() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select cast('abc' as clob)"));
