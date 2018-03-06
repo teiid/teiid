@@ -2908,6 +2908,22 @@ public class TestResolver {
     	assertTrue(((CompareCriteria)q.getCriteria()).getLeftExpression() instanceof ElementSymbol);
     }
     
+    @Test public void testSelectAllOrder() {
+        Query q = (Query)helpResolve("select * from pm1.g1, pm1.g2");
+        assertEquals("[pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4]", q.getProjectedSymbols().toString());
+        
+        q = (Query)helpResolve("select * from pm1.g1 cross join pm1.g2");
+        assertEquals("[pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4]", q.getProjectedSymbols().toString());
+        
+        q = (Query)helpResolve("select * from pm1.g1, pm1.g2 inner join pm1.g3 on (pm1.g2.e1 = pm1.g3.e1)");
+        assertEquals("[pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4, pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4]", q.getProjectedSymbols().toString());
+    }
+    
+    @Test public void testSelectAllOrderCommonTable() {
+        Query q = (Query)helpResolve("with x as (select 1 y) select * from pm1.g1, pm1.g2");
+        assertEquals("[pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4]", q.getProjectedSymbols().toString());
+    }
+    
     @Test public void testLeadOffset() {
         //must be integer
         String sql = "SELECT LEAD(e1, 'a') over (order by e2) FROM pm1.g1";

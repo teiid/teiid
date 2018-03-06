@@ -1455,7 +1455,7 @@ public class TestJoinOptimization {
 	}
 	
 	@Test public void testEnhancedJoinWithLeftDuplicates() throws Exception {
-		String sql = "select * from (select 3 as a, 3 as b union all select 1 as a, 1 as b union all select 3 as a, 3 as b) as t1 join test_a t2 on t1.a=t2.a limit 10";
+		String sql = "select t2.*, t1.* from (select 3 as a, 3 as b union all select 1 as a, 1 as b union all select 3 as a, 3 as b) as t1 join test_a t2 on t1.a=t2.a limit 10";
 		
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign TABLE test_a (  a integer,  b integer );", "x", "y");
 		HardcodedDataManager hdm = new HardcodedDataManager();
@@ -1511,7 +1511,7 @@ public class TestJoinOptimization {
     }
 	
 	@Test public void testInnerOuterOptimization() throws TeiidComponentException, TeiidProcessingException {
-        String sql = "select * from (pm2.g1 inner join pm1.g2 on (pm2.g1.e1 = pm1.g2.e1) inner join pm2.g3 on (pm1.g2.e2 = pm2.g3.e2)) left outer join pm1.g4 on (pm1.g2.e4 = pm1.g4.e4)"; //$NON-NLS-1$
+        String sql = "select g4.*, g3.*, g2.*, g1.* from (pm2.g1 inner join pm1.g2 on (pm2.g1.e1 = pm1.g2.e1) inner join pm2.g3 on (pm1.g2.e2 = pm2.g3.e2)) left outer join pm1.g4 on (pm1.g2.e4 = pm1.g4.e4)"; //$NON-NLS-1$
         
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         

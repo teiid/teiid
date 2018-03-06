@@ -248,7 +248,7 @@ public class TestMaterialization {
     
     @Test public void testManagedMaterializedTransformationJoin() throws Exception {
         //make sure view removal is not inhibited
-        String userSql = "SELECT * FROM ManagedMatView left outer join MatTable1 on ManagedMatView.e1 = MatTable1.e1"; //$NON-NLS-1$
+        String userSql = "SELECT MatTable1.*,ManagedMatView.* FROM ManagedMatView left outer join MatTable1 on ManagedMatView.e1 = MatTable1.e1"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);

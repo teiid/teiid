@@ -784,7 +784,7 @@ public class TestWithClauseProcessing {
 		bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
 		
 		String sql = "WITH cte1 as /*+ no_inline */ (SELECT e1, e2 from pm1.g1), cte2 as /*+ no_inline */ (select * from cte1), cte3 as /*+ no_inline */ (select * from cte1 limit 1) "
-				+ "SELECT * FROM cte2 join cte3 on cte2.e1=cte3.e1";
+				+ "SELECT cte3.*,cte2.* FROM cte2 join cte3 on cte2.e1=cte3.e1";
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
 	    HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.example1Cached());
 	    
@@ -941,7 +941,7 @@ public class TestWithClauseProcessing {
 				+ " create view tv1 as WITH cte1 as (SELECT a from test_a), alias2 as (select a from cte1), cte3 as (select a from alias2) SELECT cte3.a FROM alias2 join cte3 on cte3.a=alias2.a;"
 				+ " create view tv2 as WITH alias2 as (select b, a from test_a), cte4 as (select a from alias2) SELECT cte4.a FROM cte4 join alias2 on cte4.a=alias2.a ;", "x", "y");
 		
-		String sql = "with CTE1 as ( select a from ( with CTE11 as (select a from tv0) select a from CTE11 ) as  SUBQ1), CTE2 as ( select a from ( with CTE21 as (select a from tv1) select a from CTE21 ) as  SUBQ2) select * from CTE1 as T1 join CTE2 as T2 on T1.a=T2.a";
+		String sql = "with CTE1 as ( select a from ( with CTE11 as (select a from tv0) select a from CTE11 ) as  SUBQ1), CTE2 as ( select a from ( with CTE21 as (select a from tv1) select a from CTE21 ) as  SUBQ2) select T2.*, T1.* from CTE1 as T1 join CTE2 as T2 on T1.a=T2.a";
 
 		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
 	    HardcodedDataManager hdm = new HardcodedDataManager(metadata);
@@ -961,7 +961,7 @@ public class TestWithClauseProcessing {
 				+ " create view tv1 as WITH cte1 as (SELECT a from test_a), alias2 as (select a from cte1), cte3 as (select a from alias2) SELECT cte3.a FROM alias2 join cte3 on cte3.a=alias2.a;"
 				+ " create view tv2 as WITH alias2 as (select b, a from test_a), cte4 as (select a from alias2) SELECT cte4.a FROM cte4 join alias2 on cte4.a=alias2.a ;", "x", "y");
 		
-		String sql = "with CTE1 as ( select a from ( with CTE11 as (select a from tv2) select a from CTE11 ) as  SUBQ1), CTE2 as ( select a from ( with CTE21 as (select a from tv2) select a from CTE21 ) as  SUBQ2) select * from CTE1 as T1 join CTE2 as T2 on T1.a=T2.a";
+		String sql = "with CTE1 as ( select a from ( with CTE11 as (select a from tv2) select a from CTE11 ) as  SUBQ1), CTE2 as ( select a from ( with CTE21 as (select a from tv2) select a from CTE21 ) as  SUBQ2) select T2.*, T1.* from CTE1 as T1 join CTE2 as T2 on T1.a=T2.a";
 
 		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
 	    HardcodedDataManager hdm = new HardcodedDataManager(metadata);
@@ -1154,7 +1154,7 @@ public class TestWithClauseProcessing {
         String sql = "with CTE as (select e2 as a from pm1.g1 as a),"
                 + " CTE_NOT_PUSHED as (select count(a) as c from CTE),"
                 + " CTE_UNION as (select c from CTE_NOT_PUSHED union all select c from CTE_NOT_PUSHED)"
-                + " select * from CTE join CTE_UNION on true";
+                + " select CTE_UNION.*,CTE.* from CTE join CTE_UNION on true";
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
         HardcodedDataManager hdm = new HardcodedDataManager(metadata);

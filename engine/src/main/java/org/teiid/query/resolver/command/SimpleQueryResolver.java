@@ -591,12 +591,17 @@ public class SimpleQueryResolver implements CommandResolver {
             List<GroupSymbol> leftGroups = new ArrayList<GroupSymbol>(discoveredGroups);
         	discoveredGroups.clear();
             visitNode(obj.getRightClause());
-            discoveredGroups.addAll(leftGroups);
+            //add to the beginning to maintain stable order
+            discoveredGroups.addAll(0, leftGroups);
             addDiscoveredGroups();
             visitNodes(obj.getJoinCriteria());
+            if (!discoveredGroups.isEmpty()) {
+                throw new AssertionError();
+            }
             discoveredGroups.addAll(currentGroups);
             currentGroups.clear();
-            discoveredGroups.addAll(tempImplicitGroups);
+            //add to the beginning to maintain stable order
+            discoveredGroups.addAll(0, tempImplicitGroups);
         }
 
 		private void addDiscoveredGroups() {

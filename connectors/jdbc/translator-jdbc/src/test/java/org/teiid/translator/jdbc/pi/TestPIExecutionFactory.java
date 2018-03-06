@@ -57,7 +57,7 @@ public class TestPIExecutionFactory {
 
     @Test 
     public void testLeftJoin() throws Exception {
-        String input = "SELECT * FROM Sample.Asset.ElementAttribute EA LEFT JOIN "
+        String input = "SELECT EAC.*,EA.* FROM Sample.Asset.ElementAttribute EA LEFT JOIN "
                 + "Sample.Asset.ElementAttributeCategory EAC ON EA.ID = EAC.ElementAttributeID"; //$NON-NLS-1$
         String output = "SELECT EAC.[ElementAttributeID], cast(EAC.[CategoryID] as String), "
                 + "cast(EA.[ID] as String), EA.[Path], EA.[Name] "
@@ -69,8 +69,8 @@ public class TestPIExecutionFactory {
     }
     
     @Test 
-    public void testCrossJoinAsInnter() throws Exception {
-        String input = "SELECT * FROM Sample.Asset.ElementAttribute EA CROSS JOIN "
+    public void testCrossJoinAsInner() throws Exception {
+        String input = "SELECT EAC.*,EA.* FROM Sample.Asset.ElementAttribute EA CROSS JOIN "
                 + "Sample.Asset.ElementAttributeCategory EAC"; //$NON-NLS-1$
         String output = "SELECT EAC.[ElementAttributeID], cast(EAC.[CategoryID] as String), "
                 + "cast(EA.[ID] as String), EA.[Path], EA.[Name] "
@@ -83,7 +83,7 @@ public class TestPIExecutionFactory {
     
     @Test 
     public void testRightOuterAsLeftOuter() throws Exception {
-        String input = "SELECT * FROM Sample.Asset.ElementAttribute EA RIGHT OUTER JOIN "
+        String input = "SELECT EAC.*,EA.* FROM Sample.Asset.ElementAttribute EA RIGHT OUTER JOIN "
                 + "Sample.Asset.ElementAttributeCategory EAC ON EA.ID = EAC.ElementAttributeID"; //$NON-NLS-1$
         String output = "SELECT EAC.[ElementAttributeID], cast(EAC.[CategoryID] as String), "
                 + "cast(EA.[ID] as String), EA.[Path], EA.[Name] "
@@ -96,7 +96,7 @@ public class TestPIExecutionFactory {
     
     @Test 
     public void testCrossApply() throws Exception {
-        String input = "SELECT * FROM Sample.Asset.ElementAttribute EA CROSS JOIN "
+        String input = "SELECT EAC.*,EA.* FROM Sample.Asset.ElementAttribute EA CROSS JOIN "
                 + "LATERAL (exec GetPIPoint(EA.ID)) EAC "; //$NON-NLS-1$
         String output = "SELECT Path, Server, Tag, [Number of Computers], cast(EA.[ID] as String), "
                 + "EA.[Path], EA.[Name] FROM Sample.Asset.ElementAttribute AS EA "

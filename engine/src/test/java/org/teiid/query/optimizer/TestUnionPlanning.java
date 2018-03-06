@@ -165,7 +165,7 @@ public class TestUnionPlanning {
     }
         
     @Test public void testUnionPushDownWithJoin() {
-        ProcessorPlan plan = TestOptimizer.helpPlan("select * from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A inner join (SELECT intkey FROM BQT1.SmallB where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (3, 4)) B on a.intkey = b.intkey", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select b.*,a.* from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A inner join (SELECT intkey FROM BQT1.SmallB where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (3, 4)) B on a.intkey = b.intkey", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
             new String[] { "SELECT g_1.intkey, g_0.intkey FROM BQT2.SmallA AS g_0, BQT2.SmallB AS g_1 WHERE (g_0.intkey = g_1.intkey) AND (g_0.intkey IN (3, 4)) AND (g_1.intkey IN (3, 4))", 
         	"SELECT g_1.intkey, g_0.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.intkey) AND (g_0.intkey IN (1, 2)) AND (g_1.intkey IN (1, 2))" }, TestOptimizer.SHOULD_SUCCEED); 
 
@@ -221,7 +221,7 @@ public class TestUnionPlanning {
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         
         ProcessorPlan plan = TestOptimizer.helpPlan(
-                "select * from v as t1 inner join v as t2 on t1.part = t2.part and t1.intkey = t2.intkey", tm, 
+                "select t2.*,t1.* from v as t1 inner join v as t2 on t1.part = t2.part and t1.intkey = t2.intkey", tm, 
                 new String[] {"SELECT g_1.intkey, g_0.intkey FROM y.smalla AS g_0, y.smalla AS g_1 WHERE g_0.intkey = g_1.intkey", 
                         "SELECT g_1.intkey, g_0.intkey FROM y.smallb AS g_0, y.smallb AS g_1 WHERE g_0.intkey = g_1.intkey"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); 
 
@@ -249,7 +249,7 @@ public class TestUnionPlanning {
     }
     
     @Test public void testUnionPushDownWithJoin1() throws Exception {
-        ProcessorPlan plan = TestOptimizer.helpPlan("select * from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A inner join (SELECT intkey FROM BQT1.SmallB where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (3, 4)) B on a.intkey = b.intkey where a.intkey in (1, 4)", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select b.*,a.* from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A inner join (SELECT intkey FROM BQT1.SmallB where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (3, 4)) B on a.intkey = b.intkey where a.intkey in (1, 4)", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
             new String[] { "SELECT g_1.IntKey, g_0.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.IntKey) AND (g_0.IntKey IN (1)) AND (g_0.IntKey = 1) AND (g_1.IntKey = 1)"
         	, "SELECT g_1.IntKey, g_0.IntKey FROM BQT2.SmallA AS g_0, BQT2.SmallB AS g_1 WHERE (g_0.IntKey = g_1.IntKey) AND (g_0.IntKey IN (4)) AND (g_0.IntKey = 4) AND (g_1.IntKey = 4)" }, ComparisonMode.EXACT_COMMAND_STRING); 
 
@@ -342,7 +342,7 @@ public class TestUnionPlanning {
     
     @Test public void testUnionPartitionedWithMerge() throws Exception {
     	//"select max(intnum) from (select * from (SELECT IntKey, intnum FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey, intnum FROM BQT2.SmallA where intkey in (3, 4)) A where intkey in (1, 2, 3, 4) UNION ALL select intkey, intnum from bqt2.smallb where intkey in 6) B group by intkey"
-        ProcessorPlan plan = TestOptimizer.helpPlan("select * from (select * from (SELECT IntKey, intnum FROM BQT1.SmallA UNION ALL SELECT intkey, intnum FROM BQT2.SmallA) A where intkey in (1, 2, 3, 4) UNION ALL select intkey, intnum from bqt2.smallb where intkey in (6)) B inner join (SELECT IntKey, intnum FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey, intnum FROM BQT2.SmallA where intkey in (5, 6)) C on b.intkey = c.intkey", RealMetadataFactory.exampleBQTCached(), null, TestInlineView.getInliveViewCapabilitiesFinder(),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select c.*,b.* from (select * from (SELECT IntKey, intnum FROM BQT1.SmallA UNION ALL SELECT intkey, intnum FROM BQT2.SmallA) A where intkey in (1, 2, 3, 4) UNION ALL select intkey, intnum from bqt2.smallb where intkey in (6)) B inner join (SELECT IntKey, intnum FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey, intnum FROM BQT2.SmallA where intkey in (5, 6)) C on b.intkey = c.intkey", RealMetadataFactory.exampleBQTCached(), null, TestInlineView.getInliveViewCapabilitiesFinder(),//$NON-NLS-1$
             new String[] { "SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2) ORDER BY c_0", 
         	"SELECT g_0.IntKey, g_0.IntNum FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2)", 
         	"SELECT g_0.IntKey, g_0.IntNum FROM BQT2.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2)", 
