@@ -798,10 +798,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		else if ((m = releasePattern.matcher(sql)).matches()) {
 			return "set \"dummy-update-pg-odbc\" 0"; //$NON-NLS-1$
 		} 
+		//quickly check if rewrite is needed by the scriptreader
 		for (int i = 0; i < modified.length(); i++) {
 			switch (modified.charAt(i)) {
 			case ':':
 			case '~':
+			case '(':
+			case '$':
 				ScriptReader reader = new ScriptReader(modified);
 				reader.setRewrite(true);
 				try {

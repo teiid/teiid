@@ -10,3 +10,5 @@ m2e-wtp
 
 # btm transaction
 *.tlog
+teiid-jdbc/dependency-reduced-pom.xml
+
