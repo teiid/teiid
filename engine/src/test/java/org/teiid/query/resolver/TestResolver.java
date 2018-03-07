@@ -727,6 +727,18 @@ public class TestResolver {
 			new String[] { "pm3.g1.e2", "pm3.g2.e2", "pm3.g1.e2", "pm3.g2.e2" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 	
+    @Test public void testLateralJoinDirection() {
+        helpResolveException("select * from pm1.g1 right outer join lateral(select g1.e1) x on pm1.g1.e1 = x.e1"); //$NON-NLS-1$
+    }
+    
+    @Test public void testLateralJoinDirection1() {
+        helpResolve("select * from (select 1 e1) g1, ((select 1 e1) g2 right outer join lateral(select g1.e1) x on g2.e1 = x.e1)"); //$NON-NLS-1$
+    }
+    
+    @Test public void testLateralJoinDirection2() {
+        helpResolveException("select * from pm1.g1 full outer join lateral(select pm1.g1.e1) x on pm1.g1.e1 = x.e1"); //$NON-NLS-1$
+    }
+	
     @Test public void testHavingRequiringConvertOnAggregate1() {
         helpResolve("SELECT * FROM pm1.g1 GROUP BY e4 HAVING MAX(e2) > 1.2"); //$NON-NLS-1$
     }

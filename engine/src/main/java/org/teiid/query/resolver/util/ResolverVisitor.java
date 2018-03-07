@@ -98,7 +98,7 @@ public class ResolverVisitor extends LanguageVisitor {
     }
 
     private QueryResolverException handleUnresolvedElement(ElementSymbol symbol, String description) {
-    	UnresolvedSymbolDescription usd = new UnresolvedSymbolDescription(symbol.toString(), description);
+    	UnresolvedSymbolDescription usd = new UnresolvedSymbolDescription(symbol, description);
         QueryResolverException e = new QueryResolverException(usd.getDescription());
         e.setUnresolvedSymbols(Arrays.asList(usd));
         return e;

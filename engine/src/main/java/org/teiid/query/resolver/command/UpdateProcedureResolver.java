@@ -373,7 +373,7 @@ public class UpdateProcedureResolver implements CommandResolver {
     private void handleUnresolvableDeclaration(ElementSymbol variable, String description) throws QueryResolverException {
         UnresolvedSymbolDescription symbol = new UnresolvedSymbolDescription(variable.toString(), description);
         QueryResolverException e = new QueryResolverException(symbol.getDescription());
-        e.setUnresolvedSymbols(Arrays.asList(new Object[] {symbol}));
+        e.setUnresolvedSymbols(Arrays.asList(symbol));
         throw e;
     }
 

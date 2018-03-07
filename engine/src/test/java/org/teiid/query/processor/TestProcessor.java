@@ -7982,5 +7982,17 @@ public class TestProcessor {
         TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1,2,1,2,1,1,2)});
 	}
 	
+	@Test public void testNestedRightJoinWithLateral() throws Exception {
+        String ddl = "create view v as select 1 a, 2 b;";
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "views");
+        
+        String sql = "select * from (select 1 e1) g1, ((select 1 e1) g2 right outer join lateral(select g1.e1) x on g2.e1 = x.e1)";
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(caps));
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1,1,1)});
+    }
+	
     private static final boolean DEBUG = false;
 }

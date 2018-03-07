@@ -20,6 +20,9 @@ package org.teiid.api.exception.query;
 
 import java.io.Serializable;
 
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.symbol.ElementSymbol;
+
 /**
  * This helper object describes an unresolved symbol found during
  * query resolution.
@@ -28,6 +31,7 @@ public class UnresolvedSymbolDescription implements Serializable {
 
 	private String symbol;
 	private String description;
+	private transient LanguageObject object;
 
     /**
      * Construct a description given the symbol and it's description.
@@ -39,6 +43,17 @@ public class UnresolvedSymbolDescription implements Serializable {
 		this.description = description;
 	}
 	
+    public UnresolvedSymbolDescription(ElementSymbol symbol,
+            String description) {
+        this.symbol = symbol.toString();
+        this.object = symbol;
+        this.description = description;
+    }
+    
+    public LanguageObject getObject() {
+        return object;
+    }
+
     /**
      * Get the symbol that was unresolved
      * @return Unresolved symbol

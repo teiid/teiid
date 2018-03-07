@@ -205,7 +205,6 @@ public class SimpleQueryResolver implements CommandResolver {
         private List<GroupSymbol> implicitGroups = new LinkedList<GroupSymbol>();
         private TempMetadataAdapter metadata;
         private Query query;
-        private boolean allowImplicit = true;
         
         public QueryResolverVisitor(Query query, TempMetadataAdapter metadata) {
             super(new ResolverVisitor(metadata, null, query.getExternalGroupContexts()));
@@ -415,9 +414,7 @@ public class SimpleQueryResolver implements CommandResolver {
 		 */
         public LinkedHashSet<GroupSymbol> preTableFunctionReference(TableFunctionReference tfr) {
         	LinkedHashSet<GroupSymbol> saved = new LinkedHashSet<GroupSymbol>(this.currentGroups);
-        	if (allowImplicit) {
-        		currentGroups.addAll(this.implicitGroups);
-        	}
+    		currentGroups.addAll(this.implicitGroups);
         	return saved;
         }
         
@@ -431,10 +428,8 @@ public class SimpleQueryResolver implements CommandResolver {
 					symbol.setIsExternalReference(true);
 				}
 			}
-			if (allowImplicit) {
-	        	this.currentGroups.clear();
-	        	this.currentGroups.addAll(saved);
-			}
+        	this.currentGroups.clear();
+        	this.currentGroups.addAll(saved);
             discoveredGroup(obj.getGroupSymbol());
             try {
                 ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), obj.getProjectedSymbols(), false);
@@ -456,11 +451,30 @@ public class SimpleQueryResolver implements CommandResolver {
         
         public void visit(SubqueryFromClause obj) {
         	Collection<GroupSymbol> externalGroups = this.currentGroups;
-        	if (obj.isLateral() && allowImplicit) {
+        	if (obj.isLateral()) {
         		externalGroups = new ArrayList<GroupSymbol>(externalGroups);
         		externalGroups.addAll(this.implicitGroups);
         	}
-            resolveSubQuery(obj, externalGroups);
+        	try {
+        	    resolveSubQuery(obj, externalGroups);
+        	} catch (TeiidRuntimeException e) {
+        	    //detect if this element symbol can't be used as part of a lateral join
+        	    if (nonLateralGroups != null && obj.isLateral() && e.getCause() instanceof QueryResolverException) {
+        	        QueryResolverException qre = (QueryResolverException)e.getCause();
+        	        for (UnresolvedSymbolDescription usd : qre.getUnresolvedSymbols()) {
+        	            if (usd.getObject() instanceof ElementSymbol) {
+        	                try {
+                                ResolverVisitor.resolveLanguageObject(((ElementSymbol)usd.getObject()).getGroupSymbol(), nonLateralGroups, metadata);
+                                throw new TeiidRuntimeException(
+                                        new QueryResolverException(QueryPlugin.Event.TEIID31268, qre, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31268, usd.getObject())));
+                            } catch (QueryResolverException e1) {
+                            } catch (TeiidComponentException e1) {
+                            }        	                
+        	            }
+        	        }
+        	    }
+        	    throw e;
+        	}
             discoveredGroup(obj.getGroupSymbol());
             try {
                 ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), obj.getCommand().getProjectedSymbols(), false);
@@ -485,9 +499,7 @@ public class SimpleQueryResolver implements CommandResolver {
         
         private void discoveredGroup(GroupSymbol group) {
         	discoveredGroups.add(group);
-        	if (allowImplicit) {
-        		implicitGroups.add(group);
-        	}
+    		implicitGroups.add(group);
         }
 
 		private void createProcRelational(UnaryFromClause obj)
@@ -582,6 +594,8 @@ public class SimpleQueryResolver implements CommandResolver {
                 super.visit(obj);
             }
         }
+        
+        private List<GroupSymbol> nonLateralGroups;
 
         public void visit(JoinPredicate obj) {
             assert currentGroups.isEmpty();
@@ -590,7 +604,13 @@ public class SimpleQueryResolver implements CommandResolver {
             visitNode(obj.getLeftClause());
             List<GroupSymbol> leftGroups = new ArrayList<GroupSymbol>(discoveredGroups);
         	discoveredGroups.clear();
+        	if (obj.getJoinType() == JoinType.JOIN_RIGHT_OUTER || obj.getJoinType() == JoinType.JOIN_FULL_OUTER) {
+        	    this.implicitGroups.removeAll(leftGroups);
+    	        nonLateralGroups = leftGroups;
+        	}
             visitNode(obj.getRightClause());
+            nonLateralGroups = null;
+            this.implicitGroups.addAll(leftGroups);
             //add to the beginning to maintain stable order
             discoveredGroups.addAll(0, leftGroups);
             addDiscoveredGroups();
@@ -618,27 +638,10 @@ public class SimpleQueryResolver implements CommandResolver {
                 
         public void visit(From obj) {
             assert currentGroups.isEmpty();
-            for (FromClause clause : obj.getClauses()) {
-				checkImplicit(clause);
-			}
             super.visit(obj);
             addDiscoveredGroups();
         }
 
-		private void checkImplicit(FromClause clause) {
-			if (clause instanceof JoinPredicate) {
-				JoinPredicate jp = (JoinPredicate)clause;
-				if (jp.getJoinType() == JoinType.JOIN_FULL_OUTER || jp.getJoinType() == JoinType.JOIN_RIGHT_OUTER) {
-					allowImplicit = false;
-					return;
-				}
-				checkImplicit(jp.getLeftClause());
-				if (allowImplicit) {
-					checkImplicit(jp.getRightClause());
-				}
-			}
-		}
-		
 		@Override
 		public void visit(Limit obj) {
 			super.visit(obj);

@@ -18,7 +18,8 @@
 
 package org.teiid.api.exception.query;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.teiid.core.BundleUtil;
 
@@ -29,7 +30,7 @@ import org.teiid.core.BundleUtil;
 public class QueryResolverException extends QueryProcessingException {
 
 	private static final long serialVersionUID = 752912934870580744L;
-	private transient List problems;
+	private transient List<UnresolvedSymbolDescription> problems;
 
     /**
      * No-arg constructor required by Externalizable semantics.
@@ -77,7 +78,7 @@ public class QueryResolverException extends QueryProcessingException {
 	 * Set the list of unresolved symbols during QueryResolution
 	 * @param unresolvedSymbols List of <UnresolvedSymbolDescription> objects
 	 */
-	public void setUnresolvedSymbols(List unresolvedSymbols) {
+	public void setUnresolvedSymbols(List<UnresolvedSymbolDescription> unresolvedSymbols) {
 		this.problems = unresolvedSymbols;
 	}
 
@@ -87,7 +88,7 @@ public class QueryResolverException extends QueryProcessingException {
      */
     public void addUnresolvedSymbol(UnresolvedSymbolDescription symbolDesc) { 
         if(this.problems == null) { 
-            this.problems = new ArrayList();
+            this.problems = new ArrayList<UnresolvedSymbolDescription>();
         }
         this.problems.add(symbolDesc);
     }
@@ -96,7 +97,7 @@ public class QueryResolverException extends QueryProcessingException {
 	 * Set the list of unresolved symbols during QueryResolution
 	 * @return List of {@link UnresolvedSymbolDescription} objects
 	 */
-	public List getUnresolvedSymbols() {
+	public List<UnresolvedSymbolDescription> getUnresolvedSymbols() {
 		return this.problems;
 	}
 }
