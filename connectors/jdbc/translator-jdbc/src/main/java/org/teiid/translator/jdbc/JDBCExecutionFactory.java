@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 import javax.sql.rowset.serial.SerialStruct;
@@ -114,6 +115,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private boolean enableDependentJoins;
 	private boolean useBindingsForDependentJoin = true;
 	private String commentFormat = "/*teiid sessionid:{0}, requestid:{1}.{2}*/ "; //$NON-NLS-1$
+	private Pattern removePushdownCharacters;
 	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
@@ -1028,6 +1030,10 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         }
         
         if (type != Types.JAVA_OBJECT) {
+            if (this.removePushdownCharacters != null && param instanceof String) {
+                //TODO: this only accounts for strings and not strings embedded in arrays
+                param = this.removePushdownCharacters.matcher((String)param).replaceAll(""); //$NON-NLS-1$
+            }
         	stmt.setObject(i, param, type);
         } else {
         	stmt.setObject(i, param);
@@ -1639,4 +1645,20 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		return SQLConstants.Reserved.LATERAL;
 	}
 
+	@TranslatorProperty(display="Remove Pushdown Characters", description="A case-sensitive regular expression of character strings to remove from string values that are pushed down.")
+	public String getRemovePushdownCharacters() {
+	    if (this.removePushdownCharacters == null) {
+	        return null;
+	    }
+        return removePushdownCharacters.pattern();
+    }
+	
+	Pattern getRemovePushdownCharactersPattern() {
+	    return removePushdownCharacters;
+	}
+	
+	public void setRemovePushdownCharacters(String removePushdownCharacters) {
+        this.removePushdownCharacters = Pattern.compile(removePushdownCharacters);
+    }
+	
 }

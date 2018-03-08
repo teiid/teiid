@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
@@ -190,10 +191,18 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 	    			}
             	}
                 valuesbuffer.append(Tokens.QUOTE)
-                      .append(escapeString(val, Tokens.QUOTE))
+                      .append(escapeString(removeCharacters(val), Tokens.QUOTE))
                       .append(Tokens.QUOTE);
             }
         }        
+    }
+    
+    protected String removeCharacters(String value) {
+        Pattern p = this.executionFactory.getRemovePushdownCharactersPattern();
+        if (p == null) {
+            return value;
+        }
+        return p.matcher(value).replaceAll(""); //$NON-NLS-1$
     }
     
     protected boolean useUnicodePrefix() {

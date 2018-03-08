@@ -22,9 +22,11 @@ import static org.junit.Assert.*;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Struct;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -115,4 +117,17 @@ public class TestJDBCExecutionFactory {
 		//should still succeed even if an exception is thrown from supportsGetGeneratedKeys
 		jef.initCapabilities(connection);
 	}
+	
+	@Test public void testRemovePushdownCharacters() throws SQLException {
+        JDBCExecutionFactory jef = new JDBCExecutionFactory();
+        jef.setRemovePushdownCharacters("[\\u0000-\\u0002]");
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        jef.bindValue(ps, "\u0000Hello\u0001World", TypeFacility.RUNTIME_TYPES.STRING, 1);
+        Mockito.verify(ps).setObject(1, "HelloWorld", Types.VARCHAR);
+        
+        SQLConversionVisitor scv = new SQLConversionVisitor(jef);
+        StringBuilder sb = new StringBuilder();
+        scv.translateSQLType(TypeFacility.RUNTIME_TYPES.STRING, "\u0003?\u0002", sb);
+        assertEquals("'\u0003?'", sb.toString());
+    }
 }
