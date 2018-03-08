@@ -50,29 +50,29 @@ public class TestStats {
 
     @Test public void testSetTableStats() throws Exception {
     	Statement s = connection.createStatement();
-    	ResultSet rs = s.executeQuery("select cardinality from tables where name = 'PARTSSUPPLIER.PARTS'");
+    	ResultSet rs = s.executeQuery("select cardinality from sys.tables where name = 'PARTSSUPPLIER.PARTS'");
     	rs.next();
     	assertEquals(16, rs.getInt(1));
     	s.execute("call setTableStats(tableName=>'partssupplier.partssupplier.parts', cardinality=>32)");
-    	rs = s.executeQuery("select cardinality from tables where name = 'PARTSSUPPLIER.PARTS'");
+    	rs = s.executeQuery("select cardinality from sys.tables where name = 'PARTSSUPPLIER.PARTS'");
     	rs.next();
     	assertEquals(32, rs.getInt(1));
     	s.execute("call setTableStats(tableName=>'partssupplier.partssupplier.parts', cardinality=>321100000000)");
-    	rs = s.executeQuery("select cardinality from tables where name = 'PARTSSUPPLIER.PARTS'");
+    	rs = s.executeQuery("select cardinality from sys.tables where name = 'PARTSSUPPLIER.PARTS'");
     	rs.next();
     	assertEquals(Integer.MAX_VALUE, rs.getInt(1));
     }
     
     @Test public void testSetColumnStats() throws Exception {
     	Statement s = connection.createStatement();
-    	ResultSet rs = s.executeQuery("select MinRange, MaxRange, DistinctCount, NullCount from columns where name = 'PART_ID'");
+    	ResultSet rs = s.executeQuery("select MinRange, MaxRange, DistinctCount, NullCount from sys.columns where name = 'PART_ID'");
     	rs.next();
     	assertEquals(null, rs.getString(1));
     	assertEquals(null, rs.getString(2));
     	assertEquals(-1, rs.getInt(3));
     	assertEquals(-1, rs.getInt(4));
     	s.execute("call setColumnStats(tableName=>'partssupplier.partssupplier.parts', columnName=>'PART_ID', max=>32, nullcount=>0)");
-    	rs = s.executeQuery("select MinRange, MaxRange, DistinctCount, NullCount from columns where name = 'PART_ID'");
+    	rs = s.executeQuery("select MinRange, MaxRange, DistinctCount, NullCount from sys.columns where name = 'PART_ID'");
     	rs.next();
     	assertEquals(null, rs.getString(1));
     	assertEquals("32", rs.getString(2));

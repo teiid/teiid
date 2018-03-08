@@ -172,24 +172,24 @@ public class TestMetadataUpdates {
     }
     
     @Test public void testSetProperty() throws Exception {
-    	CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty((select uid from tables where name='vw'), 'foo', 'bar')}");
+    	CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty((select uid from sys.tables where name='vw'), 'foo', 'bar')}");
     	assertFalse(s.execute());
     	assertNull(s.getClob(1));
     	
     	Statement stmt = connection.createStatement();
-    	ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from tables where name='vw') and name = 'foo'");
+    	ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from sys.tables where name='vw') and name = 'foo'");
     	rs.next();
     	assertEquals("foo", rs.getString(1));
     	assertEquals("bar", rs.getString(2));
     }
     
     @Test public void testSetPropertyNamespace() throws Exception {
-    	CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty((select uid from tables where name='vw'), 'teiid_rel:foo', 'bar')}");
+    	CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty((select uid from sys.tables where name='vw'), 'teiid_rel:foo', 'bar')}");
     	assertFalse(s.execute());
     	assertNull(s.getClob(1));
     	
     	Statement stmt = connection.createStatement();
-    	ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from tables where name='vw') and name = '{http://www.teiid.org/ext/relational/2012}foo'");
+    	ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from sys.tables where name='vw') and name = '{http://www.teiid.org/ext/relational/2012}foo'");
     	rs.next();
     	assertEquals("{http://www.teiid.org/ext/relational/2012}foo", rs.getString(1));
     	assertEquals("bar", rs.getString(2));

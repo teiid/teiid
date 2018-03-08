@@ -345,7 +345,7 @@ public class TestEmbeddedServer {
 		es.deployVDB("empty");
 		c = es.getDriver().connect("jdbc:teiid:empty", null);
 		s = c.createStatement();
-		s.execute("select * from tables");
+		s.execute("select * from sys.tables");
 		
 		assertNotNull(es.getSchemaDdl("empty", "SYS"));
 		assertNull(es.getSchemaDdl("empty", "xxx"));
@@ -467,7 +467,7 @@ public class TestEmbeddedServer {
 	@Test public void testDeployDesignerZip() throws Exception {
 		es.start(new EmbeddedConfiguration());
 		es.deployVDBZip(UnitTestUtil.getTestDataFile("matviews.vdb").toURI().toURL());
-		ResultSet rs = es.getDriver().connect("jdbc:teiid:matviews", null).createStatement().executeQuery("select count(*) from tables where schemaname='test'");
+		ResultSet rs = es.getDriver().connect("jdbc:teiid:matviews", null).createStatement().executeQuery("select count(*) from sys.tables where schemaname='test'");
 		rs.next();
 		assertEquals(4, rs.getInt(1));
 	}

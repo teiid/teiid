@@ -147,14 +147,14 @@ public class TestODBCSocketTransport {
 	 */
 	@Test public void testSelect() throws Exception {
 		Statement s = conn.createStatement();
-		assertTrue(s.execute("select * from tables order by name"));
+		assertTrue(s.execute("select * from sys.tables order by name"));
 		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
 	}
 	
 	@Test public void testTransactionalMultibatch() throws Exception {
 		Statement s = conn.createStatement();
 		conn.setAutoCommit(false);
-		assertTrue(s.execute("select tables.name from tables, columns limit 1025"));
+		assertTrue(s.execute("select sys.tables.name from sys.tables, sys.columns limit 1025"));
 		int count = 0;
 		while (s.getResultSet().next()) {
 			count++;
@@ -165,7 +165,7 @@ public class TestODBCSocketTransport {
 	
 	@Test public void testMultibatchSelect() throws Exception {
 		Statement s = conn.createStatement();
-		assertTrue(s.execute("select * from tables, columns limit 7000"));
+		assertTrue(s.execute("select * from sys.tables, sys.columns limit 7000"));
 		ResultSet rs = s.getResultSet();
 		int i = 0;
 		while (rs.next()) {
@@ -179,7 +179,7 @@ public class TestODBCSocketTransport {
 	 * tests that the portal max is handled correctly
 	 */
 	@Test public void testMultibatchSelectPrepared() throws Exception {
-		PreparedStatement s = conn.prepareStatement("select * from (select * from tables order by name desc limit 21) t1, (select * from tables order by name desc limit 21) t2 where t1.name > ?");
+		PreparedStatement s = conn.prepareStatement("select * from (select * from sys.tables order by name desc limit 21) t1, (select * from sys.tables order by name desc limit 21) t2 where t1.name > ?");
 		conn.setAutoCommit(false);
 		s.setFetchSize(100);
 		s.setString(1, "0");
@@ -248,7 +248,7 @@ public class TestODBCSocketTransport {
 		//TODO: drill in to ensure that the underlying statement has been set to autocommit false
 		conn.setAutoCommit(false); 
 		Statement s = conn.createStatement();
-		assertTrue(s.execute("select * from tables order by name"));
+		assertTrue(s.execute("select * from sys.tables order by name"));
 		conn.setAutoCommit(true);
 	}
 	
@@ -510,7 +510,7 @@ public class TestODBCSocketTransport {
 		p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
 		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
 		Statement s = conn.createStatement();
-		assertTrue(s.execute("select * from tables order by name"));
+		assertTrue(s.execute("select * from sys.tables order by name"));
 		TestMMDatabaseMetaData.compareResultSet("TestODBCSocketTransport/testSelect", s.getResultSet());
 	}
 	
@@ -564,7 +564,7 @@ public class TestODBCSocketTransport {
 		assertTrue(rs.next());
 		assertEquals(" a::b", rs.getString(1));
 		
-		rs = s.executeQuery("select name::varchar from tables where name = 'Columns'");
+		rs = s.executeQuery("select name::varchar from sys.tables where name = 'Columns'");
 		assertTrue(rs.next());
 		assertEquals("Columns", rs.getString(1));
 	}
@@ -703,14 +703,14 @@ public class TestODBCSocketTransport {
 		Statement s = conn.createStatement();
 		s.execute("set disableLocalTxn true");
 		conn.setAutoCommit(false); 
-		assertTrue(s.execute("select * from tables order by name"));
+		assertTrue(s.execute("select * from sys.tables order by name"));
 		conn.setAutoCommit(true);
 	}
 	
 	@Test public void testGropuByPositional() throws Exception {
 		Statement s = conn.createStatement();
 		//would normally throw an exception, but is allowable over odbc
-		s.execute("select name, count(schemaname) from tables group by 1");
+		s.execute("select name, count(schemaname) from sys.tables group by 1");
 	}
 	
 	@Test public void testImplicitPortalClosing() throws Exception {

@@ -124,7 +124,7 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 	}
 	
 	@Test public void testPGTableConflicts() throws Exception {
-		execute("select name FROM tables where schemaname='pg_catalog'"); //$NON-NLS-1$
+		execute("select name FROM sys.tables where schemaname='pg_catalog'"); //$NON-NLS-1$
 		ArrayList<String> names = new ArrayList<String>();
 		while (internalResultSet.next()) {
 			names.add(internalResultSet.getString(1));
@@ -135,7 +135,7 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		mmd.setSchemaSourceType("ddl");
 		StringBuffer ddl = new StringBuffer();
 		for (String name : names) {
-			ddl.append("create view "+name+" as select 1;\n");
+			ddl.append("create view \""+name+"\" as select 1;\n");
 		}
 		mmd.setSchemaText(ddl.toString());
 		server.deployVDB("x", mmd);
@@ -267,5 +267,19 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
         assertResults(new String[] {"expr1[string]\n" + 
                 "PART_ID"});
     }
-	
+    
+    @Test public void testInformationSchemaViews() throws Exception {
+        execute("select * from information_schema.views"); //$NON-NLS-1$
+        TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+    }
+    
+    @Test public void testInformationSchemaTables() throws Exception {
+        execute("select * from information_schema.tables"); //$NON-NLS-1$
+        TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+    }
+    
+    @Test public void testInformationSchemaColumns() throws Exception {
+        execute("select * from information_schema.columns"); //$NON-NLS-1$
+        TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+    }
 }

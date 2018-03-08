@@ -96,6 +96,12 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_pg_stats();
 		add_geography_columns();
 		add_pg_constraint();
+		
+		//limited emulation of information_schema
+		add_infoSchemaTables();
+		add_infoSchemaViews();
+		add_infoSchemaColumns();
+		
 		addFunction("regClass", "regclass").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("objDescription", "obj_description"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -702,6 +708,62 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		t.setProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, "true"); //$NON-NLS-1$
 		return t;
 	}	
+	
+	private Table add_infoSchemaViews() {
+	    Table t = createView("information_schema.views"); //$NON-NLS-1$ 
+        addColumn("table_catalog", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("table_schema", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("table_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("check_option", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("is_updatable", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        t.setSelectTransformation("select vdbname, schemaName, name, 'NONE', case when SupportsUpdates then 'YES' else 'NO' end from sys.tables where IsPhysical"); //$NON-NLS-1$
+        return t;
+	}
+	
+    private Table add_infoSchemaTables() {
+        Table t = createView("information_schema.tables"); //$NON-NLS-1$ 
+        addColumn("table_catalog", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("table_schema", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("table_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("table_type", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        t.setSelectTransformation("select vdbname, schemaName, name," + //$NON-NLS-1$
+                " case when IsSystem then 'SYSTEM ' else '' end || case when IsPhysical then 'BASE TABLE' else 'VIEW' end from sys.tables"); //$NON-NLS-1$
+        return t;
+    }
+    
+    private Table add_infoSchemaColumns() {
+        Table t = createView("information_schema.columns"); //$NON-NLS-1$ 
+        addColumn("table_catalog", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("table_schema", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("table_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("column_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("ordinal_position", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("column_default", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("is_nullable", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("udt_type", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("character_maximum_length", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("character_octet_length", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("numeric_precision", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("numeric_precision_radix", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("numeric_scale", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("datetime_precision", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("character_set_catalog", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("character_set_schema", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("character_set_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("collation_catalog", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("is_updatable", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        t.setSelectTransformation("select vdbname, schemaName, tableName, columns.name, position, defaultValue," + //$NON-NLS-1$ 
+                " case when NullType = 'No Nulls' then 'NO' else 'YES' end," + //$NON-NLS-1$
+                " typname, case WHEN columns.DataType in ('string', 'char') THEN columns.length end, null," + //$NON-NLS-1$
+                " CASE WHEN columns.DataType in ('bigdecimal', 'biginteger') then columns.precision WHEN columns.DataType = 'float' then 24 WHEN columns.DataType = 'double' then 53 WHEN columns.DataType in ('byte', 'short', 'integer', 'long') then pt.typlen * 8 end," + //$NON-NLS-1$
+                " CASE WHEN columns.DataType in ('bigdecimal', 'biginteger', 'float', 'double', 'byte', 'short', 'integer', 'long') then 2 end, " + //$NON-NLS-1$
+                " CASE WHEN columns.DataType in ('bigdecimal', 'biginteger') then columns.scale WHEN columns.DataType in ('byte', 'short', 'integer', 'long') then 0 end," + //$NON-NLS-1$
+                " CASE WHEN columns.DataType = 'date' then 0 WHEN columns.DataType = 'time' then 3 WHEN columns.DataType = 'timestamp' then 9 end," + //$NON-NLS-1$
+                " null, null, null, null," + //$NON-NLS-1$
+                " case when SupportsUpdates then 'YES' else 'NO' end " + //$NON-NLS-1$
+                " from sys.columns left outer join pg_catalog.matpg_datatype pt ON columns.DataType = pt.Name"); //$NON-NLS-1$
+        return t;
+    }
 	
 	private FunctionMethod addFunction(String javaFunction, String name) {
 		Method[] methods = FunctionMethods.class.getMethods();

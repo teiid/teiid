@@ -34,8 +34,8 @@ CREATE FOREIGN TABLE Columns (
 	TypeCode integer,
 	ColumnSize integer,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
-	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
-	FOREIGN KEY (TableUID) REFERENCES Tables (UID),
+	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Sys.Tables (VDBName, SchemaName, Name),
+	FOREIGN KEY (TableUID) REFERENCES Sys.Tables (UID),
 	UNIQUE (UID)
 );
 
@@ -77,8 +77,8 @@ CREATE FOREIGN TABLE KeyColumns (
 	Position integer,
 	TableUID string (50) NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
-	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
-	FOREIGN KEY (TableUID) REFERENCES Tables (UID),
+	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Sys.Tables (VDBName, SchemaName, Name),
+	FOREIGN KEY (TableUID) REFERENCES Sys.Tables (UID),
 	UNIQUE (UID)	
 );
 
@@ -99,7 +99,7 @@ CREATE FOREIGN TABLE Keys (
 	RefSchemaUID string(50) NOT NULL,
 	ColPositions short[] NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
-	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
+	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Sys.Tables (VDBName, SchemaName, Name),
 	UNIQUE (UID)
 );
 

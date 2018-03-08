@@ -2,6 +2,9 @@ string                                                             clob
 Name                                                               Body                                                             
 GEOMETRY_COLUMNS                                                   Clob[551]                                                        
 geography_columns                                                  Clob[73]                                                         
+information_schema.columns                                         Clob[1048]                                                       
+information_schema.tables                                          Clob[153]                                                        
+information_schema.views                                           Clob[125]                                                        
 matpg_datatype                                                     Clob[1562]                                                       
 pg_am                                                              Clob[34]                                                         
 pg_attrdef                                                         Clob[273]                                                        
@@ -20,7 +23,7 @@ pg_trigger                                                         Clob[188]
 pg_type                                                            Clob[1907]                                                       
 pg_user                                                            Clob[95]                                                         
 spatial_ref_sys                                                    Clob[209]                                                        
-Row Count : 20
+Row Count : 23
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 Name           12             PartsSupplier   java.lang.String    Name            string             SYSADMIN       Views         255                   255           0         false            true             false       false                 0           true        true          false     false       
 Body           2005           PartsSupplier   java.sql.Clob       Body            clob               SYSADMIN       Views         2097152               2097152       0         false            true             false       false                 0           true        true          false     false       

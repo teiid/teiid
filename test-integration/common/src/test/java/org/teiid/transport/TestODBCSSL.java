@@ -51,7 +51,7 @@ public class TestODBCSSL {
 		p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
 		Connection conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
 		Statement s = conn.createStatement();
-		assertTrue(s.execute("select * from tables order by name"));
+		assertTrue(s.execute("select * from sys.tables order by name"));
 		TestMMDatabaseMetaData.compareResultSet("TestODBCSocketTransport/testSelect", s.getResultSet());
 		
 		p.remove("ssl");

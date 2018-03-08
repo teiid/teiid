@@ -284,7 +284,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
 		});
         name = SystemTables.TABLES.name();
-        columns = getColumns(tm, name);
+        columns = getColumns(tm, CoreConstants.SYSTEM_MODEL + "." +name); //$NON-NLS-1$
         systemTables.put(SystemTables.TABLES, new RecordExtractionTable<Table>(new TableSystemTable(1, 2, columns), columns) {
 			
         	@Override
@@ -673,7 +673,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         });        
         name = SystemAdminTables.VIEWS.name();
-        columns = getColumns(tm, name);
+        columns = getColumns(tm, CoreConstants.SYSTEM_ADMIN_MODEL + "." +name); //$NON-NLS-1$
         systemAdminTables.put(SystemAdminTables.VIEWS, new RecordExtractionTable<Table>(new TableSystemTable(1, 2, columns) {
         	@Override
         	protected boolean isValid(Table s, VDBMetaData vdb,
@@ -722,7 +722,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			}
 		});
         name = SystemTables.COLUMNS.name();
-        columns = getColumns(tm, name);
+        columns = getColumns(tm, CoreConstants.SYSTEM_MODEL + "." +name); //$NON-NLS-1$
         systemTables.put(SystemTables.COLUMNS, new ChildRecordExtractionTable<Table, Column>(new TableSystemTable(1, 2, columns), columns) {
         	@Override
         	protected void fillRow(List<Object> row, Column column,

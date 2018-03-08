@@ -143,28 +143,28 @@ public class TestJDBCSocketTransport {
 	
 	@Test public void testSelect() throws Exception {
 		Statement s = conn.createStatement();
-		assertTrue(s.execute("select * from tables order by name"));
+		assertTrue(s.execute("select * from sys.tables order by name"));
 		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
 	}
 	
 	@Test public void testLobStreaming() throws Exception {
 		Statement s = conn.createStatement();
-		assertTrue(s.execute("select xmlelement(name \"root\") from tables"));
+		assertTrue(s.execute("select xmlelement(name \"root\") from sys.tables"));
 		s.getResultSet().next();
 		assertEquals("<root></root>", s.getResultSet().getString(1));
 		toggleInline(false);
-		assertTrue(s.execute("select xmlelement(name \"root\") from tables"));
+		assertTrue(s.execute("select xmlelement(name \"root\") from sys.tables"));
 		s.getResultSet().next();
 		assertEquals("<root></root>", s.getResultSet().getString(1));
 	}
 	
 	@Test public void testLobStreaming1() throws Exception {
 		Statement s = conn.createStatement();
-		assertTrue(s.execute("select cast('' as clob) from tables"));
+		assertTrue(s.execute("select cast('' as clob) from sys.tables"));
 		s.getResultSet().next();
 		assertEquals("", s.getResultSet().getString(1));
 		toggleInline(false);
-		assertTrue(s.execute("select cast('' as clob) from tables"));
+		assertTrue(s.execute("select cast('' as clob) from sys.tables"));
 		s.getResultSet().next();
 		assertEquals("", s.getResultSet().getString(1));
 	}
@@ -198,7 +198,7 @@ public class TestJDBCSocketTransport {
 	
 	@Test public void testXmlTableScrollable() throws Exception {
 		Statement s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		assertTrue(s.execute("select * from xmltable('/root/row' passing (select xmlelement(name \"root\", xmlagg(xmlelement(name \"row\", xmlforest(t.name)) order by t.name)) from (select t.* from tables as t, columns as t1 limit 7000) as t) columns \"Name\" string) as x"));
+		assertTrue(s.execute("select * from xmltable('/root/row' passing (select xmlelement(name \"root\", xmlagg(xmlelement(name \"row\", xmlforest(t.name)) order by t.name)) from (select t.* from sys.tables as t, sys.columns as t1 limit 7000) as t) columns \"Name\" string) as x"));
 		ResultSet rs = s.getResultSet();
 		int count = 0;
 		while (rs.next()) {
@@ -231,7 +231,7 @@ public class TestJDBCSocketTransport {
 	@Test public void testSimultaneousLargeSelects() throws Exception {
 		for (int j = 0; j < 3; j++) {
 			Statement s = conn.createStatement();
-			assertTrue(s.execute("select * from columns c1, columns c2"));
+			assertTrue(s.execute("select * from sys.columns c1, sys.columns c2"));
 		}
 	}
 	

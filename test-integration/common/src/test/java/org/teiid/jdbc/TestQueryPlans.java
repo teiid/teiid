@@ -96,7 +96,7 @@ public class TestQueryPlans {
 	@Test public void testShowPlanMultibatch() throws Exception {
         Statement s = conn.createStatement();
         s.execute("set showplan debug");
-        ResultSet rs = s.executeQuery("with x as( select * from columns limit 50) select * from x t1, x t2");
+        ResultSet rs = s.executeQuery("with x as( select * from sys.columns limit 50) select * from x t1, x t2");
         int count = 0;
         while (rs.next()) {
             count++;

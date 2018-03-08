@@ -38,10 +38,10 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
 		server.deployVDB(VDB1, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     	this.internalConnection = server.createConnection("jdbc:teiid:"+VDB1);
     	
-       execute("select * from tables where schemaname ='PartsSupplier'"); //$NON-NLS-1$
+       execute("select * from sys.tables where schemaname ='PartsSupplier'"); //$NON-NLS-1$
        TestMMDatabaseMetaData.compareResultSet("TestVDBMerge/merge.test", this.internalResultSet);
        
-       execute("select * from tables where schemaname='BQT1'"); //$NON-NLS-1$
+       execute("select * from sys.tables where schemaname='BQT1'"); //$NON-NLS-1$
        TestMMDatabaseMetaData.compareResultSet("TestVDBMerge/merge.before", this.internalResultSet);
        
        this.internalConnection.close();
@@ -57,7 +57,7 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
        server.deployVDB(VDB1, UnitTestUtil.getTestDataPath()+"/PartsSupplier.vdb", param);
        
        this.internalConnection = server.createConnection("jdbc:teiid:"+VDB1);
-       execute("select * from tables where schemaname='BQT1' order by name"); //$NON-NLS-1$
+       execute("select * from sys.tables where schemaname='BQT1' order by name"); //$NON-NLS-1$
        TestMMDatabaseMetaData.compareResultSet("TestVDBMerge/merge.after", this.internalResultSet);
     }
 	
@@ -66,7 +66,7 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
 		server.deployVDB("empty", UnitTestUtil.getTestDataPath() + "/empty.vdb");
     	this.internalConnection = server.createConnection("jdbc:teiid:empty");
     
-    	execute("select * from tables where schemaname ='BQT1'"); //$NON-NLS-1$
+    	execute("select * from sys.tables where schemaname ='BQT1'"); //$NON-NLS-1$
     	TestMMDatabaseMetaData.compareResultSet("TestVDBMerge/mergeEmpty.before", this.internalResultSet);
         this.internalConnection.close();
         
@@ -81,7 +81,7 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
         server.deployVDB("empty", UnitTestUtil.getTestDataPath() + "/empty.vdb", param);
 
         this.internalConnection = server.createConnection("jdbc:teiid:empty");
-        execute("select * from tables where schemaname='BQT1'"); //$NON-NLS-1$
+        execute("select * from sys.tables where schemaname='BQT1'"); //$NON-NLS-1$
         TestMMDatabaseMetaData.compareResultSet("TestVDBMerge/mergeEmpty.after", this.internalResultSet);
     }
     

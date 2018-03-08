@@ -267,7 +267,7 @@ public class TestLocalConnections {
     	}
     	Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	Statement s = c.createStatement();
-    	s.execute("select * from tables");
+    	s.execute("select * from sys.tables");
     	
     	lock.lock();
     	try {
@@ -568,7 +568,7 @@ public class TestLocalConnections {
 		Connection c = server.createConnection("jdbc:teiid:PartsSupplier;FetchSize=10;");
 		Statement s = c.createStatement();
 		//a query that spans multiple batches and has a larger batch size than the fetch size
-		ResultSet rs = s.executeQuery("select * from tables t, tables t1");
+		ResultSet rs = s.executeQuery("select * from sys.tables t, sys.tables t1");
 		while (rs.next()) {
 			
 		}
