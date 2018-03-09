@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 import org.teiid.CommandContext;
 import org.teiid.UserDefinedAggregate;
@@ -65,6 +66,7 @@ public class MetadataFactory extends NamespaceContainer {
 	private boolean autoCorrectColumnNames = true;
     private boolean renameDuplicateColumns;
     private boolean renameDuplicateTables;
+    private boolean renameAllDuplicates;
 	private String rawMetadata;
 	private Properties modelProperties;
 	private Schema schema = new Schema();
@@ -103,8 +105,9 @@ public class MetadataFactory extends NamespaceContainer {
 				}
 			}
 		    this.autoCorrectColumnNames = PropertiesUtils.getBooleanProperty(modelProperties, "importer.autoCorrectColumnNames", this.autoCorrectColumnNames); //$NON-NLS-1$
-		    this.renameDuplicateColumns = PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameDuplicateColumns", this.renameDuplicateColumns); //$NON-NLS-1$
-		    this.renameDuplicateTables = PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameDuplicateTables", this.renameDuplicateTables); //$NON-NLS-1$
+		    this.renameAllDuplicates = PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameAllDuplicates", this.renameAllDuplicates); //$NON-NLS-1$
+		    this.renameDuplicateColumns = renameAllDuplicates||PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameDuplicateColumns", this.renameDuplicateColumns); //$NON-NLS-1$
+		    this.renameDuplicateTables = renameAllDuplicates||PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameDuplicateTables", this.renameDuplicateTables); //$NON-NLS-1$
 		}
 		this.modelProperties = modelProperties;
 		this.rawMetadata = rawMetadata;
@@ -179,21 +182,28 @@ public class MetadataFactory extends NamespaceContainer {
 	public Table addTable(String name) {
 		Table table = new Table();
 		table.setTableType(Table.Type.Table);
-		if (renameDuplicateTables && this.schema.getTable(name) != null) {
-		    int suffix = 1;
-            String newName = name + "_" + suffix; //$NON-NLS-1$
-            while (this.schema.getTable(newName) != null) {
-                suffix++;
-                newName = name + "_" + suffix; //$NON-NLS-1$
-            }
-            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60040, name, newName));
-            name = newName;
+		if (renameDuplicateTables) {
+		    name = checkForDuplicate(name, (s)->this.schema.getTable(s) != null, "Table"); //$NON-NLS-1$
 		}
 		table.setName(name);
 		setUUID(table);
 		this.schema.addTable(table);
 		return table;
 	}
+
+    private String checkForDuplicate(String name, Function<String, Boolean> check, String type) {
+        if (check.apply(name)) {
+		    int suffix = 1;
+            String newName = name + "_" + suffix; //$NON-NLS-1$
+            while (check.apply(newName)) {
+                suffix++;
+                newName = name + "_" + suffix; //$NON-NLS-1$
+            }
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60039, name, newName, type));
+            name = newName;
+		}
+        return name;
+    }
 
 	/**
 	 * Adds a column to the table with the given name and type.
@@ -213,18 +223,8 @@ public class MetadataFactory extends NamespaceContainer {
 		} else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
 			throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, table.getFullName(), name));
 		}
-		if (table.getColumnByName(name) != null) {
-		    if (!renameDuplicateColumns) {
-		        throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
-		    }
-		    int suffix = 1;
-		    String newName = name + "_" + suffix; //$NON-NLS-1$
-            while (table.getColumnByName(newName) != null) {
-		        suffix++;
-		        newName = name + "_" + suffix; //$NON-NLS-1$
-		    }
-            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DataPlugin.Util.gs(DataPlugin.Event.TEIID60039, name, newName));
-            name = newName;
+		if (renameDuplicateColumns) {
+		    name = checkForDuplicate(name, (s)->table.getColumnByName(s) != null, "Column"); //$NON-NLS-1$
 		}
 		Column column = new Column();
 		column.setName(name);
@@ -439,6 +439,9 @@ public class MetadataFactory extends NamespaceContainer {
 	public Procedure addProcedure(String name) {
 	    Assertion.isNotNull(name, "name cannot be null"); //$NON-NLS-1$
 		Procedure procedure = new Procedure();
+		if (renameAllDuplicates) {
+		    name = checkForDuplicate(name, (s)->this.schema.getProcedure(s) != null, "Procedure"); //$NON-NLS-1$   
+		}
 		procedure.setName(name);
 		setUUID(procedure);
 		procedure.setParameters(new LinkedList<ProcedureParameter>());
@@ -457,6 +460,9 @@ public class MetadataFactory extends NamespaceContainer {
 	 */
 	public ProcedureParameter addProcedureParameter(String name, String type, ProcedureParameter.Type parameterType, Procedure procedure) {
 		ProcedureParameter param = new ProcedureParameter();
+		if (renameAllDuplicates) {
+            name = checkForDuplicate(name, (s)->procedure.getParameterByName(s) != null, "Parameter"); //$NON-NLS-1$   
+        }
 		param.setName(name);
 		setUUID(param);
 		param.setType(parameterType);

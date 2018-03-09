@@ -400,7 +400,7 @@ public class RealMetadataFactory {
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
         Table physGroupStage1 = createPhysicalGroup("MatStage1", physModel); //$NON-NLS-1$
-        createElements(physGroupStage,
+        createElements(physGroupStage1,
                                       new String[] { "e1" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         

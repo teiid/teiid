@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.teiid.connector.DataPlugin;
+
 public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadataRecord {
 	
 	private static final long serialVersionUID = -1185104601468519829L;
@@ -58,6 +60,9 @@ public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadat
     public void addColumn(Column column) {
     	if (columns == null) {
     		columns = new ArrayList<Column>();
+    	}
+    	if (getColumnByName(column.getName()) != null) {
+    	    throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + column.getName()));
     	}
     	columns.add(column);
     	Map<String, Column> map = columnMap;
