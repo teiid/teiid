@@ -21,6 +21,7 @@ package org.teiid.jdbc;
 import static org.junit.Assert.*;
 
 import java.sql.DriverPropertyInfo;
+import java.util.Arrays;
 import java.util.Properties;
 
 import org.junit.Test;
@@ -139,7 +140,9 @@ public class TestTeiidDriver {
         assertEquals("ApplicationName", info[1].name); //$NON-NLS-1$
         assertEquals("x", info[1].value); //$NON-NLS-1$
         
-        
+        for (DriverPropertyInfo dpi : info) {
+            assertFalse(dpi.name, dpi.description.startsWith("<Missing message")); //$NON-NLS-1$
+        }
     }
 
 }

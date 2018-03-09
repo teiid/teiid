@@ -164,6 +164,10 @@ public class TeiidDriver implements Driver {
         	if (property.equals(BaseDataSource.VDB_NAME)) {
         		dpi.required = true;
         	}
+        	dpi.description = JDBCPlugin.Util.getString(property + "_desc"); //$NON-NLS-1$
+        	if (JDBCPlugin.Util.keyExists(property + "_choices")) { //$NON-NLS-1$
+                dpi.choices = JDBCPlugin.Util.getString(property + "_choices").split(","); //$NON-NLS-1$ //$NON-NLS-2$
+        	}
         	driverProps.add(dpi);
         }
         
