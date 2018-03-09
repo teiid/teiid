@@ -115,6 +115,10 @@ public class ODataFilterVisitor extends HierarchyVisitor {
         } else {
             currentExpression = null;
         }
+        //we are really looking for the native type, if it's not set then don't bother
+        if (currentExpression != null && currentExpression.getNativeType() == null) {
+            currentExpression = null;
+        }
         return old;
     }
 
@@ -124,16 +128,10 @@ public class ODataFilterVisitor extends HierarchyVisitor {
 
     @Override
     public void visit(IsNull obj) {
-        if (obj.isNegated()) {
-            this.filter.append(NOT.toLowerCase()).append(Tokens.LPAREN);
-        }
         appendNested(obj.getExpression());
         this.filter.append(Tokens.SPACE);
-        this.filter.append("eq").append(Tokens.SPACE); //$NON-NLS-1$
+        this.filter.append(obj.isNegated()?"ne":"eq").append(Tokens.SPACE); //$NON-NLS-1$ //$NON-NLS-2$
         this.filter.append(NULL.toLowerCase());
-        if (obj.isNegated()) {
-            this.filter.append(Tokens.RPAREN);
-        }
     }
 
     private void appendNested(Expression ex) {

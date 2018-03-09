@@ -225,7 +225,7 @@ public class TestODataSQLVistor {
     @Test
     public void testisNotNull() throws Exception {
     	helpExecute("SELECT UserName FROM People WHERE UserName is NOT NULL", 
-    	        "People?$select=UserName&$filter=not(UserName eq null)");
+    	        "People?$select=UserName&$filter=UserName ne null");
     }    
 
     @Test
@@ -253,7 +253,13 @@ public class TestODataSQLVistor {
     public void testSelectFromComplexTable() throws Exception {
         helpExecute("SELECT * FROM People_AddressInfo where Address = 'foo'", 
                 "People?$select=UserName,AddressInfo&$filter=AddressInfo/Address eq 'foo'");
-    }     
+    }
+    
+    @Test
+    public void testConvert() throws Exception {
+        helpExecute("select username from People where convert(gender, integer) = 1", 
+                "People?$select=UserName&$filter=cast(Gender,Edm.Int32) eq 1");
+    }
     
 }
 
