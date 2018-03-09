@@ -319,6 +319,15 @@ public class TestODataIntegration {
         response = http.GET(baseURL + "/loopy/vm1/G1?$filter=true");
         assertEquals(200, response.getStatus());
     }
+    
+    @Test
+    public void testFilterIsNotNull() throws Exception {
+        //should work, but does not due to https://issues.apache.org/jira/browse/OLINGO-1245
+        //ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$filter=not(" + Encoder.encode("e1 eq null") +")");
+        
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$filter=" + Encoder.encode("e1 ne null"));
+        assertEquals(response.getContentAsString(), 200, response.getStatus());
+    }
 
     @Test
     public void testEntitySet() throws Exception {
