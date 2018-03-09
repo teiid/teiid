@@ -56,8 +56,6 @@ public class JDBCURL {
 	            ExecutionProperties.SQL_OPTION_SHOWPLAN,
 	            ExecutionProperties.NOEXEC,
 	            ExecutionProperties.PROP_FETCH_SIZE,
-	            ExecutionProperties.PROP_XML_FORMAT,
-	            ExecutionProperties.PROP_XML_VALIDATION,
 	            LocalProfile.USE_CALLING_THREAD,
 	            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
 	            ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS}) {
@@ -257,14 +255,6 @@ public class JDBCURL {
     
     public String getFetchSize() {
         return properties.getProperty(ExecutionProperties.PROP_FETCH_SIZE);
-    }
-    
-    public String getXMLFormat() {
-        return properties.getProperty(ExecutionProperties.PROP_XML_FORMAT);
-    }
-    
-    public String getXMLValidation() {
-        return properties.getProperty(ExecutionProperties.PROP_XML_VALIDATION);
     }
     
     public String getTransparentFailover() {

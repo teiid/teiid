@@ -75,9 +75,7 @@ public class RequestMessage implements Externalizable {
     private boolean partialResultsFlag;
     private StatementType statementType = StatementType.STATEMENT;
     private List<?> parameterValues;
-    private boolean validationMode;
     private String txnAutoWrapMode;
-    private String XMLFormat;
     private String styleSheet;
     private ResultsMode resultsMode = ResultsMode.EITHER;
     //whether to use ResultSet cache if there is one
@@ -187,36 +185,6 @@ public class RequestMessage implements Externalizable {
      */
     public void setCursorType(int cursorType) {
         this.cursorType = cursorType;
-    }
-
-    /**
-     * @return boolean
-     */
-    public boolean getValidationMode() {
-        return validationMode;
-    }
-
-    /**
-     * @return String
-     */
-    public String getXMLFormat() {
-        return XMLFormat;
-    }
-
-    /**
-     * Sets the validationMode.
-     * @param validationMode The validationMode to set
-     */
-    public void setValidationMode(boolean validationMode) {
-        this.validationMode = validationMode;
-    }
-
-    /**
-     * Sets the xMLFormat.
-     * @param xMLFormat The xMLFormat to set
-     */
-    public void setXMLFormat(String xMLFormat) {
-        XMLFormat = xMLFormat;
     }
 
     /**
@@ -383,9 +351,9 @@ public class RequestMessage implements Externalizable {
 		this.partialResultsFlag = in.readBoolean();
 		this.statementType = StatementType.values()[in.readByte()];
 		this.parameterValues = ExternalizeUtil.readList(in);
-		this.validationMode = in.readBoolean();
+		in.readBoolean(); //legacy validation mode
 		this.txnAutoWrapMode = (String)in.readObject();
-		this.XMLFormat = (String)in.readObject();
+		in.readObject(); // legacy xml format
 		this.styleSheet = (String)in.readObject();
 		this.resultsMode = ResultsMode.values()[in.readByte()];
 		this.useResultSetCache = in.readBoolean();
@@ -416,9 +384,9 @@ public class RequestMessage implements Externalizable {
 		out.writeBoolean(partialResultsFlag);
 		out.writeByte(statementType.ordinal());
 		ExternalizeUtil.writeList(out, parameterValues);
-		out.writeBoolean(validationMode);
+		out.writeBoolean(false); //legacy xml validation
 		out.writeObject(txnAutoWrapMode);
-		out.writeObject(XMLFormat);
+		out.writeObject(null); //legacy xml format
 		out.writeObject(styleSheet);
 		out.writeByte(resultsMode.ordinal());
 		out.writeBoolean(useResultSetCache);

@@ -943,18 +943,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         String partial = getExecutionProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE);
         res.setPartialResults(Boolean.valueOf(partial).booleanValue());
 
-        // Get xml validation mode
-        String validate = getExecutionProperty(ExecutionProperties.PROP_XML_VALIDATION);
-        if(validate == null) {
-            res.setValidationMode(false);
-        } else {
-            res.setValidationMode(Boolean.valueOf(validate).booleanValue());
-        }
-
-        // Get xml format mode
-        String format = getExecutionProperty(ExecutionProperties.PROP_XML_FORMAT);
-        res.setXMLFormat(format);
-
         // Get transaction auto-wrap mode
         String txnAutoWrapMode = getExecutionProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
         try {
