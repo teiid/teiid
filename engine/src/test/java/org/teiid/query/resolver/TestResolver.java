@@ -728,7 +728,15 @@ public class TestResolver {
 	}
 	
     @Test public void testLateralJoinDirection() {
-        helpResolveException("select * from pm1.g1 right outer join lateral(select g1.e1) x on pm1.g1.e1 = x.e1"); //$NON-NLS-1$
+        helpResolveException("select * from pm1.g1 right outer join lateral(select g1.e1) x on pm1.g1.e1 = x.e1", "TEIID31268 Element g1.e1 cannot be a lateral reference because it does not come from an INNER or LEFT OUTER join."); //$NON-NLS-1$
+    }
+	
+    @Test public void testLateralJoinDirectionImplicit() {
+        helpResolveException("select * from pm1.g1 x1 right join texttable(x1.e1||'' columns a string) x2 on x1.e1=x2.e1", "TEIID31268 Element x1.e1 cannot be a lateral reference because it does not come from an INNER or LEFT OUTER join."); //$NON-NLS-1$
+    }
+    
+    @Test public void testLateralJoinDirectionImplicit1() {
+        helpResolveException("select * from pm1.g1 x1 right join arraytable((x1.e1,) columns a string) x2 on x1.e1=x2.e1", "TEIID31268 Element x1.e1 cannot be a lateral reference because it does not come from an INNER or LEFT OUTER join."); //$NON-NLS-1$
     }
     
     @Test public void testLateralJoinDirection1() {

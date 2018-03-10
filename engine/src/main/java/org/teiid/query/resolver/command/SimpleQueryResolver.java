@@ -349,7 +349,7 @@ public class SimpleQueryResolver implements CommandResolver {
         	try {
 				obj.setFile(ResolverUtil.convertExpression(obj.getFile(), DataTypeManager.DefaultDataTypes.CLOB, metadata));
 			} catch (QueryResolverException e) {
-				 throw new TeiidRuntimeException(e);
+				throw new TeiidRuntimeException(e);
 			}
 			postTableFunctionReference(obj, saved);
             //set to fixed width if any column has width specified
@@ -385,7 +385,7 @@ public class SimpleQueryResolver implements CommandResolver {
 					column.setDefaultExpression(ex);
 				}
 			} catch (TeiidException e) {
-				 throw new TeiidRuntimeException(e);
+				throw new TeiidRuntimeException(e);
 			}
         }
         
@@ -405,7 +405,7 @@ public class SimpleQueryResolver implements CommandResolver {
 					column.setDefaultExpression(ex);
 				}
 			} catch (TeiidException e) {
-				 throw new TeiidRuntimeException(e);
+				throw new TeiidRuntimeException(e);
 			}
         }
         
@@ -444,7 +444,7 @@ public class SimpleQueryResolver implements CommandResolver {
                 try {
 					ResolverVisitor.resolveLanguageObject(symbol, groups, null, metadata);
 				} catch (TeiidException e) {
-					 throw new TeiidRuntimeException(e);
+					throw new TeiidRuntimeException(e);
 				}				
 			}
         }
@@ -455,26 +455,7 @@ public class SimpleQueryResolver implements CommandResolver {
         		externalGroups = new ArrayList<GroupSymbol>(externalGroups);
         		externalGroups.addAll(this.implicitGroups);
         	}
-        	try {
-        	    resolveSubQuery(obj, externalGroups);
-        	} catch (TeiidRuntimeException e) {
-        	    //detect if this element symbol can't be used as part of a lateral join
-        	    if (nonLateralGroups != null && obj.isLateral() && e.getCause() instanceof QueryResolverException) {
-        	        QueryResolverException qre = (QueryResolverException)e.getCause();
-        	        for (UnresolvedSymbolDescription usd : qre.getUnresolvedSymbols()) {
-        	            if (usd.getObject() instanceof ElementSymbol) {
-        	                try {
-                                ResolverVisitor.resolveLanguageObject(((ElementSymbol)usd.getObject()).getGroupSymbol(), nonLateralGroups, metadata);
-                                throw new TeiidRuntimeException(
-                                        new QueryResolverException(QueryPlugin.Event.TEIID31268, qre, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31268, usd.getObject())));
-                            } catch (QueryResolverException e1) {
-                            } catch (TeiidComponentException e1) {
-                            }        	                
-        	            }
-        	        }
-        	    }
-        	    throw e;
-        	}
+    	    resolveSubQuery(obj, externalGroups);
             discoveredGroup(obj.getGroupSymbol());
             try {
                 ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), obj.getCommand().getProjectedSymbols(), false);
@@ -483,7 +464,7 @@ public class SimpleQueryResolver implements CommandResolver {
             }
             obj.getGroupSymbol().setMetadataID(metadata.getMetadataStore().getTempGroupID(obj.getGroupSymbol().getName())); 
         }
-                        
+
         public void visit(UnaryFromClause obj) {
             GroupSymbol group = obj.getGroup();
             visitNode(group);
@@ -595,8 +576,6 @@ public class SimpleQueryResolver implements CommandResolver {
             }
         }
         
-        private List<GroupSymbol> nonLateralGroups;
-
         public void visit(JoinPredicate obj) {
             assert currentGroups.isEmpty();
         	List<GroupSymbol> tempImplicitGroups = new ArrayList<GroupSymbol>(discoveredGroups);
@@ -604,12 +583,32 @@ public class SimpleQueryResolver implements CommandResolver {
             visitNode(obj.getLeftClause());
             List<GroupSymbol> leftGroups = new ArrayList<GroupSymbol>(discoveredGroups);
         	discoveredGroups.clear();
+        	boolean allowReferences = true;
         	if (obj.getJoinType() == JoinType.JOIN_RIGHT_OUTER || obj.getJoinType() == JoinType.JOIN_FULL_OUTER) {
         	    this.implicitGroups.removeAll(leftGroups);
-    	        nonLateralGroups = leftGroups;
+        	    allowReferences = false;
         	}
-            visitNode(obj.getRightClause());
-            nonLateralGroups = null;
+        	try {
+        	    visitNode(obj.getRightClause());
+        	} catch (TeiidRuntimeException e) {
+        	    if (!allowReferences &&
+        	            (obj.getRightClause() instanceof TableFunctionReference || (obj.getRightClause() instanceof SubqueryFromClause && ((SubqueryFromClause)obj.getRightClause()).isLateral()))) {
+        	        //detect if this element symbol can't be used as part of a lateral join
+                    QueryResolverException qre = (QueryResolverException)e.getCause();
+                    for (UnresolvedSymbolDescription usd : qre.getUnresolvedSymbols()) {
+                        if (usd.getObject() instanceof ElementSymbol) {
+                            try {
+                                ResolverVisitor.resolveLanguageObject(((ElementSymbol)usd.getObject()).getGroupSymbol(), leftGroups, metadata);
+                                throw new TeiidRuntimeException(
+                                        new QueryResolverException(QueryPlugin.Event.TEIID31268, qre, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31268, usd.getObject())));
+                            } catch (QueryResolverException e1) {
+                            } catch (TeiidComponentException e1) {
+                            }                           
+                        }
+                    }
+                }
+        	    throw e;
+        	}
             this.implicitGroups.addAll(leftGroups);
             //add to the beginning to maintain stable order
             discoveredGroups.addAll(0, leftGroups);
