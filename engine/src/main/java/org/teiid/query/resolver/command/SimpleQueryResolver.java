@@ -609,7 +609,9 @@ public class SimpleQueryResolver implements CommandResolver {
                 }
         	    throw e;
         	}
-            this.implicitGroups.addAll(leftGroups);
+        	if (!allowReferences) {
+        	    this.implicitGroups.addAll(leftGroups);
+        	}
             //add to the beginning to maintain stable order
             discoveredGroups.addAll(0, leftGroups);
             addDiscoveredGroups();
