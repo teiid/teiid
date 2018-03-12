@@ -255,6 +255,11 @@ public class TestODataSQLVistor {
                 "People?$select=UserName,AddressInfo&$filter=AddressInfo/Address eq 'foo'");
     }     
     
+    @Test
+    public void testMod() throws Exception {
+        helpExecute(TestODataMetadataProcessor.oneToManyRelationMetadata(), "select e2 from G1 where MOD(e1, 2) = 1", 
+                "G1?$select=e2&$filter=(e1 mod 2) eq 1");
+    }    
 }
 
 

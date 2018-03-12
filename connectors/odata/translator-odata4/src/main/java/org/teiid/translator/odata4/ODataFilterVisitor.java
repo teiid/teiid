@@ -45,6 +45,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     private static Map<String, String> infixFunctions = new HashMap<String, String>();
     static {
         infixFunctions.put("%", "mod");//$NON-NLS-1$ //$NON-NLS-2$
+        infixFunctions.put("mod", "mod");//$NON-NLS-1$ //$NON-NLS-2$
         infixFunctions.put("+", "add");//$NON-NLS-1$ //$NON-NLS-2$
         infixFunctions.put("-", "sub");//$NON-NLS-1$ //$NON-NLS-2$
         infixFunctions.put("*", "mul");//$NON-NLS-1$ //$NON-NLS-2$
