@@ -21,12 +21,12 @@ import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -42,13 +42,14 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 
 public class ODataSQLVisitor extends HierarchyVisitor {
-    private static Map<String, String> infixFunctions = new HashMap<String, String>();
+    private static Map<String, String> infixFunctions = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     static {
-    	infixFunctions.put("%", "mod");//$NON-NLS-1$ //$NON-NLS-2$
-    	infixFunctions.put("+", "add");//$NON-NLS-1$ //$NON-NLS-2$
-    	infixFunctions.put("-", "sub");//$NON-NLS-1$ //$NON-NLS-2$
-    	infixFunctions.put("*", "mul");//$NON-NLS-1$ //$NON-NLS-2$
-    	infixFunctions.put("/", "div");//$NON-NLS-1$ //$NON-NLS-2$
+        infixFunctions.put("%", "mod");//$NON-NLS-1$ //$NON-NLS-2$
+        infixFunctions.put("mod", "mod");//$NON-NLS-1$ //$NON-NLS-2$
+        infixFunctions.put("+", "add");//$NON-NLS-1$ //$NON-NLS-2$
+        infixFunctions.put("-", "sub");//$NON-NLS-1$ //$NON-NLS-2$
+        infixFunctions.put("*", "mul");//$NON-NLS-1$ //$NON-NLS-2$
+        infixFunctions.put("/", "div");//$NON-NLS-1$ //$NON-NLS-2$
     }
 
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
@@ -238,7 +239,10 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	@Override
     public void visit(Function obj) {
     	if (this.executionFactory.getFunctionModifiers().containsKey(obj.getName())) {
-            this.executionFactory.getFunctionModifiers().get(obj.getName()).translate(obj);
+    	    List<?> parts = this.executionFactory.getFunctionModifiers().get(obj.getName()).translate(obj);
+            if (parts != null) {
+                throw new AssertionError("not supported"); //$NON-NLS-1$
+            }
     	}
 
         String name = obj.getName();

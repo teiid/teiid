@@ -66,12 +66,6 @@ public class TestODataSQLVistor {
     }
     
     @Test
-    public void testPKBasedFilter2() throws Exception {
-        helpExecute("select UserName from People where UserName = 'ALSK' or UserName= 'ABCD'", 
-                "People?$select=UserName&$filter=UserName eq 'ABCD' or UserName eq 'ALSK'");
-    }    
-    
-    @Test
     public void testMultiKeyKeyBasedFilter() throws Exception {
     	helpExecute("select Price from PurchaseDetails where ItemId = 1 and SaleId = 12 and Quantity = 2", 
     	        "PurchaseDetails?$select=Price&$filter=ItemId eq 1 and SaleId eq 12 and Quantity eq 2");
@@ -266,6 +260,19 @@ public class TestODataSQLVistor {
         helpExecute(TestODataMetadataProcessor.oneToManyRelationMetadata(), "select e2 from G1 where MOD(e1, 2) = 1", 
                 "G1?$select=e2&$filter=(e1 mod 2) eq 1");
     }    
+    
+    @Test
+    public void testLocate() throws Exception {
+        helpExecute("select UserName from People where locate(UserName, 'a') = 1", 
+                "People?$select=UserName&$filter=(indexof('a',UserName) add 1) eq 1");
+    }
+    
+    @Test
+    public void testSubstring() throws Exception {
+        helpExecute("select UserName from People where substring(UserName, 1) = 'a' and substring(username, 2, 2) = 'bc'", 
+                "People?$select=UserName&$filter=substring(UserName,1) eq 'a' and substring(UserName,(2 add 1),2) eq 'bc'");
+    }
+    
 }
 
 

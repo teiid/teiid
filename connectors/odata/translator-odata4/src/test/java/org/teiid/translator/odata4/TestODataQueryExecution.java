@@ -17,9 +17,7 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +52,6 @@ import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
@@ -687,6 +685,18 @@ public class TestODataQueryExecution {
         
         //make sure the format is valid
         EdmGeometryPoint.getInstance().valueOfString("geometry'SRID=0;Point(1.0 2.0)'", false, 4000, 0, 0, true, Point.class);
+    }
+    
+    @Test
+    public void testSimpleAggregate() throws Exception {
+        String query = "SELECT Count(*) FROM People";
+        String expectedURL = "People/$count";
+        
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, "19", expectedURL);
+        
+        assertEquals(Arrays.asList(19), 
+                excution.next());
     }
     
 }
