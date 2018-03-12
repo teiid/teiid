@@ -28,7 +28,9 @@ import java.util.TreeMap;
 
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.language.AggregateFunction;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -44,6 +46,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
     private int countResponse = -1;
     private Class<?>[] expectedColumnTypes;
     private ODataResponse response;
+    private boolean isCount;
     
     public ODataQueryExecution(ODataExecutionFactory translator,
             QueryExpression command, ExecutionContext executionContext,
@@ -52,6 +55,12 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
         
         this.visitor = new ODataSQLVisitor(this.translator, metadata);
         this.visitor.visitNode(command);
+        if (command instanceof Select) {
+            Select select = (Select)command;
+            if (select.getGroupBy() == null && select.getDerivedColumns().get(0).getExpression() instanceof AggregateFunction) {
+                this.isCount = true;
+            }
+        }
         if (!this.visitor.exceptions.isEmpty()) {
             throw visitor.exceptions.get(0);
         }
@@ -63,9 +72,9 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
     public void execute() throws TranslatorException {
         final String URI = this.visitor.buildURL("");
 
-        if (this.visitor.isCount()) {
+        if (isCount) {
             Map<String, List<String>> headers = new TreeMap<String, List<String>>();
-            headers.put("Accept", Arrays.asList("text/plain"));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            headers.put("Accept", Arrays.asList("text/plain"));  //$NON-NLS-1$ //$NON-NLS-2$ 
             
             BinaryWSProcedureExecution execution = invokeHTTP("GET", URI, null, headers); //$NON-NLS-1$
             if (execution.getResponseCode() != HttpStatusCode.OK.getStatusCode()) {
@@ -106,7 +115,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         
-        if (visitor.isCount() && this.countResponse != -1) {
+        if (isCount && this.countResponse != -1) {
             int count = this.countResponse;
             this.countResponse = -1;
             return Arrays.asList(count);

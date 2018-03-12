@@ -37,6 +37,9 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
@@ -81,7 +84,36 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         setSupportsOdataTop(false);
         setTransactionSupport(TransactionSupport.NONE);
         registerFunctionModifier(SourceSystemFunctions.CONVERT, new AliasModifier("cast")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("indexof")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new FunctionModifier() {
+            
+            @Override
+            public List<?> translate(Function function) {
+                function.setName(SourceSystemFunctions.ADD_OP); 
+                
+                Expression param1 = function.getParameters().get(0);
+                Expression param2 = function.getParameters().get(1);
+                
+                Function indexOf = new Function("indexof", Arrays.asList(param2, param1), TypeFacility.RUNTIME_TYPES.INTEGER); //$NON-NLS-1$
+                indexOf.setMetadataObject(function.getMetadataObject());
+                function.getParameters().set(0, indexOf);
+                function.getParameters().set(1, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER));
+                return null;
+            }
+        });
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new FunctionModifier() {
+            
+            @Override
+            public List<?> translate(Function function) {
+                if (function.getParameters().size() != 3) {
+                    return null;
+                }
+                Expression param2 = function.getParameters().get(1);
+                
+                param2 = new Function(SourceSystemFunctions.ADD_OP, Arrays.asList(param2, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)), TypeFacility.RUNTIME_TYPES.INTEGER); 
+                function.getParameters().set(1, param2);
+                return null;
+            }
+        });
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("tolower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("toupper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
@@ -308,8 +340,9 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         return supportsOdataFilter;
     }
     
+    @Override
     public boolean supportsInCriteria() {
-        return supportsOdataFilter;
+        return false; // not directly supported, the engine will compensate
     }
 
     @Override

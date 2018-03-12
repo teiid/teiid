@@ -17,31 +17,18 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.teiid.language.SQLConstants.Reserved.DESC;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.olingo.client.core.uri.URIBuilderImpl;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Condition;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Join;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.LanguageUtil;
-import org.teiid.language.Limit;
-import org.teiid.language.NamedTable;
-import org.teiid.language.OrderBy;
-import org.teiid.language.QueryExpression;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.language.Select;
-import org.teiid.language.SortSpecification;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
@@ -49,13 +36,11 @@ import org.teiid.translator.TranslatorException;
 public class ODataSQLVisitor extends HierarchyVisitor {
 
     protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
-    protected QueryExpression command;
     protected ODataExecutionFactory executionFactory;
     protected RuntimeMetadata metadata;
     protected ArrayList<Column> projectedColumns = new ArrayList<Column>();
     private ODataSelectQuery odataQuery;
     private StringBuilder orderBy = new StringBuilder();
-    private boolean count = false;
     private ArrayList<Condition> conditionFragments = new ArrayList<Condition>();
 
     public ODataSQLVisitor(ODataExecutionFactory executionFactory,
@@ -71,10 +56,6 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     
     public ODataSelectQuery getODataQuery() {
         return this.odataQuery;
-    }
-
-    public boolean isCount() {
-        return this.count;
     }
 
     public String buildURL(String serviceRoot) throws TranslatorException {
