@@ -49,13 +49,13 @@ import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.translator.SourceSystemFunctions;
 
 public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor implements  ODataExpressionVisitor{
@@ -265,7 +265,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 
         org.teiid.query.sql.symbol.Expression when = new CompareCriteria(expr,
                 CompareCriteria.LT, new Constant(0));
-        CaseExpression caseExpr = new CaseExpression(expr, Arrays.asList(when),
+        SearchedCaseExpression caseExpr = new SearchedCaseExpression(Arrays.asList(when),
                 Arrays.asList(expr));
         caseExpr.setElseExpression(new Function("+",
                 new org.teiid.query.sql.symbol.Expression[] { expr, new Constant(1) }));
@@ -335,7 +335,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                     new Constant(' '), teiidExprs.get(0) })); //$NON-NLS-1$ //$NON-NLS-2$
             break;
         case CONCAT:
-            this.stack.push(new Function("CONCAT2", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("CONCAT", new org.teiid.query.sql.symbol.Expression[] 
                     { teiidExprs.get(0), teiidExprs.get(1) })); //$NON-NLS-1$
             break;
         case YEAR:

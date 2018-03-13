@@ -531,7 +531,7 @@ public class TestODataSQLBuilder {
 
     @Test
     public void testConcat() throws Exception {
-        te("e1 eq concat('foo','bar')", "g0.e1 = CONCAT2('foo', 'bar')");
+        te("e1 eq concat('foo','bar')", "g0.e1 = CONCAT('foo', 'bar')");
     }
 
     @Test
@@ -546,9 +546,9 @@ public class TestODataSQLBuilder {
     
     @Test
     public void testSubString() throws Exception {
-        te("substring(e1,1) eq 'x'", "SUBSTRING(g0.e1, CASE 1 WHEN 1 < 0 THEN 1 ELSE (1 + 1) END) = 'x'");
-        te("substring(e1,-1) eq 'x'", "SUBSTRING(g0.e1, CASE -1 WHEN -1 < 0 THEN -1 ELSE (-1 + 1) END) = 'x'");
-        te("substring(e1,1,2) eq 'x'", "SUBSTRING(g0.e1, CASE 1 WHEN 1 < 0 THEN 1 ELSE (1 + 1) END, 2) = 'x'");
+        te("substring(e1,1) eq 'x'", "SUBSTRING(g0.e1, CASE WHEN 1 < 0 THEN 1 ELSE (1 + 1) END) = 'x'");
+        te("substring(e1,-1) eq 'x'", "SUBSTRING(g0.e1, CASE WHEN -1 < 0 THEN -1 ELSE (-1 + 1) END) = 'x'");
+        te("substring(e1,1,2) eq 'x'", "SUBSTRING(g0.e1, CASE WHEN 1 < 0 THEN 1 ELSE (1 + 1) END, 2) = 'x'");
     }    
 
     @Test
@@ -583,8 +583,8 @@ public class TestODataSQLBuilder {
     public void testStringMethods() throws Exception {
         //te("replace(x, y, z)", "REPLACE(x, y, z)");
 
-        te("substring('foo',1) eq 'f'", "SUBSTRING('foo', CASE 1 WHEN 1 < 0 THEN 1 ELSE (1 + 1) END) = 'f'");
-        te("substring('foo',1,2) eq 'f'", "SUBSTRING('foo', CASE 1 WHEN 1 < 0 THEN 1 ELSE (1 + 1) END, 2) = 'f'");
+        te("substring('foo',1) eq 'f'", "SUBSTRING('foo', CASE WHEN 1 < 0 THEN 1 ELSE (1 + 1) END) = 'f'");
+        te("substring('foo',1,2) eq 'f'", "SUBSTRING('foo', CASE WHEN 1 < 0 THEN 1 ELSE (1 + 1) END, 2) = 'f'");
         te("tolower(e1) eq 'foo'", "LCASE(g0.e1) = 'foo'");
         te("toupper(e1) eq 'FOO'", "UCASE(g0.e1) = 'FOO'");
         te("trim('x') eq e1", "TRIM(' ' FROM 'x') = g0.e1");
