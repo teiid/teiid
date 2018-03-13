@@ -2927,4 +2927,55 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }
+    
+    @Test public void testConcatNull() throws Exception {
+        try {
+            String ddl = "CREATE VIEW A(a_id integer PRIMARY KEY, a_value string, b_value string) AS SELECT 1, 'a', null";
+            
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", ddl);
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+            
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/A?$filter=concat(a_value,b_value)%20eq%20%27a%27");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#A\",\"value\":[]}", 
+                    response.getContentAsString());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test public void testSubstring() throws Exception {
+        try {
+            String ddl = "CREATE VIEW A(a_id integer PRIMARY KEY, a_value string) AS SELECT 1, 'abc'";
+            
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", ddl);
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+            
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/A?$filter=substring(a_value,1)%20eq%20%27bc%27");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#A\",\"value\":[{\"a_id\":1,\"a_value\":\"abc\"}]}", 
+                    response.getContentAsString());
+            
+            response = http.GET(baseURL + "/northwind/vw/A?$filter=substring(a_value,0,1)%20eq%20%27a%27");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#A\",\"value\":[{\"a_id\":1,\"a_value\":\"abc\"}]}", 
+                    response.getContentAsString());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
 }
