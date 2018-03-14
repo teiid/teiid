@@ -9,7 +9,7 @@
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.teiid</groupId>
-        <version>10.0.4</version>
+        <version>10.0.5-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
