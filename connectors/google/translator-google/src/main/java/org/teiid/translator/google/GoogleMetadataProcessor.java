@@ -32,6 +32,7 @@ import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
 import org.teiid.translator.google.api.metadata.Column;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.google.api.metadata.Worksheet;
+import org.teiid.util.FullyQualifiedName;
 
 public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsheetConnection>{
     
@@ -61,6 +62,7 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 			return;
 		}
 		Table table = mf.addTable(worksheet.getName());
+		table.setProperty(FQN, new FullyQualifiedName("worksheet", worksheet.getName()).toString()); //$NON-NLS-1$
 		table.setNameInSource(worksheet.getName()); 
 		if (worksheet.isHeaderEnabled()) {
             table.setSupportsUpdate(true);
