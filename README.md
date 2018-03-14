@@ -1,5 +1,4 @@
-teiid [![Build Status](https://hudson.jboss.org/hudson/job/Teiid%20-%20Continuous%20Build/lastBuild/buildStatus)](https://hudson.jboss.org/hudson/job/Teiid%20-%20Continuous%20Build/lastBuild/) 
-[![Build Status](https://hudson.jboss.org/hudson/job/Teiid-WeeklyBuild/lastBuild//buildStatus)](https://hudson.jboss.org/hudson/job/Teiid-WeeklyBuild/lastBuild/)
+teiid
 =====
 
 Teiid is a data virtualization system that allows applications to use data from multiple, heterogeneous data stores.
