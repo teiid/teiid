@@ -919,4 +919,35 @@ public class TestWithClauseProcessing {
         hdm.addData("SELECT g_0.e1 FROM g2 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM g1 AS g_1 WHERE g_1.e1 = 'a')", Arrays.asList("a"));
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
     }
+    
+    @Test public void testRecursiveWithProjectionMinimization() throws Exception {
+        String sql = "WITH table3 (column5,column6,column7) AS (\n" + 
+                "SELECT column1, column2, column3 FROM table1 where column1 = 'joe'\n" + 
+                "UNION ALL \n" + 
+                "SELECT column1, column2, column3 FROM table1 inner join table3 on table3.column6=table1.column1  \n" + 
+                ") \n" + 
+                "SELECT column3, column4 FROM table2 WHERE column3 IN (SELECT column5 FROM table3)";
+        
+        String ddl = "CREATE FOREIGN TABLE table1 (\n" + 
+                "column1 string(4000),\n" + 
+                "column2 string(4000),\n" + 
+                "column3 string(4000)\n" +
+                ") OPTIONS(NAMEINSOURCE 'table1', UPDATABLE 'TRUE');\n" + 
+                "\n" + 
+                "CREATE FOREIGN TABLE table2 (\n" + 
+                "column3 string(4000),\n" + 
+                "column4 string(4000)\n" + 
+                ") OPTIONS(NAMEINSOURCE 'table2', UPDATABLE 'TRUE');";
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        CommandContext cc = createCommandContext();
+        cc.setSession(new SessionMetadata());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()), cc);
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.column1, g_0.column2 FROM y.table1 AS g_0 WHERE g_0.column1 = 'joe'", Arrays.asList("joe", "bob"));
+        dataManager.addData("SELECT g_0.column1, g_0.column2 FROM y.table1 AS g_0 WHERE g_0.column1 = 'bob'");
+        dataManager.addData("SELECT g_0.column3 AS c_0, g_0.column4 AS c_1 FROM y.table2 AS g_0 WHERE g_0.column3 = 'joe' ORDER BY c_0", Arrays.asList("joe", "employee"));
+        helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("joe", "employee")});
+    }
+
 }

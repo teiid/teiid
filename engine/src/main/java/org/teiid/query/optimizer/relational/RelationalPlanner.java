@@ -314,14 +314,15 @@ public class RelationalPlanner {
 			//the strategy here is to replace the actual projections with null.  this keeps
 			//the definition of the with clause consistent
 			if (!toRemove.isEmpty()) {
-				GroupSymbol gs = new GroupSymbol("x"); //$NON-NLS-1$
-				gs = RulePlaceAccess.recontextSymbol(gs, context.getGroups());
-				Query query = QueryRewriter.createInlineViewQuery(gs, subCommand, metadata, ResolverUtil.resolveElementsInGroup(with.getGroupSymbol(), metadata));
-				for (int i : toRemove) {
-					query.getSelect().getSymbols().set(i, new ExpressionSymbol(elements.get(i).getName(), new Constant(null, elements.get(i).getType())));
-				}
-				subCommand = query;
-				with.setCommand(subCommand);
+			    if (with.isRecursive()) {
+			        SetQuery setQuery = (SetQuery) subCommand;
+		            setQuery.setLeftQuery(removeUnusedProjection(with, setQuery.getLeftQuery(), elements, toRemove));
+		            setQuery.setRightQuery(removeUnusedProjection(with, setQuery.getRightQuery(), elements, toRemove));
+		        } else {
+		            subCommand = removeUnusedProjection(with, subCommand, elements,
+                            toRemove);
+		            with.setCommand(subCommand);
+		        }
 			}
 			if (with.isRecursive()) {
 				SetQuery setQuery = (SetQuery) subCommand;
@@ -385,6 +386,35 @@ public class RelationalPlanner {
 			this.withPlanningState.pushdownWith.put(with.getGroupSymbol().getName(), wqc);
 		}
 	}
+
+	/**
+	 * Remove unused projects by replacing with null
+	 * @param with
+	 * @param subCommand
+	 * @param elements
+	 * @param toRemove
+	 * @return
+	 * @throws QueryMetadataException
+	 * @throws QueryResolverException
+	 * @throws TeiidComponentException
+	 */
+    private Query removeUnusedProjection(WithQueryCommand with,
+            QueryCommand subCommand, List<TempMetadataID> elements,
+            List<Integer> toRemove) throws QueryMetadataException,
+            QueryResolverException, TeiidComponentException {
+        Query query = null;
+        if (!(subCommand instanceof Query) || subCommand.getOrderBy() != null) {
+            GroupSymbol gs = new GroupSymbol("x"); //$NON-NLS-1$
+            gs = RulePlaceAccess.recontextSymbol(gs, context.getGroups());
+            query = QueryRewriter.createInlineViewQuery(gs, subCommand, metadata, ResolverUtil.resolveElementsInGroup(with.getGroupSymbol(), metadata));
+        } else {
+            query = (Query)subCommand;
+        }
+        for (int i : toRemove) {
+            query.getSelect().getSymbols().set(i, new ExpressionSymbol(elements.get(i).getName(), new Constant(null, elements.get(i).getType())));
+        }    
+        return query;
+    }
 
 	private boolean isPushdownValid(WithQueryCommand with, SetQuery setQuery,
 			Object modelID, QueryCommand withCommand, RelationalPlan subPlan1)
