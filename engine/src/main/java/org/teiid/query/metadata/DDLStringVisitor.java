@@ -63,7 +63,6 @@ public class DDLStringVisitor {
 	private Pattern filter;
 	private Map<String, String> prefixMap;
 	protected boolean usePrefixes = true;
-	protected boolean createNS = true;
 	
 	private final static Map<String, String> BUILTIN_PREFIXES = new HashMap<String, String>();
 	static {
@@ -831,17 +830,18 @@ public class DDLStringVisitor {
 				String uri = key.substring(1, index);
 				key = key.substring(index + 1, key.length());
 				String prefix = BUILTIN_PREFIXES.get(uri);
-				if ((prefix == null && usePrefixes) || createNS) {
-					if (prefixMap == null) {
-						prefixMap = new LinkedHashMap<String, String>();
-					} else {
-						prefix = this.prefixMap.get(uri);
-					}
-					if (prefix == null) {
-						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$						
-					}
-					this.prefixMap.put(uri, prefix);
-				} 
+				if (usePrefixes) {
+				    if (prefixMap == null) {
+                        prefixMap = new LinkedHashMap<String, String>();
+                    }
+    				if (prefix == null) {
+					    prefix = this.prefixMap.get(uri);
+    					if (prefix == null) {
+    						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$						
+    					}
+    				}
+                    this.prefixMap.put(uri, prefix);
+				}
 				if (prefix != null) {
 					key = prefix + ":" + key; //$NON-NLS-1$
 				} else {
