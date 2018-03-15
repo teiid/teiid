@@ -3,7 +3,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.teiid</groupId>
-    <version>10.1.2-SNAPSHOT</version>
+    <version>10.1.2</version>
   </parent>
   <licenses>
         <license>
