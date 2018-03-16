@@ -217,7 +217,7 @@ public class IntegrationTestDeployment {
         assertEquals(20, props.size());
         
         props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.EXTENSION_METADATA);
-        assertEquals(3, props.size());
+        assertEquals(4, props.size());
         for (PropertyDefinition p: props) {
             if (p.getName().equals("{http://www.teiid.org/translator/accumulo/2013}CF")) {
                 assertEquals("org.teiid.metadata.Column", p.getPropertyValue("owner"));
