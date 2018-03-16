@@ -103,7 +103,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     private boolean reference = false;
     private String baseURI;
     private ServiceMetadata serviceMetadata;
-    private UniqueNameGenerator nameGenerator;
+    private UniqueNameGenerator nameGenerator = new UniqueNameGenerator();
     private ExpandOption expandOption;
     private URLParseService parseService;
     private OData odata;
@@ -116,12 +116,12 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 rawPath = rawPath.replace("$root", "");
                 UriInfo uriInfo = new Parser(serviceMetadata.getEdm(), odata).parseUri(rawPath, null, null, baseUri);                
                 ODataSQLBuilder visitor = new ODataSQLBuilder(odata, metadata,
-                        prepared, aliasedGroups, baseURI, serviceMetadata,
-                        nameGenerator) {
+                        prepared, aliasedGroups, baseURI, serviceMetadata) {
                     public void visit(OrderByOption option) {
                         //no implicit ordering now.
                     }
                 };
+                visitor.nameGenerator = nameGenerator;
                 visitor.visit(uriInfo);
                 return visitor.selectQuery();
             } catch (UriParserException e) {
@@ -134,14 +134,13 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     
     public ODataSQLBuilder(OData odata, MetadataStore metadata, boolean prepared,
             boolean aliasedGroups, String baseURI,
-            ServiceMetadata serviceMetadata, UniqueNameGenerator nameGenerator) {
+            ServiceMetadata serviceMetadata) {
         this.odata = odata;
         this.metadata = metadata;
         this.prepared = prepared;
         this.aliasedGroups = aliasedGroups;
         this.baseURI = baseURI;
         this.serviceMetadata = serviceMetadata;
-        this.nameGenerator = nameGenerator;
         this.parseService = new URLParseService();
     }
 
