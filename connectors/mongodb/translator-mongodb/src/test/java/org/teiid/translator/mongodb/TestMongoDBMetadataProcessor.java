@@ -50,42 +50,44 @@ public class TestMongoDBMetadataProcessor {
         MetadataFactory mf = processExampleMetadata(mp);
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
+        String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\n" + 
+                "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS n1;\n" + 
+                "\n" + 
                 "CREATE FOREIGN TABLE \"table\" (\n" + 
-                "\t\"_id\" integer,\n" + 
-                "\tcol2 double,\n" + 
-                "\tcol3 long,\n" + 
-                "\tcol5 boolean,\n" + 
-                "\tcol6 string,\n" + 
-                "\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
-                "\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n"+
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-                "\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
-                ") OPTIONS (UPDATABLE TRUE);\n" +
+                "    \"_id\" integer,\n" + 
+                "    col2 double,\n" + 
+                "    col3 long,\n" + 
+                "    col5 boolean,\n" + 
+                "    col6 string,\n" + 
+                "    col7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    col8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "    CONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table');\n" + 
                 "\n" + 
                 "CREATE FOREIGN TABLE child (\n" + 
-        		"\tcol1 string,\n" + 
-        		"\tcol2 string,\n" + 
-        	    "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n"+
-        	    "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n"+       
-        	    "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-        		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 
-        		"\n" + 
-        		"CREATE FOREIGN TABLE embedded (\n" + 
-        		"\tcol1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
-        		"\tcol2 object OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
-        		"\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
-        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-        		"\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-        		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true');\n" + 
-        		"\n" +
-        		"CREATE FOREIGN TABLE emptyFirst (\n" + 
-        		"\t\"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" + 
-        		"\tcol2 double,\n" + 
-        		"\tcol3 long,\n" + 
-        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
-        		") OPTIONS (UPDATABLE TRUE);";
-        assertEquals(expected, metadataDDL);
+                "    col1 string,\n" + 
+                "    col2 string,\n" + 
+                "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=child', \"n1:MERGE\" 'table');\n" + 
+                "\n" + 
+                "CREATE FOREIGN TABLE embedded (\n" + 
+                "    col1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    col2 object OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=embedded', \"n1:EMBEDDABLE\" 'true');\n" + 
+                "\n" + 
+                "CREATE FOREIGN TABLE emptyFirst (\n" + 
+                "    \"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" + 
+                "    col2 double,\n" + 
+                "    col3 long,\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=emptyFirst');";
+        assertEquals(expected, metadataDDL.replace("\t", "    "));
     }
     
     @Test
@@ -96,43 +98,45 @@ public class TestMongoDBMetadataProcessor {
         MetadataFactory mf = processExampleMetadata(mp);
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
+        String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\n" + 
+                "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS n1;\n" + 
+                "\n" + 
                 "CREATE FOREIGN TABLE \"table\" (\n" + 
-                "\t\"_id\" integer,\n" + 
-                "\tcol2 double,\n" + 
-                "\tcol3 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
-                "\tcol5 boolean,\n" + 
-                "\tcol6 string,\n" + 
-                "\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
-                "\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" + 
-                "\tcol9 string,\n" + 
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-                "\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
-                ") OPTIONS (UPDATABLE TRUE);\n" +
+                "    \"_id\" integer,\n" + 
+                "    col2 double,\n" + 
+                "    col3 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    col5 boolean,\n" + 
+                "    col6 string,\n" + 
+                "    col7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    col8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" + 
+                "    col9 string,\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "    CONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table');\n" + 
                 "\n" + 
                 "CREATE FOREIGN TABLE child (\n" + 
-                "\tcol1 string,\n" + 
-                "\tcol2 string,\n" + 
-                "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n"+
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n"+       
-                "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 
+                "    col1 string,\n" + 
+                "    col2 string,\n" + 
+                "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=child', \"n1:MERGE\" 'table');\n" + 
                 "\n" + 
                 "CREATE FOREIGN TABLE embedded (\n" + 
-                "\tcol1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
-                "\tcol2 object OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
-                "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-                "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true');\n" + 
-                "\n" +
+                "    col1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    col2 object OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=embedded', \"n1:EMBEDDABLE\" 'true');\n" + 
+                "\n" + 
                 "CREATE FOREIGN TABLE emptyFirst (\n" + 
-                "\t\"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" + 
-                "\tcol2 double,\n" + 
-                "\tcol3 long,\n" + 
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
-                ") OPTIONS (UPDATABLE TRUE);";
-        assertEquals(expected, metadataDDL);
+                "    \"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" + 
+                "    col2 double,\n" + 
+                "    col3 long,\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=emptyFirst');";
+        assertEquals(expected, metadataDDL.replace("\t", "    "));
     }
 
     private MetadataFactory processExampleMetadata(MongoDBMetadataProcessor mp)
@@ -299,34 +303,36 @@ public class TestMongoDBMetadataProcessor {
         mp.process(mf, conn);
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
+        String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\n" + 
+                "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS n1;\n" + 
+                "\n" + 
                 "CREATE FOREIGN TABLE \"table\" (\n" + 
-                "\t\"_id\" integer,\n" + 
-                "\tcol2 double,\n" + 
-                "\tcol3 long,\n" + 
-                "\tcol5 boolean,\n" + 
-                "\tcol6 string,\n" + 
-                "\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
-                "\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n"+
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-                "\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
-                ") OPTIONS (UPDATABLE TRUE);\n" +
+                "    \"_id\" integer,\n" + 
+                "    col2 double,\n" + 
+                "    col3 long,\n" + 
+                "    col5 boolean,\n" + 
+                "    col6 string,\n" + 
+                "    col7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    col8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "    CONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table');\n" + 
                 "\n" + 
                 "CREATE FOREIGN TABLE child (\n" + 
-                "\tcol1 string,\n" + 
-                "\tcol2 string,\n" + 
-                "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n"+
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n"+       
-                "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 
+                "    col1 string,\n" + 
+                "    col2 string,\n" + 
+                "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=child', \"n1:MERGE\" 'table');\n" + 
                 "\n" + 
                 "CREATE FOREIGN TABLE embedded (\n" + 
-                "\tcol1 string,\n" + 
-                "\tcol2 string,\n" + 
-                "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
-                "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
-                "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');";
-        assertEquals(expected, metadataDDL);
+                "    col1 string,\n" + 
+                "    col2 string,\n" + 
+                "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+                "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" + 
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=embedded', \"n1:MERGE\" 'table');";
+        assertEquals(expected, metadataDDL.replace("\t", "    "));
     }    
 }

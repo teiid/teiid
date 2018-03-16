@@ -45,6 +45,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
+import org.teiid.util.FullyQualifiedName;
 
 import com.sforce.soap.partner.ChildRelationship;
 import com.sforce.soap.partner.DescribeGlobalResult;
@@ -275,7 +276,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		    return;
 		}
 		Table table = metadataFactory.addTable(name);
-		
+		FullyQualifiedName fqn = new FullyQualifiedName("sobject", objectMetadata.getName()); //$NON-NLS-1$
+		table.setProperty(FQN, fqn.toString());
 		table.setNameInSource(objectMetadata.getName());
 		tableMap.put(objectMetadata.getName(), table);
 		

@@ -39,6 +39,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
+import org.teiid.util.FullyQualifiedName;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -93,7 +94,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                     if (row == null) {
                         continue;
                     }
-                    Table table = addTable(metadataFactory, tableName, row);   
+                    Table table = addTable(metadataFactory, tableName, row, null);
                     if (table != null) {
                         // top level documents can not be seen as merged
                         table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));                    
@@ -128,7 +129,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         }
     }
 
-    private Table addTable(MetadataFactory metadataFactory, String tableName, BasicDBObject row) {
+    private Table addTable(MetadataFactory metadataFactory, String tableName, BasicDBObject row, Table parent) {
         Table table = null;
         if (metadataFactory.getSchema().getTable(tableName) != null) {
             table = metadataFactory.getSchema().getTable(tableName);
@@ -138,6 +139,14 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             if (table == null) {
                 table = metadataFactory.addTable(tableName);
                 table.setSupportsUpdate(true);
+                if (parent != null) {
+                    FullyQualifiedName rn = new FullyQualifiedName("embedded", tableName); //$NON-NLS-1$
+                    String parentfqn = parent.getProperty(FQN, false);
+                    table.setProperty(FQN, parentfqn + FullyQualifiedName.SEPARATOR + rn.toString());
+                } else {
+                    FullyQualifiedName fqn = new FullyQualifiedName("collection", tableName); //$NON-NLS-1$
+                    table.setProperty(FQN, fqn.toString());                
+                }
             }
             
             for (String columnKey:keys) {
@@ -169,7 +178,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         
         if (!columnKey.equals(ID) && value instanceof BasicDBObject) {
             // embedded doc - one to one
-            Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)value);
+            Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)value, table);
             if (childTable != null) {
                 childTable.setProperty(MERGE, table.getName());
                 childTable.setProperty(ASSOSIATION, MergeDetails.Association.ONE.name()); 
@@ -178,7 +187,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         else if (value instanceof BasicDBList) {
             // embedded doc, list one to many
             if (((BasicDBList)value).get(0) instanceof BasicDBObject) {
-                Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)((BasicDBList)value).get(0));
+                Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)((BasicDBList)value).get(0), table);
                 if (childTable != null) {
                     childTable.setProperty(MERGE, table.getName());
                     childTable.setProperty(ASSOSIATION, MergeDetails.Association.MANY.name());
