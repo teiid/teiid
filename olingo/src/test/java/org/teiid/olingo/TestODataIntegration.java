@@ -54,7 +54,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.GeneratedKeys;
+import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Admin.SchemaObjectType;
+import org.teiid.adminapi.CacheStatistics;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.TeiidRuntimeException;
@@ -1045,6 +1047,9 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
                     response.getContentAsString());
+            CacheStatistics stats = teiid.getAdmin().getCacheStats(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name()).iterator().next();
+            //first query misses, second hits
+            assertEquals(50, stats.getHitRatio(), 0);
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

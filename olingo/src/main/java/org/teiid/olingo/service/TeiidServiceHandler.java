@@ -30,7 +30,6 @@ import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
@@ -105,8 +104,6 @@ public class TeiidServiceHandler implements ServiceHandler {
     private boolean prepared = true;
     private OData odata;
     private ServiceMetadata serviceMetadata;
-    private String schemaName;
-    private UniqueNameGenerator nameGenerator = new UniqueNameGenerator();
     
     private static ThreadLocal<Client> CLIENT = new ThreadLocal<Client>();
 
@@ -119,7 +116,6 @@ public class TeiidServiceHandler implements ServiceHandler {
     }    
     
     public TeiidServiceHandler(String schemaName) {
-        this.schemaName = schemaName;
     }
     
     @Override
@@ -145,10 +141,10 @@ public class TeiidServiceHandler implements ServiceHandler {
         response.writeServiceDocument(request.getODataRequest().getRawBaseUri());
     }
 
-    class UniqueNameGenerator {
-        private final AtomicInteger groupCount = new AtomicInteger(0);
+    static class UniqueNameGenerator {
+        private int groupCount;
         public String getNextGroup() {
-            String aliasGroup = "g"+this.groupCount.getAndIncrement(); //$NON-NLS-1$
+            String aliasGroup = "g"+this.groupCount++; //$NON-NLS-1$
             return aliasGroup;
         }
     }    
@@ -159,7 +155,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         
         final ODataSQLBuilder visitor = new ODataSQLBuilder(odata,
                 getClient().getMetadataStore(), this.prepared, true, 
-                request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+                request.getODataRequest().getRawBaseUri(), this.serviceMetadata);
         visitor.visit(request.getUriInfo());
         
         final BaseResponse queryResponse;
@@ -378,7 +374,7 @@ public class TeiidServiceHandler implements ServiceHandler {
             EdmEntityType entityType, Entity entity) throws SQLException, TeiidException {
         ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata, 
                 getClient().getMetadataStore(), this.prepared, false,
-                rawURI, this.serviceMetadata, this.nameGenerator);
+                rawURI, this.serviceMetadata);
         visitor.visit(uriInfo);
         Insert command = visitor.insert(entityType, entity, null, this.prepared);
         return getClient().executeUpdate(command, visitor.getParameters());
@@ -452,7 +448,7 @@ public class TeiidServiceHandler implements ServiceHandler {
             if (updateResponse != null && updateResponse.getUpdateCount()  == 1) {
                 ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                         getClient().getMetadataStore(), true, false, 
-                        request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+                        request.getODataRequest().getRawBaseUri(), this.serviceMetadata);
                 
                 Query query = visitor.selectWithEntityKey(entityType,
                                 entity, updateResponse.getGeneratedKeys(), expands);
@@ -507,7 +503,7 @@ public class TeiidServiceHandler implements ServiceHandler {
             try {
                 ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                         getClient().getMetadataStore(), this.prepared, false,
-                        request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+                        request.getODataRequest().getRawBaseUri(), this.serviceMetadata);
                 visitor.visit(request.getUriInfo());
                 EdmEntityType entityType = request.getEntitySet().getEntityType();
                 Update update = visitor.update(entityType, entity, this.prepared);
@@ -531,7 +527,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                 ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                         getClient().getMetadataStore(), this.prepared, false,
                         request.getODataRequest().getRawBaseUri(),
-                        this.serviceMetadata, this.nameGenerator);
+                        this.serviceMetadata);
                 visitor.visit(request.getUriInfo());
                 
                 EdmEntityType entityType = request.getEntitySet().getEntityType();
@@ -542,7 +538,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                 ODataSQLBuilder deleteVisitor = new ODataSQLBuilder(this.odata,
                         getClient().getMetadataStore(), this.prepared, false,
                         request.getODataRequest().getRawBaseUri(),
-                        this.serviceMetadata, this.nameGenerator);
+                        this.serviceMetadata);
                 deleteVisitor.visit(request.getUriInfo());
                 Delete delete = deleteVisitor.delete();
                 updateResponse = getClient().executeUpdate(delete, deleteVisitor.getParameters());
@@ -594,7 +590,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         try {
             ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                     getClient().getMetadataStore(), this.prepared, false,
-                    request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+                    request.getODataRequest().getRawBaseUri(), this.serviceMetadata);
             visitor.visit(request.getUriInfo());
             Delete delete = visitor.delete();
             updateResponse = getClient().executeUpdate(delete, visitor.getParameters());
@@ -629,7 +625,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         try {
             ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                     getClient().getMetadataStore(), this.prepared, false,
-                    request.getODataRequest().getRawBaseUri(),this.serviceMetadata, this.nameGenerator);
+                    request.getODataRequest().getRawBaseUri(),this.serviceMetadata);
             visitor.visit(request.getUriInfo());
             Update update = visitor.updateProperty(edmProperty, property, this.prepared, rawValue);
             updateResponse = getClient().executeUpdate(update, visitor.getParameters());
@@ -659,7 +655,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         try {
             ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                     getClient().getMetadataStore(), this.prepared, false,
-                    request.getODataRequest().getRawBaseUri(),this.serviceMetadata, this.nameGenerator);
+                    request.getODataRequest().getRawBaseUri(),this.serviceMetadata);
             visitor.visit(request.getUriInfo());
             Update update = visitor.updateStreamProperty(edmProperty, streamContent);
             updateResponse = getClient().executeUpdate(update, visitor.getParameters());
@@ -702,7 +698,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         
         final ODataSQLBuilder visitor = new ODataSQLBuilder(odata,
                 getClient().getMetadataStore(), this.prepared, true, 
-                request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+                request.getODataRequest().getRawBaseUri(), this.serviceMetadata);
         visitor.setOperationParameterValueProvider(parameters);
         visitor.visit(request.getUriInfo());
         
@@ -870,8 +866,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         
         final ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                 getClient().getMetadataStore(), this.prepared, true, request
-                .getODataRequest().getRawBaseUri(), this.serviceMetadata,
-                this.nameGenerator);
+                .getODataRequest().getRawBaseUri(), this.serviceMetadata);
         visitor.visit(request.getUriInfo());
 
         try {
@@ -941,7 +936,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         
         final ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                 getClient().getMetadataStore(), this.prepared, true, 
-                request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+                request.getODataRequest().getRawBaseUri(), this.serviceMetadata);
         visitor.visit(request.getUriInfo());
         
         final EntityCollectionResponse queryResponse;
