@@ -34,6 +34,7 @@ import org.teiid.language.Literal;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.sap.SAPIQExecutionFactory;
 import org.teiid.util.Version;
 
 
@@ -42,7 +43,7 @@ import org.teiid.util.Version;
 public class TestSybaseIQConvertModifier {
 
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
-    private static SybaseIQExecutionFactory trans = new SybaseIQExecutionFactory();
+    private static SAPIQExecutionFactory trans = new SAPIQExecutionFactory();
     
     @BeforeClass
     public static void setup() throws TranslatorException {

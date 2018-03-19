@@ -31,6 +31,7 @@
         <translator name="sqlserver" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="sybase" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="sybaseiq" module="org.jboss.teiid.translator.jdbc"/>
+        <translator name="sap-iq" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="teiid" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="teradata" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="modeshape" module="org.jboss.teiid.translator.jdbc"/>

@@ -29,10 +29,11 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.sap.SAPIQExecutionFactory;
 
 public class TestSybaseIQTranslator {
 	
-    private static SybaseIQExecutionFactory trans = new SybaseIQExecutionFactory();
+    private static SAPIQExecutionFactory trans = new SAPIQExecutionFactory();
     
     @BeforeClass
     public static void setup() throws TranslatorException {

@@ -20,6 +20,7 @@ org.teiid.translator.jdbc.postgresql.PostgreSQLExecutionFactory #postgresql
 org.teiid.translator.jdbc.sqlserver.SQLServerExecutionFactory #sqlserver
 org.teiid.translator.jdbc.sybase.SybaseExecutionFactory #sybase
 org.teiid.translator.jdbc.sybase.SybaseIQExecutionFactory #sybaseiq
+org.teiid.translator.jdbc.sap.SAPIQExecutionFactory #sap-iq
 org.teiid.translator.jdbc.teiid.TeiidExecutionFactory #teiid
 org.teiid.translator.jdbc.teradata.TeradataExecutionFactory #teradata
 org.teiid.translator.jdbc.postgresql.GreenplumExecutionFactory #greenplum
