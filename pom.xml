@@ -32,7 +32,7 @@
         
         <version.google-api-services-sheets>v4-rev502-1.23.0</version.google-api-services-sheets>
         <version.google-api-client>1.23.0</version.google-api-client>
-        	    
+        <version.org.mongodb.mongo-java-driver>3.6.3</version.org.mongodb.mongo-java-driver>	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
