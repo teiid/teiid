@@ -2496,6 +2496,27 @@ public class TestProcedureProcessor {
         }
     }
     
+    @Test public void testNonDeterministicNow() throws Exception {
+        String sql = "BEGIN\n" + 
+                "    declare timestamp ts1 = (select now());\n" + 
+                "    DECLARE integer c = 20000;\n" + 
+                "    WHILE (c > 0) \n" + 
+                "        BEGIN\n" + 
+                "            c= c-1; \n" + 
+                "        END\n" + 
+                "    declare timestamp ts2 = (select now());\n" + 
+                "    if (ts1 = ts2)"
+                + "     raise sqlexception 'failed';" + 
+                "END ;";
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] { }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
     private static final boolean DEBUG = false;
     
 }

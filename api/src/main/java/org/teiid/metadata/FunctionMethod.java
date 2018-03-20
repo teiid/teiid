@@ -87,13 +87,13 @@ public class FunctionMethod extends AbstractMetadataRecord {
      */
     public enum Determinism{
     	NONDETERMINISTIC,
+    	INSTRUCTION_DETERMINISTIC, //specifically for the now function which is not fully non-deterministic TEIID-5290
     	COMMAND_DETERMINISTIC,
     	SESSION_DETERMINISTIC,
     	USER_DETERMINISTIC,
     	VDB_DETERMINISTIC,
     	DETERMINISTIC;
     }
-    
 
     private String description;
     private String category;

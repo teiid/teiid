@@ -479,7 +479,7 @@ public class PlanToProcessConverter {
 	                    	aNode.minimizeProject(command);
 	                    }
 	                    //check if valid to share this with other nodes
-	                    if (ev != null && ev.getDeterminismLevel().compareTo(Determinism.COMMAND_DETERMINISTIC) >= 0 && command.areResultsCachable()) {
+	                    if (ev != null && ev.getDeterminismLevel().compareTo(Determinism.INSTRUCTION_DETERMINISTIC) >= 0 && command.areResultsCachable()) {
 	                    	checkForSharedSourceCommand(aNode, node);
 	                    }
                     }

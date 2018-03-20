@@ -101,9 +101,9 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addBitFunction(SourceSystemFunctions.BITNOT, QueryPlugin.Util.getString("SystemSource.Bitnot_desc"), "bitnot", 1, QueryPlugin.Util.getString("SystemSource.Bitnot_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         // date
-        addConstantDateFunction(SourceSystemFunctions.CURDATE, QueryPlugin.Util.getString("SystemSource.Curdate_desc"), "currentDate", DataTypeManager.DefaultDataTypes.DATE); //$NON-NLS-1$ //$NON-NLS-2$ 
-        addConstantDateFunction(SourceSystemFunctions.CURTIME, QueryPlugin.Util.getString("SystemSource.Curtime_desc"), "currentTime", DataTypeManager.DefaultDataTypes.TIME); //$NON-NLS-1$ //$NON-NLS-2$ 
-        addConstantDateFunction(SourceSystemFunctions.NOW, QueryPlugin.Util.getString("SystemSource.Now_desc"), "currentTimestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$ 
+        addConstantDateFunction(SourceSystemFunctions.CURDATE, QueryPlugin.Util.getString("SystemSource.Curdate_desc"), "currentDate", DataTypeManager.DefaultDataTypes.DATE, Determinism.COMMAND_DETERMINISTIC); //$NON-NLS-1$ //$NON-NLS-2$ 
+        addConstantDateFunction(SourceSystemFunctions.CURTIME, QueryPlugin.Util.getString("SystemSource.Curtime_desc"), "currentTime", DataTypeManager.DefaultDataTypes.TIME, Determinism.COMMAND_DETERMINISTIC); //$NON-NLS-1$ //$NON-NLS-2$ 
+        addConstantDateFunction(SourceSystemFunctions.NOW, QueryPlugin.Util.getString("SystemSource.Now_desc"), "currentTimestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP, Determinism.INSTRUCTION_DETERMINISTIC); //$NON-NLS-1$ //$NON-NLS-2$ 
         addDateFunction(SourceSystemFunctions.DAYNAME, "dayName", QueryPlugin.Util.getString("SystemSource.Dayname_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayname_result_ts_desc"), DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         addDateFunction(SourceSystemFunctions.DAYOFMONTH, "dayOfMonth", QueryPlugin.Util.getString("SystemSource.Dayofmonth_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofmonth_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         addDateFunction(SourceSystemFunctions.DAYOFWEEK, "dayOfWeek", QueryPlugin.Util.getString("SystemSource.Dayofweek_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofweek_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
@@ -502,11 +502,11 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
      * Date functions a marked as command deterministic, since we prefer pre-evaluation rather than row-by-row
      * evaluation.
      */
-    private void addConstantDateFunction(String name, String description, String methodName, String returnType) {
+    private void addConstantDateFunction(String name, String description, String methodName, String returnType, Determinism determinism) {
         FunctionMethod method = new FunctionMethod(name, description, DATETIME, FUNCTION_CLASS, methodName,
                 new FunctionParameter[] {},
                 new FunctionParameter("result", returnType, description));                 //$NON-NLS-1$
-        method.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
+        method.setDeterminism(determinism);
         functions.add(method);
     }
 

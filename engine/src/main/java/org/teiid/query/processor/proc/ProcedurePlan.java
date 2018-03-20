@@ -372,6 +372,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
                 continue;
             }
 	        try {
+	            getContext().setCurrentTimestamp(System.currentTimeMillis());
 	            if (inst instanceof RepeatedInstruction) {
 	    	        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing repeated instruction", inst); //$NON-NLS-1$
 	                RepeatedInstruction loop = (RepeatedInstruction)inst;

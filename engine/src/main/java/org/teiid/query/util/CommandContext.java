@@ -222,6 +222,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private AtomicBoolean cancelled = new AtomicBoolean();
     private AtomicBoolean parentCancelled;
     
+    private Long currentTimestamp;
+    
     /**
      * Construct a new context.
      */
@@ -312,6 +314,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	} else {
     		clone.parentCancelled = this.cancelled;
     	}
+    	clone.currentTimestamp = this.currentTimestamp;
     	return clone;
     }
     
@@ -1220,7 +1223,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
 
     public Timestamp currentTimestamp() {
+        if (currentTimestamp != null) {
+            return new Timestamp(this.currentTimestamp);
+        }
         return new Timestamp(this.globalState.timestamp);
+    }
+
+    public void setCurrentTimestamp(long currentTimeMillis) {
+        this.currentTimestamp = currentTimeMillis;
     }
 	
 }
