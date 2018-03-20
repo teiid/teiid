@@ -21,9 +21,14 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+import static org.teiid.language.visitor.SQLStringVisitor.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.teiid.GeneratedKeys;
 import org.teiid.language.Command;
@@ -31,7 +36,11 @@ import org.teiid.language.Insert;
 import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -618,6 +627,11 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 		Table table = this.visitor.mongoDoc.getTargetTable();
 
 		int cols = table.getPrimaryKey().getColumns().size();
+		
+		if (cols != 1) {
+		    //restrict to only primary keys based upon id
+		    return;
+		}
 		Class<?>[] columnDataTypes = new Class<?>[cols];
 		String[] columnNames = new String[cols];
 		//this is typically expected to be an int/long, but we'll be general here.  we may eventual need the type logic off of the metadata importer
@@ -625,10 +639,13 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
         	columnDataTypes[i] = table.getPrimaryKey().getColumns().get(i).getJavaType();
         	columnNames[i] = table.getPrimaryKey().getColumns().get(i).getName();
         }
+        if (!columnNames[0].equals(MongoDBMetadataProcessor.ID)) {
+            return;
+        }
         GeneratedKeys generatedKeys = this.executionContext.getCommandContext().returnGeneratedKeys(columnNames, columnDataTypes);
         List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
         for (int i = 0; i < columnDataTypes.length; i++) {
-            Object value = this.executionFactory.retrieveValue(result.getField(columnNames[i]), columnDataTypes[i], this.mongoDB, columnNames[i], columnNames[i]);
+            Object value = this.executionFactory.retrieveValue(result.getUpsertedId(), columnDataTypes[i], this.mongoDB, columnNames[i], columnNames[i]);
             vals.add(value);
         }
         generatedKeys.addKey(vals);

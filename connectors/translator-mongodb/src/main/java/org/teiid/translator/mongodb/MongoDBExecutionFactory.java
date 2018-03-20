@@ -30,13 +30,31 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 
 import javax.resource.cci.ConnectionFactory;
 
 import org.bson.types.Binary;
-import org.teiid.core.types.*;
-import org.teiid.language.*;
+import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.Transform;
+import org.teiid.core.types.TransformationException;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
+import org.teiid.language.Command;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
@@ -45,7 +63,11 @@ import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
-import com.mongodb.*;
+import com.mongodb.AggregationOptions;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBRef;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
@@ -516,7 +538,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		}
 		else if (value instanceof org.bson.types.ObjectId) {
 		    org.bson.types.ObjectId id = (org.bson.types.ObjectId) value;
-		    value = id.toStringBabble();
+		    value = id.toHexString();
 		}
 		else {
 		    Transform transform = DataTypeManager.getTransform(value.getClass(), expectedClass);

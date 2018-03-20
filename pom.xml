@@ -114,8 +114,8 @@
  
 	    
 	    <!-- drivers and other external, provided, dependencies -->
-    	<version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
-    	<version.com.couchbase.client>2.4.2</version.com.couchbase.client>
+        <version.org.mongodb.mongo-java-driver>3.4.2</version.org.mongodb.mongo-java-driver>
+        <version.com.couchbase.client>2.4.2</version.com.couchbase.client>
     	<version.com.couchbase.core.io>1.4.2</version.com.couchbase.core.io>
     	<version.io.reactivex>1.2.3</version.io.reactivex>
     	    	
