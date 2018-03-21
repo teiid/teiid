@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.teiid</groupId>
         <artifactId>project-bom-parent</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.3</version>
     </parent>  
     
     <modelVersion>4.0.0</modelVersion>
@@ -24,15 +24,14 @@
 	    <version.release.plugin>2.5</version.release.plugin>
         <version.teiid.console>3.0.1</version.teiid.console>
         
+        <version.teiid.bom>1.0.3</version.teiid.bom>
+        
         <!-- project version property overrides go here
              this should only be utilized when there is a conflict
              with the bom. In most cases that will will need migrated
              into a new release of the bom.   
         -->
         
-        <version.google-api-services-sheets>v4-rev502-1.23.0</version.google-api-services-sheets>
-        <version.google-api-client>1.23.0</version.google-api-client>
-        <version.org.mongodb.mongo-java-driver>3.6.3</version.org.mongodb.mongo-java-driver>	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -322,7 +321,7 @@
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>teiid-bom</artifactId>
-                <version>1.0.1-SNAPSHOT</version>
+                <version>${version.teiid.bom}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -613,37 +612,6 @@
                <artifactId>teiid-data-quality</artifactId>
                <version>${project.version}</version>
            </dependency>
-                      
-           <dependency>
-               <groupId>com.google.apis</groupId>
-               <artifactId>google-api-services-sheets</artifactId>
-               <version>${version.google-api-services-sheets}</version>
-           </dependency>
-
-           <dependency>
-               <groupId>com.google.api-client</groupId>
-               <artifactId>google-api-client</artifactId>
-               <version>${version.google-api-client}</version>
-           </dependency>   
-           
-           <dependency>
-               <groupId>com.google.http-client</groupId>
-               <artifactId>google-http-client</artifactId>
-               <version>${version.google-api-client}</version>
-           </dependency>   
-           
-           <dependency>
-               <groupId>com.google.oauth-client</groupId>
-               <artifactId>google-oauth-client</artifactId>
-               <version>${version.google-api-client}</version>
-           </dependency>
-           
-            <dependency>
-	            <groupId>com.google.http-client</groupId>
-	            <artifactId>google-http-client-jackson2</artifactId>
-	            <version>${version.google-api-client}</version>
-	        </dependency>
-	                                  
         </dependencies>
 	</dependencyManagement>
 	<modules>
