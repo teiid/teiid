@@ -125,7 +125,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	    VDBRepository repo = VDBRepository.class.cast(sc.getValue());	
 		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null) {
-        	throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50102, vdb, vdbVersion));
+        	throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50102, vdbName, vdbVersion));
 		}
 		Status status = vdb.getStatus();
 		if (status != VDB.Status.ACTIVE) {
