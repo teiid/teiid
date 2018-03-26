@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -637,5 +638,81 @@ public class TestUnionPlanning {
     	TestProcessor.helpProcess(plan, new HardcodedDataManager(), new List[] {Arrays.asList(1)} );
     }
     
+    @Test public void testImplictPartitionwiseStarJoin() throws Exception {
+        TransformationMetadata tm = partitionedStartSchema();
+        
+        String sql = "select * from combined_fact, combined_dim1, combined_dim2 where combined_fact.dim_id1 = combined_dim1.id and combined_fact.dim_id2 = combined_dim2.id";
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
+            new String[] { "SELECT g_0.id, g_0.dim_id1, g_0.dim_id2, g_1.id, g_1.val, g_2.id, g_2.val FROM source1.fact AS g_0, source1.dim1 AS g_1, source1.dim2 AS g_2 WHERE (g_0.dim_id1 = g_1.id) AND (g_0.dim_id2 = g_2.id)", 
+                    "SELECT g_0.id, g_0.dim_id1, g_0.dim_id2, g_1.id, g_1.val, g_2.id, g_2.val FROM source2.fact AS g_0, source2.dim1 AS g_1, source2.dim2 AS g_2 WHERE (g_0.dim_id1 = g_1.id) AND (g_0.dim_id2 = g_2.id)" }, ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            0,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        });   
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        
+        dataManager.addData("SELECT g_0.id, g_0.dim_id1, g_0.dim_id2, g_1.id, g_1.val, g_2.id, g_2.val FROM source1.fact AS g_0, source1.dim1 AS g_1, source1.dim2 AS g_2 WHERE (g_0.dim_id1 = g_1.id) AND (g_0.dim_id2 = g_2.id)", 
+                Arrays.asList(1, 1, 1, 1, "abc", 1, "def"));
+        dataManager.addData("SELECT g_0.id, g_0.dim_id1, g_0.dim_id2, g_1.id, g_1.val, g_2.id, g_2.val FROM source2.fact AS g_0, source2.dim1 AS g_1, source2.dim2 AS g_2 WHERE (g_0.dim_id1 = g_1.id) AND (g_0.dim_id2 = g_2.id)", 
+                Arrays.asList(10, 10, 10, 10, "2abc", 10, "2def"));
+        
+        TestProcessor.helpProcess(plan, dataManager, new List[] {
+                Arrays.asList(1, 1, 1, 1, 1, "abc", 1, 1, "def", 1), Arrays.asList(10, 10, 10, 2, 10, "2abc", 2, 10, "2def", 2)} );
+    }
+
+    private TransformationMetadata partitionedStartSchema()
+            throws Exception, TeiidComponentException, QueryMetadataException {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("x", new RealMetadataFactory.DDLHolder("source1", 
+                "create foreign table fact (id integer, dim_id1 integer, dim_id2 integer);"
+                + "create foreign table dim1 (id integer, val string);"
+                + "create foreign table dim2 (id integer, val string);"), 
+                new RealMetadataFactory.DDLHolder("source2", 
+                        "create foreign table fact (id integer, dim_id1 integer, dim_id2 integer);"
+                        + "create foreign table dim1 (id integer, val string);"
+                        + "create foreign table dim2 (id integer, val string);"),
+                new RealMetadataFactory.DDLHolder("v", 
+                        "create view combined_fact as select id, dim_id1, dim_id2, 1 as part from source1.fact union all select id, dim_id1, dim_id2, 2 as part from source2.fact;"
+                        + "create view combined_dim1 as select id, val, 1 as part from source1.dim1 union all select id, val, 2 as part from source2.dim1;"
+                        + "create view combined_dim2 as select id, val, 1 as part from source1.dim2 union all select id, val, 2 as part from source2.dim2;")
+                );
+        
+        tm.getModelID("v").setProperty("implicit_partition.columnName", "part");
+        return tm;
+    }
+    
+    @Test public void testImplicitPartionwiseStarJoinMinimalColumns() throws Exception {
+        TransformationMetadata tm = partitionedStartSchema();  
+                
+        String sql = "select combined_fact.id, combined_dim1.val, combined_dim2.val from combined_fact, combined_dim1, combined_dim2 where combined_fact.dim_id1 = combined_dim1.id and combined_fact.dim_id2 = combined_dim2.id";
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
+                new String[] { "SELECT g_0.id, g_1.val, g_2.val FROM source2.fact AS g_0, source2.dim1 AS g_1, source2.dim2 AS g_2 WHERE (g_0.dim_id1 = g_1.id) AND (g_0.dim_id2 = g_2.id)", 
+                        "SELECT g_0.id, g_1.val, g_2.val FROM source1.fact AS g_0, source1.dim1 AS g_1, source1.dim2 AS g_2 WHERE (g_0.dim_id1 = g_1.id) AND (g_0.dim_id2 = g_2.id)" }, ComparisonMode.EXACT_COMMAND_STRING); 
+    
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        
+        dataManager.addData("SELECT g_0.id, g_1.val, g_2.val FROM source1.fact AS g_0, source1.dim1 AS g_1, source1.dim2 AS g_2 WHERE (g_0.dim_id1 = g_1.id) AND (g_0.dim_id2 = g_2.id)", 
+                Arrays.asList(1, "abc", "def"));
+        dataManager.addData("SELECT g_0.id, g_1.val, g_2.val FROM source2.fact AS g_0, source2.dim1 AS g_1, source2.dim2 AS g_2 WHERE (g_0.dim_id1 = g_1.id) AND (g_0.dim_id2 = g_2.id)", 
+                Arrays.asList(10, "2abc", "2def"));
+        
+        TestProcessor.helpProcess(plan, dataManager, new List[] {
+                Arrays.asList(1, "abc", "def"), Arrays.asList(10, "2abc", "2def")} );
+    }
 
 }
