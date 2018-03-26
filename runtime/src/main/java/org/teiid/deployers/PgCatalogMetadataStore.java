@@ -740,7 +740,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
         addColumn("ordinal_position", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
         addColumn("column_default", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
         addColumn("is_nullable", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
-        addColumn("udt_type", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("udt_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
         addColumn("character_maximum_length", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
         addColumn("character_octet_length", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
         addColumn("numeric_precision", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$

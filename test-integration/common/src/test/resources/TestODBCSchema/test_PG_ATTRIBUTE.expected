@@ -328,7 +328,7 @@ oid          attrelid     attname                                               
 526          521          ordinal_position                                                   23           4       5       -1           false       false         false    
 527          521          column_default                                                     1043         -1      6       4004         false       false         false    
 528          521          is_nullable                                                        1043         -1      7       4004         false       false         false    
-529          521          udt_type                                                           1043         -1      8       4004         false       false         false    
+529          521          udt_name                                                           1043         -1      8       4004         false       false         false    
 530          521          character_maximum_length                                           23           4       9       -1           false       false         false    
 531          521          character_octet_length                                             23           4       10      -1           false       false         false    
 532          521          numeric_precision                                                  23           4       11      -1           false       false         false    
