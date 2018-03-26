@@ -39,6 +39,11 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-4731">TEIID-4731</a> The default authentication scheme for MongoDB resource adapter has been changed to SCRAM_SHA_1 to match with latest versions of MongoDB. If using MongoDB version less than 3.0, to restore previous functionality change/add SecurityType to 'None' in the resource adapter configuration.
 </ul>
 
+<h4>from 10.2</h4>
+<ul>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5294">TEIID-5294</a> The name escaping performed by the SQL/XML logic and JSONTOXML function did not properly escape values.  Instead of _uHHHH_, _xHHHH_ should have been used.  That correction has been made.  If you want the old behavior set the system property org.teiid.useXMLxEscape to false.</li>
+</ul>
+
 <h4>from 10.1</h4>
 <ul>
   <li><a href="https://issues.jboss.org/browse/TEIID-5286">TEIID-5286</a> The Sybase IQ translator has been renamed sap-iq and the usage of the SybaseIQExecutionFactory and the sybaseiq translator name has been deprecated.</li>

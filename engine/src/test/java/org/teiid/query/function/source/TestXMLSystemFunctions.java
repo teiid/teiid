@@ -39,8 +39,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.events.EndElement;
 import javax.xml.stream.events.XMLEvent;
 
-import net.sf.saxon.trans.XPathException;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -54,6 +52,8 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
+
+import net.sf.saxon.trans.XPathException;
 
 @SuppressWarnings("nls")
 public class TestXMLSystemFunctions {
@@ -186,20 +186,22 @@ public class TestXMLSystemFunctions {
     }
 	
 	@Test public void testNameEscaping() throws Exception {
-		assertEquals("_u003A_b", XMLSystemFunctions.escapeName(":b", true));
+		assertEquals("_x003A_b", XMLSystemFunctions.escapeName(":b", true));
     }
 	
 	@Test public void testNameEscaping1() throws Exception {
-		assertEquals("a_u005F_x", XMLSystemFunctions.escapeName("a_x", true));
+		assertEquals("a_x005F_x", XMLSystemFunctions.escapeName("a_x", true));
+		assertEquals("_", XMLSystemFunctions.escapeName("_", true));
+        assertEquals("_a", XMLSystemFunctions.escapeName("_a", true));
     }
 	
 	@Test public void testNameEscaping2() throws Exception {
-		assertEquals("_u000A_", XMLSystemFunctions.escapeName(new String(new char[] {10}), true));
+		assertEquals("_x000A_", XMLSystemFunctions.escapeName(new String(new char[] {10}), true));
     }
 	
 	@Test public void testJsonToXml() throws Exception {
 		String json = "[0,{\"1\":{\"2\":{\"3\":{\"4\":[5,{\"6\":7}]}}}}]";
-		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Array xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Array xsi:type=\"decimal\">0</Array><Array><_u0031_><_u0032_><_u0033_><_u0034_ xsi:type=\"decimal\">5</_u0034_><_u0034_><_u0036_ xsi:type=\"decimal\">7</_u0036_></_u0034_></_u0033_></_u0032_></_u0031_></Array></Array>";
+		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Array xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Array xsi:type=\"decimal\">0</Array><Array><_x0031_><_x0032_><_x0033_><_x0034_ xsi:type=\"decimal\">5</_x0034_><_x0034_><_x0036_ xsi:type=\"decimal\">7</_x0036_></_x0034_></_x0033_></_x0032_></_x0031_></Array></Array>";
 		helpTestJson(json, "Array", expected);
 	}
 

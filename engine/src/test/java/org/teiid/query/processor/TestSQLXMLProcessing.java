@@ -698,7 +698,7 @@ public class TestSQLXMLProcessing {
     	String sql = "select xmlforest(\"xml\") from (select 1 as \"xml\") x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<_u0078_ml>1</_u0078_ml>")
+        		Arrays.asList("<_x0078_ml>1</_x0078_ml>")
         };    
     
         process(sql, expected);
