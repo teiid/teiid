@@ -71,6 +71,7 @@ import org.teiid.core.types.*;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.json.simple.ContentHandler;
 import org.teiid.json.simple.JSONParser;
@@ -108,6 +109,8 @@ import net.sf.saxon.value.TimeValue;
  * @since 4.2
  */
 public class XMLSystemFunctions {
+    
+    private static final boolean USE_X_ESCAPE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useXMLxEscape", false); //$NON-NLS-1$
 	
 	private static final Charset UTF_32BE = Charset.forName("UTF-32BE"); //$NON-NLS-1$
 	private static final Charset UTF_16BE = Charset.forName("UTF-16BE"); //$NON-NLS-1$
@@ -932,7 +935,7 @@ public class XMLSystemFunctions {
     			} 
     			break;
     		case '_':
-    			if (chars.length > i && chars[i+1] == 'x') {
+    			if (chars.length > i+1 && chars[i+1] == 'x') {
     				sb.append(escapeChar(chr));
     				continue;
     			}
@@ -958,7 +961,11 @@ public class XMLSystemFunctions {
 
 	private static String escapeChar(char chr) {
 		CharBuffer cb = CharBuffer.allocate(7);
-		cb.append("_u");  //$NON-NLS-1$
+		if (USE_X_ESCAPE) {
+		    cb.append("_x");  //$NON-NLS-1$
+		} else {
+		    cb.append("_u");  //$NON-NLS-1$
+		}
 		CharsetUtils.toHex(cb, (byte)(chr >> 8));
 		CharsetUtils.toHex(cb, (byte)chr);
 		return cb.append("_").flip().toString();  //$NON-NLS-1$

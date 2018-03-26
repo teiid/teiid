@@ -41,6 +41,7 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-4228">TEIID-4228</a> Precision and scale values greater than 32767 are deprecated.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-4228">TEIID-4228</a> Not using a semicolon delimiter between statements is deprecated and should only be relied on for backwards compatibility.
   <li><a href="https://issues.jboss.org/browse/TEIID-4731">TEIID-4731</a> The default authentication scheme for MongoDB resource adapter has been changed to SCRAM_SHA_1 to match with latest versions of MongoDB. If using MongoDB version less than 3.0, to restore previous functionality change/add SecurityType to 'None' in the resource adapter configuration.
+  <li><a href="https://issues.jboss.org/browse/TEIID-5294">TEIID-5294</a> The name escaping performed by the SQL/XML logic and JSONTOXML function did not properly escape values.  Instead of _uHHHH_, _xHHHH_ should have been used.  That correction has been made, but is enabled via setting the system property org.teiid.useXMLxEscape to true.</li>
 </ul>
 
 <h4>from 10.0</h4>
