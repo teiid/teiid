@@ -32,6 +32,7 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
@@ -70,6 +71,8 @@ import org.teiid.query.util.CommandContext;
  * </pre>
  */
 public class RuleDecomposeJoin implements OptimizerRule {
+    
+    public final static String IMPLICIT_PARTITION_COLUMN_NAME = "implicit_partition.columnName";  //$NON-NLS-1$
 
 	@Override
 	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata,
@@ -136,6 +139,15 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		List<Expression> expr = new ArrayList<Expression>();
 		List<Expression> exprOther = new ArrayList<Expression>();
 		RuleChooseJoinStrategy.separateCriteria(unionNode.getParent().getGroups(), right.getGroups(), expr, exprOther, criteria, new LinkedList<Criteria>());
+
+        //if implicit, we assume that partitions match
+	    ElementSymbol es = getImplicitPartitionColumn(metadata, left);
+        ElementSymbol esOther = getImplicitPartitionColumn(metadata, right);
+        if (es != null && esOther != null 
+                && getEffectiveModelId(metadata, es.getGroupSymbol()) == getEffectiveModelId(metadata, esOther.getGroupSymbol())) {
+            expr.add(es);
+            exprOther.add(esOther);
+        }
 		
 		if (expr.isEmpty()) {
 			return root; //no equi-join
@@ -180,13 +192,18 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		}
 
 		PlanNode newUnion = buildUnion(unionNode, right, criteria, matches, branches, otherBranches, joinType);
-		PlanNode view = rebuild(left.getGroups().iterator().next(), joinNode, newUnion, metadata, context, left, right);
+		GroupSymbol leftGroup = left.getGroups().iterator().next();
+        PlanNode view = rebuild(leftGroup, joinNode, newUnion, metadata, context, left, right);
+		
+		//preserve the model of the virtual group as we'll look for this when checking for implicit behavior
+        ((TempMetadataID)(view.getGroups().iterator().next().getMetadataID())).getTableData().setModel(getEffectiveModelId(metadata, leftGroup));
 
 		SymbolMap symbolmap = (SymbolMap)view.getProperty(Info.SYMBOL_MAP);
 		HashMap<ElementSymbol, List<Set<Constant>>> newPartitionInfo = new LinkedHashMap<ElementSymbol, List<Set<Constant>>>();
+		Map<Expression, ElementSymbol> inverse = symbolmap.inserseMapping();
 		for (int[] match : matches) {
-			updatePartitionInfo(partitionInfo, matches, symbolmap, newPartitionInfo, 0, match[0]);
-			updatePartitionInfo(rightPartionInfo, matches, symbolmap, newPartitionInfo, partitionInfo.size(), match[1]);
+			updatePartitionInfo(partitionInfo, matches, inverse, newPartitionInfo, match[0]);
+			updatePartitionInfo(rightPartionInfo, matches, inverse, newPartitionInfo, match[1]);
 		}
 		view.setProperty(Info.PARTITION_INFO, newPartitionInfo);
 	
@@ -197,12 +214,33 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		return root;
 	}
 
+    static Object getEffectiveModelId(QueryMetadataInterface metadata,
+            GroupSymbol gs)
+            throws TeiidComponentException, QueryMetadataException {
+        if (gs.getModelMetadataId() != null) {
+            return gs.getModelMetadataId();
+        }
+        return metadata.getModelID(gs.getMetadataID());
+    }
+
+    private ElementSymbol getImplicitPartitionColumn(QueryMetadataInterface metadata,
+            PlanNode node)
+            throws TeiidComponentException, QueryMetadataException {
+        GroupSymbol gs = node.getGroups().iterator().next();
+        Object modelId = getEffectiveModelId(metadata, gs);
+        String name = metadata.getExtensionProperty(modelId, IMPLICIT_PARTITION_COLUMN_NAME, true);
+        if (name != null) {
+            return new ElementSymbol(name, gs);
+        }
+        return null;
+    }
+
 	private void updatePartitionInfo(
 			Map<ElementSymbol, List<Set<Constant>>> partitionInfo,
-			List<int[]> matches, SymbolMap symbolmap,
-			HashMap<ElementSymbol, List<Set<Constant>>> newPartitionInfo, int start, int index) {
+			List<int[]> matches, Map<Expression, ElementSymbol> inverse,
+			HashMap<ElementSymbol, List<Set<Constant>>> newPartitionInfo, int index) {
 		for (Map.Entry<ElementSymbol, List<Set<Constant>>> entry : partitionInfo.entrySet()) {
-			ElementSymbol newSymbol = symbolmap.getKeys().get(start++);
+			ElementSymbol newSymbol = inverse.get(entry.getKey());
 			List<Set<Constant>> values = newPartitionInfo.get(newSymbol);
 			if (values == null) {
 				values = new ArrayList<Set<Constant>>(matches.size());

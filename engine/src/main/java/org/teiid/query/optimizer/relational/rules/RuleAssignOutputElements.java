@@ -244,6 +244,21 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		        break;
 		    case NodeConstants.Types.SOURCE: {
 		        outputElements = (List<Expression>)determineSourceOutput(root, outputElements, metadata, capFinder);
+		        if (!finalRun && root.getProperty(Info.PARTITION_INFO) != null 
+		                && NodeEditor.findParent(root, NodeConstants.Types.JOIN) != null) {
+		            GroupSymbol group = root.getGroups().iterator().next();
+		            Object modelId = RuleDecomposeJoin.getEffectiveModelId(metadata, group);
+		            String name = metadata.getExtensionProperty(modelId, RuleDecomposeJoin.IMPLICIT_PARTITION_COLUMN_NAME, true);
+		            if (name != null) {
+		                //keep projecting the implicit partitioning column through the source so that it can 
+		                //be used in the decomposition logic
+		                ElementSymbol es = new ElementSymbol(name, group);
+		                if (!outputElements.contains(es)) {
+		                    es.setMetadataID(metadata.getElementID(es.getName()));
+		                    outputElements.add(es);
+		                }
+		            }
+		        }
 	            root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
 	            List<Expression> childElements = filterVirtualElements(root, outputElements, metadata);
 	            assignOutputElements(root.getFirstChild(), childElements, metadata, capFinder, rules, analysisRecord, context);
