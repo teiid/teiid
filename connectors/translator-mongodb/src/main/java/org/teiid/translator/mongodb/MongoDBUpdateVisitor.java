@@ -28,7 +28,7 @@ import java.util.Stack;
 
 import org.teiid.language.*;
 import org.teiid.language.AndOr.Operator;
-import org.teiid.language.Update;
+import org.teiid.language.Function;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;

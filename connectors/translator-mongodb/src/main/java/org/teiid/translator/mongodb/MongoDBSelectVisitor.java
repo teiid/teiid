@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import org.teiid.language.*;
+import org.teiid.language.Function;
 import org.teiid.language.Join.JoinType;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.HierarchyVisitor;

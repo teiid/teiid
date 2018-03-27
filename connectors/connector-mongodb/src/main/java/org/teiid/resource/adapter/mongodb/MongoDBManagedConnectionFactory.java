@@ -211,11 +211,7 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
     			if (idx < 0) {
     				throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
     			}
-    			try {
-    				addresses.add(new ServerAddress(token.substring(0, idx), Integer.valueOf(token.substring(idx+1))));
-    			} catch(UnknownHostException e) {
-    				throw new ResourceException(e);
-    			}
+    			addresses.add(new ServerAddress(token.substring(0, idx), Integer.valueOf(token.substring(idx+1))));
     		}
     		return addresses;
 	    }

@@ -130,8 +130,8 @@ public class MongoDBDirectQueryExecution extends MongoDBBaseExecution implements
                 }
                 else if (result instanceof WriteResult) {
                     WriteResult wr = (WriteResult)result;
-                    if (wr.getError() != null) {
-                        throw new TranslatorException(wr.getError());
+                    if(!wr.wasAcknowledged()) { //throw error for unacknowledged write
+                        throw new TranslatorException(wr.toString());
                     }
                 }
             } catch (NoSuchMethodException e) {
