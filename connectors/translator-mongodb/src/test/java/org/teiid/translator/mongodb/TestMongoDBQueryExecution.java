@@ -833,17 +833,17 @@ public class TestMongoDBQueryExecution {
     	DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 3);
 
 		BasicDBObject project = new BasicDBObject();
-	    project.append( "total",1);
+	    project.append( "_m0",1);
 
 	    BasicDBObject id = new BasicDBObject();
 	    id.append( "_c0","$user_id");
 
 	    BasicDBObject group = new BasicDBObject("_id", id);
-	    group.append("total", new BasicDBObject("$sum", "$age"));
+	    group.append("_m0", new BasicDBObject("$sum", "$age"));
 
 	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$group", group),
-	    		new BasicDBObject("$match", QueryBuilder.start("total").greaterThan(250).get()),
+	    		new BasicDBObject("$match", QueryBuilder.start("_m0").greaterThan(250).get()),
 				new BasicDBObject("$project", project));
 	    ArgumentCaptor<List> actualCapture = ArgumentCaptor.forClass(List.class);
 	    Mockito.verify(dbCollection).aggregate(actualCapture.capture(), Mockito.any(AggregationOptions.class));
@@ -857,18 +857,18 @@ public class TestMongoDBQueryExecution {
 		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 4);
 
 		BasicDBObject project = new BasicDBObject();
-	    project.append( "total",1);
+	    project.append( "_m0",1);
 
 	    BasicDBObject id = new BasicDBObject();
 	    id.append( "_c0","$user_id");
 
 	    BasicDBObject group = new BasicDBObject("_id", id);
-	    group.append("total", new BasicDBObject("$sum", "$age"));
+	    group.append("_m0", new BasicDBObject("$sum", "$age"));
 
 	    ArrayList<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$match", QueryBuilder.start("age").greaterThan(45).get()),
 	    		new BasicDBObject("$group", group),
-	    		new BasicDBObject("$match", QueryBuilder.start("total").greaterThan(250).get()),
+	    		new BasicDBObject("$match", QueryBuilder.start("_m0").greaterThan(250).get()),
 				new BasicDBObject("$project", project));
 
 	    ArgumentCaptor<List> actualCapture = ArgumentCaptor.forClass(List.class);
