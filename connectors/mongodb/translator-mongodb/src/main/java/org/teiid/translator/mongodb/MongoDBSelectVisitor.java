@@ -155,7 +155,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			exprDetails = new ColumnDetail();
 			exprDetails.addProjectedName(alias);
 			this.expressionMap.put(mongoExpression, exprDetails);
-		} else if (projectBeforeMatch) {
+		} else if (projectBeforeMatch || teiidExpression instanceof AggregateFunction) {
 		    alias = exprDetails.getProjectedName();
 		}
 
@@ -201,7 +201,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	}
 
 	private ColumnDetail buildAlias() {
-	    String alias = "_m"+this.aliasCount.getAndIncrement(); //$NON-NLS-1$
+	    String alias = getAlias(null);
 	    ColumnDetail detail =  new ColumnDetail();
 		detail.addProjectedName(alias);
 		return detail;
@@ -617,6 +617,14 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         if (obj.getGroupBy() != null) {
             append(obj.getGroupBy());
         }
+        
+        if (obj.getHaving() != null) {
+            append(obj.getHaving());
+        }
+
+        if (!this.onGoingExpression.isEmpty()) {
+            this.having = (DBObject)this.onGoingExpression.pop();
+        }
 
     	append(obj.getDerivedColumns());
 
@@ -626,14 +634,6 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			this.group.clear();
 			this.group.put("_id", id); //$NON-NLS-1$
 		}
-
-        if (obj.getHaving() != null) {
-            append(obj.getHaving());
-        }
-
-        if (!this.onGoingExpression.isEmpty()) {
-        	this.having = (DBObject)this.onGoingExpression.pop();
-        }
 
         if (!this.group.isEmpty()) {
             if (this.group.get("_id") == null) { //$NON-NLS-1$
@@ -658,7 +658,13 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
             return this.expressionMap.get(mongoExpr);
         }
         else if (teiidExpr instanceof AggregateFunction) {
+            boolean saved = this.projectBeforeMatch;
             ColumnDetail alias = addToProject(mongoExpr, false, columnDetails, true, projectedName);
+            //don't toggle for an aggregate function as it is projected by the group operation
+            this.projectBeforeMatch = saved;
+            if (projectedName == null) {
+                projectedName = alias.getProjectedName();
+            }
             if (!this.group.values().contains(mongoExpr)) {
                 this.group.put(projectedName, mongoExpr);
             }
