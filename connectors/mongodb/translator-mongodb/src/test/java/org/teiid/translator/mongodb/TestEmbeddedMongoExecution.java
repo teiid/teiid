@@ -220,16 +220,30 @@ public class TestEmbeddedMongoExecution {
         client.close();
     }
     
-    @Ignore("TEIID-5301 This does not work due to naming issues with e1 - however it is not expected to be pushed to the translator")
     @Test
     public void testGroupByHaving() throws Exception {
         executeCmd("delete from TIME_TEST");       
         executeCmd("insert into TIME_TEST (e1, e2) values (1, null)");
-        String sql = "SELECT e1, max(year(e2)) FROM TIME_TEST GROUP BY e1 HAVING max(year(e2)) = 1";
+        executeCmd("insert into TIME_TEST (e1, e2) values (2, null)");
+        String sql = "SELECT max(e1), e2, count(*) FROM TIME_TEST GROUP BY e2 HAVING count(*) = 2";
                 
         MongoDBQueryExecution exec = (MongoDBQueryExecution)executeCmd(sql);
-        assertEquals(Arrays.asList(1), exec.next());
+        assertEquals(Arrays.asList(2, null, 2), exec.next());
         assertNull(exec.next());
+        
+        sql = "SELECT min(e1), e2 FROM TIME_TEST GROUP BY e2 HAVING count(*) = 2";
+        
+        exec = (MongoDBQueryExecution)executeCmd(sql);
+        assertEquals(Arrays.asList(1, null), exec.next());
+        assertNull(exec.next());
+        
+        //won't work as it requires a secondary projection
+        sql = "SELECT min(e1)+1, e2 FROM TIME_TEST GROUP BY e2";
+        
+        /*exec = (MongoDBQueryExecution)executeCmd(sql);
+        assertEquals(Arrays.asList(1), exec.next());
+        assertEquals(Arrays.asList(1, null), exec.next());
+        assertNull(exec.next());*/
         
         client.close();
     }
