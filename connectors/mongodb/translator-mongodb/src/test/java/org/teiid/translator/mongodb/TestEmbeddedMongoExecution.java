@@ -17,8 +17,7 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -36,6 +35,7 @@ import org.teiid.language.Command;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 
@@ -204,4 +204,33 @@ public class TestEmbeddedMongoExecution {
     	
     	client.close();
     }    
+    
+    @Test
+    public void testTimeFunction() throws Exception {
+        executeCmd("delete from TIME_TEST");       
+        executeCmd("insert into TIME_TEST (e1, e2) values (1, null)");
+        MongoDBQueryExecution exec = (MongoDBQueryExecution)executeCmd("select * from TIME_TEST where YEAR(e2) = 1");
+        assertNull(exec.next());
+        
+        executeCmd("insert into TIME_TEST (e1, e2) values (2, '2001-01-01 01:02:03')");
+        
+        exec = (MongoDBQueryExecution)executeCmd("SELECT e2, second(e2) as sec FROM TIME_TEST WHERE second(e2) >= 0");
+        assertEquals(Arrays.asList(TimestampUtil.createTimestamp(101, 0, 1, 1, 2, 3, 0), 3), exec.next());
+        
+        client.close();
+    }
+    
+    @Ignore("TEIID-5301 This does not work due to naming issues with e1 - however it is not expected to be pushed to the translator")
+    @Test
+    public void testGroupByHaving() throws Exception {
+        executeCmd("delete from TIME_TEST");       
+        executeCmd("insert into TIME_TEST (e1, e2) values (1, null)");
+        String sql = "SELECT e1, max(year(e2)) FROM TIME_TEST GROUP BY e1 HAVING max(year(e2)) = 1";
+                
+        MongoDBQueryExecution exec = (MongoDBQueryExecution)executeCmd(sql);
+        assertEquals(Arrays.asList(1), exec.next());
+        assertNull(exec.next());
+        
+        client.close();
+    }
 }
