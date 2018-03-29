@@ -242,3 +242,9 @@ CREATE FOREIGN TABLE N7 (
     e3 integer,
     FOREIGN KEY (e2) REFERENCES N5 (e1)
 ) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:MERGE" 'N5');
+
+CREATE FOREIGN TABLE TIME_TEST (
+    e1 integer NOT NULL,
+    e2 timestamp,
+    PRIMARY KEY (e1)
+) OPTIONS(UPDATABLE 'TRUE');

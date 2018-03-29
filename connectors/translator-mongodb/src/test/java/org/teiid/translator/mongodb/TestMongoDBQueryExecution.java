@@ -1070,7 +1070,7 @@ public class TestMongoDBQueryExecution {
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", new BasicDBObject("$concat", params));
-        result.append( "_m1", "$CategoryName");
+        result.append( "CategoryName", "$CategoryName");
 
         List<DBObject> pipeline = buildArray(
                         new BasicDBObject("$project", result),
@@ -1078,6 +1078,32 @@ public class TestMongoDBQueryExecution {
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
 
+    @Test
+    public void testDateFunction() throws Exception {
+        String query = "SELECT YEAR(e2) FROM TIME_TEST";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"TIME_TEST"}, 1);
+
+        BasicDBList params = new BasicDBList();
+        params.add("$e2");
+
+        BasicDBList values = new BasicDBList();
+        values.add(0, "$e2");
+        values.add(1, null);        
+        BasicDBObject isNull = new BasicDBObject("$eq", values);  
+        
+        BasicDBObject func = new BasicDBObject("$year", params);
+        BasicDBObject expr = buildCondition(isNull, null, func);
+        
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", expr);
+        
+        //{ "$cond" : [ { "$eq" : [ "$e2" ,  null ]} ,  null  , { "$year" : [ "$e2"]}]}
+
+        List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+    
     @Test
     public void testSubStr() throws Exception {
         String query = "SELECT SUBSTRING(CategoryName, 3) FROM Categories";

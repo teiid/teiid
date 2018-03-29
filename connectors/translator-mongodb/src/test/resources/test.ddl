@@ -33,3 +33,9 @@ CREATE FOREIGN TABLE G4 (
     e2 integer NOT NULL,
     e3 integer  
 ) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'true');
+
+CREATE FOREIGN TABLE TIME_TEST (
+    e1 integer NOT NULL,
+    e2 timestamp,
+    PRIMARY KEY (e1)
+) OPTIONS(UPDATABLE 'TRUE');

@@ -21,23 +21,39 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+import static org.teiid.language.visitor.SQLStringVisitor.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.EmptyStackException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import org.teiid.language.*;
-import org.teiid.language.Function;
 import org.teiid.language.Join.JoinType;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.HierarchyVisitor;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
+//import org.teiid.query.function.GeometryUtils;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MergeDetails.Association;
 
-import com.mongodb.*;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBObject;
+import com.mongodb.QueryBuilder;
 
 public class MongoDBSelectVisitor extends HierarchyVisitor {
     private AtomicInteger aliasCount = new AtomicInteger();
@@ -137,6 +153,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			exprDetails = new ColumnDetail();
 			exprDetails.addProjectedName(alias);
 			this.expressionMap.put(mongoExpression, exprDetails);
+		} else if (projectBeforeMatch) {
+		    alias = exprDetails.getProjectedName();
 		}
 
 		// the the expression is already part of group by then the projection should be $_id.{name}
@@ -181,13 +199,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	}
 
 	private ColumnDetail buildAlias() {
-	    return buildAlias("_m"+this.aliasCount.getAndIncrement()); //$NON-NLS-1$
-	}
-
-	private ColumnDetail buildAlias(String alias) {
-	    if (alias == null) {
-	        return buildAlias();
-	    }
+	    String alias = "_m"+this.aliasCount.getAndIncrement(); //$NON-NLS-1$
 	    ColumnDetail detail =  new ColumnDetail();
 		detail.addProjectedName(alias);
 		return detail;
@@ -351,6 +363,9 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
             List<?> parts =  this.executionFactory.getFunctionModifiers().get(functionName).translate(obj);
             if (parts != null) {
             	obj = (Function)parts.get(0);
+            	if (parts.size() > 1) {
+            	    throw new AssertionError("Not supported"); //$NON-NLS-1$
+            	}
             }
     	}
     	BasicDBObject expr = null;
@@ -358,7 +373,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			expr = (BasicDBObject)handleGeoSpatialFunction(functionName, obj);
     	} 
     	else if (isStringFunction(functionName)) {
-    	    expr = (BasicDBObject)handleStringFunction(functionName, obj);
+    	    expr = handleStringFunction(functionName, obj);
     	}
     	else {
 	    	List<Expression> args = obj.getParameters();
@@ -374,6 +389,21 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
     	}
 
 		if(expr != null) {
+		    //functions over dates do not work if the date is null/missing
+		    if (obj.getParameters().size() == 1 
+                    && Date.class.isAssignableFrom(obj.getParameters().get(0).getType())
+                    && isDateTimeFunction(functionName) ) {
+		        BasicDBList newParams = new BasicDBList();
+		        newParams.addAll((BasicDBList)expr.values().iterator().next());
+		        newParams.add(null);
+		        BasicDBObject nullCheck = new BasicDBObject("$eq", newParams);
+		        newParams = new BasicDBList();
+                newParams.add(nullCheck);
+                newParams.add(null);
+                newParams.add(expr);
+                expr = new BasicDBObject("$cond", newParams);
+		    }
+		        
 			this.onGoingExpression.push(expr);
 		}
 	}
@@ -384,6 +414,21 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
                 || functionName.equalsIgnoreCase("SUBSTRING")) {
 	        return true;
 	    }
+        return false;
+    }
+    
+    private boolean isDateTimeFunction(String functionName) {
+        if (functionName.equalsIgnoreCase(SourceSystemFunctions.DAYOFYEAR)
+                || functionName.equalsIgnoreCase(SourceSystemFunctions.DAYOFMONTH)
+                || functionName.equalsIgnoreCase(SourceSystemFunctions.DAYOFWEEK)
+                || functionName.equalsIgnoreCase(SourceSystemFunctions.YEAR)
+                || functionName.equalsIgnoreCase(SourceSystemFunctions.MONTH)
+                || functionName.equalsIgnoreCase(SourceSystemFunctions.WEEK)
+                || functionName.equalsIgnoreCase(SourceSystemFunctions.HOUR)
+                || functionName.equalsIgnoreCase(SourceSystemFunctions.MINUTE)
+                || functionName.equalsIgnoreCase(SourceSystemFunctions.SECOND)) {
+            return true;
+        }
         return false;
     }
     
