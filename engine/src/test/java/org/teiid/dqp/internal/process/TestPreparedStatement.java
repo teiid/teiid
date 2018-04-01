@@ -23,6 +23,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeSet;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -48,6 +49,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -149,6 +151,24 @@ public class TestPreparedStatement {
         TestProcessor.sampleData1(dataManager);
 		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, RealMetadataFactory.example1VDB());
 	}
+    
+    @Test public void testCopiedWhere() throws Exception { 
+        String preparedSql = "SELECT mediuma.bigdecimalvalue as a FROM bqt1.smalla inner join  bqt1.mediuma "
+                + "on (smalla.bigdecimalvalue = mediuma.bigdecimalvalue) "
+                + "WHERE smalla.bigdecimalvalue in (?,?) and mediuma.bigdecimalvalue in (1,2)"; //$NON-NLS-1$
+        
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        List<?> values = Arrays.asList(0, 1);
+
+        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0), SESSION_ID, false, false,RealMetadataFactory.exampleBQTVDB());
+        TestOptimizer.checkNodeTypes(plan.processPlan, TestOptimizer.FULL_PUSHDOWN);
+        
+        TestOptimizer.checkAtomicQueries(new String[] {"SELECT g_1.BigDecimalValue FROM BQT1.SmallA AS g_0, BQT1.MediumA AS g_1 WHERE (g_0.BigDecimalValue = g_1.BigDecimalValue) AND (g_0.BigDecimalValue IN (?, ?)) AND (g_0.BigDecimalValue IN (1, 2)) AND (g_1.BigDecimalValue IN (1, 2)) AND (g_1.BigDecimalValue IN (?, ?))"}, plan.processPlan);
+    }
     
     @Test public void testObjectCast() throws Exception { 
         // Create query 
@@ -510,6 +530,12 @@ public class TestPreparedStatement {
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         
 		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+    }
+    
+    public static void main(String[] args) {
+        TreeSet set = new TreeSet<>();
+        
+        set.containsAll(Arrays.asList(new Object()));
     }
     
 }
