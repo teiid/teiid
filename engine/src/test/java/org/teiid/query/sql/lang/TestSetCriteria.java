@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -29,6 +30,7 @@ import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Reference;
 
 public class TestSetCriteria {
 
@@ -100,6 +102,14 @@ public class TestSetCriteria {
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
 	}
 	
+    @Test public void testNonEquivalence(){
+        Object s1 = sample1();
+        SetCriteria s1a = sample1();
+        s1a.setValues(Arrays.asList(new Reference(1), new Reference(2)));
+        int equals = -1;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
+    }
+	
     @Test public void testNonEquivalence1(){
         Object s1 = sample1();
         Object s2 = sample2();
@@ -133,5 +143,13 @@ public class TestSetCriteria {
         
         SetCriteria c2 = (SetCriteria) c1.clone();
         assertTrue(c2.getValues() instanceof TreeSet);
+    }
+    
+    @Test public void testNonEquivalence3(){
+        Object s1 = sample1();
+        SetCriteria s1a = sample1();
+        s1a.setValues(Arrays.asList(new Constant("a"), new Constant("a")));
+        int equals = -1;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
     }
 }

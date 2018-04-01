@@ -21,12 +21,15 @@ package org.teiid.query.sql.lang;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.TreeSet;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -117,7 +120,6 @@ public class SetCriteria extends AbstractSetCriteria {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Use super.equals() to check obvious stuff and variable
     	if(obj == this) {
 			return true;
 		}
@@ -131,10 +133,40 @@ public class SetCriteria extends AbstractSetCriteria {
         if (isNegated() ^ sc.isNegated()) {
             return false;
         }
-                
-        return getValues().size() == sc.getValues().size() && 
-        	getValues().containsAll(sc.getValues()) &&
-            EquivalenceUtil.areEqual(getExpression(), sc.getExpression());
+        
+        if (getValues().size() != sc.getValues().size() ||
+            !EquivalenceUtil.areEqual(getExpression(), sc.getExpression())) {
+            return false;
+        }
+        
+        if (this.allConstants) {
+            for (Expression ex : (Collection<Expression>)sc.getValues()) {
+                if (!(ex instanceof Constant)) {
+                    return false;
+                }
+                if (!values.contains(ex)) {
+                    return false;
+                }
+            }
+        } else {
+            if (!getValues().containsAll(sc.getValues())) {
+                return false;
+            }
+        }
+        
+        if (!(sc.values instanceof Set)) {
+            Collection unique = null;
+            if (!DataTypeManager.isHashable(sc.getExpression().getType())) {
+                unique = new TreeSet(sc.getValues());
+            } else {
+                unique = new HashSet(sc.getValues());
+            }
+            if (unique.size() < sc.getValues().size()) {
+                return false;
+            }
+        }
+        
+        return true;
 	}
 	
 	/**
