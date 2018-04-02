@@ -68,6 +68,10 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		RANK,
 		DENSE_RANK,
 		ROW_NUMBER,
+		FIRST_VALUE,
+		LAST_VALUE,
+        LEAD,
+        LAG,
 		STRING_AGG,
 		USER_DEFINED;
 	}
@@ -169,6 +173,17 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	public Type getAggregateFunction() {
 		return this.aggregate;
 	}
+	
+	public boolean isRowValueFunction() {
+	    switch (aggregate) {
+	    case ROW_NUMBER:
+	    case LEAD:
+	    case LAG:
+	        return true;
+        default:
+            return false;
+	    }
+	}
 
 	/**
 	 * Get the distinct flag.  If true, aggregate symbol will remove duplicates during
@@ -235,9 +250,14 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		case RANK:
 		case ROW_NUMBER:
 		case DENSE_RANK:
+		case FIRST_VALUE:
+		case LAST_VALUE:
+		case LEAD:
+        case LAG:
 			return true;
+		default:
+		    return false;
 		}
-		return false;
 	}
 
 	public boolean isBoolean() {
