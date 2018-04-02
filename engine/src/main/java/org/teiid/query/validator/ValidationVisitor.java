@@ -1114,6 +1114,30 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.window_order_by", windowFunction), windowFunction); //$NON-NLS-1$
             }
     		break;
+    	case LAST_VALUE:
+    	case FIRST_VALUE:
+            if (windowFunction.getWindowSpecification().getOrderBy() == null) {
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.value_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$
+            }
+    	    if (windowFunction.getFunction().getArgs().length != 1) { 
+    	        handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.value_one_argument", windowFunction), windowFunction); //$NON-NLS-1$
+    	    }
+    	    if (windowFunction.getFunction().isDistinct() || windowFunction.getFunction().getCondition() != null) {
+    	        handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.analytic_restriction", windowFunction), windowFunction); //$NON-NLS-1$
+    	    }
+    	    break;
+    	case LEAD:
+    	case LAG:
+            if (windowFunction.getWindowSpecification().getOrderBy() == null) {
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.value_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$
+            }
+    	    if (windowFunction.getFunction().getArgs().length > 3 || windowFunction.getFunction().getArgs().length == 0) { 
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.value_three_arguments", windowFunction), windowFunction); //$NON-NLS-1$
+            }
+            if (windowFunction.getFunction().isDistinct() || windowFunction.getFunction().getCondition() != null) {
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.analytic_restriction", windowFunction), windowFunction); //$NON-NLS-1$
+            }
+            break;
     	}
     	validateNoSubqueriesOrOuterReferences(windowFunction);
         if (windowFunction.getFunction().getOrderBy() != null || (windowFunction.getFunction().isDistinct() && windowFunction.getWindowSpecification().getOrderBy() != null)) {

@@ -195,6 +195,10 @@ public class CapabilitiesUtil {
         case RANK:
         case DENSE_RANK:
         case ROW_NUMBER:
+        case FIRST_VALUE:
+        case LAST_VALUE:
+        case LEAD:
+        case LAG:
         	if (!caps.supportsCapability(Capability.ELEMENTARY_OLAP)) {
         		return false;
         	}
