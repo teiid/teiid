@@ -175,6 +175,10 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		execute("call logMsg(level=>'DEBUG', context=>'org.teiid.foo', msg=>'hello world')"); //$NON-NLS-1$
 	}
 	
+	@Test(expected=SQLException.class) public void testNotNullParameter() throws Exception {
+        execute("begin declare string x = null; call logMsg(level=>'DEBUG', context=>x, msg=>'a'); end"); //$NON-NLS-1$
+    }
+	
 	@Test(expected=SQLException.class) public void testLogMsg1() throws Exception {
 		execute("call logMsg(level=>'foo', context=>'org.teiid.foo', msg=>'hello world')"); //$NON-NLS-1$
 	}

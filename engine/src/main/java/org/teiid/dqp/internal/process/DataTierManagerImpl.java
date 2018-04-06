@@ -98,11 +98,13 @@ import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
+import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
@@ -1312,7 +1314,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			return et.processQuery(query, vdb, indexMetadata, context);
 		} 			
 		Collection<List<?>> rows = new ArrayList<List<?>>();
-		StoredProcedure proc = (StoredProcedure)command;		
+		StoredProcedure proc = (StoredProcedure)command;
+		for (SPParameter param : proc.getInputParameters()) {
+		    ProcedurePlan.checkNotNull(param.getParameterSymbol(), ((Constant)param.getExpression()).getValue(), context.getMetadata());
+		}
 		if (StringUtil.startsWithIgnoreCase(proc.getProcedureCallableName(), CoreConstants.SYSTEM_ADMIN_MODEL)) {
 			final SystemAdminProcs sysProc = SystemAdminProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_ADMIN_MODEL.length() + 1).toUpperCase());
 			switch (sysProc) {
@@ -1327,9 +1332,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				int msgLevel = getLevel(level);
 				boolean logged = false;
 				if (LogManager.isMessageToBeRecorded(logContext, msgLevel)) {
-					if (message != null) {
-						LogManager.log(msgLevel, logContext, message);
+					if (message == null) {
+					    message = "null"; //$NON-NLS-1$
 					}
+                    LogManager.log(msgLevel, logContext, message);
 					logged = true;
 				}
 				if (proc.returnParameters()) {

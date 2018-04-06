@@ -221,7 +221,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		            Object value = this.evaluateExpression(expr);
 		
 		            //check constraint
-		            checkNotNull(param, value);
+		            checkNotNull(param, value, metadata);
 		            setParameterValue(param, context, value);
 		        }
 		        this.evaluator.close();
@@ -234,7 +234,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     	this.evaluatedParams = true;
     }
 
-	private void checkNotNull(ElementSymbol param, Object value)
+	public static void checkNotNull(ElementSymbol param, Object value, QueryMetadataInterface metadata)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryValidatorException {
 		if (metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
@@ -308,7 +308,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
             		int i = this.getOutputElements().size() - this.outParams.size();
             		for (ElementSymbol param : outParams) {
             			Object value = vc.getValue(param);
-            			checkNotNull(param, value);
+            			checkNotNull(param, value, metadata);
 						paramTuple.set(i++, value);
 					}
             		addBatchRow(paramTuple, true);
