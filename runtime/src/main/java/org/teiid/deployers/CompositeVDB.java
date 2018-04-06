@@ -17,14 +17,7 @@
  */
 package org.teiid.deployers;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.Future;
 
 import org.teiid.adminapi.DataPolicy;
@@ -37,6 +30,8 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
@@ -156,8 +151,12 @@ public class CompositeVDB {
 		toSearch[0] = this.vdb.getAttachment(ClassLoader.class);
 		this.children = new LinkedHashMap<VDBKey, CompositeVDB>();
 		newMergedVDB.setImportedModels(new TreeSet<String>(String.CASE_INSENSITIVE_ORDER));
+		LinkedHashSet<VDBImport> seen = new LinkedHashSet<>(vdb.getVDBImports());
+		Stack<VDBImport> toLoad = new Stack<VDBImport>();
+		toLoad.addAll(seen);
 		int i = 1;
-		for (VDBImport vdbImport : vdb.getVDBImports()) {
+		while (!toLoad.isEmpty()) {
+		    VDBImport vdbImport = toLoad.pop();
 			VDBKey key = new VDBKey(vdbImport.getName(), vdbImport.getVersion());
 			if (key.isAtMost()) {
 				//TODO: could allow partial versions
@@ -168,6 +167,21 @@ public class CompositeVDB {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40083, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40083, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion()));
 			}
 			VDBMetaData childVDB = importedVDB.getVDB();
+			VDBMetaData originalChildVDB = importedVDB.getOriginalVDB();
+			//detect transitive importing vdb
+			if (!originalChildVDB.getVDBImports().isEmpty() 
+			        && originalChildVDB.getVisibilityOverrides().isEmpty() 
+			        && originalChildVDB.getDataPolicies().isEmpty()
+			        && originalChildVDB.getModels().isEmpty()) {
+			    for (VDBImport childImport : originalChildVDB.getVDBImports()) {
+			        if (seen.add(childImport)) {
+			            toLoad.push(childImport);
+			        } else {
+			            LogManager.logDetail(LogConstants.CTX_DQP, "Ommitting the duplicate import of " + childImport + " from " + vdbImport + " for the creation of " + vdb); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+			        }
+			    }
+			    continue;
+			}
 			newMergedVDB.getVisibilityOverrides().putAll(childVDB.getVisibilityOverrides());
 			toSearch[i++] = childVDB.getAttachment(ClassLoader.class);
 			this.children.put(importedVDB.getVDBKey(), importedVDB);
