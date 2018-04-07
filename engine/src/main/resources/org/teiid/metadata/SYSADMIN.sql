@@ -429,9 +429,9 @@ BEGIN
 
     /* make sure table in valid state before updating */    
     EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || VARIABLES.updateCriteria AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long, LoadNumber long INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = updateMatView.schemaName, viewName = updateMatView.viewName;
-    DECLARE long loadNumber = (SELECT LoadNumber FROM #load);
-    DECLARE long updatedCardinality = (SELECT Cardinality FROM #load);
-    DECLARE boolean valid = (SELECT Valid FROM #load);
+    DECLARE long loadNumber = nvl((SELECT LoadNumber FROM #load), 0);
+    DECLARE long updatedCardinality = nvl((SELECT Cardinality FROM #load), 0);
+    DECLARE boolean valid = nvl((SELECT Valid FROM #load), false);
     IF (NOT VARIABLES.valid)
     BEGIN
         RAISE SQLEXCEPTION 'View ' || VARIABLES.fullViewName || ' contents are not in valid status to perform materialization update. Run loadMatview to reload.';
