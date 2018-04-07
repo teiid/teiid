@@ -1411,16 +1411,18 @@ public class TestEmbeddedServer {
                     }
                     @Override
                     public List<?> next() throws TranslatorException, DataNotAvailableException {
-                        String status = "SELECT status.TargetSchemaName, status.TargetName, status.Valid, "
-                                + "status.LoadState, status.Updated, status.Cardinality, status.LoadNumber "
-                                + "FROM status WHERE status.VDBName = 'test' AND status.VDBVersion = '1.0.0' "
-                                + "AND status.SchemaName = 'virt' AND status.Name = 'my_view'";
                         if (results == null) {
 	                        String commandString = command.toString();
-							if (hasStatus.get() && commandString.equals(status)) {
-	                            results = Arrays.asList(Arrays.asList(null, "mat_table", valid.get(), loaded.get()?"LOADED":"LOADING", new Timestamp(System.currentTimeMillis()), -1, new Integer(1))).iterator();
-	                        } else if (hasStatus.get() && commandString.startsWith("SELECT status.Valid, status.LoadState FROM status")) {
-	                        	results = Arrays.asList(Arrays.asList(valid.get(), loaded.get()?"LOADED":"LOADING")).iterator();
+							if (commandString.contains(" FROM status")) {
+							    if (hasStatus.get()) {
+							        if (commandString.startsWith("SELECT status.Valid, status.LoadState FROM status")) {
+							            results = Arrays.asList(Arrays.asList(valid.get(), loaded.get()?"LOADED":"LOADING")).iterator();
+		                            } else if (commandString.startsWith("SELECT status.Name, status.TargetSchemaName, status.TargetName, status.Valid, status.LoadState, status.Updated, status.Cardinality, status.LoadNumber")) {
+		                                results = Arrays.asList(Arrays.asList("my_view", "my_schema", "mat_table", valid.get(), loaded.get()?"LOADED":"LOADING", new Timestamp(System.currentTimeMillis()), -1, new Integer(1))).iterator();
+		                            } else {
+		                                throw new AssertionError(commandString);
+		                            }
+							    }
 	                        } else if (loaded.get() && commandString.equals("SELECT mat_table.my_column FROM mat_table")) {
 	                        	matTableCount.getAndIncrement();
 	                        	results = Arrays.asList(Arrays.asList("mat_column0"), Arrays.asList("mat_column1")).iterator();
@@ -1533,6 +1535,8 @@ public class TestEmbeddedServer {
         }
         
         assertEquals(1, tableCount.get());
+        
+        s.execute("update my_schema.status set valid=true");
         
         //make sure a similar name doesn't cause an issue
   		rs = s.executeQuery("select * from (call sysadmin.updateMatView('virt', 'my_view', 'true')) as x");
