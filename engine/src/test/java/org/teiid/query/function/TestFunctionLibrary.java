@@ -1452,7 +1452,12 @@ public class TestFunctionLibrary {
 	@Test public void testNodeId() throws Exception {
 		System.setProperty("jboss.node.name", "x");
 		helpInvokeMethod("node_id", new Object[] {}, "x"); //$NON-NLS-1$
+		helpInvokeMethod("sys_prop", new Object[] {"jboss.node.name"}, "x"); //$NON-NLS-1$
 	}
+	
+    @Test public void testEnvVar() throws Exception {
+        helpInvokeMethod("env_var", new Class<?>[] {String.class}, new Object[] {"x"}, null);
+    }
 	
 	@Test public void testGetBuiltin() throws Exception {
 		assertEquals(17, RealMetadataFactory.SFM.getSystemFunctionLibrary().getBuiltInAggregateFunctions(false).size());

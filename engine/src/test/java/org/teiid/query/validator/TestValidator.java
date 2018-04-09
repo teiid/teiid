@@ -1586,4 +1586,22 @@ public class TestValidator {
         helpValidate("SELECT LAG(e3) over (order by e2) FROM test.group", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Test public void testEnvAllowed() { 
+        TransformationMetadata tm = RealMetadataFactory.example1(); 
+        String sql = "select env('abc')"; //$NON-NLS-1$
+        helpValidate(sql, new String[] {}, tm);
+        sql = "select env_var('abc')"; //$NON-NLS-1$
+        helpValidate(sql, new String[] {}, tm);
+        sql = "select sys_prop('abc')"; //$NON-NLS-1$
+        helpValidate(sql, new String[] {}, tm);
+        
+        tm.setAllowENV(false);
+        sql = "select env('abc')"; //$NON-NLS-1$
+        helpValidate(sql, new String[] {"env('abc')"}, tm);
+        sql = "select env_var('abc')"; //$NON-NLS-1$
+        helpValidate(sql, new String[] {"env_var('abc')"}, tm);
+        sql = "select sys_prop('abc')"; //$NON-NLS-1$
+        helpValidate(sql, new String[] {"sys_prop('abc')"}, tm);
+    }
+    
 }

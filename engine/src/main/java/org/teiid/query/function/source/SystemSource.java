@@ -879,6 +879,18 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                     new FunctionParameter("variablename", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Env_varname")) //$NON-NLS-1$ //$NON-NLS-2$
                      ),
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Env_result")), true, Determinism.DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
+        functions.add(
+                new FunctionMethod("sys_prop", QueryPlugin.Util.getString("SystemSource.Env_desc"), MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, "sys_prop", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Arrays.asList(
+                        new FunctionParameter("variablename", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Env_varname")) //$NON-NLS-1$ //$NON-NLS-2$
+                         ),
+                    new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Env_result")), true, Determinism.DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
+        functions.add(
+                new FunctionMethod("env_var", QueryPlugin.Util.getString("SystemSource.env_var_desc"), MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, "env_var", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Arrays.asList(
+                        new FunctionParameter("variablename", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.env_var_param1")) //$NON-NLS-1$ //$NON-NLS-2$
+                         ),
+                    new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.env_var_result")), true, Determinism.DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addSessionIdFunction() {

@@ -290,7 +290,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	}
 
     public void visit(Function obj) {
-        if (!this.getMetadata().isEnvAllowed() && obj.getName().equalsIgnoreCase(FunctionLibrary.ENV)) {
+        if (!this.getMetadata().isEnvAllowed() 
+                && (obj.getName().equalsIgnoreCase(FunctionLibrary.ENV)
+                || obj.getName().equalsIgnoreCase(FunctionLibrary.SYS_PROP)
+                || obj.getName().equalsIgnoreCase(FunctionLibrary.ENV_VAR))) {
             handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.env_not_allowed", obj, obj.getName()), obj); //$NON-NLS-1$
         } else if(FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {

@@ -1547,6 +1547,15 @@ public final class FunctionMethods {
         return value;            
     }
     
+    public static Object sys_prop(String propertyName) {
+        return System.getProperty(propertyName);
+    }
+    
+    // ================= Function - ENV ========================
+    public static Object env_var(String propertyName) {
+        return System.getenv(propertyName);
+    }
+    
     public static Object session_id(CommandContext context) {
         return context.getConnectionId();
     }
