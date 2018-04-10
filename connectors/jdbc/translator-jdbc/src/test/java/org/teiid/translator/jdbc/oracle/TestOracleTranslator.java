@@ -1307,4 +1307,33 @@ public class TestOracleTranslator {
         String output = "SELECT DBMS_RANDOM.VALUE() FROM SmallA"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+    
+    @Test public void testUnicodeLiteral() throws Exception {
+        helpTestVisitor(getTestVDB(),
+                        "select part_name from parts where part_name like N'日本語のキーボード_'", //$NON-NLS-1$
+                        null,
+                        "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_NAME LIKE N'日本語のキーボード_'"); //$NON-NLS-1$
+    }
+    
+    @Test public void testUnicodeCase() throws Exception {
+        helpTestVisitor(getTestVDB(),
+                        "select case when part_name = 'a' then N'日本語のキーボード' else part_name end from parts", //$NON-NLS-1$
+                        null,
+                        "SELECT CASE WHEN PARTS.PART_NAME = 'a' THEN N'日本語のキーボード' ELSE TO_NCHAR(PARTS.PART_NAME) END FROM PARTS"); //$NON-NLS-1$
+    }
+    
+    @Test public void testUnicodeUnion() throws Exception {
+        String input = "select part_name from parts union all select 'a' from parts"; //$NON-NLS-1$
+        String output = "SELECT parts.part_name FROM parts UNION ALL SELECT TO_NCHAR('a') FROM parts"; //$NON-NLS-1$
+               
+        String ddl = "create foreign table parts (a_name string, part_name string options (native_type 'nvarchar'));";
+        
+        TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        
+        helpTestVisitor(tm,
+            input, 
+            EMPTY_CONTEXT,
+            null,
+            output);
+    }
 }
