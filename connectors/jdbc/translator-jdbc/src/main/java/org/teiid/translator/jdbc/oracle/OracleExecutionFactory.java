@@ -37,6 +37,7 @@ import java.util.TreeSet;
 
 import org.teiid.GeometryInputSource;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
@@ -68,6 +69,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	
 	private static final String TRUNC = "TRUNC"; //$NON-NLS-1$
 	private static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
+	private static final String TO_NCHAR = "TO_NCHAR"; //$NON-NLS-1$
     public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
@@ -129,6 +131,39 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	 */
 	static final class FixedCharType {}
 	static int FIXED_CHAR_TYPE = 999;
+	
+    private static boolean isI18NChar(Expression obj) {
+        if (obj == null 
+                || !(obj.getType() == TypeFacility.RUNTIME_TYPES.STRING || obj.getType() == TypeFacility.RUNTIME_TYPES.CHAR)) {
+            return false;
+        }
+        if (obj instanceof ColumnReference) {
+            ColumnReference cr = (ColumnReference)obj;
+            return cr.getMetadataObject() == null 
+                    || (StringUtil.startsWithIgnoreCase(cr.getMetadataObject().getNativeType(), "NVAR") //$NON-NLS-1$
+                            || "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
+            
+        }
+        if (obj instanceof Literal) {
+            Object value = ((Literal) obj).getValue();
+            if (value != null) {
+                String val = value.toString();
+                for (int i = 0; i < val.length(); i++) {
+                    if (val.charAt(i) > 127) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        if (obj instanceof Function) {
+            Function f = (Function)obj;
+            return f.getName().equalsIgnoreCase(TO_NCHAR)
+                     || (obj.getType() == TypeFacility.RUNTIME_TYPES.CHAR && f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT));
+        }
+        return false;
+    }
+
 
 	private boolean oracleSuppliedDriver = true;
 	
@@ -186,7 +221,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
-    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.CHAR, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                if (isI18NChar(function.getParameters().get(0))) {
+                    ((Literal)function.getParameters().get(1)).setValue("nchar(1)"); //$NON-NLS-1$
+                } else {
+                    ((Literal)function.getParameters().get(1)).setValue("char(1)"); //$NON-NLS-1$
+                }
+                return null;
+            }
+        });
     	convertModifier.addTypeMapping("date", FunctionModifier.DATE, FunctionModifier.TIME); //$NON-NLS-1$
     	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
@@ -659,12 +704,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 					return false;
 				}
 				ColumnReference cr = (ColumnReference)obj;
-				return cr.getType() == TypeFacility.RUNTIME_TYPES.STRING 
+				return (cr.getType() == TypeFacility.RUNTIME_TYPES.STRING || cr.getType() == TypeFacility.RUNTIME_TYPES.CHAR)  
 						&& cr.getMetadataObject() != null 
 						&& ("CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()) //$NON-NLS-1$
 								|| "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
 			}
-    		
+			
     		@Override
             public void visit(In obj) {
     			if (isFixedChar(obj.getLeftExpression())) {
@@ -773,6 +818,55 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     				}
     			}
     			super.visit(obj);
+    		}
+
+    		@Override
+    		public void visit(SearchedCase obj) {
+    		    boolean i18n = false;
+    		    if (isI18NChar(obj.getElseExpression())) {
+    		        i18n = true;
+    		    }
+    		    for (SearchedWhenClause clause : obj.getCases()) {
+    		        if (isI18NChar(clause.getResult())) {
+    		            i18n = true;
+    		        }
+    		    }
+    		    if (i18n) {
+    		        if (obj.getElseExpression() != null && !isI18NChar(obj.getElseExpression())) {
+    		            obj.setElseExpression(toNChar(obj.getElseExpression()));
+                    }
+                    for (SearchedWhenClause clause : obj.getCases()) {
+                        if (!isI18NChar(clause.getResult())) {
+                            clause.setResult(toNChar(clause.getResult()));
+                        }
+                    }   
+    		    }
+    		    super.visit(obj);
+    		}
+    		
+    		private Function toNChar(Expression ex) {
+    		    return new Function(TO_NCHAR, Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.STRING);
+    		}
+    		
+    		@Override
+    		public void visit(SetQuery obj) {
+    		    for (int i = 0; i < obj.getColumnNames().length; i++) {
+    		        DerivedColumn leftDerivedColumn = obj.getLeftQuery().getProjectedQuery().getDerivedColumns().get(i);
+                    boolean left_i18n = isI18NChar(leftDerivedColumn.getExpression());
+    		        DerivedColumn rightDerivedColumn = obj.getRightQuery().getProjectedQuery().getDerivedColumns().get(i);
+                    boolean right_i18n = isI18NChar(rightDerivedColumn.getExpression());
+    		        if (left_i18n ^ right_i18n) {
+    		            if (!left_i18n) {
+    		                leftDerivedColumn.setExpression(toNChar(leftDerivedColumn.getExpression()));
+    		            } else if (!right_i18n) {
+    		                rightDerivedColumn.setExpression(toNChar(rightDerivedColumn.getExpression()));
+    		            }
+    		            if (obj.getOrderBy() != null) {
+    		                throw new AssertionError();
+    		            }
+    		        }
+    		    }
+    		    super.visit(obj);
     		}
     		
     	};
@@ -1165,5 +1259,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
             }
         }
         return super.translate(obj, context);
+    }
+    
+    @Override
+    public boolean useUnicodePrefix() {
+        return true;
     }
 }
