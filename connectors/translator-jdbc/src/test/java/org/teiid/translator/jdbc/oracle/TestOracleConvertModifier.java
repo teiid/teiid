@@ -79,6 +79,10 @@ public class TestOracleConvertModifier {
     @Test public void testStringToChar() throws Exception {
         helpTest(LANG_FACTORY.createLiteral("5", String.class), "char", "cast('5' AS char(1))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
+    
+    @Test public void testStringToNChar() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral("日", String.class), "char", "cast(N'日' AS nchar(1))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
 
     @Test public void testStringToBoolean() throws Exception {
         helpTest(LANG_FACTORY.createLiteral("5", String.class), "boolean", "CASE WHEN '5' IN ('false', '0') THEN 0 WHEN '5' IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -132,6 +136,14 @@ public class TestOracleConvertModifier {
     
     @Test public void testCharToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Character('5'), Character.class), "string", "'5'"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testNCharToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Character('日'), Character.class), "string", "N'日'"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testNCharToStringConversion() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Character('日'), String.class), "string", "TO_NCHAR(N'日')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = BOOLEAN

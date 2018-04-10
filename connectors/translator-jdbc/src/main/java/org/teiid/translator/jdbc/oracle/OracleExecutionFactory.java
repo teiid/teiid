@@ -67,7 +67,8 @@ import org.teiid.translator.jdbc.*;
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
 	
-	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+	private static final String TO_NCHAR = "TO_NCHAR"; //$NON-NLS-1$
+    public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
 	public static final Version TWELVE = Version.getVersion("12"); //$NON-NLS-1$
@@ -126,7 +127,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	 */
 	static final class FixedCharType {}
 	static int FIXED_CHAR_TYPE = 999;
-
+	
 	private boolean oracleSuppliedDriver = true;
 	
 	private OracleFormatFunctionModifier parseModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
@@ -183,7 +184,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
-    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.CHAR, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                if (isNonAscii(function.getParameters().get(0))) {
+                    ((Literal)function.getParameters().get(1)).setValue("nchar(1)"); //$NON-NLS-1$
+                } else {
+                    ((Literal)function.getParameters().get(1)).setValue("char(1)"); //$NON-NLS-1$
+                }
+                return null;
+            }
+        });
     	convertModifier.addTypeMapping("date", FunctionModifier.DATE, FunctionModifier.TIME); //$NON-NLS-1$
     	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
@@ -219,7 +230,20 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.CLOB, FunctionModifier.STRING, new TemplateFunctionModifier("DBMS_LOB.substr(", 0, ", 4000)")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_char"), FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new FunctionModifier() {
+    	    
+    	    ConvertModifier.FormatModifier toChar = new ConvertModifier.FormatModifier("to_char"); //$NON-NLS-1$
+    	    ConvertModifier.FormatModifier toNChar = new ConvertModifier.FormatModifier(TO_NCHAR);
+    	    
+            @Override
+            public List<?> translate(Function function) {
+                if (isNonAscii(function.getParameters().get(0))) {
+                    return toNChar.translate(function);
+                }
+                return toChar.translate(function);
+            }
+        }, FunctionModifier.STRING);
+    	
     	//NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
     	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
     			FunctionModifier.FLOAT, FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL);
@@ -637,12 +661,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 					return false;
 				}
 				ColumnReference cr = (ColumnReference)obj;
-				return cr.getType() == TypeFacility.RUNTIME_TYPES.STRING 
+				return (cr.getType() == TypeFacility.RUNTIME_TYPES.STRING || cr.getType() == TypeFacility.RUNTIME_TYPES.CHAR)  
 						&& cr.getMetadataObject() != null 
 						&& ("CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()) //$NON-NLS-1$
 								|| "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
 			}
-    		
+			
     		@Override
             public void visit(In obj) {
     			if (isFixedChar(obj.getLeftExpression())) {
@@ -751,6 +775,52 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     				}
     			}
     			super.visit(obj);
+    		}
+
+    		@Override
+    		public void visit(SearchedCase obj) {
+    		    boolean i18n = false;
+    		    if (OracleExecutionFactory.this.isNonAscii(obj.getElseExpression())) {
+    		        i18n = true;
+    		    }
+    		    for (SearchedWhenClause clause : obj.getCases()) {
+    		        if (OracleExecutionFactory.this.isNonAscii(clause.getResult())) {
+    		            i18n = true;
+    		        }
+    		    }
+    		    if (i18n) {
+    		        if (obj.getElseExpression() != null && !OracleExecutionFactory.this.isNonAscii(obj.getElseExpression())) {
+    		            obj.setElseExpression(toNChar(obj.getElseExpression()));
+                    }
+                    for (SearchedWhenClause clause : obj.getCases()) {
+                        if (!OracleExecutionFactory.this.isNonAscii(clause.getResult())) {
+                            clause.setResult(toNChar(clause.getResult()));
+                        }
+                    }   
+    		    }
+    		    super.visit(obj);
+    		}
+    		
+    		private Function toNChar(Expression ex) {
+    		    return new Function(TO_NCHAR, Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.STRING);
+    		}
+    		
+    		@Override
+    		public void visit(SetQuery obj) {
+    		    for (int i = 0; i < obj.getColumnNames().length; i++) {
+    		        DerivedColumn leftDerivedColumn = obj.getLeftQuery().getProjectedQuery().getDerivedColumns().get(i);
+                    boolean left_i18n = OracleExecutionFactory.this.isNonAscii(leftDerivedColumn.getExpression());
+    		        DerivedColumn rightDerivedColumn = obj.getRightQuery().getProjectedQuery().getDerivedColumns().get(i);
+                    boolean right_i18n = OracleExecutionFactory.this.isNonAscii(rightDerivedColumn.getExpression());
+    		        if (left_i18n ^ right_i18n) {
+    		            if (!left_i18n) {
+    		                leftDerivedColumn.setExpression(toNChar(leftDerivedColumn.getExpression()));
+    		            } else if (!right_i18n) {
+    		                rightDerivedColumn.setExpression(toNChar(rightDerivedColumn.getExpression()));
+    		            }
+    		        }
+    		    }
+    		    super.visit(obj);
     		}
     		
     	};
@@ -1121,5 +1191,16 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsSelectExpressionArrayType() {
         return false;
+    }
+    
+    @Override
+    public boolean useUnicodePrefix() {
+        return true;
+    }
+    
+    @Override
+    protected boolean isNonAsciiFunction(Function f) {
+        return f.getName().equalsIgnoreCase(TO_NCHAR)
+                     || (f.getType() == TypeFacility.RUNTIME_TYPES.CHAR && f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT));
     }
 }

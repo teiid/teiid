@@ -26,9 +26,11 @@ import static org.junit.Assert.*;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Struct;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -118,4 +120,13 @@ public class TestJDBCExecutionFactory {
 		//should still succeed even if an exception is thrown from supportsGetGeneratedKeys
 		jef.initCapabilities(connection);
 	}
+	
+	@Test public void testBindNChar() throws SQLException {
+        JDBCExecutionFactory jef = new JDBCExecutionFactory() {
+            public boolean useUnicodePrefix() {return true;}
+        };
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        jef.bindValue(ps, "Hello\u0128World", TypeFacility.RUNTIME_TYPES.STRING, 1);
+        Mockito.verify(ps).setObject(1, "Hello\u0128World", Types.NVARCHAR);
+    }
 }
