@@ -22,11 +22,13 @@ import java.io.Serializable;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
 import org.ietf.jgss.GSSContext;
+import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.jboss.as.server.CurrentServiceContainer;
@@ -176,10 +178,18 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
                             principal = p;
                             break;
                         }
+                        GSSCredential delegationCredential = null;
+                        //if isValid checked just the cache the context will be null
+                        if (context.getSchemeContext() == null) {
+                            Set<GSSCredential> credentials = subject.getPrivateCredentials(GSSCredential.class); 
+                            if (credentials != null && !credentials.isEmpty()) {
+                                delegationCredential = credentials.iterator().next();
+                            }
+                        }
                         
                         Object sc = createSecurityContext(securityDomain, principal, null, subject);
                         LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful though GSS API"}); //$NON-NLS-1$
-                        GSSResult result = buildGSSResult(context, securityDomain, true);
+                        GSSResult result = buildGSSResult(context, securityDomain, true, delegationCredential);
                         result.setSecurityContext(sc);
                         result.setUserName(principal.getName());
                         return result;
@@ -187,7 +197,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
                     LoginException le = (LoginException)securityContext.getData().get("org.jboss.security.exception"); //$NON-NLS-1$
                     if (le != null) {
                         if (le.getMessage().equals("Continuation Required.")) { //$NON-NLS-1$
-                            return buildGSSResult(context, securityDomain, false);
+                            return buildGSSResult(context, securityDomain, false, null);
                         }
                         throw le;
                     }
@@ -200,15 +210,18 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
         throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, "GSS Auth", securityDomain)); //$NON-NLS-1$     
     }
 
-    private GSSResult buildGSSResult(NegotiationContext context, String securityDomain, boolean validAuth) throws LoginException {
+    private GSSResult buildGSSResult(NegotiationContext context, String securityDomain, boolean validAuth, GSSCredential delegationCredential) throws LoginException {
         GSSContext securityContext = (GSSContext) context.getSchemeContext();
         try {
+            if (securityContext != null && securityContext.getCredDelegState()) {
+                delegationCredential = securityContext.getDelegCred();
+            }
             if (context.getResponseMessage() == null && validAuth) {
-                return new GSSResult(context.isAuthenticated(), securityContext.getCredDelegState()?securityContext.getDelegCred():null);            
+                return new GSSResult(context.isAuthenticated(), delegationCredential);            
             }
             if (context.getResponseMessage() instanceof KerberosMessage) {
                 KerberosMessage km = (KerberosMessage)context.getResponseMessage();
-                return new GSSResult(km.getToken(), context.isAuthenticated(), securityContext.getCredDelegState()?securityContext.getDelegCred():null);
+                return new GSSResult(km.getToken(), context.isAuthenticated(), delegationCredential);
             }
         } catch (GSSException e) {
             // login exception can not take exception
