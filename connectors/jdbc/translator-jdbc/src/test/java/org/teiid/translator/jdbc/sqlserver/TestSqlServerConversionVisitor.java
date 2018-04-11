@@ -456,5 +456,17 @@ public class TestSqlServerConversionVisitor {
 
         TranslationHelper.helpTestVisitor("create foreign table tbl (txt string options (native_type 'text'), ntxt string options (native_type 'ntext'), str string)", input, output, trans);
     }
+    
+    @Test
+    public void testNCharCast() throws Exception {
+        String input = "select cast(txt as char) from tbl"; //$NON-NLS-1$
+        String output = "SELECT cast(tbl.txt AS nchar(1)) FROM tbl"; //$NON-NLS-1$
+
+        SQLServerExecutionFactory trans1 = new SQLServerExecutionFactory();
+        trans1.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+        trans1.start();
+        
+        TranslationHelper.helpTestVisitor("create foreign table tbl (txt string options (native_type 'ntext'))", input, output, trans);
+    }
        
 }

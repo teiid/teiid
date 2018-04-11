@@ -130,4 +130,13 @@ public class TestJDBCExecutionFactory {
         scv.translateSQLType(TypeFacility.RUNTIME_TYPES.STRING, "\u0003?\u0002", sb);
         assertEquals("'\u0003?'", sb.toString());
     }
+	
+	@Test public void testBindNChar() throws SQLException {
+        JDBCExecutionFactory jef = new JDBCExecutionFactory() {
+            public boolean useUnicodePrefix() {return true;}
+        };
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        jef.bindValue(ps, "Hello\u0128World", TypeFacility.RUNTIME_TYPES.STRING, 1);
+        Mockito.verify(ps).setObject(1, "Hello\u0128World", Types.NVARCHAR);
+    }
 }

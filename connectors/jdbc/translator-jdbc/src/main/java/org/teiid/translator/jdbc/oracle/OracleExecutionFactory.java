@@ -37,7 +37,6 @@ import java.util.TreeSet;
 
 import org.teiid.GeometryInputSource;
 import org.teiid.core.types.BinaryType;
-import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
@@ -132,39 +131,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	static final class FixedCharType {}
 	static int FIXED_CHAR_TYPE = 999;
 	
-    private static boolean isI18NChar(Expression obj) {
-        if (obj == null 
-                || !(obj.getType() == TypeFacility.RUNTIME_TYPES.STRING || obj.getType() == TypeFacility.RUNTIME_TYPES.CHAR)) {
-            return false;
-        }
-        if (obj instanceof ColumnReference) {
-            ColumnReference cr = (ColumnReference)obj;
-            return cr.getMetadataObject() == null 
-                    || (StringUtil.startsWithIgnoreCase(cr.getMetadataObject().getNativeType(), "NVAR") //$NON-NLS-1$
-                            || "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
-            
-        }
-        if (obj instanceof Literal) {
-            Object value = ((Literal) obj).getValue();
-            if (value != null) {
-                String val = value.toString();
-                for (int i = 0; i < val.length(); i++) {
-                    if (val.charAt(i) > 127) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        if (obj instanceof Function) {
-            Function f = (Function)obj;
-            return f.getName().equalsIgnoreCase(TO_NCHAR)
-                     || (obj.getType() == TypeFacility.RUNTIME_TYPES.CHAR && f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT));
-        }
-        return false;
-    }
-
-
 	private boolean oracleSuppliedDriver = true;
 	
 	private OracleFormatFunctionModifier parseModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
@@ -224,7 +190,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.CHAR, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
-                if (isI18NChar(function.getParameters().get(0))) {
+                if (isNonAscii(function.getParameters().get(0))) {
                     ((Literal)function.getParameters().get(1)).setValue("nchar(1)"); //$NON-NLS-1$
                 } else {
                     ((Literal)function.getParameters().get(1)).setValue("char(1)"); //$NON-NLS-1$
@@ -267,7 +233,20 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.CLOB, FunctionModifier.STRING, new TemplateFunctionModifier("DBMS_LOB.substr(", 0, ", 4000)")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_char"), FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new FunctionModifier() {
+    	    
+    	    ConvertModifier.FormatModifier toChar = new ConvertModifier.FormatModifier("to_char"); //$NON-NLS-1$
+    	    ConvertModifier.FormatModifier toNChar = new ConvertModifier.FormatModifier(TO_NCHAR);
+    	    
+            @Override
+            public List<?> translate(Function function) {
+                if (isNonAscii(function.getParameters().get(0))) {
+                    return toNChar.translate(function);
+                }
+                return toChar.translate(function);
+            }
+        }, FunctionModifier.STRING);
+    	
     	//NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
     	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
     			FunctionModifier.FLOAT, FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL);
@@ -823,20 +802,20 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		@Override
     		public void visit(SearchedCase obj) {
     		    boolean i18n = false;
-    		    if (isI18NChar(obj.getElseExpression())) {
+    		    if (OracleExecutionFactory.this.isNonAscii(obj.getElseExpression())) {
     		        i18n = true;
     		    }
     		    for (SearchedWhenClause clause : obj.getCases()) {
-    		        if (isI18NChar(clause.getResult())) {
+    		        if (OracleExecutionFactory.this.isNonAscii(clause.getResult())) {
     		            i18n = true;
     		        }
     		    }
     		    if (i18n) {
-    		        if (obj.getElseExpression() != null && !isI18NChar(obj.getElseExpression())) {
+    		        if (obj.getElseExpression() != null && !OracleExecutionFactory.this.isNonAscii(obj.getElseExpression())) {
     		            obj.setElseExpression(toNChar(obj.getElseExpression()));
                     }
                     for (SearchedWhenClause clause : obj.getCases()) {
-                        if (!isI18NChar(clause.getResult())) {
+                        if (!OracleExecutionFactory.this.isNonAscii(clause.getResult())) {
                             clause.setResult(toNChar(clause.getResult()));
                         }
                     }   
@@ -852,17 +831,14 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		public void visit(SetQuery obj) {
     		    for (int i = 0; i < obj.getColumnNames().length; i++) {
     		        DerivedColumn leftDerivedColumn = obj.getLeftQuery().getProjectedQuery().getDerivedColumns().get(i);
-                    boolean left_i18n = isI18NChar(leftDerivedColumn.getExpression());
+                    boolean left_i18n = OracleExecutionFactory.this.isNonAscii(leftDerivedColumn.getExpression());
     		        DerivedColumn rightDerivedColumn = obj.getRightQuery().getProjectedQuery().getDerivedColumns().get(i);
-                    boolean right_i18n = isI18NChar(rightDerivedColumn.getExpression());
+                    boolean right_i18n = OracleExecutionFactory.this.isNonAscii(rightDerivedColumn.getExpression());
     		        if (left_i18n ^ right_i18n) {
     		            if (!left_i18n) {
     		                leftDerivedColumn.setExpression(toNChar(leftDerivedColumn.getExpression()));
     		            } else if (!right_i18n) {
     		                rightDerivedColumn.setExpression(toNChar(rightDerivedColumn.getExpression()));
-    		            }
-    		            if (obj.getOrderBy() != null) {
-    		                throw new AssertionError();
     		            }
     		        }
     		    }
@@ -1264,5 +1240,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean useUnicodePrefix() {
         return true;
+    }
+    
+    @Override
+    protected boolean isNonAsciiFunction(Function f) {
+        return f.getName().equalsIgnoreCase(TO_NCHAR)
+                     || (f.getType() == TypeFacility.RUNTIME_TYPES.CHAR && f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT));
     }
 }
