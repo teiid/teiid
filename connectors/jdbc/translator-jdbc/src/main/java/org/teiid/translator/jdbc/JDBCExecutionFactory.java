@@ -47,10 +47,12 @@ import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.MixinProxy;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SetQuery.Operation;
+import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
@@ -1028,6 +1030,17 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         }
         
         if (type != Types.JAVA_OBJECT) {
+            if (useUnicodePrefix()) {
+                //sources that require the prefix, also require binding as an N type
+                if (type == Types.VARCHAR) {
+                    if (SQLConversionVisitor.isNonAscii(param.toString())) {
+                        type = Types.NVARCHAR;
+                    }
+                } else if (type == Types.CLOB) {
+                    //don't try to read the clob as it could be streaming
+                    type = Types.NCLOB;
+                }
+            }
         	stmt.setObject(i, param, type);
         } else {
         	stmt.setObject(i, param);
@@ -1607,7 +1620,73 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		return false;
 	}
 
+	/**
+	 * 
+	 * @param obj
+	 * @return true if the string expression is possibly non-ascii
+	 */
+	protected boolean isNonAscii(Expression obj) {
+        if (obj == null 
+                || !(obj.getType() == TypeFacility.RUNTIME_TYPES.STRING || obj.getType() == TypeFacility.RUNTIME_TYPES.CHAR || obj.getType() == TypeFacility.RUNTIME_TYPES.CLOB)) {
+            return false;
+        }
+        if (obj instanceof ColumnReference) {
+            ColumnReference cr = (ColumnReference)obj;
+            return cr.getMetadataObject() == null 
+                    || (StringUtil.startsWithIgnoreCase(cr.getMetadataObject().getNativeType(), "N")); //$NON-NLS-1$
+            
+        }
+        if (obj.getType() == TypeFacility.RUNTIME_TYPES.CLOB) {
+            return true;
+        }
+        if (obj instanceof Literal) {
+            Object value = ((Literal) obj).getValue();
+            if (value != null) {
+                return SQLConversionVisitor.isNonAscii(value.toString());
+            }
+            return false;
+        }
+        if (obj instanceof Parameter) {
+            return true;
+        }
+        if (obj instanceof Function) {
+            Function f = (Function)obj;
+            if (isNonAsciiFunction(f)) {
+                return true;
+            }
+        }
+        final boolean[] result = new boolean[1];
+        HierarchyVisitor v = new HierarchyVisitor() {
+            @Override
+            public void visit(ColumnReference cr) {
+                if (isNonAscii(cr)) {
+                    result[0] = true;
+                }    
+            }
+            public void visit(Literal l) {
+                if (isNonAscii(l)) {
+                    result[0] = true;
+                }
+            }
+            public void visit(Parameter p) {
+                result[0] = true;
+            }
+        };
+        v.visitNode(obj);
+        return result[0];
+    }
 	
+	/**
+	 * 
+	 * @param f
+	 * @return true if the function is a conversion function to a non-ascii string type
+	 * 
+	 * An implementation is not required if no such function exists, or the source can handle unicode string using the standard types.
+	 */
+	protected boolean isNonAsciiFunction(Function f) {
+	    return false;
+	}
+
 	/**
 	 * Implemented if the {@link Connection} needs initialized after a statement cancel
 	 * @param c

@@ -181,19 +181,23 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
                 // If obj is string, toSting() will not create a new String 
                 // object, it returns it self, so new object creation.
             	String val = obj.toString();
-            	if (useUnicodePrefix()) {
-	            	for (int i = 0; i < val.length(); i++) {
-	    				if (val.charAt(i) > 127) {
-	    					buffer.append("N"); //$NON-NLS-1$
-	    					break;
-	    				}
-	    			}
+            	if (useUnicodePrefix() && isNonAscii(val)) {
+                    buffer.append("N"); //$NON-NLS-1$
             	}
                 valuesbuffer.append(Tokens.QUOTE)
                       .append(escapeString(val, Tokens.QUOTE))
                       .append(Tokens.QUOTE);
             }
         }        
+    }
+
+    public static boolean isNonAscii(String val) {
+        for (int i = 0; i < val.length(); i++) {
+        	if (val.charAt(i) > 127) {
+        	    return true;
+        	}
+        }
+        return false;
     }
     
     protected boolean useUnicodePrefix() {

@@ -135,6 +135,14 @@ public class TestOracleConvertModifier {
     @Test public void testCharToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Character('5'), Character.class), "string", "'5'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testNCharToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Character('日'), Character.class), "string", "N'日'"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testNCharToStringConversion() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Character('日'), String.class), "string", "TO_NCHAR(N'日')"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     // Source = BOOLEAN
     
