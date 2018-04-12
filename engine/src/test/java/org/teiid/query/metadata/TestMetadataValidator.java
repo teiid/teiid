@@ -38,7 +38,10 @@ import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class TestMetadataValidator {
-	public static final SystemFunctionManager SFM = SystemMetadata.getInstance().getSystemFunctionManager();
+	private static final String STATUS = "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
+    				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
+    				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG, NODENAME STRING, STALECOUNT LONG)";
+    public static final SystemFunctionManager SFM = SystemMetadata.getInstance().getSystemFunctionManager();
 	private VDBMetaData vdb = new VDBMetaData();
 	private MetadataStore store = new MetadataStore();
 	
@@ -332,9 +335,7 @@ public class TestMetadataValidator {
 	@Test
 	public void testExternalMaterializationValidate() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar);"
-				+ "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
-				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
-				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG, NODENAME STRING, STALECOUNT LONG)";
+				+ STATUS;
 		String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT * FROM pm1.G1";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
@@ -352,9 +353,7 @@ public class TestMetadataValidator {
 	@Test
 	public void testExternalMaterializationValidateColumns() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(e2 varchar);"
-				+ "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
-				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
-				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG, NODENAME STRING, STALECOUNT LONG)";
+				+ STATUS;
 		String ddl2 = "CREATE VIEW G2 (e1 integer, e2 varchar) OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT 1, 'a' FROM pm1.G1";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
@@ -370,9 +369,7 @@ public class TestMetadataValidator {
 	@Test
 	public void testExternalMaterializationValidateColumnTypes() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 integer);"
-				+ "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
-				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
-				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG, NODENAME STRING, STALECOUNT STRING)";
+				+ STATUS;
 		String ddl2 = "CREATE VIEW G2 (e1 integer, e2 varchar) OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT 1, 'a' FROM pm1.G1";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
@@ -399,6 +396,28 @@ public class TestMetadataValidator {
 		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertTrue(printError(report), report.hasItems());
 	}
+	
+    @Test
+    public void testExternalMaterializationValidateModelStatus() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar);"
+                + STATUS;
+        String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT * FROM pm1.G1";      
+        
+        buildModel("pm1", true, this.vdb, this.store, ddl);
+        ModelMetaData vm1 = buildModel("vm1", false, this.vdb, this.store, ddl2);
+        
+        buildTransformationMetadata();
+        
+        ValidatorReport report = new ValidatorReport();
+        report = new MetadataValidator().validate(this.vdb, this.store);
+        assertTrue(printError(report), report.hasItems());
+        
+        vm1.addProperty(MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, "pm1.status");
+        
+        report = new ValidatorReport();
+        report = new MetadataValidator().validate(this.vdb, this.store);
+        assertFalse(printError(report), report.hasItems());
+    }
 	
 	@Test
 	public void testExternalMaterializationValidateMissingColumns() throws Exception {

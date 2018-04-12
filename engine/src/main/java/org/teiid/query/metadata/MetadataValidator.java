@@ -343,8 +343,14 @@ public class MetadataValidator {
                         String status = t.getProperty(MATVIEW_STATUS_TABLE, false);
                         String loadScript = t.getProperty(MATVIEW_LOAD_SCRIPT, false);
                         if (status == null) {
-                        	metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31154, t.getFullName()));
-                        	continue; 
+                            status = model.getPropertyValue(MATVIEW_STATUS_TABLE);
+                            if (status == null) {
+                                status = vdb.getPropertyValue(MATVIEW_STATUS_TABLE);
+                                if (status == null) {
+                                	metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31154, t.getFullName()));
+                                    continue; 
+                                }
+                            }
                         }
                         
                         if (matViewLoadNumberColumn == null && stageTable == null && loadScript == null) {
