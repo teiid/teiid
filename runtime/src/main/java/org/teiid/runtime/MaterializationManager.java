@@ -187,14 +187,23 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 					
 					String stalenessString = table.getProperty(MaterializationMetadataRepository.MATVIEW_MAX_STALENESS_PCT, false);
 					
+					String pollingInterval = table.getProperty(MaterializationMetadataRepository.MATVIEW_POLLING_INTERVAL, false);
+					
 					if (stalenessString != null) {
-					    // run first time like, SNAPSHOT
+	                    // schedule a check every minute 
+					    long interval = WAITTIME;
 					    if (ttl <= 0) {
-					        scheduleSnapshotJob(cvdb, table, 0L, 0L, true);
+					        // run first time like, SNAPSHOT
+	                        scheduleSnapshotJob(cvdb, table, 0L, 0L, true);
+					    } else {
+					        interval = Math.min(interval, Math.max(1, ttl>>1));
+					    }
+					    
+					    if (pollingInterval != null) {
+					        interval = Long.parseLong(pollingInterval);
 					    }
 
-					    // schedule a check every minute 
-					    scheduleSnapshotJob(cvdb, table, WAITTIME, WAITTIME, true);
+					    scheduleSnapshotJob(cvdb, table, interval, interval, false);
 					}
 				}
 			});
