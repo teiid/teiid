@@ -881,13 +881,14 @@ public class TestExternalMatViews {
                 + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
                 + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
                 + "\"teiid_rel:MATVIEW_MAX_STALENESS_PCT\" '10', "
+                + "\"teiid_rel:MATVIEW_POLLING_INTERVAL\" '1000', "
                 + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
                 + "AS select col, col1 from source.physicalTbl");
         server.deployVDB("comp", sourceModel, viewModel, matViewModel);
         
         Thread.sleep(1000);
 
-        // check if materilization is loaded
+        // check if materialization is loaded
         Connection c = h2DataSource.getConnection();
         ResultSet rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
         rs.next();
@@ -918,10 +919,10 @@ public class TestExternalMatViews {
         assertEquals("NEEDS_LOADING", rs.getString(1));
         assertEquals(1, rs.getInt(2));      
         
-        // now reload the view, this should reset the stalecount. If you can wait one minute this occurs automatically
-        conn.createStatement().execute("exec SYSADMIN.loadMatView(schemaName=>'view1', viewName=>'v1', invalidate=>false)");
+        //wait for the polling a load to happen
+        Thread.sleep(2000);
         
-        // check the stale count to zero
+        // check the stale count to zero and that we are reloaded
         rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
         rs.next();
         assertEquals("LOADED", rs.getString(1));
@@ -929,5 +930,27 @@ public class TestExternalMatViews {
         
         String ddl = server.getAdmin().getSchema("comp", "1", "source", null, null);
         assertFalse(ddl.contains("AFTER INSERT"));
+        
+        f = ed.dataModification("comp", "1", "source", "physicalTbl", new Object[] { 1, "town" },
+                new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
+        f.get();
+        
+        f = ed.dataModification("comp", "1", "source", "physicalTbl", new Object[] { 1, "town" },
+                new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
+        f.get();
+        
+        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("NEEDS_LOADING", rs.getString(1));
+        assertEquals(1, rs.getInt(2));      
+        
+        //wait for the polling a load to happen
+        Thread.sleep(2000);
+        
+        // check the stale count to zero and that we are reloaded
+        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("LOADED", rs.getString(1));
+        assertEquals(0, rs.getInt(2));
     }    
 }
