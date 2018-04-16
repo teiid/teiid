@@ -351,6 +351,7 @@ public class MetadataValidator {
                                     continue; 
                                 }
                             }
+                            t.setProperty(MATVIEW_STATUS_TABLE, status); //for scripts and other logic, this must be on the view
                         }
                         
                         if (matViewLoadNumberColumn == null && stageTable == null && loadScript == null) {
