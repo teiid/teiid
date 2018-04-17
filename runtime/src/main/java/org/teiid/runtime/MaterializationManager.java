@@ -129,34 +129,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 				@Override
 				public void process(final Table table) {
 					if (table.getMaterializedTable() == null) {
-						String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
-						if (ttlStr != null) {
-							long ttl = Long.parseLong(ttlStr);
-							if (ttl > 0) {
-								//TODO: make the interval based upon the state as with the external, but
-								//for now just refresh on schedule
-								Future<?> f = getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
-									@Override
-									public void run() {
-										boolean invalidate = TempTableDataManager.shouldInvalidate(vdb);
-										try {
-											executeAsynchQuery(vdb, "call SYSADMIN.refreshMatView('" + table.getFullName().replaceAll("'", "''") + "', " + invalidate + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-										} catch (SQLException e) {
-											LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-										}
-									}
-								}, 0, ttl, TimeUnit.MILLISECONDS);
-								cvdb.addTask(f);
-								return;
-							}
-						}
-						//just a one time load
-						try {
-							//we use a count so that the load can cascade
-							executeAsynchQuery(vdb, "select count(*) from " + table.getSQLString()); //$NON-NLS-1$
-						} catch (SQLException e) {
-							LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-						} 
+					    createInternalMaterializationJobs(cvdb, vdb, table);
 						return;
 					}
 
@@ -181,20 +154,20 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 					if (ttlStr != null) {
 						ttl = Long.parseLong(ttlStr);
 						if (ttl > 0) {
-							scheduleSnapshotJob(cvdb, table, ttl, 0L, false);
+							scheduleSnapshotJob(cvdb, table, ttl, 0L, JobType.TTL);
 						}
 					}
 					
 					String stalenessString = table.getProperty(MaterializationMetadataRepository.MATVIEW_MAX_STALENESS_PCT, false);
-					
+					String pollingExpression = table.getProperty(MaterializationMetadataRepository.MATVIEW_POLLING_QUERY, false);
 					String pollingInterval = table.getProperty(MaterializationMetadataRepository.MATVIEW_POLLING_INTERVAL, false);
 					
-					if (stalenessString != null) {
+					if (pollingExpression != null || stalenessString != null) {
 	                    // schedule a check every minute 
 					    long interval = WAITTIME;
-					    if (ttl <= 0) {
+					    if (ttl <= 0 && pollingExpression == null) {
 					        // run first time like, SNAPSHOT
-	                        scheduleSnapshotJob(cvdb, table, 0L, 0L, true);
+	                        scheduleSnapshotJob(cvdb, table, 0L, 0L, JobType.ONCE);
 					    } else {
 					        interval = Math.min(interval, Math.max(1, ttl>>1));
 					    }
@@ -203,9 +176,74 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 					        interval = Long.parseLong(pollingInterval);
 					    }
 
-					    scheduleSnapshotJob(cvdb, table, interval, interval, false);
+					    scheduleSnapshotJob(cvdb, table, interval, interval, JobType.POLL);
 					}
 				}
+
+                private void createInternalMaterializationJobs(
+                        final CompositeVDB cvdb, final VDBMetaData vdb,
+                        final Table table) {
+                    long ttl = 0;
+                    String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
+                    String pollingQuery = table.getProperty(MaterializationMetadataRepository.MATVIEW_POLLING_QUERY, false);
+                    String pollingInterval = table.getProperty(MaterializationMetadataRepository.MATVIEW_POLLING_INTERVAL, false);
+
+                    if (ttlStr != null) {
+                    	ttl = Long.parseLong(ttlStr);
+                    	if (ttl > 0) {
+                    		//TODO: make the interval based upon the state as with the external, but
+                    		//for now just refresh on schedule
+                    		Future<?> f = getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
+                    			@Override
+                    			public void run() {
+                    				boolean invalidate = TempTableDataManager.shouldInvalidate(vdb);
+                    				try {
+                    					executeAsynchQuery(vdb, "call SYSADMIN.refreshMatView('" + table.getFullName().replaceAll("'", "''") + "', " + invalidate + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+                    				} catch (SQLException e) {
+                    					LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+                    				}
+                    			}
+                    		}, 0, ttl, TimeUnit.MILLISECONDS);
+                    		cvdb.addTask(f);
+                    	}
+                    }
+                    
+                    if (ttl <= 0 && pollingQuery == null) {
+                    	//just a one time load
+                    	try {
+                    		//we use a count so that the load can cascade
+                    		executeAsynchQuery(vdb, "select count(*) from " + table.getSQLString()); //$NON-NLS-1$
+                    	} catch (SQLException e) {
+                    		LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+                    	} 
+                    }
+                    
+                    if (pollingQuery != null) {
+                        long interval = WAITTIME;
+                        if (pollingInterval != null) {
+                            interval = Long.parseLong(pollingInterval);
+                        }
+
+                        final String sql = "begin if ((select updated from sysadmin.matviews where schemaname = '%s' and name = '%s') < (%s)) " //$NON-NLS-1$
+                                + "call SYSADMIN.refreshMatView('%s', %s); end"; //$NON-NLS-1$
+                        
+                        Future<?> f = getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
+                            @Override
+                            public void run() {
+                                boolean invalidate = TempTableDataManager.shouldInvalidate(vdb);
+                                try {
+                                    executeAsynchQuery(vdb, String.format(sql, 
+                                            table.getParent().getName().replaceAll("'", "''"), //$NON-NLS-1$ //$NON-NLS-2$
+                                            table.getName().replaceAll("'", "''"), //$NON-NLS-1$ //$NON-NLS-2$
+                                            pollingQuery, table.getFullName().replaceAll("'", "''"), invalidate)); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                } catch (SQLException e) {
+                                    LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+                                }
+                            }
+                        }, interval, interval, TimeUnit.MILLISECONDS);
+                        cvdb.addTask(f);
+                    }
+                }
 			});
 	}
 	
@@ -248,13 +286,13 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 		}
 	}
 	
-	public void scheduleSnapshotJob(CompositeVDB vdb, Table table, long ttl, long delay, boolean oneTimeJob) {
-		SnapshotJobScheduler task = new SnapshotJobScheduler(vdb, table, ttl, delay, oneTimeJob);
+	public void scheduleSnapshotJob(CompositeVDB vdb, Table table, long ttl, long delay, JobType jobType) {
+		SnapshotJobScheduler task = new SnapshotJobScheduler(vdb, table, ttl, delay, jobType);
 		queueTask(vdb, task, delay);
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void runJob(final CompositeVDB vdb, final Table table, final long ttl, final boolean onetimeJob) {
+	private void runJob(final CompositeVDB vdb, final Table table, final long ttl, final JobType jobType) {
 		String command = "execute SYSADMIN.loadMatView('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"','"+StringUtil.replaceAll(table.getName(), "'", "''")+"', false, true)"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 		try {
 		    final AtomicInteger procReturn = new AtomicInteger();
@@ -267,24 +305,30 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 				public void onCompletion(ResultsFuture future) {
 					try {
 						future.get();
-						if (!onetimeJob) {
+						if (jobType != JobType.ONCE) {
 						    if (procReturn.get() >= 0) {
-						        scheduleSnapshotJob(vdb, table, ttl, ttl, onetimeJob);
+						        scheduleSnapshotJob(vdb, table, ttl, ttl, jobType);
 						    } else {
-						        // when in error re-schedule in 1 min or less
-						        scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), onetimeJob);
+						        if (procReturn.get() == -3 || jobType == JobType.TTL) {
+    						        // when in error, or a ttl job re-schedule in 1 min or less
+						            // TODO: this should be based upon the ttl remaining
+    						        scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), jobType);
+						        } else {
+						            //already loaded/loading, probe again at the next interval 
+						            scheduleSnapshotJob(vdb, table, ttl, ttl, jobType);
+						        }
 						    }
 						}
 					} catch (InterruptedException e) {
 					} catch (ExecutionException e) {
 						LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-					    scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), onetimeJob); // re-schedule the same job in one minute
+					    scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), jobType); // re-schedule the same job in one minute
 					}
 				}
 			});
 		} catch (SQLException e) {
 			LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-		    scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), onetimeJob); // re-schedule the same job in one minute
+		    scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), jobType); // re-schedule the same job in one minute
 		}
 	}	
 	
@@ -298,20 +342,26 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 	    void removeScheduledFuture();
 	}
 	
+	enum JobType {
+	    ONCE,
+	    POLL,
+	    TTL
+	}
+	
 	class SnapshotJobScheduler implements MaterializationTask {
 		protected Table table;
 		protected long ttl;
 		protected long delay;
 		protected CompositeVDB vdb;
 		protected ScheduledFuture<?> future;
-		protected boolean oneTimeJob;
+		protected JobType jobType;
 		
-		public SnapshotJobScheduler(CompositeVDB vdb, Table table, long ttl, long delay, boolean oneTimeJob) {
+		public SnapshotJobScheduler(CompositeVDB vdb, Table table, long ttl, long delay, JobType jobType) {
 			this.vdb = vdb;
 			this.table = table;
 			this.ttl = ttl;
 			this.delay = delay;
-			this.oneTimeJob = oneTimeJob;
+			this.jobType = jobType;
 		}
 
         public void attachScheduledFuture(ScheduledFuture<?> sf) {
@@ -338,7 +388,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 			// when source or target data source(s) are down, there is no reason
 			// to run the materialization jobs. schedule for later time
             if (!vdb.getVDB().isValid()) {
-                scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), oneTimeJob); // re-schedule the same job in one minute
+                scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), jobType); // re-schedule the same job in one minute
                 return;
             }			
 			
@@ -347,12 +397,11 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 				result = executeQuery(vdb.getVDB(), query);
 			} catch (SQLException e) {
 				LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-			    scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), oneTimeJob); // re-schedule the same job in one minute
+			    scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), jobType); // re-schedule the same job in one minute
 				return;
 			}
 			
 			long updated = 0L;
-			this.delay = ttl;
 			String loadstate = null;
 			boolean valid = false;
 			if (result != null && !result.isEmpty()) {
@@ -368,7 +417,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 			long next = ttl;
 			if (loadstate == null || loadstate.equalsIgnoreCase("needs_loading") || !valid) { //$NON-NLS-1$
 				// no entry found run immediately
-				runJob(vdb, table, ttl, oneTimeJob);
+				runJob(vdb, table, ttl, jobType);
 				return;
 			}
 			else if (loadstate.equalsIgnoreCase("loading")) { //$NON-NLS-1$
@@ -380,19 +429,19 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 			}
 			else if (loadstate.equalsIgnoreCase("loaded")) { //$NON-NLS-1$
 				if (elapsed >= ttl) {
-					runJob(vdb, table, ttl, oneTimeJob);
+					runJob(vdb, table, ttl, jobType);
 					return;
 				} 
 				next = ttl - elapsed;	
 			}
 			else if (loadstate.equalsIgnoreCase("failed_load")) { //$NON-NLS-1$
 				if (elapsed > ttl/4 || elapsed > 60000) { // exceeds 1/4 of cached time or 1 mins
-					runJob(vdb, table, ttl, oneTimeJob);
+					runJob(vdb, table, ttl, jobType);
 					return;
 				}
 				next = Math.min(((ttl/4)-elapsed), (60000-elapsed));
 			}
-			scheduleSnapshotJob(vdb, table, ttl, next, oneTimeJob);
+			scheduleSnapshotJob(vdb, table, ttl, next, jobType);
 		}
 	}	
 	
@@ -490,7 +539,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
                                 if (ttl > 0) {
                                     // run the job
                                     CompositeVDB cvdb = getVDBRepository().getCompositeVDB(new VDBKey(vdb.getName(), vdb.getVersion()));
-                                    scheduleSnapshotJob(cvdb, t, ttl, 0L, true);
+                                    scheduleSnapshotJob(cvdb, t, ttl, 0L, JobType.ONCE);
                                 }
                             }
                         }

@@ -309,7 +309,13 @@ public class MetadataValidator {
                 ModelMetaData model = vdb.getModel(schema.getName());
                 
                 for (final Table t:schema.getTables().values()) {
-                    if (t.isVirtual() && t.isMaterialized() && t.getMaterializedTable() != null) {
+                    if (!t.isVirtual() || !t.isMaterialized()) {
+                        continue;
+                    }
+                    String pollingExpression = t.getProperty(MaterializationMetadataRepository.MATVIEW_POLLING_QUERY, false);
+                    pollingQueryValidation(vdb, report, metadataValidator, model, t, pollingExpression, MaterializationMetadataRepository.MATVIEW_POLLING_QUERY);
+                    
+                    if (t.getMaterializedTable() != null) {
                     	Table matTable = t.getMaterializedTable();
                         Table stageTable = t.getMaterializedStageTable();
                         
@@ -430,7 +436,7 @@ public class MetadataValidator {
                         loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(MATVIEW_BEFORE_LOAD_SCRIPT, false), "MATVIEW_BEFORE_LOAD_SCRIPT");//$NON-NLS-1$
                         loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(MATVIEW_LOAD_SCRIPT, false), "MATVIEW_LOAD_SCRIPT");//$NON-NLS-1$
                         loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(MATVIEW_AFTER_LOAD_SCRIPT, false), "MATVIEW_AFTER_LOAD_SCRIPT");//$NON-NLS-1$
-                    } else if (t.isVirtual() && t.isMaterialized() && t.getMaterializedTable() == null) {
+                    } else {
                     	// internal materialization
                     	String manage = t.getProperty(ALLOW_MATVIEW_MANAGEMENT, false);
                     	if (!Boolean.valueOf(manage)) {
@@ -445,7 +451,7 @@ public class MetadataValidator {
                 } 
             }
         }
-        
+
         interface TableFilter {
             void accept(Table table);
         }
@@ -501,6 +507,26 @@ public class MetadataValidator {
                 metadataValidator.processReport(model, matView, report, subReport);
             } catch (QueryParserException | QueryResolverException | TeiidComponentException e) {
                 metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31198, matView.getFullName(), option, script, e));
+            } 
+        }
+        
+        private void pollingQueryValidation(VDBMetaData vdb, ValidatorReport report, MetadataValidator metadataValidator, ModelMetaData model, Table matView, String query, String option) {
+            if(query == null) {
+                return;
+            }
+            QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
+            QueryParser queryParser = QueryParser.getQueryParser();
+            try {
+                Command command = queryParser.parseCommand(query);
+                QueryResolver.resolveCommand(command, metadata);        
+                AbstractValidationVisitor visitor = new ValidationVisitor();
+                ValidatorReport subReport = Validator.validate(command, metadata, visitor);
+                metadataValidator.processReport(model, matView, report, subReport);
+                if (command.getResultSetColumns().size() != 1 || command.getResultSetColumns().get(0).getType() != DataTypeManager.DefaultDataClasses.TIMESTAMP) {
+                    throw new QueryResolverException("Expected 1 timestampe result column"); //$NON-NLS-1$
+                }
+            } catch (QueryParserException | QueryResolverException | TeiidComponentException e) {
+                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31269, matView.getFullName(), option, query, e));
             } 
         }
 

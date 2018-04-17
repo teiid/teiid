@@ -688,5 +688,64 @@ public class TestMatViews {
         rs.next();
         assertEquals("ax", rs.getString(1));
     }
+    
+    @Test
+    public void testInternalPollingQuery() throws Exception {
+        ModelMetaData mmd2 = new ModelMetaData();
+        mmd2.setName("m");
+        mmd2.setModelType(Type.PHYSICAL);
+        mmd2.addSourceMapping("x", "x", null);
+        mmd2.addSourceMetadata("DDL", "CREATE foreign TABLE t (col string, colx string, coly timestamp) options (updatable true); "
+                + "CREATE VIEW v1 (col1 string, col2 string, primary key (col1)) "
+                + "OPTIONS (updatable true, MATERIALIZED true, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, "
+                + "\"teiid_rel:MATVIEW_POLLING_INTERVAL\" 1000, "
+                + "\"teiid_rel:MATVIEW_POLLING_QUERY\" 'SELECT max(coly) from t') AS /*+ cache(updatable) */ select col, colx from t;");
+        
+        HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }  
+        };
+        hcef.addData("SELECT t.col, t.colx FROM t", Arrays.asList(Arrays.asList("a", "ax")));
+        hcef.addData("SELECT t.coly FROM t", Arrays.asList(Arrays.asList(new Timestamp(System.currentTimeMillis() + 1500))));
+        server.addTranslator("x", hcef);
+        
+        server.deployVDB("comp", mmd2);
+        
+        Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+        
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertEquals("a", rs.getString(1));
+        
+        hcef.addData("SELECT t.col, t.colx FROM t", Arrays.asList(Arrays.asList("b", "bx")));
+        
+        Thread.sleep(2000);
+        
+        rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertEquals("b", rs.getString(1));
+        
+        //no longer greater than the last update
+        hcef.addData("SELECT t.col, t.colx FROM t", Arrays.asList(Arrays.asList("c", "cx")));
+        
+        Thread.sleep(2000);
+        
+        rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertEquals("b", rs.getString(1));
+        
+        hcef.addData("SELECT t.coly FROM t", Arrays.asList(Arrays.asList(new Timestamp(System.currentTimeMillis() + 1500))));
+        
+        Thread.sleep(2000);
+
+        //should be updated again
+        rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertEquals("c", rs.getString(1));
+    }
 	
 }

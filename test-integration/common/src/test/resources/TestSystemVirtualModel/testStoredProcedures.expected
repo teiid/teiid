@@ -1,6 +1,6 @@
 string                                                             clob                                                             
 Name                                                               Body                                                             
-loadMatView                                                        Clob[11751]                                                      
+loadMatView                                                        Clob[12268]                                                      
 matViewStatus                                                      Clob[3119]                                                       
 updateMatView                                                      Clob[8824]                                                       
 updateStaleCount                                                   Clob[3492]                                                       

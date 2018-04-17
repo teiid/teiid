@@ -189,7 +189,7 @@ BEGIN
 	DECLARE string matViewTable = array_get(targets, 1);
 	DECLARE string targetSchemaName = array_get(targets, 2);
 
-    EXECUTE sysadmin.logMsg(context=>'org.teiid.MATVIEWS', level=>'INFO', msg=>'Materialization of view ' || VARIABLES.fullViewName || ' started.');        
+    EXECUTE sysadmin.logMsg(context=>'org.teiid.MATVIEWS', level=>'INFO', msg=>'Materialization of view ' || VARIABLES.fullViewName || ' started' || case when only_if_needed then ' if needed.' else '.' end);        
     
     IF (targetSchemaName IS NULL)
     BEGIN        
@@ -245,7 +245,20 @@ BEGIN
 	BEGIN 
 	    LOOP ON (SELECT valid, updated, loadstate, cardinality, loadnumber FROM #load) AS matcursor
 	    BEGIN
-		    IF ((loadstate <> 'LOADING' AND NOT only_if_needed) OR (only_if_needed AND loadstate IN ('NEEDS_LOADING', 'FAILED_LOAD')) OR TIMESTAMPDIFF(SQL_TSI_FRAC_SECOND, matcursor.updated, now())/1000000 > ttl)
+		    DECLARE boolean VARIABLES.load = false;
+	        IF ((loadstate <> 'LOADING' AND NOT only_if_needed) OR (only_if_needed AND loadstate IN ('NEEDS_LOADING', 'FAILED_LOAD')) OR TIMESTAMPDIFF(SQL_TSI_FRAC_SECOND, matcursor.updated, now())/1000000 > ttl)
+		        load = true;
+		    ELSE
+		        BEGIN
+		            DECLARE string pollingQuery = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_POLLING_QUERY');
+		            IF (pollingQuery IS NOT NULL)
+		                BEGIN
+		                    EXECUTE IMMEDIATE pollingQuery AS updateTimestamp timestamp INTO #poll;
+		                    IF (matcursor.updated < (SELECT updateTimestamp from #poll))
+		                        load = true;
+		                END
+		        END
+		    IF (load)
 		        BEGIN 
 		            EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = ' || matcursor.loadNumber USING loadNumber = matcursor.loadNumber + 1, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADING', valid = matcursor.valid AND NOT invalidate, cardinality = matcursor.cardinality, NodeName = NODE_ID(), StaleCount = VARIABLES.staleCount;
 					DECLARE integer updated = VARIABLES.ROWCOUNT;

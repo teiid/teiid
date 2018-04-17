@@ -54,6 +54,8 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 	public static final String MATVIEW_WRITE_THROUGH = "{http://www.teiid.org/ext/relational/2012}MATVIEW_WRITE_THROUGH"; //$NON-NLS-1$
 	public static final String MATVIEW_MAX_STALENESS_PCT = "{http://www.teiid.org/ext/relational/2012}MATVIEW_MAX_STALENESS_PCT"; //$NON-NLS-1$
     public static final String MATVIEW_POLLING_INTERVAL = "{http://www.teiid.org/ext/relational/2012}MATVIEW_POLLING_INTERVAL"; //$NON-NLS-1$
+    
+    public static final String MATVIEW_POLLING_QUERY = "{http://www.teiid.org/ext/relational/2012}MATVIEW_POLLING_QUERY"; //$NON-NLS-1$
 	
 	public enum LoadStates {NEEDS_LOADING, LOADING, LOADED, FAILED_LOAD};
 	public enum Scope {IMPORTED, FULL};

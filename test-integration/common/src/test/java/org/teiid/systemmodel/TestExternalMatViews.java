@@ -28,8 +28,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -73,6 +75,11 @@ public class TestExternalMatViews {
         @Override
         public boolean supportsCompareCriteriaEquals() {
             return supportsEQ;
+        }
+        
+        @Override
+        public boolean supportsAggregatesMax() {
+            return true;
         }
 
         @Override
@@ -644,7 +651,7 @@ public class TestExternalMatViews {
 		ModelMetaData sourceModel = new ModelMetaData();
 		sourceModel.setName("source");
 		sourceModel.setModelType(Type.PHYSICAL);
-		sourceModel.addSourceMetadata("DDL", "create foreign table physicalTbl (col integer, col1 string) options (updatable true);");
+		sourceModel.addSourceMetadata("DDL", "create foreign table physicalTbl (col integer, col1 string, col2 timestamp) options (updatable true);");
 		sourceModel.addSourceMapping("s1", "fixed", null);
 		return sourceModel;
 	}	
@@ -914,10 +921,14 @@ public class TestExternalMatViews {
         f.get();
         
         // check the stale count incremented
-        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
         rs.next();
-        assertEquals("NEEDS_LOADING", rs.getString(1));
-        assertEquals(1, rs.getInt(2));      
+        if (rs.getString(1).equalsIgnoreCase("NEEDS_LOADING")) {
+            assertEquals(1, rs.getInt(2));
+            assertEquals(1, rs.getLong(3));
+        } else {
+            assertEquals(2, rs.getLong(3));
+        }
         
         //wait for the polling a load to happen
         Thread.sleep(2000);
@@ -939,10 +950,14 @@ public class TestExternalMatViews {
                 new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
         f.get();
         
-        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
         rs.next();
-        assertEquals("NEEDS_LOADING", rs.getString(1));
-        assertEquals(1, rs.getInt(2));      
+        if (rs.getString(1).equalsIgnoreCase("NEEDS_LOADING")) {
+            assertEquals(1, rs.getInt(2));
+            assertEquals(2, rs.getLong(3));
+        } else {
+            assertEquals(3, rs.getLong(3));
+        }      
         
         //wait for the polling a load to happen
         Thread.sleep(2000);
@@ -963,4 +978,66 @@ public class TestExternalMatViews {
         assertEquals(0, rs.getInt(2));
         assertEquals(rs.getLong(3), loadNumber);
     }    
+    
+    
+    @Test
+    public void testPollingQuery() throws Exception {
+        HardCodedExecutionFactory hcef = setupData(server);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
+        
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V2', "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_POLLING_QUERY\" 'select max(col2) from source.physicalTbl', "
+                + "\"teiid_rel:MATVIEW_POLLING_INTERVAL\" '1000', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
+                + "AS select col, col1 from source.physicalTbl");
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);
+        
+        hcef.addData("SELECT MAX(physicalTbl.col2) FROM physicalTbl", Collections.emptyList());
+        
+        Thread.sleep(1000);
+
+        // check if materialization is loaded
+        Connection c = h2DataSource.getConnection();
+        ResultSet rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("LOADED", rs.getString(1));
+        assertEquals(0, rs.getInt(2));
+
+        // verify with querying the database.
+        conn = server.createConnection("jdbc:teiid:comp");
+        Statement s = conn.createStatement();
+        rs = s.executeQuery("select * from view1.v1 order by col");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        assertEquals("town", rs.getString(2));
+        
+        hcef.addData("SELECT MAX(physicalTbl.col2) FROM physicalTbl", Arrays.asList(Arrays.asList(new Timestamp(System.currentTimeMillis()))));
+        hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl",
+                Arrays.asList(
+                        Arrays.asList(1, "city"), 
+                        Arrays.asList(2, "state"),
+                        Arrays.asList(3, "neighborhoot"),
+                        Arrays.asList(4, "USA"))); 
+        
+        //wait for the polling/load to happen
+        Thread.sleep(2000);
+        
+        // check the stale count to zero and that we are reloaded
+        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("LOADED", rs.getString(1));
+        assertEquals(0, rs.getInt(2));
+        
+        rs = s.executeQuery("select count(*) from view1.v1");
+        rs.next();
+        assertEquals(4, rs.getInt(1));
+    }
 }
