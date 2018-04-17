@@ -143,7 +143,7 @@ BEGIN
 END;
 
 
-CREATE VIRTUAL PROCEDURE loadMatView(IN schemaName string NOT NULL, IN viewName string NOT NULL, IN invalidate boolean NOT NULL DEFAULT 'false') RETURNS integer
+CREATE VIRTUAL PROCEDURE loadMatView(IN schemaName string NOT NULL, IN viewName string NOT NULL, IN invalidate boolean NOT NULL DEFAULT 'false', IN only_if_needed boolean NOT NULL DEFAULT false) RETURNS integer
 AS
 BEGIN
 	DECLARE string vdbName = (SELECT Name FROM VirtualDatabases);
@@ -245,7 +245,7 @@ BEGIN
 	BEGIN 
 	    LOOP ON (SELECT valid, updated, loadstate, cardinality, loadnumber FROM #load) AS matcursor
 	    BEGIN
-		    IF (loadstate <> 'LOADING' OR TIMESTAMPDIFF(SQL_TSI_SECOND, matcursor.updated, now()) > (ttl/1000))
+		    IF ((loadstate <> 'LOADING' AND NOT only_if_needed) OR (only_if_needed AND loadstate IN ('NEEDS_LOADING', 'FAILED_LOAD')) OR TIMESTAMPDIFF(SQL_TSI_FRAC_SECOND, matcursor.updated, now())/1000000 > ttl)
 		        BEGIN 
 		            EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = ' || matcursor.loadNumber USING loadNumber = matcursor.loadNumber + 1, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADING', valid = matcursor.valid AND NOT invalidate, cardinality = matcursor.cardinality, NodeName = NODE_ID(), StaleCount = VARIABLES.staleCount;
 					DECLARE integer updated = VARIABLES.ROWCOUNT;
