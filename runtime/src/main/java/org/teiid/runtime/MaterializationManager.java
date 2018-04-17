@@ -212,7 +212,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
     public int resetPendingJob(final VDBMetaData vdb, final Table table, String nodeName){
         try {
             String statusTable = table.getProperty(MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
-            String updateStatusTable = "UPDATE "+statusTable+" SET LOADSTATE='needs_loading' "
+            String updateStatusTable = "UPDATE "+statusTable+" SET LOADSTATE='NEEDS_LOADING' "
                     + "WHERE LOADSTATE = 'LOADING' AND NODENAME = '"+nodeName+"' "
                     + "AND NAME = '"+table.getName()+"'";
             List<Map<String, String>> results = executeQuery(vdb, updateStatusTable);
@@ -255,7 +255,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void runJob(final CompositeVDB vdb, final Table table, final long ttl, final boolean onetimeJob) {
-		String command = "execute SYSADMIN.loadMatView('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"','"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+		String command = "execute SYSADMIN.loadMatView('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"','"+StringUtil.replaceAll(table.getName(), "'", "''")+"', false, true)"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 		try {
 		    final AtomicInteger procReturn = new AtomicInteger();
 			executeAsynchQuery(vdb.getVDB(), command, new DQPCore.ResultsListener() {
