@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>salesforce</artifactId>
-		<version>10.1.3</version>
+		<version>10.1.4-SNAPSHOT</version>
 	</parent>
 	<artifactId>feature-pack-salesforce-41</artifactId>
 	<name>Teiid Salesforce 41 Feature Pack</name>
