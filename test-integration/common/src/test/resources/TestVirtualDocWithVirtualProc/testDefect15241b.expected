@@ -10,7 +10,8 @@ pg_type:oid                                                        1028         
 teiid:pass-through-type                                            true                                                               tid:7ff2755e9621-e548fc4c-000000ce                
 {http://www.teiid.org/ext/relational/2012}ALLOW_MATVIEW_MANAGEMEN$ true                                                               tid:7ff2755e9621-d9ee5c82-0000001f                
 {http://www.teiid.org/ext/relational/2012}ALLOW_MATVIEW_MANAGEMEN$ true                                                               tid:7ff2755e9621-e544c1cc-0000006a                
-Row Count : 10
+{http://www.teiid.org/ext/relational/2012}default_handling         expression                                                         tid:60b87e792634-bc9325ad-00000034                
+Row Count : 11
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 Name           12             xmlvp           java.lang.String    Name            string             SYS            Properties    4000                  4000          0         false            true             false       false                 0           true        true          false     false       
 Value          12             xmlvp           java.lang.String    Value           string             SYS            Properties    4000                  4000          0         false            true             false       false                 0           true        true          false     false       

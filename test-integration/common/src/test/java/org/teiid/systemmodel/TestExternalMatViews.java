@@ -557,7 +557,7 @@ public class TestExternalMatViews {
 		rs.close();
 		s.close();
 				
-		// 1st data change event, explicit update to matview using updateMatview, this should reset TTL
+		// data changes. explicit update to matview using updateMatview, this should reset TTL
 		hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl",
 			Arrays.asList(
 					Arrays.asList(1, "city"), // update
@@ -948,9 +948,19 @@ public class TestExternalMatViews {
         Thread.sleep(2000);
         
         // check the stale count to zero and that we are reloaded
-        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
         rs.next();
         assertEquals("LOADED", rs.getString(1));
         assertEquals(0, rs.getInt(2));
+        long loadNumber = rs.getLong(3);
+        
+        Thread.sleep(2000);
+        
+        //make sure that nothing has changed
+        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("LOADED", rs.getString(1));
+        assertEquals(0, rs.getInt(2));
+        assertEquals(rs.getLong(3), loadNumber);
     }    
 }
