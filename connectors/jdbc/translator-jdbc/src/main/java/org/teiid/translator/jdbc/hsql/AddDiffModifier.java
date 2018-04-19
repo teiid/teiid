@@ -18,17 +18,15 @@
 
 package org.teiid.translator.jdbc.hsql;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants.NonReserved;
-import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
@@ -46,12 +44,11 @@ public class AddDiffModifier extends FunctionModifier {
 	}
 	
 	private boolean add;
-	private LanguageFactory factory;
 	private boolean supportsQuarter;
+	private boolean literalPart = true;
 
 	public AddDiffModifier(boolean add, LanguageFactory factory) {
 		this.add = add;
-		this.factory = factory;
 	}
 	
 	public AddDiffModifier supportsQuarter(boolean b) {
@@ -59,49 +56,58 @@ public class AddDiffModifier extends FunctionModifier {
 		return this;
 	}
 	
+	public AddDiffModifier literalPart(boolean b) {
+        this.literalPart = b;
+        return this;
+    }
+	
 	@Override
 	public List<?> translate(Function function) {
+	    ArrayList<Object> result = new ArrayList<Object>();
 		if (add) {
-			function.setName("dateadd"); //$NON-NLS-1$
+			result.add("dateadd("); //$NON-NLS-1$
 		} else {
-			function.setName("datediff"); //$NON-NLS-1$
+		    result.add("datediff("); //$NON-NLS-1$
 		}
+		for (int i = 0; i < function.getParameters().size(); i++) {
+		    if (i > 0) {
+		        result.add(", "); //$NON-NLS-1$
+		    }
+		    result.add(function.getParameters().get(i));
+		}
+		result.add(")"); //$NON-NLS-1$
 		Literal intervalType = (Literal)function.getParameters().get(0);
 		String interval = ((String)intervalType.getValue()).toUpperCase();
 		String newInterval = INTERVAL_MAP.get(interval);
 		if (newInterval != null) {
 			intervalType.setValue(newInterval);
-			return null;
-		}
-		if (supportsQuarter && interval.equals(NonReserved.SQL_TSI_QUARTER)) {
+		} else if (supportsQuarter && interval.equals(NonReserved.SQL_TSI_QUARTER)) {
 			intervalType.setValue("QUARTER"); //$NON-NLS-1$
-			return null;
-		}
-		if (add) {
+		} else if (add) {
 			if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
 				intervalType.setValue("MILLISECOND"); //$NON-NLS-1$
-				Expression[] args = new Expression[] {function.getParameters().get(1), factory.createLiteral(1000000, TypeFacility.RUNTIME_TYPES.INTEGER)};
-				function.getParameters().set(1, factory.createFunction("/", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
+				result.add(4, " / 1000000"); //$NON-NLS-1$
 			} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
 				intervalType.setValue(ExtractFunctionModifier.DAY);
-				Expression[] args = new Expression[] {function.getParameters().get(1), factory.createLiteral(91, TypeFacility.RUNTIME_TYPES.INTEGER)};
-				function.getParameters().set(1, factory.createFunction("*", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
+				result.add(4, " * 91"); //$NON-NLS-1$
 			} else {
 				intervalType.setValue(ExtractFunctionModifier.DAY);
-				Expression[] args = new Expression[] {function.getParameters().get(1), factory.createLiteral(7, TypeFacility.RUNTIME_TYPES.INTEGER)};
-				function.getParameters().set(1, factory.createFunction("*", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
+				result.add(4, " * 7"); //$NON-NLS-1$
 			}
-			return null;
-		} 
-		if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
+		} else if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
 			intervalType.setValue("MILLISECOND"); //$NON-NLS-1$
-			return Arrays.asList(function, " * 1000000"); //$NON-NLS-1$
+			result.add(" * 1000000"); //$NON-NLS-1$
 		} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
 			intervalType.setValue(ExtractFunctionModifier.DAY);
-			return Arrays.asList(function, " / 91"); //$NON-NLS-1$  
-		} 
-		intervalType.setValue(ExtractFunctionModifier.DAY);
-		return Arrays.asList(function, " / 7"); //$NON-NLS-1$  
+			result.add(" / 91"); //$NON-NLS-1$  
+		} else {
+    		intervalType.setValue(ExtractFunctionModifier.DAY);
+    		result.add(" / 7"); //$NON-NLS-1$
+		}
+		if (!literalPart) {
+		    result.set(1, intervalType.getValue());
+		}
+		return result;
 	}
 	
 }
