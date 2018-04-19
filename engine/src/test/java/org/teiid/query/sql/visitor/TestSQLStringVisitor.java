@@ -1800,4 +1800,22 @@ public class TestSQLStringVisitor {
         helpTest(cc1, "((m.g.c1 = 'abc') AND (m.g.c2 > 1)) = FALSE"); //$NON-NLS-1$
     }
     
+    @Test public void testCurrentDate() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("select current_date()"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        helpTest(command, "SELECT current_date()"); //$NON-NLS-1$
+    }
+    
+    @Test public void testCurrentTime() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("select current_time, current_time(1)"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        helpTest(command, "SELECT current_time, current_time(1)"); //$NON-NLS-1$
+    }
+    
+    @Test public void testCurrentTimestamp() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("select current_timestamp, current_timestamp(1)"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        helpTest(command, "SELECT current_timestamp, current_timestamp(1)"); //$NON-NLS-1$
+    }
+    
 }

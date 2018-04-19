@@ -1992,4 +1992,33 @@ public final class FunctionMethods {
         }
     }
     
+    @TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
+    public static Time current_time(CommandContext context, int precision) {
+        if (precision != 0) {
+            context.addWarning(new FunctionExecutionException(QueryPlugin.Event.TEIID31270, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31270, precision)));
+        }
+        return context.currentTime();
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
+    public static Timestamp current_timestamp(CommandContext context, int precision) {
+        if (precision > 9) {
+            context.addWarning(new FunctionExecutionException(QueryPlugin.Event.TEIID31271, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31271, precision)));
+            precision = 9;
+        }
+        if (precision == 9) {
+            return context.currentTimestamp();
+        }
+        Timestamp ts = context.currentTimestamp();
+        Timestamp clone = (Timestamp)ts.clone();
+        if (precision == 0) {
+            clone.setNanos(0);
+            return clone;
+        }
+        //reduce precision
+        int val = (int)Math.pow(10, 9 - precision);
+        clone.setNanos((clone.getNanos()/val)*val);
+        return clone;
+    }
+    
 }

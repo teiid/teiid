@@ -123,6 +123,7 @@ public class QueryRewriter {
     	ALIASED_FUNCTIONS.put("chr", SourceSystemFunctions.CHAR); //$NON-NLS-1$
     	ALIASED_FUNCTIONS.put("substr", SourceSystemFunctions.SUBSTRING); //$NON-NLS-1$
     	ALIASED_FUNCTIONS.put("st_geomfrombinary", SourceSystemFunctions.ST_GEOMFROMWKB); //$NON-NLS-1$
+    	ALIASED_FUNCTIONS.put(SQLConstants.Reserved.CURRENT_DATE, SourceSystemFunctions.CURDATE);
     	PARSE_FORMAT_TYPES.addAll(    Arrays.asList(DataTypeManager.DefaultDataTypes.TIME, 
     		DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
     		DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.LONG, 
