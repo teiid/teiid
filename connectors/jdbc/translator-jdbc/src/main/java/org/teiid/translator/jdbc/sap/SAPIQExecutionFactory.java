@@ -60,8 +60,8 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new TemplateFunctionModifier("DATEPART(dy,",0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.WEEK, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new AddDiffModifier(true, this.getLanguageFactory()).supportsQuarter(true));
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new AddDiffModifier(false, this.getLanguageFactory()).supportsQuarter(true));
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new AddDiffModifier(true, this.getLanguageFactory()).supportsQuarter(true).literalPart(false));
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new AddDiffModifier(false, this.getLanguageFactory()).supportsQuarter(true).literalPart(false));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier(SourceSystemFunctions.COALESCE));
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new FunctionModifier() {
             

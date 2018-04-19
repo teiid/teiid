@@ -57,7 +57,7 @@ public class TestSybaseIQTranslator {
     
     @Test public void testTimestampDiff() {
     	String input = "SELECT timestampadd(sql_tsi_quarter, 1, timestampvalue), timestampadd(sql_tsi_frac_second, 1000, timestampvalue), timestampdiff(sql_tsi_frac_second, timestampvalue, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT dateadd('QUARTER', 1, SmallA.TimestampValue), dateadd('MILLISECOND', (1000 / 1000000), SmallA.TimestampValue), datediff('MILLISECOND', SmallA.TimestampValue, SmallA.TimestampValue) * 1000000 FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT dateadd(QUARTER, 1, SmallA.TimestampValue), dateadd(MILLISECOND, 1000 / 1000000, SmallA.TimestampValue), datediff(MILLISECOND, SmallA.TimestampValue, SmallA.TimestampValue) * 1000000 FROM SmallA";  //$NON-NLS-1$
         
         helpTestVisitor(TranslationHelper.BQT_VDB,
             input, 
