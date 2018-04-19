@@ -84,6 +84,7 @@ import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
@@ -429,13 +430,13 @@ public final class FunctionMethods {
 
 	// ================== Function = currentTime =====================
 
-	public static  Object currentTime() {
+	public static Time currentTime() {
 		return TimestampWithTimezone.createTime(new Date());
 	}
 
 	// ================== Function = currentTimestamp =====================
 
-	public static  Object currentTimestamp() {
+	public static Timestamp currentTimestamp() {
 		return new Timestamp(System.currentTimeMillis());
 	}
 
@@ -1734,6 +1735,35 @@ public final class FunctionMethods {
     public static BinaryType digest(byte[] plainText, String algorithm) throws NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);        
         return new BinaryType(messageDigest.digest(plainText));
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
+    public static Time current_time(CommandContext context, int precision) {
+        if (precision != 0) {
+            context.addWarning(new FunctionExecutionException(QueryPlugin.Event.TEIID31270, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31270, precision)));
+        }
+        return currentTime();
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
+    public static Timestamp current_timestamp(CommandContext context, int precision) {
+        if (precision > 9) {
+            context.addWarning(new FunctionExecutionException(QueryPlugin.Event.TEIID31271, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31271, precision)));
+            precision = 9;
+        }
+        if (precision == 9) {
+            return currentTimestamp();
+        }
+        Timestamp ts = currentTimestamp();
+        Timestamp clone = (Timestamp)ts.clone();
+        if (precision == 0) {
+            clone.setNanos(0);
+            return clone;
+        }
+        //reduce precision
+        int val = (int)Math.pow(10, 9 - precision);
+        clone.setNanos((clone.getNanos()/val)*val);
+        return clone;
     }
     
 }

@@ -1548,9 +1548,11 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(")"); //$NON-NLS-1$
         } else {
             append(name);
-            append("("); //$NON-NLS-1$
-            registerNodes(args, 0);
-            append(")"); //$NON-NLS-1$
+            if ((args != null && args.length > 0) || (!name.equalsIgnoreCase(Reserved.CURRENT_TIME) && !name.equalsIgnoreCase(Reserved.CURRENT_TIMESTAMP))) {
+                append("("); //$NON-NLS-1$
+                registerNodes(args, 0);
+                append(")"); //$NON-NLS-1$
+            }
         }
     }
 

@@ -30,6 +30,7 @@ import java.util.Comparator;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeometryType;
+import org.teiid.language.SQLConstants;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -103,8 +104,11 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 
         // date
         addConstantDateFunction(SourceSystemFunctions.CURDATE, QueryPlugin.Util.getString("SystemSource.Curdate_desc"), "currentDate", DataTypeManager.DefaultDataTypes.DATE); //$NON-NLS-1$ //$NON-NLS-2$ 
+        addConstantDateFunction(SQLConstants.Reserved.CURRENT_DATE, QueryPlugin.Util.getString("SystemSource.Curdate_desc"), "currentDate", DataTypeManager.DefaultDataTypes.DATE); //$NON-NLS-1$ //$NON-NLS-2$
         addConstantDateFunction(SourceSystemFunctions.CURTIME, QueryPlugin.Util.getString("SystemSource.Curtime_desc"), "currentTime", DataTypeManager.DefaultDataTypes.TIME); //$NON-NLS-1$ //$NON-NLS-2$ 
-        addConstantDateFunction(SourceSystemFunctions.NOW, QueryPlugin.Util.getString("SystemSource.Now_desc"), "currentTimestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$ 
+        addConstantDateFunction(SQLConstants.Reserved.CURRENT_TIME, QueryPlugin.Util.getString("SystemSource.Curtime_desc"), "currentTime", DataTypeManager.DefaultDataTypes.TIME); //$NON-NLS-1$ //$NON-NLS-2$
+        addConstantDateFunction(SourceSystemFunctions.NOW, QueryPlugin.Util.getString("SystemSource.Now_desc"), "currentTimestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
+        addConstantDateFunction(SQLConstants.Reserved.CURRENT_TIMESTAMP, QueryPlugin.Util.getString("SystemSource.Now_desc"), "currentTimestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
         addDateFunction(SourceSystemFunctions.DAYNAME, "dayName", QueryPlugin.Util.getString("SystemSource.Dayname_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayname_result_ts_desc"), DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         addDateFunction(SourceSystemFunctions.DAYOFMONTH, "dayOfMonth", QueryPlugin.Util.getString("SystemSource.Dayofmonth_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofmonth_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         addDateFunction(SourceSystemFunctions.DAYOFWEEK, "dayOfWeek", QueryPlugin.Util.getString("SystemSource.Dayofweek_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofweek_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 

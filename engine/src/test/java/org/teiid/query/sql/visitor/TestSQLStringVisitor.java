@@ -1783,4 +1783,22 @@ public class TestSQLStringVisitor {
     	helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT 'a\\u0000\\u0001b''c''d\\u0002e\\u0003f''' FROM TEXTTABLE(x COLUMNS y string ESCAPE '\\u0000' HEADER) AS A"); //$NON-NLS-1$
     }
     
+    @Test public void testCurrentDate() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("select current_date()"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        helpTest(command, "SELECT current_date()"); //$NON-NLS-1$
+    }
+    
+    @Test public void testCurrentTime() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("select current_time, current_time(1)"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        helpTest(command, "SELECT current_time, current_time(1)"); //$NON-NLS-1$
+    }
+    
+    @Test public void testCurrentTimestamp() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("select current_timestamp, current_timestamp(1)"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        helpTest(command, "SELECT current_timestamp, current_timestamp(1)"); //$NON-NLS-1$
+    }
+    
 }

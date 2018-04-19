@@ -4224,6 +4224,7 @@ Expression function(ParseInfo info) :
 	Expression condition = null;
 	String literal = null;
 	ParsedDataType type = null;
+	Integer intVal = null;
 }
 {
 	((	funcToken = <CONVERT>
@@ -4436,7 +4437,13 @@ Expression function(ParseInfo info) :
 		[ orderBy = orderby(info) ]
 		<RPAREN>
 		[condition = filterClause(info)]
-	))		
+	)
+	|   (funcToken = <CURRENT_DATE><LPAREN><RPAREN>)
+    |   
+    (   (funcToken = <CURRENT_TIMESTAMP>| funcToken = <CURRENT_TIME>)
+    	[<LPAREN> intVal = intVal() <RPAREN> {args.add(new Constant(intVal));}]
+    )
+	)		
 	{
 		if(funcName == null) { 
 			funcName = funcToken.image;

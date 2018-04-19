@@ -33,6 +33,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
 import junit.framework.TestCase;
 
@@ -84,6 +85,13 @@ public class TestResolvedFunctions extends TestCase {
         
         assertEquals(DataTypeManager.DefaultDataClasses.DOUBLE, getFunctionResult(sql).getClass());
     }
+    
+    public void testCurrentDate() throws Exception {
+        
+        String sql = "current_date()"; //$NON-NLS-1$
+        
+        assertEquals(DataTypeManager.DefaultDataClasses.DATE, getFunctionResult(sql).getClass());
+    }
 
     private Object getFunctionResult(String sql) throws QueryParserException,
                                               ExpressionEvaluationException,
@@ -91,7 +99,8 @@ public class TestResolvedFunctions extends TestCase {
                                               TeiidComponentException, QueryResolverException {
         Expression expr = QueryParser.getQueryParser().parseExpression(sql);
         ResolverVisitor.resolveLanguageObject(expr, RealMetadataFactory.example1Cached());
-        return Evaluator.evaluate(expr);
+        Evaluator eval = new Evaluator(null, null, new CommandContext());
+        return eval.evaluate(expr, null);
     }
     
 }

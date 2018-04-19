@@ -1141,6 +1141,14 @@ public class TestFunction {
               
     }    
     
+    @Test public void testCurrentTimestamp() throws Exception {
+    	CommandContext context = new CommandContext();
+     	Timestamp current = FunctionMethods.current_timestamp(context, 0);
+     	assertEquals(0, current.getNanos());
+    	current = FunctionMethods.current_timestamp(context, 3);
+        assertEquals(0, current.getNanos()%1000000);
+    }
+    
     @Test public void testRand() throws Exception {
         Double d = (Double)FunctionMethods.rand(new CommandContext(), new Integer(100));
         assertEquals(new Double(0.7220096548596434), d);
