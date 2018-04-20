@@ -298,5 +298,10 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
     public boolean isSourceRequiredForCapabilities() {
         return super.isSourceRequiredForCapabilities() || jConnectDriver == null;
     }
+    
+    @Override
+    public boolean useParensForJoins() {
+        return true;
+    }
 	
 }
