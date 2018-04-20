@@ -31,6 +31,7 @@ import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
 import org.teiid.translator.jdbc.sap.SAPIQExecutionFactory;
 
+@SuppressWarnings("nls")
 public class TestSybaseIQTranslator {
 	
     private static SAPIQExecutionFactory trans = new SAPIQExecutionFactory();
@@ -85,6 +86,26 @@ public class TestSybaseIQTranslator {
     @Test public void testDayOfYear() {
         String input = "SELECT dayofyear(datevalue) from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT DATEPART(dy,SmallA.DateValue) FROM SmallA";  //$NON-NLS-1$
+        
+        helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output);
+    }
+    
+    @Test public void testJoinParens() {
+        String input = "SELECT g_1.\"intkey\" AS c_0, g_2.\"intkey\" AS c_1, g_0.\"intkey\" AS c_2\n" + 
+                "FROM\n" + 
+                "    bqt1.\"SmallB\" AS g_0 \n" + 
+                "    LEFT OUTER JOIN\n" + 
+                "    bqt1.\"SmallA\" AS g_1\n" + 
+                "    INNER JOIN bqt1.\"MediumB\" AS g_2\n" + 
+                "    ON g_1.\"intkey\" = g_2.\"intkey\"\n" + 
+                "    ON g_2.\"intkey\" = g_0.\"intkey\"\n" + 
+                "AND g_2.\"intkey\" < 1500\n" + 
+                "WHERE g_0.\"intkey\" < 1500"; //$NON-NLS-1$
+        String output = "SELECT g_1.IntKey AS c_0, g_2.IntKey AS c_1, g_0.IntKey AS c_2 "
+                + "FROM SmallB AS g_0 LEFT OUTER JOIN (SmallA AS g_1 INNER JOIN MediumB AS g_2 ON g_1.IntKey = g_2.IntKey) "
+                + "ON g_2.IntKey = g_0.IntKey AND g_2.IntKey < 1500 WHERE g_0.IntKey < 1500";  //$NON-NLS-1$
         
         helpTestVisitor(TranslationHelper.BQT_VDB,
             input, 
