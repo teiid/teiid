@@ -59,7 +59,7 @@ public class TestMongoDBMetadataProcessor {
                 "    col3 long,\n" + 
                 "    col5 boolean,\n" + 
                 "    col6 string,\n" + 
-                "    col7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    col7 string[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
                 "    col8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" + 
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
                 "    CONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
@@ -107,7 +107,7 @@ public class TestMongoDBMetadataProcessor {
                 "    col3 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
                 "    col5 boolean,\n" + 
                 "    col6 string,\n" + 
-                "    col7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    col7 string[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
                 "    col8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" + 
                 "    col9 string,\n" + 
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
@@ -312,7 +312,7 @@ public class TestMongoDBMetadataProcessor {
                 "    col3 long,\n" + 
                 "    col5 boolean,\n" + 
                 "    col6 string,\n" + 
-                "    col7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
+                "    col7 string[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" + 
                 "    col8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" + 
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
                 "    CONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
