@@ -103,7 +103,9 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         }
         else if (this.securityType.equals(SecurityType.X509.name())) {
             credential = MongoCredential.createMongoX509Credential(this.username);
-        }        
+        } else if (this.securityType.equals(SecurityType.None.name())) {
+        	// skip
+        }
         else if (this.username != null && this.password != null) {
             // to support legacy pre-3.0 authentication 
             credential = MongoCredential.createMongoCRCredential(
