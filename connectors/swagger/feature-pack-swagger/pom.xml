@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>swagger</artifactId>
-      <version>10.2.1-SNAPSHOT</version>
+      <version>10.2.1</version>
     </parent>
     <artifactId>feature-pack-swagger</artifactId>
     <name>Teiid Connector Swagger Feature Pack</name>
