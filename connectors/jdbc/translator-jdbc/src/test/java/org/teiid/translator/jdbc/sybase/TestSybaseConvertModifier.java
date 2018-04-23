@@ -183,7 +183,23 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
 
-        helpGetString1(func,  "stuff(stuff(convert(varchar, CAST('2003-11-01 12:05:02.0' AS DATETIME), 102), 5, 1, '-'), 8, 1, '-')+convert(varchar, CAST('2003-11-01 12:05:02.0' AS DATETIME), 8)");  //$NON-NLS-1$
+        helpGetString1(func,  "stuff(stuff(convert(varchar, CAST('2003-11-01 12:05:02.0' AS DATETIME), 102), 5, 1, '-'), 8, 1, '-')+' '+convert(varchar, CAST('2003-11-01 12:05:02.0' AS DATETIME), 8)");  //$NON-NLS-1$
+        
+        func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+                new Expression[] { 
+                    LANG_FACTORY.createLiteral(ts, Timestamp.class),
+                    LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
+                String.class);
+        
+        SybaseExecutionFactory old = trans;
+        trans = new SybaseExecutionFactory();
+        trans.setDatabaseVersion(SybaseExecutionFactory.FIFTEEN_5);
+        trans.start();
+        try {
+            helpGetString1(func,  "stuff(convert(varchar, CAST('2003-11-01 12:05:02.0' AS DATETIME), 23), 11, 1, ' ')");  //$NON-NLS-1$
+        } finally {
+            trans = old;
+        }
     }
     
     @Test public void testDateToString() throws Exception {
