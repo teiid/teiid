@@ -8,7 +8,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -124,11 +123,7 @@ public class SybaseIQExecutionFactory extends BaseSybaseExecutionFactory {
     
     //TODO: this looses the milliseconds
     protected List<?> convertTimestampToString(Function function) {
-        LinkedList<Object> result = new LinkedList<Object>();
-        result.addAll(convertDateToString(function));
-        result.add('+');
-        result.addAll(convertTimeToString(function));
-        return result;
+        return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 121)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Override
