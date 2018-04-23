@@ -187,7 +187,7 @@ public class TestSybaseIQConvertModifier {
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
 
-        helpGetString1(func,  "stuff(stuff(convert(varchar, CAST('2003-11-01 12:05:02.0' AS TIMESTAMP), 102), 5, 1, '-'), 8, 1, '-')+convert(varchar, CAST('2003-11-01 12:05:02.0' AS TIMESTAMP), 8)");  //$NON-NLS-1$
+        helpGetString1(func,  "convert(varchar, CAST('2003-11-01 12:05:02.0' AS TIMESTAMP), 121)");  //$NON-NLS-1$
     }
     
     @Test public void testDateToString() throws Exception {

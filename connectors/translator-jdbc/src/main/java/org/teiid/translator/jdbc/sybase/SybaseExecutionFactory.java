@@ -285,11 +285,14 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     
     //TODO: this looses the milliseconds
 	protected List<?> convertTimestampToString(Function function) {
-		LinkedList<Object> result = new LinkedList<Object>();
-		result.addAll(convertDateToString(function));
-		result.add('+');
-		result.addAll(convertTimeToString(function));
-		return result;
+	    if (getVersion().compareTo(FIFTEEN_5) >= 0) {
+	        return Arrays.asList("stuff(convert(varchar, ", function.getParameters().get(0), ", 23), 11, 1, ' ')"); //$NON-NLS-1$ //$NON-NLS-2$
+	    }
+	    LinkedList<Object> result = new LinkedList<Object>();
+        result.addAll(convertDateToString(function));
+        result.add("+' '+"); //$NON-NLS-1$
+        result.addAll(convertTimeToString(function));
+        return result;
 	}
     
     @Override
