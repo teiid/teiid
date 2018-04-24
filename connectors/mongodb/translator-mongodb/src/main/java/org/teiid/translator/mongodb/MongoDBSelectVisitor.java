@@ -406,12 +406,12 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
                     && isDateTimeFunction(functionName) ) {
 		        BasicDBList newParams = new BasicDBList();
 		        newParams.addAll((BasicDBList)expr.values().iterator().next());
-		        newParams.add(null);
-		        BasicDBObject nullCheck = new BasicDBObject("$eq", newParams);
+		        newParams.add(false);
+		        BasicDBObject nullCheck = new BasicDBObject("$ifNull", newParams);
 		        newParams = new BasicDBList();
                 newParams.add(nullCheck);
-                newParams.add(null);
                 newParams.add(expr);
+                newParams.add(null);
                 expr = new BasicDBObject("$cond", newParams);
 		    }
 		        
