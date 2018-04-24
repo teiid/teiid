@@ -1109,16 +1109,16 @@ public class TestMongoDBQueryExecution {
 
         BasicDBList values = new BasicDBList();
         values.add(0, "$e2");
-        values.add(1, null);        
-        BasicDBObject isNull = new BasicDBObject("$eq", values);  
+        values.add(1, false);        
+        BasicDBObject isNull = new BasicDBObject("$ifNull", values);  
         
         BasicDBObject func = new BasicDBObject("$year", params);
-        BasicDBObject expr = buildCondition(isNull, null, func);
+        BasicDBObject expr = buildCondition(isNull, func, null);
         
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", expr);
         
-        //{ "$cond" : [ { "$eq" : [ "$e2" ,  null ]} ,  null  , { "$year" : [ "$e2"]}]}
+        //{ "$cond" : [ { "$ifNull" : [ "$e2" ,  false ]} ,  { "$year" : [ "$e2"]}, null]}
 
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
