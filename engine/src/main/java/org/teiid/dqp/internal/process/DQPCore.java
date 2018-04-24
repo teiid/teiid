@@ -669,6 +669,7 @@ public class DQPCore implements DQP {
         options.setProperties(config.getProperties());
         PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
         LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        this.bufferManager.setOptions(options);
 	}
 	
 	public void setBufferManager(BufferManager mgr) {
