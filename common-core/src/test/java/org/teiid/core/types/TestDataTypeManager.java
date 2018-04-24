@@ -237,5 +237,10 @@ public class TestDataTypeManager {
     	Object value = new Object[] {"a", "b"};
         DataTypeManager.transformValue(value, value.getClass(), String[].class);
     }
+    
+    @Test public void isHashable() {
+        assertFalse(DataTypeManager.isHashable(DataTypeManager.DefaultDataClasses.STRING, true, null));
+        assertFalse(DataTypeManager.isHashable(String[].class, false, "Something"));
+    }
 	
 }

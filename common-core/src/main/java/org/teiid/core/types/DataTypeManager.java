@@ -980,18 +980,29 @@ public class DataTypeManager {
     }
     
 	public static boolean isHashable(Class<?> type) {
-		if (type == DataTypeManager.DefaultDataClasses.STRING
-				|| type == DataTypeManager.DefaultDataClasses.CHAR) {
-			return COLLATION_LOCALE == null;
-		}
-		if (type == DataTypeManager.DefaultDataClasses.STRING) {
-			return 	!PAD_SPACE; 
-		}
-		return !(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
-				|| type == DataTypeManager.DefaultDataClasses.BLOB
-				|| type == DataTypeManager.DefaultDataClasses.CLOB
-				|| type == DataTypeManager.DefaultDataClasses.OBJECT);
+		return isHashable(type, PAD_SPACE, COLLATION_LOCALE);
 	}
+    
+	static boolean isHashable(Class<?> type, boolean padSpace, String collationLocale) {
+	    if (type == null) {
+	        return true;
+	    }
+	    if ((type == DataTypeManager.DefaultDataClasses.STRING
+                || type == DataTypeManager.DefaultDataClasses.CHAR) && collationLocale != null) {
+            return false;
+        }
+        if (type == DataTypeManager.DefaultDataClasses.STRING) {
+            return !padSpace; 
+        }
+        if (type.isArray() ) {
+            return isHashable(type.getComponentType(), padSpace, collationLocale);
+        }
+        return !(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
+                || type == DataTypeManager.DefaultDataClasses.BLOB
+                || type == DataTypeManager.DefaultDataClasses.CLOB
+                || type == DataTypeManager.DefaultDataClasses.OBJECT);
+    }
+    
 
 	public static Class<?> getArrayType(Class<?> classType) {
 		Class<?> result = arrayTypes.get(classType);
