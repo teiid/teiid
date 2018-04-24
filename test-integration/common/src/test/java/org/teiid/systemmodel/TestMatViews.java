@@ -709,7 +709,6 @@ public class TestMatViews {
             }  
         };
         hcef.addData("SELECT t.col, t.colx FROM t", Arrays.asList(Arrays.asList("a", "ax")));
-        hcef.addData("SELECT t.coly FROM t", Arrays.asList(Arrays.asList(new Timestamp(System.currentTimeMillis() + 1500))));
         server.addTranslator("x", hcef);
         
         server.deployVDB("comp", mmd2);
@@ -720,7 +719,8 @@ public class TestMatViews {
         ResultSet rs = s.executeQuery("select * from v1");
         rs.next();
         assertEquals("a", rs.getString(1));
-        
+
+        hcef.addData("SELECT t.coly FROM t", Arrays.asList(Arrays.asList(new Timestamp(System.currentTimeMillis()+500))));
         hcef.addData("SELECT t.col, t.colx FROM t", Arrays.asList(Arrays.asList("b", "bx")));
         
         Thread.sleep(2000);
@@ -738,7 +738,7 @@ public class TestMatViews {
         rs.next();
         assertEquals("b", rs.getString(1));
         
-        hcef.addData("SELECT t.coly FROM t", Arrays.asList(Arrays.asList(new Timestamp(System.currentTimeMillis() + 1500))));
+        hcef.addData("SELECT t.coly FROM t", Arrays.asList(Arrays.asList(new Timestamp(System.currentTimeMillis()+500))));
         
         Thread.sleep(2000);
 
@@ -746,6 +746,16 @@ public class TestMatViews {
         rs = s.executeQuery("select * from v1");
         rs.next();
         assertEquals("c", rs.getString(1));
+    }
+    
+    public static void main(String[] args) throws Exception {
+        TestMatViews tmv = new TestMatViews();
+        for (int i = 0; i < 50; i++) {
+            tmv.setUp();
+            tmv.testInternalPollingQuery();
+            tmv.tearDown();
+            System.out.println(i);
+        }
     }
 	
 }

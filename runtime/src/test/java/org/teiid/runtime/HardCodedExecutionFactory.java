@@ -18,11 +18,11 @@
 
 package org.teiid.runtime;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.teiid.language.Call;
 import org.teiid.language.Command;
@@ -39,10 +39,10 @@ import org.teiid.translator.UpdateExecution;
 
 @Translator(name="hardcoded")
 public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> {
-	Map<String, List<? extends List<?>>> dataMap = new HashMap<String, List<? extends List<?>>>();
-	Map<String, Object> updateMap = new HashMap<String, Object>();
+	Map<String, List<? extends List<?>>> dataMap = new ConcurrentHashMap<String, List<? extends List<?>>>();
+	Map<String, Object> updateMap = new ConcurrentHashMap<String, Object>();
 	
-	private List<Command> commands = new ArrayList<Command>();
+	private List<Command> commands = new CopyOnWriteArrayList<Command>();
 	
 	public HardCodedExecutionFactory() {
 		setSourceRequired(false);
