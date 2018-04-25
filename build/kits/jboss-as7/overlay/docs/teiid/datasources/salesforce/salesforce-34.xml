@@ -12,7 +12,7 @@
                         pool-name="teiid-sf-ds">
                         
                     <!-- URL; the below is test; replace with actual URL you need to connect to -->
-                    <config-property name="URL">https://www.salesforce.com/services/Soap/u/34.0</config-property>
+                    <config-property name="URL">https://login.salesforce.com/services/Soap/u/34.0</config-property>
                     
                     <config-property name="username">user</config-property>
                     <config-property name="password">pass</config-property>
