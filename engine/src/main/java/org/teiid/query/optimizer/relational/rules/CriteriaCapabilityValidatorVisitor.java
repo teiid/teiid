@@ -221,7 +221,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         } 
     	if (!this.caps.supportsCapability(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES) 
     			&& windowFunction.getWindowSpecification().getOrderBy() != null
-    			&& !windowFunction.getFunction().isAnalytical()) {
+    			&& !(windowFunction.getFunction().isAnalytical() || windowFunction.getFunction().isRanking())) {
     		markInvalid(windowFunction, "Window function order by with aggregate not supported by source"); //$NON-NLS-1$
             return;
     	}

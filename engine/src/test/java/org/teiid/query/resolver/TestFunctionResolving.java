@@ -18,8 +18,9 @@
 
 package org.teiid.query.resolver;
 
-import java.sql.Clob;
 import static org.junit.Assert.*;
+
+import java.sql.Clob;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
@@ -283,6 +284,16 @@ public class TestFunctionResolving {
     	String sql = "1.0/2"; //$NON-NLS-1$
     	Function f = (Function)getExpression(sql);
     	assertEquals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, f.getType());
+    }
+    
+    @Test public void testRankingFunction() throws Exception {
+        String sql = "rank() over ()"; //$NON-NLS-1$
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, getExpression(sql).getType());
+    }
+    
+    @Test public void testAnalytical() throws Exception {
+        String sql = "last_value(pm1.g1.e1) over ()"; //$NON-NLS-1$
+        assertEquals(DataTypeManager.DefaultDataClasses.STRING, getExpression(sql).getType());
     }
     
 }
