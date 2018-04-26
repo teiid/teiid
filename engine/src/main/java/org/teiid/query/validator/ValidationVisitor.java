@@ -989,7 +989,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_boolean", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	} else if (aggregateFunction == Type.JSONARRAY_AGG) {
 				validateJSONValue(obj, aggExps[0]);
-        	} else if (obj.getType() == null) {
+        	} else if (obj.getType() == null && obj.getArgs().length > 0) {
         		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.aggregate_type", obj), obj); //$NON-NLS-1$
         	}
         }
