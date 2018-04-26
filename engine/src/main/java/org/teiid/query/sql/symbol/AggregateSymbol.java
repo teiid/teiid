@@ -236,7 +236,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		if (isEnhancedNumeric()) {
 			return DataTypeManager.DefaultDataClasses.DOUBLE;
 		}
-		if (isAnalytical()) {
+		if (isRanking()) {
 			return DataTypeManager.DefaultDataClasses.INTEGER;
 		}
 		if (this.getArgs().length == 0) {
@@ -245,20 +245,28 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		return this.getArg(0).getType();
 	}
 	
-	public boolean isAnalytical() {
+	public boolean isRanking() {
 		switch (this.aggregate) {
 		case RANK:
 		case ROW_NUMBER:
 		case DENSE_RANK:
-		case FIRST_VALUE:
-		case LAST_VALUE:
-		case LEAD:
-        case LAG:
 			return true;
 		default:
 		    return false;
 		}
 	}
+	
+    public boolean isAnalytical() {
+        switch (this.aggregate) {
+        case FIRST_VALUE:
+        case LAST_VALUE:
+        case LEAD:
+        case LAG:
+            return true;
+        default:
+            return false;
+        }
+    }
 
 	public boolean isBoolean() {
 		return this.aggregate == Type.EVERY 
