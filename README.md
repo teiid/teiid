@@ -5,8 +5,8 @@ Teiid is a data virtualization system that allows applications to use data from 
 
 ## Useful Links
 - Website - http://teiid.org
-- Documentation - https://teiid.gitbooks.io/documents/content/
-- Documentation Project - https://teiid.gitbooks.io
+- Latest Documentation - http://teiid.github.io/teiid-documents/master/content/
+- Documentation Project - https://github.com/teiid/teiid-documents
 - JIRA Issues -  https://issues.jboss.org/browse/TEIID
 - User Forum - https://community.jboss.org/en/teiid?view=discussions
 - Wiki - https://community.jboss.org/wiki/TheTeiidProject
