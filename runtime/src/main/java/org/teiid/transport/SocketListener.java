@@ -61,8 +61,8 @@ public class SocketListener implements ChannelListenerFactory {
     private ClientServiceRegistryImpl csr;
 	private ServerBootstrap bootstrap;
     
-    private int maxMessageSize = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.maxMessageSize", DEFAULT_MAX_MESSAGE_SIZE); //$NON-NLS-1$
-    private long maxLobSize = PropertiesUtils.getLongProperty(System.getProperties(), "org.teiid.maxStreamingLobSize", ObjectDecoder.MAX_LOB_SIZE); //$NON-NLS-1$
+    private int maxMessageSize = PropertiesUtils.getHierarchicalProperty("org.teiid.maxMessageSize", DEFAULT_MAX_MESSAGE_SIZE, Integer.class); //$NON-NLS-1$
+    private long maxLobSize = PropertiesUtils.getHierarchicalProperty("org.teiid.maxStreamingLobSize", ObjectDecoder.MAX_LOB_SIZE, Long.class); //$NON-NLS-1$
 	
     public SocketListener(InetSocketAddress address, SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
 		this(address, config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);

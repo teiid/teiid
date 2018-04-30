@@ -100,7 +100,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	private int skipTo;
 	
-	private static boolean DISABLE_FETCH_SIZE_DEFAULT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid." + DISABLE_FETCH_SIZE, false); //$NON-NLS-1$
+	private static boolean DISABLE_FETCH_SIZE_DEFAULT = PropertiesUtils.getHierarchicalProperty("org.teiid." + DISABLE_FETCH_SIZE, false, Boolean.class); //$NON-NLS-1$
 	
 	private Boolean disableFetchSize;
 

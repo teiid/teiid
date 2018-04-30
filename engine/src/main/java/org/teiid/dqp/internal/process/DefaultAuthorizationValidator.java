@@ -55,7 +55,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	
 	public static final String IGNORE_UNAUTHORIZED_ASTERISK = "ignore_unauthorized_asterisk"; //$NON-NLS-1$
 	private PolicyDecider policyDecider;
-	private boolean ignoreUnauthorizedAsteriskDefault = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ignoreUnauthorizedAsterisk", false); //$NON-NLS-1$
+	private boolean ignoreUnauthorizedAsteriskDefault = PropertiesUtils.getHierarchicalProperty("org.teiid.ignoreUnauthorizedAsterisk", false, Boolean.class); //$NON-NLS-1$
 	
 	public DefaultAuthorizationValidator() {
 	}

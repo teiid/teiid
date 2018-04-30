@@ -49,7 +49,7 @@ import org.teiid.vdb.runtime.VDBKey;
  */
 public class CompositeVDB {
 	
-	private static final boolean WIDEN_COMPARISON_TO_STRING = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.widenComparisonToString", false); //$NON-NLS-1$
+	private static final boolean WIDEN_COMPARISON_TO_STRING = PropertiesUtils.getHierarchicalProperty("org.teiid.widenComparisonToString", false, Boolean.class); //$NON-NLS-1$
 	
 	private VDBMetaData vdb;
 	private MetadataStore store;

@@ -55,7 +55,12 @@ public class DQPConfiguration{
     private transient AuthorizationValidator authorizationValidator;
     private transient PreParser preParser;
     
-    private Properties properties = System.getProperties();
+    private Properties properties;
+    
+    public DQPConfiguration() {
+        properties = new Properties(System.getProperties());
+        properties.putAll(System.getenv());
+    }
 
 	public int getMaxActivePlans() {
 		return maxActivePlans;

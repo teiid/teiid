@@ -152,6 +152,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		if (INSTANCE == null) {
 			INSTANCE = new SocketServerConnectionFactory();
 			Properties props = System.getProperties();
+			props = new Properties(props);
+			props.putAll(System.getenv());
 			InputStream is = SocketServerConnectionFactory.class.getResourceAsStream("/teiid-client-settings.properties"); //$NON-NLS-1$
 			if (is != null) {
 				props = new Properties(props);

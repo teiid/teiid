@@ -43,6 +43,7 @@ import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.language.SQLConstants;
@@ -71,7 +72,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	
 	public static final String POSTGIS_LIB_VERSION = "2.0.0 USE_GEOS=0 USE_PROJ=1 USE_STATS=0"; //$NON-NLS-1$
 	
-	public static final String POSTGRESQL_VERSION = System.getProperties().getProperty("org.teiid.pgVersion", "PostgreSQL 8.2"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static final String POSTGRESQL_VERSION = PropertiesUtils.getHierarchicalProperty("org.teiid.pgVersion", "PostgreSQL 8.2"); //$NON-NLS-1$ //$NON-NLS-2$
 
 	public static final String TYPMOD = "(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN 4+(65536*(case when (t1.Precision>32767) then 32767 else t1.Precision end)+(case when (t1.Scale>32767) then 32767 else t1.Scale end)) " + //$NON-NLS-1$
 				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END)"; //$NON-NLS-1$

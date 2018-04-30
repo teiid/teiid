@@ -80,7 +80,7 @@ import org.teiid.transport.pg.TimestampUtils;
  */
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
-    private static final boolean HONOR_DECLARE_FETCH_TXN = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.honorDeclareFetchTxn", false); //$NON-NLS-1$
+    private static final boolean HONOR_DECLARE_FETCH_TXN = PropertiesUtils.getHierarchicalProperty("org.teiid.honorDeclareFetchTxn", false, Boolean.class); //$NON-NLS-1$
     
 	public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$

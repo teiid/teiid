@@ -50,7 +50,7 @@ import org.teiid.query.util.CommandContext;
 public class FunctionDescriptor implements Serializable, Cloneable {
 	private static final long serialVersionUID = 5374103983118037242L;
 
-	private static final boolean ALLOW_NAN_INFINITY = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowNanInfinity", false); //$NON-NLS-1$
+	private static final boolean ALLOW_NAN_INFINITY = PropertiesUtils.getHierarchicalProperty("org.teiid.allowNanInfinity", false, Boolean.class); //$NON-NLS-1$
 	
 	private Class<?>[] types;
 	private Class<?> returnType;	

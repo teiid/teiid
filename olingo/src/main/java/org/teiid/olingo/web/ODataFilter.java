@@ -42,6 +42,7 @@ import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.server.api.ODataHttpHandler;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.LRUCache;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.jdbc.ConnectionImpl;
@@ -68,7 +69,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         String proxyURI = config.getInitParameter("proxy-base-uri"); //$NON-NLS-1$
         if (proxyURI != null && proxyURI.startsWith("${") && proxyURI.endsWith("}")) { //$NON-NLS-1$ //$NON-NLS-2$
             proxyURI = proxyURI.substring(2, proxyURI.length() - 1);
-            proxyURI = System.getProperty(proxyURI);
+            proxyURI = PropertiesUtils.getHierarchicalProperty(proxyURI, null);
         }
 
         if (proxyURI != null) {

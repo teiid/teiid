@@ -103,7 +103,7 @@ import net.sf.saxon.trans.XPathException;
  */
 public class XMLSystemFunctions {
     
-    private static final boolean USE_X_ESCAPE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useXMLxEscape", true); //$NON-NLS-1$
+    private static final boolean USE_X_ESCAPE = PropertiesUtils.getHierarchicalProperty("org.teiid.useXMLxEscape", true, Boolean.class); //$NON-NLS-1$
 	
 	private static final Charset UTF_32BE = Charset.forName("UTF-32BE"); //$NON-NLS-1$
 	private static final Charset UTF_16BE = Charset.forName("UTF-16BE"); //$NON-NLS-1$

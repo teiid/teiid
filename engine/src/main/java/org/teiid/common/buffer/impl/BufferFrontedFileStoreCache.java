@@ -378,7 +378,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	private AtomicBoolean defragRunning = new AtomicBoolean();
 	private AtomicInteger freedCounter = new AtomicInteger();
 	
-	private boolean compactBufferFiles = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.compactBufferFiles", false); //$NON-NLS-1$
+	private boolean compactBufferFiles = PropertiesUtils.getHierarchicalProperty("org.teiid.compactBufferFiles", false, Boolean.class); //$NON-NLS-1$
 	
 	private int truncateInterval = 4;
 	//defrag to release freespace held by storage files

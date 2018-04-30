@@ -77,7 +77,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         boolean rightCandidate;
     }
 
-	public static final int DEFAULT_INDEPENDENT_CARDINALITY = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.defaultIndependentCardinality", 10); //$NON-NLS-1$
+	public static final int DEFAULT_INDEPENDENT_CARDINALITY = PropertiesUtils.getHierarchicalProperty("org.teiid.defaultIndependentCardinality", 10, Integer.class); //$NON-NLS-1$
 	public static final int UNKNOWN_INDEPENDENT_CARDINALITY = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	
 	private boolean fullPushOnly;

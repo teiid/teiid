@@ -150,7 +150,7 @@ public class SortUtility {
 	private long[] attempts = new long[2];
 	private boolean nonBlocking;
 	
-	private static boolean STABLE_SORT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.requireStableSort", false); //$NON-NLS-1$
+	private static boolean STABLE_SORT = PropertiesUtils.getHierarchicalProperty("org.teiid.requireStableSort", false, Boolean.class); //$NON-NLS-1$
 	
 	private boolean stableSort = STABLE_SORT;
     private Future<Void> future;

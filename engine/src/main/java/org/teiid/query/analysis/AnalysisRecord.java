@@ -53,7 +53,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  */
 public class AnalysisRecord {
 	
-    private static final int MAX_PLAN_LENGTH = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.maxPlanLength", 1<<25); //$NON-NLS-1$
+    private static final int MAX_PLAN_LENGTH = PropertiesUtils.getHierarchicalProperty("org.teiid.maxPlanLength", 1<<25, Integer.class); //$NON-NLS-1$
 
 	// Common 
     public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$

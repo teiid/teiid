@@ -59,7 +59,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	/** The internal null escape character */
 	public static final char NULL_ESCAPE_CHAR = 0;
 
-	static char DEFAULT_ESCAPE_CHAR = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.backslashDefaultMatchEscape", false)?'\\':NULL_ESCAPE_CHAR; //$NON-NLS-1$
+	static char DEFAULT_ESCAPE_CHAR = PropertiesUtils.getHierarchicalProperty("org.teiid.backslashDefaultMatchEscape", false, Boolean.class)?'\\':NULL_ESCAPE_CHAR; //$NON-NLS-1$
 	
 	/** The escape character or '' if there is none */
 	private char escapeChar = DEFAULT_ESCAPE_CHAR;

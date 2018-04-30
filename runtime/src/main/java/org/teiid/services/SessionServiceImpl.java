@@ -79,7 +79,7 @@ public class SessionServiceImpl implements SessionService {
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
 	private AuthenticationType defaultAuthenticationType = AuthenticationType.USERPASSWORD;
 	
-	private static boolean CHECK_PING = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.checkPing", true); //$NON-NLS-1$
+	private static boolean CHECK_PING = PropertiesUtils.getHierarchicalProperty("org.teiid.checkPing", true, Boolean.class); //$NON-NLS-1$
 	/*
 	 * Injected state
 	 */

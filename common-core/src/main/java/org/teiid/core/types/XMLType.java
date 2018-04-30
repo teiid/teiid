@@ -56,7 +56,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	}
 	
 	private static final long serialVersionUID = -7922647237095135723L;
-	static final boolean SUPPORT_DTD = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.supportDTD", false); //$NON-NLS-1$
+	static final boolean SUPPORT_DTD = PropertiesUtils.getHierarchicalProperty("org.teiid.supportDTD", false, Boolean.class); //$NON-NLS-1$
 	
 	private static ThreadLocal<XMLInputFactory> threadLocalFactory = new ThreadLocal<XMLInputFactory>() {
 		protected XMLInputFactory initialValue() {

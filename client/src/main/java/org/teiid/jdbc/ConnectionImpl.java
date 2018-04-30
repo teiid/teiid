@@ -52,7 +52,7 @@ import org.teiid.net.socket.SocketServerConnection;
  * Teiid's Connection implementation.
  */
 public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
-	private static final int MAX_OPEN_STATEMENTS = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.maxOpenStatements", 1000); //$NON-NLS-1$
+	private static final int MAX_OPEN_STATEMENTS = PropertiesUtils.getHierarchicalProperty("org.teiid.maxOpenStatements", 1000, Integer.class); //$NON-NLS-1$
 
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 

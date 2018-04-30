@@ -178,7 +178,7 @@ public final class FunctionMethods {
         }
     }
 
-    private static final boolean CALENDAR_TIMESTAMPDIFF = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.calendarTimestampDiff", true); //$NON-NLS-1$
+    private static final boolean CALENDAR_TIMESTAMPDIFF = PropertiesUtils.getHierarchicalProperty("org.teiid.calendarTimestampDiff", true, Boolean.class); //$NON-NLS-1$
 
 	public static final String AT = "@"; //$NON-NLS-1$
 	
@@ -541,7 +541,7 @@ public final class FunctionMethods {
 	}
 	
 	private static Locale getSymbolLocale() {
-		return PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.enDateNames", false)?Locale.ENGLISH:Locale.getDefault(); //$NON-NLS-1$
+		return PropertiesUtils.getHierarchicalProperty("org.teiid.enDateNames", false, Boolean.class)?Locale.ENGLISH:Locale.getDefault(); //$NON-NLS-1$
 	}
 
 	static String[] getMonthNames() {

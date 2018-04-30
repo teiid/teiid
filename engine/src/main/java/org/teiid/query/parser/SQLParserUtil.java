@@ -52,9 +52,9 @@ public class SQLParserUtil {
 	    
     static final Pattern hintPattern = Pattern.compile("\\s*(\\w+(?:\\(\\s*(max:\\d+)?\\s*((?:no)?\\s*join)\\s*\\))?)\\s*", Pattern.DOTALL | Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
-	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.decimalAsDouble", false); //$NON-NLS-1$
+	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getHierarchicalProperty("org.teiid.decimalAsDouble", false, Boolean.class); //$NON-NLS-1$
 	
-	public static final boolean RESULT_ANY_POSITION = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.resultAnyPosition", false); //$NON-NLS-1$
+	public static final boolean RESULT_ANY_POSITION = PropertiesUtils.getHierarchicalProperty("org.teiid.resultAnyPosition", false, Boolean.class); //$NON-NLS-1$
 	
 	String prependSign(String sign, String literal) {
 		if (sign != null && sign.charAt(0) == '-') {

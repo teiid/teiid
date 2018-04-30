@@ -71,8 +71,8 @@ import org.teiid.vdb.runtime.VDBKey;
 public class VDBRepository implements Serializable{
 	private static final String LIFECYCLE_CONTEXT = LogConstants.CTX_RUNTIME + ".VDBLifeCycleListener"; //$NON-NLS-1$
 	private static final long serialVersionUID = 312177538191772674L;
-	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.clientVdbLoadTimeoutMillis", 300000); //$NON-NLS-1$
-	private static final boolean ADD_PG_METADATA = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.addPGMetadata", true); //$NON-NLS-1$
+	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getHierarchicalProperty("org.teiid.clientVdbLoadTimeoutMillis", 300000, Integer.class); //$NON-NLS-1$
+	private static final boolean ADD_PG_METADATA = PropertiesUtils.getHierarchicalProperty("org.teiid.addPGMetadata", true, Boolean.class); //$NON-NLS-1$
 	
 	private NavigableMap<VDBKey, CompositeVDB> vdbRepo = new ConcurrentSkipListMap<VDBKey, CompositeVDB>();
 	private NavigableMap<VDBKey, VDBMetaData> pendingDeployments = new ConcurrentSkipListMap<VDBKey, VDBMetaData>();

@@ -58,7 +58,7 @@ public class DQPWorkContext implements Serializable {
 
 	private static final long serialVersionUID = -6389893410233192977L; 
 	
-	private static final boolean longDatesTimes = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.longDatesTimes", false); //$NON-NLS-1$
+	private static final boolean longDatesTimes = PropertiesUtils.getHierarchicalProperty("org.teiid.longDatesTimes", false, Boolean.class); //$NON-NLS-1$
 	
 	public enum Version {
 		EIGHT_0("08.00", (byte)(longDatesTimes?0:1)), //$NON-NLS-1$

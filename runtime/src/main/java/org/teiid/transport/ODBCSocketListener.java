@@ -17,8 +17,6 @@
  */
 package org.teiid.transport;
 
-import io.netty.channel.ChannelPipeline;
-
 import java.net.InetSocketAddress;
 
 import org.teiid.common.buffer.StorageManager;
@@ -26,9 +24,11 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.net.socket.ObjectChannel;
 
+import io.netty.channel.ChannelPipeline;
+
 public class ODBCSocketListener extends SocketListener {
-	private int maxBufferSize = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.ODBCPacketSize", 307200); //$NON-NLS-1$
-	private boolean requireSecure = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ODBCRequireSecure", true); //$NON-NLS-1$
+	private int maxBufferSize = PropertiesUtils.getHierarchicalProperty("org.teiid.ODBCPacketSize", 307200, Integer.class); //$NON-NLS-1$
+	private boolean requireSecure = PropertiesUtils.getHierarchicalProperty("org.teiid.ODBCRequireSecure", true, Boolean.class); //$NON-NLS-1$
 	private int maxLobSize;
 	private TeiidDriver driver;
 	private LogonImpl logonService;
