@@ -92,6 +92,9 @@ public class TestPGMetadata extends AbstractMMQueryTestCase {
         
         execute("select format_type((select oid from pg_type where typname = 'numeric'), 100)"); //$NON-NLS-1$
         assertResults(new String[] {"expr1[string]", "numeric(0,96)"});
+        
+        execute("select format_type((select oid from pg_type where typname = 'bpchar'), 100)"); //$NON-NLS-1$
+        assertResults(new String[] {"expr1[string]", "character(96)"});
     }
     
 }

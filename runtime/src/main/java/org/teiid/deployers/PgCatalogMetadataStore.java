@@ -591,9 +591,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			+ "typelem, null as typinput, 2147483647 - row_number() over (order by typname) as typreceive, null as typdfault, teiid_name from texttable('" + //$NON-NLS-1$
 			"16,bool,1,b,0,-1,0,0,boolean\n" + //$NON-NLS-1$
 			"17,bytea,-1,b,0,-1,0,0,blob\n" + //$NON-NLS-1$
+			"18,char,1,b,0,-1,0,0,\n" + //$NON-NLS-1$
 			"1043,varchar,-1,b,0,-1,0,0,string\n" + //$NON-NLS-1$
 			"25,text,-1,b,0,-1,0,0,clob\n" + //$NON-NLS-1$
-			"1042,char,1,b,0,-1,0,0,\n" + //$NON-NLS-1$
+			"1042,bpchar,-1,b,0,-1,0,0,\n" + //$NON-NLS-1$
 			"21,int2,2,b,0,-1,0,0,short\n" + //$NON-NLS-1$
 			"20,int8,8,b,0,-1,0,0,long\n" + //$NON-NLS-1$
 			"23,int4,4,b,0,-1,0,0,integer\n" + //$NON-NLS-1$
@@ -695,14 +696,14 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addPrimaryKey("matpg_datatype_names", Arrays.asList("oid", "name"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 		addIndex("matpg_datatype_ids", true, Arrays.asList("typname", "oid"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 		String transformation = "select pt.oid as oid, pt.typname as typname, pt.teiid_name as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt" //$NON-NLS-1$
-				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'char' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='varchar'" //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'char' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='bpchar'" //$NON-NLS-1$
 				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'byte' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='int2'" //$NON-NLS-1$
 				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'biginteger' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='numeric'"  //$NON-NLS-1$
 				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'varbinary' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='bytea'"  //$NON-NLS-1$
 				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'byte[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_int2'" //$NON-NLS-1$
 				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'biginteger[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_numeric'"  //$NON-NLS-1$
 				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'varbinary[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_bytea'"  //$NON-NLS-1$
-				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'char[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_varchar'"; //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'char[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_bpchar'"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		t.setProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, "true"); //$NON-NLS-1$
@@ -909,11 +910,14 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                     case "float8": //$NON-NLS-1$
                         name = "double precision"; //$NON-NLS-1$
                         break;
+                    case "bpchar": //$NON-NLS-1$
+                        name = "character"; //$NON-NLS-1$
+                        break;
                     }
                     if (typmod > 4) {
                         if (name.equals("numeric")) {  //$NON-NLS-1$
                             name += "("+((typmod-4)>>16)+","+((typmod-4)&0xffff)+")";  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                        } else if (name.equals("bpchar") || name.equals("varchar")) { //$NON-NLS-1$ //$NON-NLS-2$
+                        } else if (name.equals("character") || name.equals("varchar")) { //$NON-NLS-1$ //$NON-NLS-2$
                             name += "("+(typmod-4)+")";  //$NON-NLS-1$ //$NON-NLS-2$
                         }
                     }

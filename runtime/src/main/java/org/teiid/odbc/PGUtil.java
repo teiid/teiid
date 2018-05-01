@@ -27,6 +27,7 @@ public class PGUtil {
 	
 	public static final int PG_TYPE_BOOL = 16;
 	public static final int PG_TYPE_BYTEA = 17;
+	public static final int PG_TYPE_CHAR = 18;
 	public static final int PG_TYPE_BPCHAR = 1042;
 	public static final int PG_TYPE_INT8 = 20;
 	public static final int PG_TYPE_INT2 = 21;

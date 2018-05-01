@@ -758,6 +758,16 @@ public class TestODBCSocketTransport {
         assertEquals(oid, oid1);
     }
 	
+	@Test public void testCharType() throws Exception {
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("select cast('a' as char)");
+        rs.next();
+        assertEquals("a", rs.getString(1));
+        assertEquals(1, rs.getMetaData().getColumnType(1));
+        assertEquals(1, rs.getMetaData().getColumnDisplaySize(1));
+        assertEquals("bpchar", rs.getMetaData().getColumnTypeName(1));
+    }
+	
     @Test public void testApplicationName() throws Exception {
         Statement s = conn.createStatement();
         checkApplicationName(s, "ODBC");
