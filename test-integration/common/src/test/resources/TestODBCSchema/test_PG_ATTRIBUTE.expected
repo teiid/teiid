@@ -353,7 +353,7 @@ oid          attrelid     attname                                               
 555          553          typname                                                            1043         -1      2       4004         false       false         false    
 556          553          name                                                               1043         -1      3       4004         false       false         false    
 557          553          typlen                                                             21           2       4       -1           false       false         false    
-558          553          typtype                                                            1043         -1      5       5            false       false         false    
+558          553          typtype                                                            1042         -1      5       5            false       false         false    
 559          553          typbasetype                                                        23           4       6       -1           false       false         false    
 560          553          typtypmod                                                          23           4       7       -1           false       false         false    
 562          561          oid                                                                23           4       1       -1           false       false         false    
@@ -380,7 +380,7 @@ oid          attrelid     attname                                               
 589          588          oid                                                                23           4       1       -1           false       false         false    
 590          588          relname                                                            1043         -1      2       4004         false       false         false    
 591          588          relnamespace                                                       23           4       3       -1           false       false         false    
-592          588          relkind                                                            1043         -1      4       5            false       false         false    
+592          588          relkind                                                            1042         -1      4       5            false       false         false    
 593          588          relowner                                                           23           4       5       -1           false       false         false    
 594          588          relam                                                              23           4       6       -1           false       false         false    
 595          588          reltuples                                                          700          4       7       -1           false       false         false    
@@ -404,7 +404,7 @@ oid          attrelid     attname                                               
 616          614          datname                                                            1043         -1      2       4004         false       false         false    
 617          614          encoding                                                           23           4       3       -1           false       false         false    
 618          614          datlastsysoid                                                      23           4       4       -1           false       false         false    
-619          614          datallowconn                                                       1043         -1      5       5            false       false         false    
+619          614          datallowconn                                                       1042         -1      5       5            false       false         false    
 620          614          datconfig                                                          705          -2      6       -1           false       false         false    
 621          614          datacl                                                             705          -2      7       -1           false       false         false    
 622          614          datdba                                                             23           4       8       -1           false       false         false    
@@ -442,7 +442,7 @@ oid          attrelid     attname                                               
 661          656          pronargs                                                           21           2       5       -1           false       false         false    
 662          656          proargtypes                                                        1007         -1      6       -1           false       false         false    
 663          656          proargnames                                                        1015         -1      7       -1           false       false         false    
-664          656          proargmodes                                                        1015         -1      8       -1           false       false         false    
+664          656          proargmodes                                                        1014         -1      8       -1           false       false         false    
 665          656          proallargtypes                                                     1007         -1      9       -1           false       false         false    
 666          656          pronamespace                                                       23           4       10      -1           false       false         false    
 668          667          oid                                                                23           4       1       -1           false       false         false    
@@ -462,11 +462,11 @@ oid          attrelid     attname                                               
 685          683          typname                                                            1043         -1      2       4004         false       false         false    
 686          683          typnamespace                                                       23           4       3       -1           false       false         false    
 687          683          typlen                                                             21           2       4       -1           false       false         false    
-688          683          typtype                                                            1043         -1      5       5            false       false         false    
+688          683          typtype                                                            1042         -1      5       5            false       false         false    
 689          683          typnotnull                                                         16           1       6       -1           false       false         false    
 690          683          typbasetype                                                        23           4       7       -1           false       false         false    
 691          683          typtypmod                                                          23           4       8       -1           false       false         false    
-692          683          typdelim                                                           1043         -1      9       5            false       false         false    
+692          683          typdelim                                                           1042         -1      9       5            false       false         false    
 693          683          typrelid                                                           23           4       10      -1           false       false         false    
 694          683          typelem                                                            23           4       11      -1           false       false         false    
 695          683          typinput                                                           23           4       12      -1           false       false         false    
