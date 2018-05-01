@@ -247,6 +247,26 @@ public class TestMetadataValidator {
 	}
 	
 	@Test
+    public void testCrossReferenceFKReferenceOrder() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 integer, PRIMARY KEY(g1e1, g1e2));";
+        String ddl2 = "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 integer, PRIMARY KEY(g2e1, g2e2), FOREIGN KEY (g2e1, g2e2) REFERENCES pm1.G1(g1e2, g1e1))";      
+        
+        buildModel("pm1", true, this.vdb, this.store, ddl);
+        buildModel("pm2", true, this.vdb, this.store, ddl2);
+        
+        buildTransformationMetadata();
+        
+        ValidatorReport report = new ValidatorReport();
+        report = new MetadataValidator().validate(this.vdb, this.store);
+        assertFalse(printError(report), report.hasItems());
+        
+        assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey());
+        assertEquals(2, this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey().getColumns().size());
+        assertEquals("g1e1", this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey().getColumns().get(0).getName());
+        assertEquals("g2e2", this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getColumns().get(0).getName());
+    }
+	
+	@Test
 	public void testEmptyKey() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));";
 		

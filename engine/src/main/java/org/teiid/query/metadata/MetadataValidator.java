@@ -921,6 +921,29 @@ public class MetadataValidator {
 							if (uniqueKey == null && referenceTable.getPrimaryKey() != null && keyMatches(referenceColumns, referenceTable.getPrimaryKey())) {
 								uniqueKey = referenceTable.getPrimaryKey();
 							}
+							//correct the order if needed, for now we always want the fk cols in the same order as the unique key
+							if (uniqueKey != null && referenceColumns.size() > 1) {
+							    boolean correct = false;
+                                for (int i = 0; i < referenceColumns.size(); i++) {
+                                    String ref = referenceColumns.get(i);
+                                    String keyCol = uniqueKey.getColumns().get(i).getName();
+                                    if (!ref.equalsIgnoreCase(keyCol)) {
+                                        correct = true;
+                                    }
+                                }
+                                if (correct) {
+                                    Map<String, Integer> keyNames = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
+                                    for (Column c: uniqueKey.getColumns()) {
+                                        keyNames.put(c.getName(), keyNames.size());
+                                    }
+                                    Map<Integer,Column> reorderedCols = new TreeMap<Integer,Column>();
+                                    for (int i = 0; i < referenceColumns.size(); i++) {
+                                        int keyIndex = keyNames.get(referenceColumns.get(i));
+                                        reorderedCols.put(keyIndex, fk.getColumns().get(i));
+                                    }
+                                    fk.setColumns(new ArrayList<Column>(reorderedCols.values()));
+                                }
+                            }
 						}
 						if (uniqueKey == null) {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31095, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName, referenceColumns));
