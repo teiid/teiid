@@ -232,6 +232,10 @@ public final class RuleMergeVirtual implements
 
         PlanNode parentBottom = frame.getParent();
         prepareFrame(frame);
+        
+        if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+            parentProject.setProperty(Info.HAS_WINDOW_FUNCTIONS, true);
+        }
 
         if (sources.isEmpty() && parentJoin != null) {
         	//special handling for no sources
@@ -425,18 +429,12 @@ public final class RuleMergeVirtual implements
                                                  GroupSymbol virtualGroup,
                                                  PlanNode parentJoin,
                                                  QueryMetadataInterface metadata, List<PlanNode> sources, boolean checkForNullDependent, PlanNode parentProject) {
-        if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
-            boolean allow = false;
-            PlanNode source = NodeEditor.findParent(parentProject, NodeConstants.Types.SOURCE);
-            if (source != null) {
-                PlanNode grandparentProject = NodeEditor.findParent(source, NodeConstants.Types.PROJECT);
-                if (grandparentProject != null && grandparentProject.hasProperty(Info.INTO_GROUP)) {
-                    allow = true;
-                }
-            }
-            if (!allow) {
-                return false;
-            }
+        if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)
+                && (parentProject.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS) 
+                        || NodeEditor.findParent(projectNode, NodeConstants.Types.PROJECT, 
+                                NodeConstants.Types.SORT | NodeConstants.Types.GROUP | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN) == null)) {
+            //if there something above using the window function symbols, then we can move the projection
+            return false;
         }
 
         List<Expression> selectSymbols = (List<Expression>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);

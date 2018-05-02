@@ -644,4 +644,61 @@ public class TestWindowFunctions {
         helpProcess(plan, dataMgr, expected);
     }
     
+    @Test public void testInsertWithView() throws Exception {
+        String sql = "insert into bqt1.smalla (intkey)\n" + 
+                "select rang \n" + 
+                "from (\n" + 
+                "    select row_number() over(partition by intnum order by intkey) as rang\n" + 
+                "    from bqt1.smallb csr\n" + 
+                ") v"; 
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached(), null), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.IntNum, g_0.IntKey FROM BQT1.SmallB AS g_0", 
+                Arrays.asList(1, 1), Arrays.asList(1, 2), Arrays.asList(2, 3), Arrays.asList(2, 4));
+        dataMgr.addData("INSERT INTO bqt1.smalla (intkey) VALUES (1)", Arrays.asList(1));
+        dataMgr.addData("INSERT INTO bqt1.smalla (intkey) VALUES (2)", Arrays.asList(1));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList(4),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        sql = "insert into bqt1.smalla (intkey)\n" + 
+                "select rang \n" + 
+                "from (\n" + 
+                "    select row_number() over(partition by intnum order by intkey) as rang\n" + 
+                "    from bqt1.smallb csr\n" + 
+                ") v group by rang";
+
+        plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached(), null), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        expected = new List<?>[] {
+            Arrays.asList(2),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        sql = "insert into bqt1.smalla (intkey)\n" + 
+                "select distinct rang \n" + 
+                "from (\n" + 
+                "    select row_number() over(partition by intnum order by intkey) as rang\n" + 
+                "    from bqt1.smallb csr\n" + 
+                ") v"; 
+        
+        plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached(), null), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        helpProcess(plan, dataMgr, expected);
+    }
+    
 }
