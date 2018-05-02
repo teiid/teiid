@@ -282,4 +282,19 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
         execute("select * from information_schema.columns"); //$NON-NLS-1$
         TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
     }
+    
+    @Test public void testInformationSchemaReferentialConstraints() throws Exception {
+        execute("select * from information_schema.referential_constraints"); //$NON-NLS-1$
+        TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+    }
+    
+    @Test public void testInformationSchemaKeyColumnUsage() throws Exception {
+        execute("select * from information_schema.key_column_usage"); //$NON-NLS-1$
+        TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+    }
+    
+    @Test public void testInformationSchemaTableConstraints() throws Exception {
+        execute("select * from information_schema.table_constraints"); //$NON-NLS-1$
+        TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+    }
 }
