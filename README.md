@@ -31,7 +31,7 @@ Once built you can start up the Wildfly server with Teiid by extracting "build/t
 
 	{server-dir}/bin/standalone.sh -c=standalone-teiid.xml
 
-In order to be able to access the Wildfly console you need to setup a user by running "./add-user.sh" or "add-user.bat" from the server directory.
+In order to be able to access the Wildfly console you need to setup a user by running "./bin/add-user.sh" or "bin/add-user.bat" from the server directory.
 
 You should be able to access the Wildfly console at http://localhost:9990 and the Teiid console at http://localhost:9990/console/App.html#teiid.
 
