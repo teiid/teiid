@@ -41,8 +41,6 @@ import org.teiid.logging.LogManager;
 
 public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
     
-    static class DeploymentTag extends Object {};
-    
 	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
 	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	final InjectedValue<VDBRepository> vdbRepoInjector = new InjectedValue<VDBRepository>();
@@ -115,9 +113,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
 
 	@Override
 	public void start(StartContext arg0) throws StartException {
-		for (CompositeVDB cvdb : this.vdbRepoInjector.getValue().addListener(this)) {
-		    finishedDeployment(cvdb.getVDBKey().getName(), cvdb);
-		}
+		this.vdbRepoInjector.getValue().addListener(this);
 	}
 
 	@Override

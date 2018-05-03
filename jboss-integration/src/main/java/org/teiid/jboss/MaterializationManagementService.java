@@ -24,7 +24,6 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.runtime.MaterializationManager;
@@ -62,9 +61,7 @@ class MaterializationManagementService implements Service<MaterializationManager
             }
 		};
 		
-		for (CompositeVDB cvdb : vdbRepositoryInjector.getValue().addListener(manager)) {
-		    manager.finishedDeployment(cvdb.getVDBKey().getName(), cvdb);
-		}
+		vdbRepositoryInjector.getValue().addListener(manager);
 		
 		if (nodeTrackerInjector.getValue() != null) {
 		    nodeTrackerInjector.getValue().addNodeListener(manager);
