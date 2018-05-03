@@ -34,9 +34,17 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.ModuleClassLoader;
-import org.jboss.msc.service.*;
+import org.jboss.msc.service.AbstractServiceListener;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
@@ -189,6 +197,9 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		vdbService.addDependency(TeiidServiceNames.OBJECT_SERIALIZER, ObjectSerializer.class, vdb.serializerInjector);
 		vdbService.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, vdb.vdbStatusCheckInjector);
 		vdbService.addDependency(vdbSwitchServiceName, CountDownLatch.class, new InjectedValue<CountDownLatch>());
+		//ensure that the secondary services have started
+		vdbService.addDependency(TeiidServiceNames.MATVIEW_SERVICE);
+        vdbService.addDependency(TeiidServiceNames.REST_WAR_SERVICE);
 				
 		// VDB restart switch, control the vdbservice by adding removing the switch service. If you
 		// remove the service by setting status remove, there is no way start it back up if vdbservice used alone
