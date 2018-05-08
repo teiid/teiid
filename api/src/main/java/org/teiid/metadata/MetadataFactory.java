@@ -246,11 +246,31 @@ public class MetadataFactory extends NamespaceContainer {
             throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
         }
         Column column = table.getColumnByName(oldName);
+        if (column == null) {
+            throw new MetadataException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, table.getFullName(), oldName));
+        }
         table.removeColumn(column);        
         column.setName(name);
         table.addColumn(column);
         return column;
-    }	
+    }
+    
+    public ProcedureParameter renameParameter(String oldName, String name, Procedure procedure) {
+        if (this.autoCorrectColumnNames) {
+            name = name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
+        } else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
+            throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, procedure.getFullName(), name));
+        }
+        if (procedure.getParameterByName(name) != null) {
+            throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, procedure.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
+        }
+        ProcedureParameter param = procedure.getParameterByName(oldName);
+        if (param == null) {
+            throw new MetadataException(DataPlugin.Event.TEIID60040, DataPlugin.Util.gs(DataPlugin.Event.TEIID60040, procedure.getFullName(), oldName));
+        }
+        param.setName(name);
+        return param;
+    }
 
 	public static Datatype setDataType(String type, BaseColumn column, Map<String, Datatype> dataTypes, boolean allowNull) {
 		int arrayDimensions = 0;

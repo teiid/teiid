@@ -426,7 +426,43 @@ public class TestEmbeddedServer {
         ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
         rs.next();
         assertEquals("HELLO WORLD", rs.getString(1));
-    }	
+    }
+    
+    @Test public void testDDLVDBRenameTable() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl1 = "CREATE DATABASE x VERSION '1';"
+                + "USE DATABASE x VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIEW x as select 1;"
+                + "ALTER VIEW x RENAME TO y;";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl1.getBytes("UTF-8")), true);
+        
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:x", null).createStatement().executeQuery("select * from y");
+        rs.next();
+        assertEquals("1", rs.getString(1));
+    }
+    
+    @Test public void testDDLVDBAddColumn() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl1 = "CREATE DATABASE x VERSION '1';"
+                + "USE DATABASE x VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIRTUAL VIEW x (col string) as select 'a';"
+                + "ALTER VIEW x ADD COLUMN y decimal;"
+                + "ALTER VIEW x AS select 'a', 1.1;";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl1.getBytes("UTF-8")), true);
+        
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:x", null).createStatement().executeQuery("select * from x");
+        rs.next();
+        assertEquals("a", rs.getString(1));
+        assertEquals(1.1, rs.getDouble(2), 0);
+    }
     
     @Test public void testDDLVDBImport() throws Exception {
         es.start(new EmbeddedConfiguration());
