@@ -131,6 +131,20 @@ public class TestDDLParser {
         helpParse(ddl, "model").getSchema();
     }
 	
+    @Test(expected=MetadataException.class)
+    public void testVirtualTable() throws Exception {
+        String ddl = "CREATE VIEW G1(e4 string)";
+                
+        helpParse(ddl, "model").getSchema();
+    }
+    
+    @Test(expected=MetadataException.class)
+    public void testTableDefinition() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(e4 string); alter view g1 as select 'a';";
+                
+        helpParse(ddl, "model").getSchema();
+    }
+	
     @Test
     public void testDefaultPrecision() throws Exception {
         String ddl = "CREATE FOREIGN TABLE G1(e4 decimal)";

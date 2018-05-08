@@ -25,12 +25,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.Grant.Permission.Privilege;
+import org.teiid.metadata.Table.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.parser.OptionsUtil;
+import org.teiid.query.parser.SQLParserUtil;
+import org.teiid.query.parser.SQLParserUtil.ParsedDataType;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.vdb.runtime.VDBKey;
@@ -55,7 +59,7 @@ public abstract class DatabaseStore {
     
     public void startEditing(boolean persist) {
         if (this.persist) {
-            throw new AssertionError();
+            throw new IllegalStateException();
         }
         this.lock.lock();
         this.persist = persist;
@@ -419,35 +423,56 @@ public abstract class DatabaseStore {
         Schema s = getCurrentSchema();
         setUUID(s.getUUID(), table);
         
+        if (table.isVirtual() && table.getSelectTransformation() == null && table.getTableType() != Type.TemporaryTable) {
+            throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31272,
+                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31272, table.getFullName()));
+        }
+        
         s.addTable(table);
     }
     
-    public void setViewDefinition(final String tableName, final String definition, boolean updateFunctional) {
+    public void setViewDefinition(final String tableName, final String definition) {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, getCurrentSchema().getTable(tableName));
-        verifyTableExists(tableName).setSelectTransformation(definition);
+        Table table = (Table)getSchemaRecord(tableName, ResourceType.TABLE);
+        if (!table.isVirtual()) {
+            throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31238,
+                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31238, table.getFullName()));
+        }
+        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        table.setSelectTransformation(definition);
     }
     
-    public void tableModified(Table table) {
+    public void modifyTableName(String name, Database.ResourceType type, String newName) {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
+        Table table = (Table)getSchemaRecord(name, type);
         assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
-        
-        verifyTableExists(table.getName());
-    }  
-    
-    public void modifyTableName(Table table, String newName) {
-        if (!assertInEditMode(Mode.SCHEMA)) {
-            return;
+        Schema s = table.getParent();
+        if (s.getTable(newName) != null) {
+            throw new DuplicateRecordException(DataPlugin.Event.TEIID60013, DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, newName));
         }
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
-        
-        verifyTableExists(table.getName());
+        s.getTables().remove(table.getName());
         table.setName(newName);
-    }     
+        s.getTables().put(newName, table);
+    }
+    
+    public void removeColumn(String objectName, Database.ResourceType type, String childName) {
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
+        Table table = (Table)getSchemaRecord(objectName, type);
+        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        
+        Column column = table.getColumnByName(childName);
+        if (column == null) {
+            throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31223,
+                QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31223, childName));      
+        }
+        table.removeColumn(column);
+    }
     
     public void tableDropped(String tableName) {
         if (!assertInEditMode(Mode.SCHEMA)) {
@@ -478,25 +503,22 @@ public abstract class DatabaseStore {
         s.addProcedure(procedure);
     }
     
-    public void setProcedureDefinition(final String procedureName, final String definition, boolean updateFunctional) {
+    public void setProcedureDefinition(final String procedureName, final String definition) {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
-        Procedure procedure = verifyProcedureExists(procedureName);
+        Procedure procedure = (Procedure)getSchemaRecord(procedureName, ResourceType.PROCEDURE);
         
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.PROCEDURE, procedure);
+        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, procedure);
+        
+        if (!procedure.isVirtual()) {
+            throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31238,
+                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31238, procedure.getFullName()));
+        }
         
         procedure.setQueryPlan(definition);
     }
     
-    public void procedureModified(Procedure procedure) {
-        if (!assertInEditMode(Mode.SCHEMA)) {
-            return;
-        }
-        verifyProcedureExists(procedure.getName());
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, procedure);
-    }     
-
     public void procedureDropped(String procedureName) {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
@@ -642,31 +664,10 @@ public abstract class DatabaseStore {
             case TABLE:
                 GroupSymbol gs = new GroupSymbol(name);
                 ResolverUtil.resolveGroup(gs, qmi);
-                Table t = (Table)gs.getMetadataID();
-                if (t == null) {
-                    throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31245,
-                            QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31245, name, getCurrentDatabase().getName(),
-                                    getCurrentSchema().getName()));
-                }
-                return t;
+                return (Table)gs.getMetadataID();
             case PROCEDURE:
                 StoredProcedureInfo sp = qmi.getStoredProcedureInfoForProcedure(name);
-                if (sp == null) {
-                    throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31213,
-                            QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31213, name, getCurrentSchema().getName(),
-                                    getCurrentDatabase().getName()));                
-                }
-                if (sp.getProcedureID() instanceof Procedure) {
-                    return (Procedure)sp.getProcedureID();
-                }                
-                return null;
-            case COLUMN:
-                Column c = qmi.getElementID(name);
-                if (c == null) {
-                    throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31223,
-                            QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31223, name));                                    
-                }
-                return c;
+                return (Procedure)sp.getProcedureID();
             case DATABASE:
                 return getCurrentDatabase();
             case SCHEMA:
@@ -691,14 +692,13 @@ public abstract class DatabaseStore {
                 }
                 return dw;
             default:
-                break;
+                throw new AssertionError();
             }
         } catch (TeiidComponentException e) {
             throw new MetadataException(e);
         } catch (QueryResolverException e) {
             throw new MetadataException(e);
         }
-        return null;
     }
     
     protected TransformationMetadata getTransformationMetadata() {
@@ -843,6 +843,57 @@ public abstract class DatabaseStore {
         this.currentDatabase.revokeGrant(grant);
     }
     
+    public void renameBaseColumn(String objectName, Database.ResourceType type, String oldName, String newName) {
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
+        
+        MetadataFactory factory = DatabaseStore.createMF(this);
+        switch (type) {
+        case TABLE:
+            Table table = (Table)getSchemaRecord(objectName, type);
+            assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+            factory.renameColumn(oldName, newName, table);
+            break;
+        case PROCEDURE:
+            Procedure proc = (Procedure)getSchemaRecord(objectName, type);
+            assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, proc);
+            factory.renameParameter(oldName, newName, proc);
+            break;
+        default:
+            throw new IllegalArgumentException("invalid type"); //$NON-NLS-1$
+        }
+    }
+    
+    public void alterBaseColumn(String objectName, Database.ResourceType type, String childName, ParsedDataType datatype, boolean autoIncrement, boolean notNull) {
+        MetadataFactory factory = DatabaseStore.createMF(this);
+        BaseColumn column = null;
+        if (type == Database.ResourceType.TABLE){
+            Table table = (Table)getSchemaRecord(objectName, type); 
+            assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+            column = table.getColumnByName(childName);
+            if (column == null){
+                throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_table_column_found", childName, table.getName())); //$NON-NLS-1$
+            }
+        } else {
+            Procedure proc = (Procedure)getSchemaRecord(objectName, type);
+            assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, proc);
+            column = proc.getParameterByName(childName);
+            if (column == null){
+                throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_proc_column_found", childName, proc.getName())); //$NON-NLS-1$
+            }            
+        }
+        MetadataFactory.setDataType(datatype.getType(), column, factory.getDataTypes(), notNull);
+        SQLParserUtil.setTypeInfo(datatype, column);
+        if (notNull) {
+           column.setNullType(Column.NullType.No_Nulls);
+        }
+        if (type == Database.ResourceType.TABLE){
+            //must be called after setDataType as that will pull the defaults
+            ((Column)column).setAutoIncremented(autoIncrement);
+        }
+    }
+    
     public static MetadataFactory createMF(DatabaseStore events, Schema schema, boolean useSchema) {
         MetadataFactory mf = new MetadataFactory(events.getCurrentDatabase().getName(), events.getCurrentDatabase().getVersion(),
                 schema==null?"undefined":schema.getName(), events.getCurrentDatabase().getMetadataStore().getDatatypes(), new Properties(), null); //$NON-NLS-1$
@@ -918,5 +969,15 @@ public abstract class DatabaseStore {
 								record.getName(), this.commandContext.getUserName()));
 			}
 		}*/
-	}    
+	}
+
+    public Table getTableForCreateColumn(String objectName, ResourceType type) {
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return new Table(); //return a dummy table;
+        }
+        
+        Table table = (Table)getSchemaRecord(objectName, type); 
+        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        return table;
+    }    
 }
