@@ -572,7 +572,7 @@ public class SQLParserUtil {
 		return column;
 	}
 
-	static void setTypeInfo(ParsedDataType type, BaseColumn column) {
+	public static void setTypeInfo(ParsedDataType type, BaseColumn column) {
 		if (type.length != null){
 			column.setLength(type.length);
 		}
@@ -625,7 +625,7 @@ public class SQLParserUtil {
 		return expressions;
 	}
 	
-	static class  ParsedDataType{
+	public static class  ParsedDataType{
 		String type;
 		Integer length;
 		Integer scale;
@@ -655,7 +655,11 @@ public class SQLParserUtil {
 			else {
 				this.length = length;
 			}			
-		}	
+		}
+		
+		public String getType() {
+            return type;
+        }
 	}
 	
 	public static void setDefault(BaseColumn column, Expression value) {
