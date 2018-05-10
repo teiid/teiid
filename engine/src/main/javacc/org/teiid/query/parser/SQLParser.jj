@@ -5091,7 +5091,7 @@ void ddlStmt(DatabaseStore dbStore) :
 	 LOOKAHEAD(2)  createDatabase(dbStore) |
 	 //LOOKAHEAD(2)  dropDatabase(dbStore) |
 	 LOOKAHEAD(2)  useDatabase(dbStore) |
-     LOOKAHEAD(2)  dropSchema(dbStore) |
+     LOOKAHEAD(3)  dropSchema(dbStore) |
      LOOKAHEAD(2)  useSchema(dbStore) |
      LOOKAHEAD(3)  createSchema(dbStore) |
      LOOKAHEAD(3)  createDDLProcedure(dbStore, ParseInfo.DEFAULT_INSTANCE) [ ddlStmt(dbStore) ] |
@@ -5202,7 +5202,7 @@ void createSchema(DatabaseStore dbStore) :
     ArrayList<String> servers = new ArrayList<String>();
 }
 {
-    <CREATE> [<VIRTUAL> {physical=false;}] <SCHEMA> 
+    <CREATE> [<VIRTUAL> {physical=false;}|<FOREIGN>] <SCHEMA> 
     name = id(Boolean.TRUE) 
     {
         schema = new Schema();
@@ -5242,12 +5242,12 @@ example=[source,sql]\n----\DROP SCHEMA foo \n----\n
 void dropSchema(DatabaseStore dbStore) :
 {
     String name = null;
-    boolean physical = true;
+    Boolean virtual = null;
 }
 { 
-    <DROP> [<VIRTUAL> {physical=false;}] <SCHEMA> name = id(null) 
+    <DROP> [<VIRTUAL> {virtual=true;} | <FOREIGN> {virtual=false;}] <SCHEMA> name = id(null) 
     {
-        dbStore.schemaDropped(name);
+        dbStore.schemaDropped(name, virtual);
     }
 }
 
@@ -5677,17 +5677,17 @@ example=[source,sql]\n----\nDROP [FOREIGN (TABLE|VIEW) table-name\n----\n
 void dropProcedure(DatabaseStore dbStore) :
 {
 	String procedureName = null;
-	boolean virtual = false;
+	Boolean virtual = null;
 	boolean function = false;
 }
 {
-	<DROP> [<VIRTUAL> | <FOREIGN> {virtual = false;}](<PROCEDURE> | <FUNCTION> {function = true;})
+	<DROP> [<VIRTUAL> {virtual = true;}| <FOREIGN> {virtual = false;}](<PROCEDURE> | <FUNCTION> {function = true;})
 	procedureName = id(null)
 	{
 	   	if (function){
-	   		dbStore.functionDropped(procedureName);
+	   		dbStore.functionDropped(procedureName, virtual);
 	   	} else {
-	   		dbStore.procedureDropped(procedureName);
+	   		dbStore.procedureDropped(procedureName, virtual);
 	    }
 	}
 }
@@ -5834,9 +5834,9 @@ void dropTableView(DatabaseStore dbStore) :
 		([<VIRTUAL>] <VIEW> {view = true;}) |
 		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true; view = true;})
 	) 
-	tableName = unqualifiedId()
+	tableName = id(null)
 	{
-	   dbStore.tableDropped(tableName);
+	   dbStore.tableDropped(tableName, globalTemp, view);
 	}
 }
 
@@ -6372,7 +6372,7 @@ void alterTrigger(DatabaseStore dbStore, ParseInfo info) :
     (<AS> triggerAction = forEachRowTriggerAction(info) | <ENABLED> {enabled=true;} | <DISABLED> {enabled=false;})
     {
         if (enabled != null){
-            dbStore.enableTableTriggerPlan(objectName, Table.TriggerEvent.valueOf(event.image.toUpperCase()), enabled, true);
+            dbStore.enableTableTriggerPlan(objectName, Table.TriggerEvent.valueOf(event.image.toUpperCase()), enabled);
         } else {
             dbStore.setTableTriggerPlan(null, objectName, Table.TriggerEvent.valueOf(event.image.toUpperCase()), triggerAction.toString(), false);
         }                

@@ -194,6 +194,17 @@ public class TestDDLParser {
 		mf.mergeInto(mds);
 	}	
 	
+    @Test 
+    public void testRenameTableQualified() throws Exception {
+        QueryParser parser = new QueryParser();
+        String ddl = "CREATE FOREIGN TABLE G1( e1 integer auto_increment primary key, e2 varchar);"
+                + "ALTER TABLE model.G1 RENAME TO G2";
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+    }
+	
 	@Test
 	public void testUDT() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar OPTIONS (UDT 'NMTOKENS(12,13,11)'))";
@@ -1639,6 +1650,23 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN PROCEDURE procG1(P1 integer) RETURNS (e1 integer, e2 varchar);"
                 + "DROP FOREIGN PROCEDURE procG1";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Procedure p = s.getProcedure("procG1");
+        assertNull(p);  
+    }
+    
+    @Test(expected=MetadataException.class)
+    public void testDropProcedureWrongType() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
+                + "CREATE FOREIGN PROCEDURE procG1(P1 integer) RETURNS (e1 integer, e2 varchar);"
+                + "DROP VIRTUAL PROCEDURE procG1";
         
         Database db = helpParse(ddl);
         Schema s = db.getSchema("test");
