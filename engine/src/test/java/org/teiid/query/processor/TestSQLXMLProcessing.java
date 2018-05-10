@@ -898,7 +898,7 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(null, "8881112222"),
         };    
     
-		XMLInputFactory factory = XMLInputFactory.newFactory();
+		XMLInputFactory factory = XMLInputFactory.newInstance();
 		XMLEventReader reader = factory.createXMLEventReader(new StringReader("<Person><!--hello--><phoneNumber><number>8881112222</number></phoneNumber></Person>"));
 		XMLType value = new XMLType(new StAXSQLXML(new StAXSource(reader)));
 		value.setType(Type.DOCUMENT);

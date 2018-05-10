@@ -401,7 +401,7 @@ public class XMLSystemFunctions {
 	};
 	static ThreadLocal<XMLEventFactory> threadLocalEventtFactory = new ThreadLocal<XMLEventFactory>() {
 		protected XMLEventFactory initialValue() {
-			return XMLEventFactory.newFactory();
+			return XMLEventFactory.newInstance();
 		}
 		public XMLEventFactory get() {
 			XMLEventFactory eventFactory = super.get();

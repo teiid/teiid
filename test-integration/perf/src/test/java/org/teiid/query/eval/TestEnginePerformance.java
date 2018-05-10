@@ -617,7 +617,7 @@ public class TestEnginePerformance {
 	 */
 	public static void main(String[] args) throws Exception {
 		FileOutputStream fos = new FileOutputStream(UnitTestUtil.getTestDataFile("test.xml"));
-		XMLOutputFactory xof = XMLOutputFactory.newFactory();
+		XMLOutputFactory xof = XMLOutputFactory.newInstance();
 		XMLStreamWriter xsw = xof.createXMLStreamWriter(fos);
 		xsw.writeStartDocument();
 		xsw.writeStartElement("root");
