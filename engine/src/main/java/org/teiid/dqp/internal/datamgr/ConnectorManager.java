@@ -300,7 +300,7 @@ public class ConnectorManager  {
             	message.setSourceCommand(command);
             }
         }      
-        LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
+        LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING_SOURCE, message);
     }
     
     /**

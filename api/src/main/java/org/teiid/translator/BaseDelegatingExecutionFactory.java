@@ -599,7 +599,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	}
 	
 	Boolean supportsOrderByNullOrdering;
-	@TranslatorProperty(display="Supports ORDER BY w/Null [FIRST|LAST]", advanced=true)
+	@TranslatorProperty(display="Supports ORDER BY col NULLS [FIRST|LAST|HIGH|LOW]", advanced=true)
 	@Override
 	public boolean supportsOrderByNullOrdering() {
 		if (supportsOrderByNullOrdering != null) {

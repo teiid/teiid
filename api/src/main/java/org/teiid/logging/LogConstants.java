@@ -29,6 +29,7 @@ public interface LogConstants {
 	public static final String CTX_BUFFER_MGR = "org.teiid.BUFFER_MGR"; //$NON-NLS-1$
 	public static final String CTX_TXN_LOG = "org.teiid.TXN_LOG"; //$NON-NLS-1$
 	public static final String CTX_COMMANDLOGGING = "org.teiid.COMMAND_LOG"; //$NON-NLS-1$
+	public static final String CTX_COMMANDLOGGING_SOURCE = CTX_COMMANDLOGGING + ".SOURCE"; //$NON-NLS-1$
 	public static final String CTX_AUDITLOGGING = "org.teiid.AUDIT_LOG"; //$NON-NLS-1$
 	public static final String CTX_ADMIN_API = "org.teiid.ADMIN_API"; //$NON-NLS-1$
 	public static final String CTX_RUNTIME = "org.teiid.RUNTIME"; //$NON-NLS-1$
