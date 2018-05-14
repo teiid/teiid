@@ -1,6 +1,8 @@
 teiid
 =====
 
+[![Build Status](https://travis-ci.org/teiid/teiid.svg?branch=master)](https://travis-ci.org/teiid/teiid)
+
 Teiid is a data virtualization system that allows applications to use data from multiple, heterogeneous data stores.
 
 ## Useful Links
