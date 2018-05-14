@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -944,6 +945,33 @@ public class TestJoinNode {
         
         this.join.setJoinStrategy(joinStrategy);
         helpTestJoinDirect(expected, 5, 1);
+    }
+    
+    @Test public void testMergeJoinAlreadySortedWithNulls() throws Exception {
+        this.joinType = JoinType.JOIN_INNER;
+        this.leftTuples = new List[] {
+                Collections.singletonList(null),
+                Arrays.asList(1),  
+                Arrays.asList(2),
+        };
+        this.rightTuples = new List[] {
+            Arrays.asList(1),  
+            Arrays.asList(2),
+            Collections.singletonList(null),
+        };
+        expected = new List[] {
+           Arrays.asList(new Object[] { 1, 1 }),
+           Arrays.asList(new Object[] { 2, 2 }),
+        };
+        helpCreateJoin();               
+        this.joinStrategy = new EnhancedSortMergeJoinStrategy(SortOption.ALREADY_SORTED, SortOption.ALREADY_SORTED);
+        this.join.setJoinStrategy(joinStrategy);
+        helpTestJoinDirect(expected, 40, 100000);
+        List[] temp = leftTuples;
+        leftTuples = rightTuples;
+        rightTuples = temp;
+        helpCreateJoin();                
+        helpTestJoinDirect(expected, 40, 100000);
     }
 
     @Test public void testRepeatedMerge() throws Exception {
