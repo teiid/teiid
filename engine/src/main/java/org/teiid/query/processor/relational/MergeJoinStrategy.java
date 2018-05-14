@@ -288,9 +288,19 @@ public class MergeJoinStrategy extends JoinStrategy {
             if (!target.isExpresssionDistinct()) {
                 compare = compare(previousTuple, target.getCurrentTuple(), target.getExpressionIndexes(), target.getExpressionIndexes());
                 if (compare < 0) {
-                	//sanity check - this means the sort order is not as expected
-                	//note this is not a complete check - it will not detect all invalid circumstances as we exit early
-                	throw new TeiidComponentException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31202));
+                    boolean ignore = false;
+                    for (int i : target.getExpressionIndexes()) {
+                        if (target.getCurrentTuple().get(i) == null) {
+                            //since we don't specify a null sort option, it could be returned as high/last
+                            ignore = true;
+                            break;
+                        }
+                    }
+                    if (!ignore) {
+                    	//sanity check - this means the sort order is not as expected
+                    	//note this is not a complete check - it will not detect all invalid circumstances as we exit early
+                    	throw new TeiidComponentException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31202));
+                    }
                 }
             }
             if (compare != 0) {

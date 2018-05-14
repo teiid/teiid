@@ -215,5 +215,10 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
         }
         return super.translate(obj, context);
     }
+    
+    @Override
+    public NullOrder getDefaultNullOrder() {
+        return NullOrder.UNKNOWN; //varies by type
+    }
 
 }
