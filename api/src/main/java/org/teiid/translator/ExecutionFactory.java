@@ -1413,4 +1413,11 @@ public class ExecutionFactory<F, C> {
 	public boolean supportsUpsert() {
 	    return false;
 	}
+	
+    /**
+     * @return true if the source supports only timestamp add literals
+     */
+	public boolean supportsOnlyTimestampAddLiteral() {
+	    return false;
+	}
 }

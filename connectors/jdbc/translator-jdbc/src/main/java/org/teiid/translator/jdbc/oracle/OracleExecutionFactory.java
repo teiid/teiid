@@ -328,6 +328,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
         
         registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("DBMS_RANDOM.VALUE")); //$NON-NLS-1$
+        
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new TimestampAddModifier());
     }
     
     @Override
@@ -936,6 +938,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ST_SRID);
         supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
         supportedFunctions.add(SourceSystemFunctions.RAND);
+        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
         return supportedFunctions;
     }
     
@@ -1246,5 +1249,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     protected boolean isNonAsciiFunction(Function f) {
         return f.getName().equalsIgnoreCase(TO_NCHAR)
                      || (f.getType() == TypeFacility.RUNTIME_TYPES.CHAR && f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT));
+    }
+    
+    @Override
+    public boolean supportsOnlyTimestampAddLiteral() {
+        return true;
     }
 }

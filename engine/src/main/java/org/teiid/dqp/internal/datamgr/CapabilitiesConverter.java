@@ -131,6 +131,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, srcCaps.supportsGroupByMultipleDistinctAggregates());
         tgtCaps.setCapabilitySupport(Capability.UPSERT, srcCaps.supportsUpsert());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SET_LIMIT_OFFSET, srcCaps.supportsSetQueryLimitOffset());
+        tgtCaps.setCapabilitySupport(Capability.ONLY_TIMESTAMPADD_LITERAL, srcCaps.supportsOnlyTimestampAddLiteral());
         if (srcCaps.supportsPartialFiltering()) {
         	//disable supports that could end up being not filterable
         	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);

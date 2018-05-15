@@ -1463,4 +1463,18 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
             boolean supportsOnlyLateralJoinProcedure) {
         this.supportsOnlyLateralJoinProcedure = supportsOnlyLateralJoinProcedure;
     }
+    
+    Boolean supportsOnlyTimestampAddLiteral;
+    @TranslatorProperty(display="Supports Only TimestampAdd literal", advanced=true)
+    @Override
+    public boolean supportsOnlyTimestampAddLiteral() {
+        if (supportsOnlyTimestampAddLiteral != null) {
+            return supportsOnlyTimestampAddLiteral;
+        }
+        return delegate.supportsOnlyTimestampAddLiteral();
+    }
+    public void setSupportsOnlyTimestampAddLiteral(
+            boolean supportsOnlyTimestampAddLiteral) {
+        this.supportsOnlyTimestampAddLiteral = supportsOnlyTimestampAddLiteral;
+    }
 }

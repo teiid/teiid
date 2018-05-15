@@ -466,6 +466,22 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             	}
             	c.setBindEligible(false);
             }
+            if (CapabilitiesUtil.supports(Capability.ONLY_TIMESTAMPADD_LITERAL, modelID, metadata, capFinder) && name.equalsIgnoreCase(SourceSystemFunctions.TIMESTAMPADD)) {
+                //if the function can be evaluated then return as it will get replaced during the final rewrite 
+                if (willBecomeConstant(obj)) { 
+                    return; 
+                }
+                if (!(obj.getArg(1) instanceof Constant)) {
+                    markInvalid(obj, obj.getName() + " non-literal timestampadd not supported by source"); //$NON-NLS-1$
+                    return;
+                }
+                Constant c = (Constant)obj.getArg(1);
+                if (c.isMultiValued()) {
+                    markInvalid(obj, obj.getName() + " non-literal timestampadd function not supported by source"); //$NON-NLS-1$
+                    return;
+                }
+                c.setBindEligible(false);
+            }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
         } catch(TeiidComponentException e) {

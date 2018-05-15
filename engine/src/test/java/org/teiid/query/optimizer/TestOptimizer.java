@@ -6656,6 +6656,24 @@ public class TestOptimizer {
 		TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE '\\_a%b' ESCAPE '\\'"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
+    @Test public void testTimestampAddRestriction() throws Exception {
+        String sql = "SELECT timestampadd(sql_tsi_second, 1, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$
+
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setFunctionSupport(SourceSystemFunctions.TIMESTAMPADD, true);
+        bsc.setCapabilitySupport(Capability.ONLY_TIMESTAMPADD_LITERAL, true);
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT timestampadd(sql_tsi_second, 1, g_0.TimestampValue) FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        
+        sql = "SELECT timestampadd(sql_tsi_second, intkey, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$
+
+        //TODO - when possible this should modify the match pattern to use the required escape
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.IntKey, g_0.TimestampValue FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        
+        bsc.setCapabilitySupport(Capability.ONLY_TIMESTAMPADD_LITERAL, false);
+        
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT timestampadd(sql_tsi_second, g_0.IntKey, g_0.TimestampValue) FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+	
 	public static final boolean DEBUG = false;
 
 }

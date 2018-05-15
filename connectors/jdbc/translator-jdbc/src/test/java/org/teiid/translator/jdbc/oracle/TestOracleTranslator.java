@@ -1336,4 +1336,26 @@ public class TestOracleTranslator {
             null,
             output);
     }
+    
+    @Test public void testTimestampAdd() throws Exception {
+        helpTestVisitor(getTestVDB(),
+                "select timestampadd(sql_tsi_second, 1, now())", //$NON-NLS-1$
+                null,
+                "SELECT now() + (INTERVAL '1' SECOND) FROM DUAL"); //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+                "select timestampadd(sql_tsi_quarter, 1, now())", //$NON-NLS-1$
+                null,
+                "SELECT now() + (INTERVAL '91' DAY) FROM DUAL"); //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+                "select timestampadd(sql_tsi_week, 1, now())", //$NON-NLS-1$
+                null,
+                "SELECT now() + (INTERVAL '7' DAY) FROM DUAL"); //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+                "select timestampadd(sql_tsi_frac_second, 1, now())", //$NON-NLS-1$
+                null,
+                "SELECT now() + (INTERVAL '0.000000001' SECOND) FROM DUAL"); //$NON-NLS-1$
+    }
 }
