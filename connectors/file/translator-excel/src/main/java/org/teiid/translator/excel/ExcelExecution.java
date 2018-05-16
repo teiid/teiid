@@ -137,6 +137,7 @@ public class ExcelExecution implements ResultSetExecution {
 					if (this.currentRow.getRowNum() >= this.visitor.getFirstDataRowNumber()) {
 						break;
 					}
+                    this.currentRow = null;
 				}
 			}
 			return rowIter;
