@@ -41,11 +41,11 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestExcelExecution {
 
-    private ArrayList helpExecute(String ddl, FileConnection connection, String query) throws Exception {
+    static ArrayList helpExecute(String ddl, FileConnection connection, String query) throws Exception {
         return helpExecute(ddl, connection, query, false);
     }
     
-	private ArrayList helpExecute(String ddl, FileConnection connection, String query, boolean format) throws Exception {
+    static ArrayList helpExecute(String ddl, FileConnection connection, String query, boolean format) throws Exception {
 		ExcelExecutionFactory translator = new ExcelExecutionFactory();
 		translator.setFormatStrings(format);
     	translator.start();
@@ -332,16 +332,27 @@ public class TestExcelExecution {
     	assertEquals("[[John], [Total]]", results.toString());
 	}	
 	
+    @Test
+    public void testStartBeyondRows() throws Exception {
+        FileConnection connection = Mockito.mock(FileConnection.class);
+        Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xlsx"));
+
+        ArrayList results = helpExecute(commonDDL, connection, "select * from Sheet1");
+        //typed as time
+        assertEquals("[]", results.toString());
+    }
+	
 	@Test
 	public void testTime() throws Exception {
     	FileConnection connection = Mockito.mock(FileConnection.class);
     	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xlsx"));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select \"time\" from Sheet1");
+    	String ddl = commonDDL.replace("14", "6");
+        ArrayList results = helpExecute(ddl, connection, "select \"time\" from Sheet1");
     	//typed as time
     	assertEquals("[[10:12:14]]", results.toString());
     	
-    	String ddl = commonDDL.replace("\"time\" time", "\"time\" string");
+    	ddl = ddl.replace("\"time\" time", "\"time\" string");
         results = helpExecute(ddl, connection, "select \"time\" from Sheet1", true);
         //typed as string with formatting - Excel format
         assertEquals("[[10:12:14 AM]]", results.toString());

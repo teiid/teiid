@@ -35,5 +35,7 @@ public class ExcelPlugin {
 		TEIID23006,
 		TEIID23007,
 		TEIID23008,
+		TEIID23009,
+		TEIID23010,
 	}
 }

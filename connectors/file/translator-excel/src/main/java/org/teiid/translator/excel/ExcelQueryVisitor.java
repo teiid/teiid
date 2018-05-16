@@ -21,15 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
+import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.In;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
@@ -38,6 +31,8 @@ import org.teiid.translator.TranslatorException;
 
 public class ExcelQueryVisitor extends HierarchyVisitor {
 
+    public static int ROW_ID_INDEX = -1;
+    
 	protected Stack<Object> onGoingExpression = new Stack<Object>();
 	private List<Integer> projectedColumns = new ArrayList<Integer>();
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
@@ -131,7 +126,11 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 	public void visit(DerivedColumn obj) {
 		visitNode(obj.getExpression());
 
-		Column column = (Column) this.onGoingExpression.pop();
+		createProjectedColumn(true);
+	}
+
+    private void createProjectedColumn(boolean allowRowId) {
+        Column column = (Column) this.onGoingExpression.pop();
 		String str = column.getProperty(ExcelMetadataProcessor.CELL_NUMBER, false);
 
 		if (str == null) {
@@ -140,11 +139,23 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 		}
 		
 		if (str.equalsIgnoreCase(ExcelMetadataProcessor.ROW_ID)) {
-			this.projectedColumns.add(-1);
+		    if (!allowRowId) {
+		        this.exceptions.add(new TranslatorException(ExcelPlugin.Event.TEIID23009, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23009, column.getName())));
+		    }
+            this.projectedColumns.add(ROW_ID_INDEX);
 		}
 		else {
 			this.projectedColumns.add(Integer.valueOf(str));
 		}
+    }
+	
+	@Override
+	public void visit(SetClause clause) {
+	    visit(clause.getSymbol());
+	    createProjectedColumn(false);
+	    if (!(clause.getValue() instanceof Literal)) {
+	        this.exceptions.add(new TranslatorException(ExcelPlugin.Event.TEIID23010, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23010, clause)));
+	    }
 	}
 
 	@Override
@@ -261,4 +272,22 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 		}
 		return true;
 	}
+	
+	@Override
+	public void visit(Insert obj) {
+	    visit(obj.getTable());
+	    for (ColumnReference cr : obj.getColumns()) {
+	        visit(cr);
+	        createProjectedColumn(false);
+	    }
+	    if (!(obj.getValueSource() instanceof ExpressionValueSource)) {
+	        throw new AssertionError();
+	    }
+	    for (Expression ex : ((ExpressionValueSource)obj.getValueSource()).getValues()) {
+	        if (!(ex instanceof Literal)) {
+	            throw new AssertionError();
+	        }
+	    }
+	}
+	
 }

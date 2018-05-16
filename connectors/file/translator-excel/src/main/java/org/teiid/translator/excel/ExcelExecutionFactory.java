@@ -21,6 +21,7 @@ package org.teiid.translator.excel;
 import javax.resource.cci.ConnectionFactory;
 
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
@@ -44,11 +45,6 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, F
 	}
 	
     @Override
-    public void start() throws TranslatorException {
-    	super.start();
-    }
-
-    @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, FileConnection connection)
     		throws TranslatorException {
     	ExcelExecution ex = new ExcelExecution((Select)command, executionContext, metadata, connection);
@@ -56,7 +52,18 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, F
     	    ex.setDataFormatter(new DataFormatter()); //assume default locale
     	}
     	return ex;
-    }    
+    }
+    
+    @Override
+    public ExcelUpdateExecution createUpdateExecution(Command command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            FileConnection connection) throws TranslatorException {
+        ExcelUpdateExecution ex = new ExcelUpdateExecution(command, executionContext, metadata, connection);
+        if (formatStrings) {
+            ex.setDataFormatter(new DataFormatter()); //assume default locale
+        }
+        return ex;
+    }
     	
     @Override
     public MetadataProcessor<FileConnection> getMetadataProcessor(){

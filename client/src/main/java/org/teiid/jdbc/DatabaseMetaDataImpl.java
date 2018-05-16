@@ -1884,7 +1884,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     /**
-     * <p>Checks whether the concatenation of a NULL vaule and a non-NULL value results
+     * <p>Checks whether the concatenation of a NULL value and a non-NULL value results
      * in a NULL value.</p>
      * @return if so return true, else false.
      * @throws SQLException, should never occur.
@@ -1894,7 +1894,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     /**
-     * <p>Checks whether NULL vaules are sorted at the end regardless of sort order.</p>
+     * <p>Checks whether NULL values are sorted at the end regardless of sort order.</p>
      * @return if so return true, else false.
      * @throws SQLException, should never occur.
      */
@@ -1903,7 +1903,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     /**
-     * <p>Checks whether NULL vaules are sorted at the start regardless of sort order.</p>
+     * <p>Checks whether NULL values are sorted at the start regardless of sort order.</p>
      * @return if so return true, else false.
      * @throws SQLException, should never occur.
      */
@@ -1912,7 +1912,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     /**
-     * <p>Checks whether NULL vaules are sorted high.</p>
+     * <p>Checks whether NULL values are sorted high.</p>
      * @return if so return true, else false.
      * @throws SQLException, should never occur.
      */
@@ -1921,7 +1921,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     /**
-     * <p>Checks whether NULL vaules are sorted low.</p>
+     * <p>Checks whether NULL values are sorted low.</p>
      * @return if so return true, else false.
      * @throws SQLException, should never occur.
      */
