@@ -618,6 +618,15 @@ public class TestOracleTranslator {
                         EMPTY_CONTEXT, null, output);
     }
     
+    @Test public void testTimeExtract() throws Exception {
+        String input = "SELECT hour(cast(timestampvalue as time)) FROM SmallA"; //$NON-NLS-1$
+        String output = "SELECT EXTRACT(HOUR FROM cast(case when SmallishA.timestampvalue is null then null else to_date('1970-01-01 ' || to_char(SmallishA.timestampvalue, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end AS timestamp)) FROM SmallishA"; //$NON-NLS-1$
+        
+        helpTestVisitor(getOracleSpecificMetadata(),
+                        input, 
+                        EMPTY_CONTEXT, null, output);
+    }
+    
     @Test public void testAliasedGroup() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select y.part_name from parts as y", //$NON-NLS-1$

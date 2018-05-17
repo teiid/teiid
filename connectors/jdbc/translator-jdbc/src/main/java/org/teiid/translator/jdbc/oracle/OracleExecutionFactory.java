@@ -109,7 +109,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		@Override
 		public List<?> translate(Function function) {
 			Expression ex = function.getParameters().get(0);
-			if ((ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) //$NON-NLS-1$ 
+			if (ex.getType() == TypeFacility.RUNTIME_TYPES.DATE || ex.getType() == TypeFacility.RUNTIME_TYPES.TIME 
+			        || (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) //$NON-NLS-1$ 
 					|| (!(ex instanceof ColumnReference) && !(ex instanceof Literal) && !(ex instanceof Function))) {
 				ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
 				function.getParameters().set(0, ex);
