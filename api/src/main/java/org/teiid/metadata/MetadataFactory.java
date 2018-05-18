@@ -77,6 +77,8 @@ public class MetadataFactory extends NamespaceContainer {
 	private transient Map<String, ? extends VDBResource> vdbResources;
 	private Map<String, Grant> grants;
 
+    private String nameFormat;
+
 	public MetadataFactory(String vdbName, Object vdbVersion, Map<String, Datatype> runtimeTypes, ModelMetaData model) {
 		this(vdbName, vdbVersion, model.getName(), runtimeTypes, model.getProperties(), model.getSchemaText());
 		this.model = model;
@@ -108,6 +110,7 @@ public class MetadataFactory extends NamespaceContainer {
 		    this.renameAllDuplicates = PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameAllDuplicates", this.renameAllDuplicates); //$NON-NLS-1$
 		    this.renameDuplicateColumns = renameAllDuplicates||PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameDuplicateColumns", this.renameDuplicateColumns); //$NON-NLS-1$
 		    this.renameDuplicateTables = renameAllDuplicates||PropertiesUtils.getBooleanProperty(modelProperties, "importer.renameDuplicateTables", this.renameDuplicateTables); //$NON-NLS-1$
+		    this.nameFormat = modelProperties.getProperty("importer.nameFormat"); //$NON-NLS-1$
 		}
 		this.modelProperties = modelProperties;
 		this.rawMetadata = rawMetadata;
@@ -182,6 +185,9 @@ public class MetadataFactory extends NamespaceContainer {
 	public Table addTable(String name) {
 		Table table = new Table();
 		table.setTableType(Table.Type.Table);
+		if (nameFormat != null) {
+		    name = String.format(nameFormat, name);
+		}
 		if (renameDuplicateTables) {
 		    name = checkForDuplicate(name, (s)->this.schema.getTable(s) != null, "Table"); //$NON-NLS-1$
 		}
@@ -459,6 +465,9 @@ public class MetadataFactory extends NamespaceContainer {
 	public Procedure addProcedure(String name) {
 	    Assertion.isNotNull(name, "name cannot be null"); //$NON-NLS-1$
 		Procedure procedure = new Procedure();
+		if (nameFormat != null) {
+            name = String.format(nameFormat, name);
+        }
 		if (renameAllDuplicates) {
 		    name = checkForDuplicate(name, (s)->this.schema.getProcedure(s) != null, "Procedure"); //$NON-NLS-1$   
 		}

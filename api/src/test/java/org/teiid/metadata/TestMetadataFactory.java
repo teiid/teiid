@@ -144,4 +144,17 @@ public class TestMetadataFactory {
 		}
 	}
 	
+	@Test public void testNameFormat() {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("foo");
+        mmd.addProperty("importer.nameFormat", "x_%s_y");
+        HashMap<String, Datatype> types = new HashMap<String, Datatype>();
+        MetadataFactory factory = new MetadataFactory("x", 1, types, mmd);
+        Table x = factory.addTable("x");
+        assertEquals("x_x_y", x.getName());
+        
+        Procedure p = factory.addProcedure("a%b.c");
+        assertEquals("x_a%b.c_y", p.getName());
+    }
+	
 }
