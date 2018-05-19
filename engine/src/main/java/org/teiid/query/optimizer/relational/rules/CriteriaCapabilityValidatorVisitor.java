@@ -885,14 +885,14 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         visitor.analysisRecord = analysisRecord;
         visitor.isJoin = isJoin;
         visitor.isSelectClause = isSelectClause;
-        //we use an array to represent multiple comparision attributes,
+        //we use an array to represent multiple comparison attributes,
         //but we don't want that to inhibit pushdown as we'll account for that later
         //in criteria processing
         final EvaluatableVisitor ev = new EvaluatableVisitor(modelID, metadata, capFinder);
         PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.POST_ORDER, false) {
         	@Override
         	public void visit(DependentSetCriteria obj1) {
-        		if (obj1.hasMultipleAttributes()) {
+        		if (obj1.hasMultipleAttributes() && obj1.getExpression() instanceof Array) {
         			Array array = (Array) obj1.getExpression();
         			visitNodes(array.getExpressions());
             		super.postVisitVisitor(obj1);
@@ -908,7 +908,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         		}
         		Determinism d = ev.getDeterminismLevel();
         		boolean pushDown = ev.requiresEvaluation(EvaluationLevel.PUSH_DOWN);
-        		//decend with clean state, then restore
+        		//descend with clean state, then restore
         		ev.reset();
         		super.visitNode(obj);
         		ev.setDeterminismLevel(d);

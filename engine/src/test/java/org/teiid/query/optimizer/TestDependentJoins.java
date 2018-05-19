@@ -1048,4 +1048,11 @@ public class TestDependentJoins {
         assertEquals(JoinType.JOIN_LEFT_OUTER, ((JoinNode)node).getJoinType());
     }
     
+    @Test public void testMakeDependentOverUnionProjectingLiterals() throws Exception {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g2.e1 from pm1.g2 inner join /*+ makedep */ "
+                + "(select 1 as x, 'a' as y, e1 from pm1.g1 union all select 2, 'b', e1 from pm2.g1) v on y = pm1.g2.e1 and x = pm1.g2.e2", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT 2 FROM pm2.g1 AS g_0", "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", "SELECT 1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        checkDependentGroups(plan, new String[] {}); //$NON-NLS-1$
+    }
+    
 }

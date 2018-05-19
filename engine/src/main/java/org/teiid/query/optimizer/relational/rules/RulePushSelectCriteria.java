@@ -930,6 +930,18 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         	}
         	return null;
         }
+        
+        if (critNode.hasBooleanProperty(Info.IS_DEPENDENT_SET)) {
+            Criteria dep = (Criteria)copyNode.getProperty(Info.SELECT_CRITERIA);
+            if (dep instanceof DependentSetCriteria) {
+                DependentSetCriteria dsc = (DependentSetCriteria)dep;
+                if (dsc.getExpression() instanceof Constant) {
+                    return null; //corner case, the expression is just a constant
+                                 //TODO: we should check if the dependent join can be reversed or undone
+                }
+            }
+        }
+
 		return copyNode;
 	}
 
