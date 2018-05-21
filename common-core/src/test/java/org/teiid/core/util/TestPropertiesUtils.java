@@ -547,4 +547,19 @@ public class TestPropertiesUtils {
     	PropertiesUtils.setBeanProperties(test, p, "org.teiid", true);
     	assertEquals(100, test.getVal());
     }
+    
+    @Test public void testCombinedProperties() {
+        String old = System.setProperty("org.teiid.val", "200");
+        try {
+            MyBean test = new MyBean();
+            PropertiesUtils.setBeanProperties(test, PropertiesUtils.getCombinedProperties(), "org.teiid", true);
+            assertEquals(200, test.getVal());
+        } finally {
+            if (old != null) {
+                System.setProperty("org.teiid.val", old);
+            } else {
+                System.clearProperty("org.teiid.val");                
+            }
+        }
+    }
 }

@@ -718,5 +718,12 @@ public final class PropertiesUtils {
         }
         return defaultValue;
 	}
+	
+	public static Properties getCombinedProperties() {
+	    Properties properties = new Properties();
+        properties.putAll(System.getProperties());
+        properties.putAll(System.getenv());
+        return properties;
+	}
 
 }

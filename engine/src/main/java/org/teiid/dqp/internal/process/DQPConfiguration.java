@@ -21,6 +21,7 @@ import java.util.Properties;
 
 import org.teiid.PreParser;
 import org.teiid.client.RequestMessage;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.query.util.Options;
 
 
@@ -58,8 +59,7 @@ public class DQPConfiguration{
     private Properties properties;
     
     public DQPConfiguration() {
-        properties = new Properties(System.getProperties());
-        properties.putAll(System.getenv());
+        properties = PropertiesUtils.getCombinedProperties();
     }
 
 	public int getMaxActivePlans() {
