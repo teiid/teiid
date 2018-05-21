@@ -4,7 +4,7 @@
   <parent>
       <groupId>org.teiid</groupId>
       <artifactId>connectors</artifactId>
-      <version>10.1.4-SNAPSHOT</version>
+      <version>10.1.4</version>
   </parent>
   <groupId>org.teiid.connectors</groupId>
   <artifactId>cassandra</artifactId>
