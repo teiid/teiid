@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>misc</artifactId>
-      <version>10.3.0-SNAPSHOT</version>
+      <version>10.3.0</version>
     </parent>
     <artifactId>feature-pack-misc</artifactId>
     <name>Teiid Connector misc Feature Pack</name>
