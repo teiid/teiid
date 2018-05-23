@@ -19,11 +19,8 @@ package org.teiid.translator.jpa;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
@@ -62,16 +59,59 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 	
 	public void process(MetadataFactory mf, EntityManager entityManager) throws TranslatorException {
 		Metamodel model = entityManager.getMetamodel();
-		
-		Set<EntityType<?>> entities = model.getEntities();
+
+		/*
+		 * Hibernate sometimes creates entities which don't have a javaType.
+		 * Envers _aud entities fall into this category. Perhaps something more
+		 * useful could be done with these, but for now filter them out so we
+		 * don't die on NullPointerException later on.
+		 */
+		Metamodel filteredModel = new Metamodel() {
+			@Override
+			public <X> EntityType<X> entity(Class<X> cls) {
+				return model.entity(cls);
+			}
+
+			@Override
+			public <X> ManagedType<X> managedType(Class<X> cls) {
+				return model.managedType(cls);
+			}
+
+			@Override
+			public <X> EmbeddableType<X> embeddable(Class<X> cls) {
+				return model.embeddable(cls);
+			}
+
+			@Override
+			public Set<ManagedType<?>> getManagedTypes() {
+				return model.getManagedTypes().stream()
+						.filter(e -> e.getJavaType() != null)
+						.collect(Collectors.toSet());
+			}
+
+			@Override
+			public Set<EntityType<?>> getEntities() {
+				return model.getEntities().stream()
+						.filter(e -> e.getJavaType() != null)
+						.collect(Collectors.toSet());
+			}
+
+			@Override
+			public Set<EmbeddableType<?>> getEmbeddables() {
+				return model.getEmbeddables();
+			}
+		};
+
+		Set<EntityType<?>> entities = filteredModel.getEntities();
+
 		for (EntityType<?> entity:entities) {
-			addEntity(mf, model, entity);
+			addEntity(mf, filteredModel, entity);
 		}
 		
 		// take a second swipe and add Foreign Keys
 		for (EntityType<?> entity:entities) {
 			Table t = mf.getSchema().getTable(entity.getName());
-			addForeignKeys(mf, model, entity, t);
+			addForeignKeys(mf, filteredModel, entity, t);
 		}		
 	}
 
