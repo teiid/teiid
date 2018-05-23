@@ -62,10 +62,7 @@ public final class PropertiesUtils {
     /**
      * Performs a correct deep clone of the properties object by capturing
      * all properties in the default(s) and placing them directly into the
-     * new Properties object.  If the input is an instance of
-     * <code>UnmodifiableProperties</code>, this method returns an
-     * <code>UnmodifiableProperties</code> instance around a new (flattened)
-     * copy of the underlying Properties object.
+     * new Properties object. 
      */
     public static Properties clone( Properties props ) {
         return clone(props, null, false);
@@ -74,10 +71,7 @@ public final class PropertiesUtils {
     /**
      * Performs a correct deep clone of the properties object by capturing
      * all properties in the default(s) and placing them directly into the
-     * new Properties object.  If the input is an instance of
-     * <code>UnmodifiableProperties</code>, this method returns an
-     * <code>UnmodifiableProperties</code> instance around a new (flattened)
-     * copy of the underlying Properties object.
+     * new Properties object.  
      */
     public static Properties clone( Properties props, Properties defaults, boolean deepClone ) {
         Properties result = null;

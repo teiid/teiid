@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -282,15 +283,16 @@ public abstract class AbstractVDBDeployer {
                         List<String> includeTables, List<String> excludeTables,
                         Map<String, String> properties) {
                     ModelMetaData model = vdb.getModel(schemaName);
-                    MetadataFactory factory = DatabaseStore.createMF(this, getSchema(schemaName), true);
-                    factory.getModelProperties().putAll(model.getPropertiesMap());
-                    factory.getModelProperties().putAll(properties);
+                    Properties modelProperties = new Properties();
+                    modelProperties.putAll(model.getPropertiesMap());
+                    modelProperties.putAll(properties);
                     if (!includeTables.isEmpty()) {
-                        factory.getModelProperties().put("importer.includeTables", StringUtil.join(includeTables, ",")); //$NON-NLS-1$
+                        modelProperties.put("importer.includeTables", StringUtil.join(includeTables, ",")); //$NON-NLS-1$
                     }
                     if (!excludeTables.isEmpty()) {
-                        factory.getModelProperties().put("importer.excludeTables", StringUtil.join(excludeTables, ",")); //$NON-NLS-1$
+                        modelProperties.put("importer.excludeTables", StringUtil.join(excludeTables, ",")); //$NON-NLS-1$
                     }
+                    MetadataFactory factory = DatabaseStore.createMF(this, getSchema(schemaName), true, modelProperties);
                     factory.setParser(new QueryParser());
                     if (vdbResources != null) {
                         factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
@@ -336,9 +338,7 @@ public abstract class AbstractVDBDeployer {
                             break;
                         } catch (Exception e) {
                             te = e;
-                            factory = DatabaseStore.createMF(this, getSchema(schemaName), true);
-                            factory.getModelProperties().putAll(model.getPropertiesMap());
-                            factory.getModelProperties().putAll(properties);
+                            factory = DatabaseStore.createMF(this, getSchema(schemaName), true, modelProperties);
                             factory.setParser(new QueryParser());
                             if (vdbResources != null) {
                                 factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
