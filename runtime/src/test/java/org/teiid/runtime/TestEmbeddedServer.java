@@ -2350,7 +2350,7 @@ public class TestEmbeddedServer {
         assertEquals("HELLO WORLD", rs.getString(1));
     }
     
-    @Test public void testDDLNameFormat() throws Exception {
+    @Test public void testDDLDuplicate() throws Exception {
         es.start(new EmbeddedConfiguration());
         es.addMetadataRepository("x", new MetadataRepository() {
             @Override
@@ -2362,15 +2362,19 @@ public class TestEmbeddedServer {
                 t.setVirtual(true);
                 factory.addColumn("col", "string", t);
                 t.setSelectTransformation("select 'HELLO WORLD'");
+                t = factory.addTable("helloworld");
+                t.setVirtual(true);
+                factory.addColumn("col", "string", t);
+                t.setSelectTransformation("select 'HELLO WORLD'");
             }
         });
         String externalDDL = "CREATE DATABASE test VERSION '1';"
                 + "USE DATABASE test VERSION '1';"
-                + "CREATE VIRTUAL SCHEMA test2 options ( importer.nameFormat 'prod_%s');"
+                + "CREATE VIRTUAL SCHEMA test2 options ( importer.renameAllDuplicates 'true');"
                 + "IMPORT FOREIGN SCHEMA public FROM REPOSITORY x INTO test2;";
         
         es.deployVDB(new ByteArrayInputStream(externalDDL.getBytes(Charset.forName("UTF-8"))), true);
-        ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from prod_helloworld");
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
         rs.next();
         assertEquals("HELLO WORLD", rs.getString(1));
     }
