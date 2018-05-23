@@ -885,9 +885,9 @@ public abstract class DatabaseStore {
         }
     }
     
-    public static MetadataFactory createMF(DatabaseStore events, Schema schema, boolean useSchema) {
+    public static MetadataFactory createMF(DatabaseStore events, Schema schema, boolean useSchema, Properties modelProperties) {
         MetadataFactory mf = new MetadataFactory(events.getCurrentDatabase().getName(), events.getCurrentDatabase().getVersion(),
-                schema==null?"undefined":schema.getName(), events.getCurrentDatabase().getMetadataStore().getDatatypes(), new Properties(), null); //$NON-NLS-1$
+                schema==null?"undefined":schema.getName(), events.getCurrentDatabase().getMetadataStore().getDatatypes(), modelProperties, null); //$NON-NLS-1$
         Map<String, String> nss = events.getNameSpaces();
         for (String key:nss.keySet()) {
             mf.addNamespace(key, nss.get(key));    
@@ -900,7 +900,7 @@ public abstract class DatabaseStore {
     
     public static MetadataFactory createMF(DatabaseStore events) {
         //it's possible that the schema won't be set as we call this from the parsing context - statement will effectively be later ignored
-        return createMF(events, events.currentSchema, false);
+        return createMF(events, events.currentSchema, false, new Properties());
     }
     
     private void setUUID(String prefix, AbstractMetadataRecord record) {
