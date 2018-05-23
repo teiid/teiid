@@ -4,7 +4,7 @@
   <parent>
       <groupId>org.teiid</groupId>
       <artifactId>connectors</artifactId>
-      <version>10.2.2-SNAPSHOT</version>
+      <version>10.2.2</version>
   </parent>
   <groupId>org.teiid.connectors</groupId>
   <artifactId>odata</artifactId>

@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>solr</artifactId>
-		<version>10.2.2-SNAPSHOT</version>
+		<version>10.2.2</version>
 	</parent>
 	<artifactId>feature-pack-solr</artifactId>
 	<name>Teiid SOLR Feature Pack</name>
