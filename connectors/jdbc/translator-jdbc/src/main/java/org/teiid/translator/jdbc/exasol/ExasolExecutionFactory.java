@@ -202,7 +202,6 @@ public class ExasolExecutionFactory extends JDBCExecutionFactory {
 
         registerFunctionModifier(SourceSystemFunctions.FROM_UNIXTIME, new AliasModifier(FROM_POSIX_TIME));
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier(DAY));
-        registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier(UPPER));
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new AliasModifier(TO_CHAR));
         registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new AliasModifier(TO_TIMESTAMP));
 
