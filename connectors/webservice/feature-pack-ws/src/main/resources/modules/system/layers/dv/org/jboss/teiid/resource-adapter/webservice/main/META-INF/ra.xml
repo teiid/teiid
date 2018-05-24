@@ -37,7 +37,7 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.ws.WSManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
-                <description>{$display:"URL, End Point",$description:"URL for HTTP, Service Endpoint for SOAP",$required:"true"}</description>
+                <description>{$display:"URL, End Point",$description:"URL for HTTP, Service Endpoint for SOAP"}</description>
                 <config-property-name>EndPoint</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>
