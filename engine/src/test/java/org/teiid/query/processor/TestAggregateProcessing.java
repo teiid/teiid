@@ -468,7 +468,7 @@ public class TestAggregateProcessing {
         dataManager.addData("SELECT DISTINCT g_0.e4 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList(1.0));
         dataManager.addData("SELECT DISTINCT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", Arrays.asList("a", false));
         dataManager.addData("SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g2 AS g_0 ORDER BY c_0", Arrays.asList("a", 1, false, 1.0));
-        dataManager.addData("SELECT v_0.c_0, v_0.c_1, v_0.c_2, MAX(v_0.c_3) AS c_3 FROM (SELECT g_0.e2 AS c_0, convert(g_0.e3, string) AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g3 AS g_0) AS v_0 WHERE v_0.c_2 = FALSE GROUP BY v_0.c_0, v_0.c_1, v_0.c_2 ORDER BY v_0.c_0, v_0.c_1");
+        dataManager.addData("SELECT v_0.c_0, v_0.c_1, v_0.c_2, MAX(v_0.c_3) AS c_3 FROM (SELECT g_0.e2 AS c_0, convert(g_0.e3, string) AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g3 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1, v_0.c_2 ORDER BY c_0, c_1");
         //dataManager.addData("SELECT g_0.e2, convert(g_0.e3, string), g_0.e3, g_0.e4 FROM pm1.g3 AS g_0 WHERE g_0.e3 = FALSE", Arrays.asList(1, "false", false, 1.0));
 
         CommandContext cc = createCommandContext();

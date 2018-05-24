@@ -32,6 +32,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -48,7 +49,9 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
@@ -81,7 +84,7 @@ public class NewCalculateCostUtil {
     }
 
     @SuppressWarnings("serial")
-	private static class ColStats extends LinkedHashMap<Expression, float[]> {
+	static class ColStats extends LinkedHashMap<Expression, float[]> {
     	@Override
     	public String toString() {
     		StringBuilder sb = new StringBuilder();
@@ -481,9 +484,6 @@ public class NewCalculateCostUtil {
     }
     
     private static void setColStatEstimates(PlanNode node, float cardinality, QueryMetadataInterface metadata, float leftPercent, float rightPercent) throws QueryMetadataException, TeiidComponentException {
-    	if (cardinality == UNKNOWN_VALUE) {
-    		return;
-    	}
     	ColStats colStats = null;
     	ColStats colStatsOther = null;
     	float childCardinality = UNKNOWN_VALUE;
@@ -505,7 +505,29 @@ public class NewCalculateCostUtil {
     		Expression expr = outputCols.get(i);
     		float[] newStats = new float[3];
     		Arrays.fill(newStats, UNKNOWN_VALUE);
-    		if (childCardinality == UNKNOWN_VALUE || (setOp != null && (colStats == null || colStatsOther == null))) {
+    		Expression rawExpr = SymbolMap.getExpression(expr);
+    		if (rawExpr instanceof Function) {
+    		    Function function = (Function)rawExpr;
+    		    if (function.getArgs().length == 0 && function.getFunctionDescriptor().getDeterministic() != Determinism.NONDETERMINISTIC) {
+                    newStats[Stat.NDV.ordinal()] = 1;
+                    newStats[Stat.NDV_HIGH.ordinal()] = 1;
+                    newStats[Stat.NNV.ordinal()] = 0;
+    		    }
+    		} else if (rawExpr instanceof Constant || rawExpr instanceof Reference) {
+    		    newStats[Stat.NDV.ordinal()] = 1;
+                newStats[Stat.NDV_HIGH.ordinal()] = 1;
+                newStats[Stat.NNV.ordinal()] = 0;
+                if (rawExpr instanceof Constant) {
+                    if (((Constant)rawExpr).getValue() == null) {
+                        newStats[Stat.NDV.ordinal()] = 0;
+                        newStats[Stat.NDV_HIGH.ordinal()] = 0;
+                        newStats[Stat.NNV.ordinal()] = 1;
+                    }
+                }
+                newColStats.put(expr, newStats);
+    		    continue;
+            }
+    		if (childCardinality == UNKNOWN_VALUE && ((setOp == null && colStats == null) || (setOp != null && (colStats == null || colStatsOther == null)))) {
     			//base case - cannot determine, just assume unique rows
         		newStats[Stat.NDV.ordinal()] = cardinality;
         		newStats[Stat.NDV_HIGH.ordinal()] = cardinality;
@@ -514,9 +536,9 @@ public class NewCalculateCostUtil {
     			//set op
 				float[] stats = colStats.get(expr);
 				float[] statsOther = colStatsOther.get(outputColsOther.get(i));
-				newStats[Stat.NDV.ordinal()] = Math.min(cardinality, getCombinedSetEstimate(setOp, stats[Stat.NDV.ordinal()], statsOther[Stat.NDV.ordinal()], true));
-				newStats[Stat.NDV_HIGH.ordinal()] = Math.min(cardinality, getCombinedSetEstimate(setOp, stats[Stat.NDV_HIGH.ordinal()], statsOther[Stat.NDV_HIGH.ordinal()], true));
-        		newStats[Stat.NNV.ordinal()] = Math.min(cardinality, getCombinedSetEstimate(setOp, stats[Stat.NNV.ordinal()], statsOther[Stat.NNV.ordinal()], !node.hasBooleanProperty(NodeConstants.Info.USE_ALL)));
+				newStats[Stat.NDV.ordinal()] = Math.min(cardinality==UNKNOWN_VALUE?Float.MAX_VALUE:cardinality, getCombinedSetEstimate(setOp, stats[Stat.NDV.ordinal()], statsOther[Stat.NDV.ordinal()], true));
+				newStats[Stat.NDV_HIGH.ordinal()] = Math.min(cardinality==UNKNOWN_VALUE?Float.MAX_VALUE:cardinality, getCombinedSetEstimate(setOp, stats[Stat.NDV_HIGH.ordinal()], statsOther[Stat.NDV_HIGH.ordinal()], true));
+        		newStats[Stat.NNV.ordinal()] = Math.min(cardinality==UNKNOWN_VALUE?Float.MAX_VALUE:cardinality, getCombinedSetEstimate(setOp, stats[Stat.NNV.ordinal()], statsOther[Stat.NNV.ordinal()], !node.hasBooleanProperty(NodeConstants.Info.USE_ALL)));
     		} else {
     			//all other cases - join is the only multi-node case here
     			float[] stats = null;
@@ -540,7 +562,7 @@ public class NewCalculateCostUtil {
 		        		newStats[Stat.NNV.ordinal()] = getStat(Stat.NNV, elems, node, childCardinality, metadata);
         			} else {
         				//TODO: use a better estimate for new aggs
-        				if (node.hasProperty(Info.GROUP_COLS)) {
+        				if (node.hasProperty(Info.GROUP_COLS) && cardinality != UNKNOWN_VALUE) {
             				newStats[Stat.NDV.ordinal()] = cardinality / 3;
             				newStats[Stat.NDV_HIGH.ordinal()] = cardinality / 3;
         				} else {
@@ -552,9 +574,9 @@ public class NewCalculateCostUtil {
         		} else {
         			if (node.getType() == NodeConstants.Types.DUP_REMOVE || node.getType() == NodeConstants.Types.GROUP || node.getType() == NodeConstants.Types.PROJECT || node.getType() == NodeConstants.Types.ACCESS) {
         				//don't scale down
-        				newStats[Stat.NDV.ordinal()] = Math.min(cardinality, stats[Stat.NDV.ordinal()]);
-        				newStats[Stat.NDV_HIGH.ordinal()] = Math.min(cardinality, stats[Stat.NDV_HIGH.ordinal()]);
-        			} else if (stats[Stat.NDV.ordinal()] != UNKNOWN_VALUE) {
+    			        newStats[Stat.NDV.ordinal()] = Math.min(cardinality==UNKNOWN_VALUE?Float.MAX_VALUE:cardinality, stats[Stat.NDV.ordinal()]);
+    				    newStats[Stat.NDV_HIGH.ordinal()] = Math.min(cardinality==UNKNOWN_VALUE?Float.MAX_VALUE:cardinality, stats[Stat.NDV_HIGH.ordinal()]);
+        			} else if (stats[Stat.NDV.ordinal()] != UNKNOWN_VALUE && cardinality!=UNKNOWN_VALUE) {
         			    if (stats[Stat.NDV.ordinal()] == stats[Stat.NDV_HIGH.ordinal()]) {
         			        newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()]*Math.min(left?leftPercent:rightPercent, cardinality/origCardinality);
                             newStats[Stat.NDV_HIGH.ordinal()] = newStats[Stat.NDV.ordinal()];
@@ -567,7 +589,7 @@ public class NewCalculateCostUtil {
         			}
     				if (stats[Stat.NNV.ordinal()] != UNKNOWN_VALUE) {
     					//TODO: this is an under estimate for the inner side of outer joins
-	        			newStats[Stat.NNV.ordinal()] = stats[Stat.NNV.ordinal()]*Math.min(1, cardinality/origCardinality);
+	        			newStats[Stat.NNV.ordinal()] = stats[Stat.NNV.ordinal()]*Math.min(1, (cardinality==UNKNOWN_VALUE?origCardinality:cardinality)/origCardinality);
 	        			newStats[Stat.NNV.ordinal()] = Math.max(0, newStats[Stat.NNV.ordinal()]);
     				}
         		}

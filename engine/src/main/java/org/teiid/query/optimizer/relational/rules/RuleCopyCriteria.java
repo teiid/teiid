@@ -39,6 +39,7 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -46,6 +47,7 @@ import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -265,11 +267,11 @@ public final class RuleCopyCriteria implements OptimizerRule {
 
                 if (!toCopy.isEmpty()) {
                     
-                    changedTree |= createCriteria(false, toCopy, combinedCriteria, srcToTgt, newJoinCrits, metadata, underAccess);
+                    changedTree |= createCriteria(false, toCopy, combinedCriteria, srcToTgt, newJoinCrits, metadata, underAccess, node);
                     
                     srcToTgt = buildElementMap(allCriteria, null, null, metadata, underAccess);
                                 
-                    changedTree |= createCriteria(true, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, metadata, underAccess);
+                    changedTree |= createCriteria(true, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, metadata, underAccess, node);
                 }
                 
                 joinCrits.addAll(newJoinCrits);
@@ -329,7 +331,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                                    Set<Criteria> combinedCriteria,
                                                    Map<Expression, Expression> srcToTgt,
                                                    List<Criteria> newJoinCrits,
-                                                   QueryMetadataInterface metadata, boolean underAccess) {
+                                                   QueryMetadataInterface metadata, boolean underAccess, PlanNode node) {
         boolean changedTree = false;
     	if (srcToTgt.size() == 0) {
             return changedTree;
@@ -342,14 +344,39 @@ public final class RuleCopyCriteria implements OptimizerRule {
             
             if (endGroups != null) {
             	changedTree = true;
-            	if (copyingJoinCriteria && endGroups < 2) {
-            		if (crit instanceof CompareCriteria) {
-            			CompareCriteria cc = (CompareCriteria)crit;
-            			//don't remove theta criteria, just mark it as optional
-        				cc.setOptional(null);
-            			continue;
-            		}
-            		i.remove();
+            	if (endGroups < 2) {
+            	    if (copyingJoinCriteria) {
+                        if (crit instanceof CompareCriteria) {
+                            CompareCriteria cc = (CompareCriteria)crit;
+                            //don't remove theta criteria, just mark it as optional
+                            cc.setOptional(null);
+                            continue;
+                        }
+                        i.remove();
+            	    } else {
+                        //this is already a defacto dependent join across the join predicates, no need to make it one again
+            	        if (crit instanceof CompareCriteria) {
+            	            CompareCriteria cc = (CompareCriteria)crit;
+            	            if (cc.getOperator() != CompareCriteria.EQ) {
+            	                continue;
+            	            }
+            	        } else if (crit instanceof SetCriteria) {
+            	            SetCriteria sc = (SetCriteria)crit;
+                            if (sc.isNegated()) {
+                                continue;
+                            }
+            	        } else {
+            	            continue;
+            	        }
+                	    PlanNode childNode = FrameUtil.findJoinSourceNode(node.getFirstChild());
+                	    if (childNode != null && !childNode.hasProperty(Info.MAKE_DEP) && !childNode.hasProperty(Info.ACCESS_PATTERNS)) {
+                	        childNode.setProperty(Info.MAKE_NOT_DEP, true);
+                	    }
+                        childNode = FrameUtil.findJoinSourceNode(node.getLastChild());
+                        if (childNode != null && !childNode.hasProperty(Info.MAKE_DEP) && !childNode.hasProperty(Info.ACCESS_PATTERNS)) {
+                            childNode.setProperty(Info.MAKE_NOT_DEP, true);
+                        }
+            	    }
             	}
             }
         }

@@ -137,7 +137,7 @@ public class TestRowBasedSecurity {
 		helpProcess(plan, context, dataManager, expectedResults);
 		
 		plan = helpGetPlan(helpParse("select count(1) from v where y is not null"), tm, new DefaultCapabilitiesFinder(caps), context);
-		dataManager.addData("SELECT g_0.y FROM y.t AS g_0 WHERE g_0.x = 'user'", new List<?>[] {Arrays.asList(1), Arrays.asList(2)});
+		dataManager.addData("SELECT g_0.y FROM y.t AS g_0 WHERE (g_0.x = 'user') AND (g_0.y = 1)", new List<?>[] {Arrays.asList(1)});
 		dataManager.addData("SELECT g_0.y AS c_0 FROM y.t1 AS g_0 WHERE g_0.y IS NOT NULL ORDER BY c_0", Arrays.asList(1));
 		expectedResults = new List<?>[] {Arrays.asList(1)};
 		helpProcess(plan, context, dataManager, expectedResults);

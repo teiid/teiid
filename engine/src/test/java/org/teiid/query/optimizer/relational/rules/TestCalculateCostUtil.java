@@ -34,8 +34,10 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil.ColStats;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.TestVirtualDepJoin;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -43,6 +45,9 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -784,6 +789,83 @@ public class TestCalculateCostUtil {
     
     @Test public void testIntersect() throws Exception {
     	helpTestSetOp("INTERSECT ", 375000.0f); //$NON-NLS-1$
+    }
+    
+    @Test public void testProjectLiteral() throws Exception {
+        PlanNode project = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        project.setProperty(Info.PROJECT_COLS, Arrays.asList(new Constant(1)));
+        PlanNode access = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
+        project.addFirstChild(access);
+        access.setProperty(NodeConstants.Info.EST_CARDINALITY, NewCalculateCostUtil.UNKNOWN_VALUE);
+        float cost = NewCalculateCostUtil.computeCostForTree(project, RealMetadataFactory.example1Cached());
+        assertTrue(cost == NewCalculateCostUtil.UNKNOWN_VALUE);
+        ColStats colStats = (ColStats)project.getProperty(Info.EST_COL_STATS);
+        assertEquals("{1=[1.0, 1.0, 0.0]}", colStats.toString());
+        
+        access.setProperty(NodeConstants.Info.EST_CARDINALITY, 5f);
+        NewCalculateCostUtil.updateCardinality(project, RealMetadataFactory.example1Cached());
+        cost = NewCalculateCostUtil.computeCostForTree(project, RealMetadataFactory.example1Cached());
+        assertTrue(cost == NewCalculateCostUtil.UNKNOWN_VALUE);
+        colStats = (ColStats)project.getProperty(Info.EST_COL_STATS);
+        assertEquals("{1=[1.0, 1.0, 0.0]}", colStats.toString());
+    }
+    
+    @Test public void testProjectLiteral1() throws Exception {
+        PlanNode project = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        project.setProperty(Info.PROJECT_COLS, Arrays.asList(new Constant(1)));
+        PlanNode access = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
+        project.addFirstChild(access);
+        access.setProperty(NodeConstants.Info.EST_CARDINALITY, 5f);
+        float cost = NewCalculateCostUtil.computeCostForTree(project, RealMetadataFactory.example1Cached());
+        assertEquals(5f, cost, 0);
+        ColStats colStats = (ColStats)project.getProperty(Info.EST_COL_STATS);
+        assertEquals("{1=[1.0, 1.0, 0.0]}", colStats.toString());
+    }
+    
+    @Test public void testProjectLiteral2() throws Exception {
+        PlanNode project = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        project.setProperty(Info.PROJECT_COLS, Arrays.asList(new Constant(1)));
+        PlanNode access = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
+        project.addFirstChild(access);
+        access.setProperty(NodeConstants.Info.EST_CARDINALITY, 5f);
+        PlanNode source = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
+        source.setProperty(Info.OUTPUT_COLS, Arrays.asList(new ElementSymbol("x")));
+        source.addFirstChild(project);
+        SymbolMap sm = new SymbolMap();
+        sm.addMapping(new ElementSymbol("x"), new Constant(1));
+        source.setProperty(Info.SYMBOL_MAP, sm);
+        float cost = NewCalculateCostUtil.computeCostForTree(source, RealMetadataFactory.example1Cached());
+        assertEquals(5f, cost, 0);
+        ColStats colStats = (ColStats)source.getProperty(Info.EST_COL_STATS);
+        assertEquals("{x=[1.0, 1.0, 0.0]}", colStats.toString());
+    }
+    
+    @Test public void testProjectLiteral3() throws Exception {
+        PlanNode project = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        project.setProperty(Info.PROJECT_COLS, Arrays.asList(new Constant(1)));
+        PlanNode access = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
+        project.addFirstChild(access);
+        access.setProperty(NodeConstants.Info.EST_CARDINALITY, 5f);
+        PlanNode dup = NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE);
+        dup.addFirstChild(project);
+        float cost = NewCalculateCostUtil.computeCostForTree(dup, RealMetadataFactory.example1Cached());
+        assertEquals(1f, cost, 0);
+        ColStats colStats = (ColStats)project.getProperty(Info.EST_COL_STATS);
+        assertEquals("{1=[1.0, 1.0, 0.0]}", colStats.toString());
+    }
+    
+    @Test public void testProjectLiteral4() throws Exception {
+        PlanNode project = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        project.setProperty(Info.PROJECT_COLS, Arrays.asList(new Constant(1)));
+        PlanNode access = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
+        project.addFirstChild(access);
+        access.setProperty(NodeConstants.Info.EST_CARDINALITY, NewCalculateCostUtil.UNKNOWN_VALUE);
+        PlanNode dup = NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE);
+        dup.addFirstChild(project);
+        float cost = NewCalculateCostUtil.computeCostForTree(dup, RealMetadataFactory.example1Cached());
+        assertEquals(NewCalculateCostUtil.UNKNOWN_VALUE, cost, 0);
+        ColStats colStats = (ColStats)dup.getProperty(Info.EST_COL_STATS);
+        assertEquals("{1=[1.0, 1.0, 0.0]}", colStats.toString());
     }
 
 }
