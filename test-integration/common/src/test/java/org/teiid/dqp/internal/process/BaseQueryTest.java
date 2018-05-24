@@ -18,15 +18,17 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.List;
+import java.util.Properties;
 
-import junit.framework.TestCase;
-
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.deployers.TranslatorUtil;
+import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -35,11 +37,15 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.ExecutionFactory;
+
+import junit.framework.TestCase;
 
 
 
@@ -50,6 +56,21 @@ public abstract class BaseQueryTest extends TestCase {
 
     public BaseQueryTest(String name) {
         super(name);
+    }
+    
+    public static SourceCapabilities getCapabilities(Class<? extends ExecutionFactory> clazz, String... properties) throws Exception {
+        VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
+        
+        tm.setExecutionFactoryClass(clazz);
+        
+        if (properties != null) {
+            Properties p = new Properties();
+            for (int i = 0; i < properties.length / 2; i++) {
+                tm.addProperty(properties[2*i], properties[2*i+1]);
+            }
+        }
+        ExecutionFactory ef = TranslatorUtil.buildExecutionFactory(tm);
+        return CapabilitiesConverter.convertCapabilities(ef);
     }
     
     public static TransformationMetadata createMetadata(String vdbFile) {
