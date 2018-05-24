@@ -32,6 +32,7 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
@@ -158,7 +159,15 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 					if (((SingularAttribute)attr).isOptional()) {
 						column.setDefaultValue(null);
 					}
-				} 
+				}
+				else if (attr.getJavaType().isEnum()) {
+					Column column = addColumn(mf, attr.getName(),
+							DataTypeManager.DefaultDataTypes.STRING, entityTable);
+					if (((SingularAttribute)attr).isOptional()) {
+						column.setDefaultValue(null);
+					}
+					column.setNativeType(attr.getJavaType().getName());
+				}
 				else {
 					boolean classFound = false;
 					// If this attribute is a @Embeddable then add its columns as
