@@ -18,6 +18,7 @@
         <translator name="access" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="db2" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="derby" module="org.jboss.teiid.translator.jdbc"/>
+        <translator name="exasol" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="h2" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="hsql" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="hana" module="org.jboss.teiid.translator.jdbc"/>
