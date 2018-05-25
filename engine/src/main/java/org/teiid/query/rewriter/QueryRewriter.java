@@ -148,6 +148,7 @@ public class QueryRewriter {
     
     private boolean rewriteSubcommands;
     private boolean processing;
+    private boolean preEvaluation;
     private Evaluator evaluator;
     private Map<ElementSymbol, Expression> variables; //constant propagation
     
@@ -164,6 +165,14 @@ public class QueryRewriter {
     	queryRewriter.rewriteSubcommands = true;
     	queryRewriter.processing = true;
 		return queryRewriter.rewriteCommand(command, false);
+    }
+    
+    public static Criteria evaluateAndRewrite(Criteria criteria, Evaluator eval, CommandContext context, QueryMetadataInterface metadata) throws TeiidProcessingException, TeiidComponentException {
+        QueryRewriter queryRewriter = new QueryRewriter(metadata, context);
+        queryRewriter.evaluator = eval;
+        queryRewriter.rewriteSubcommands = true;
+        queryRewriter.preEvaluation = true;
+        return queryRewriter.rewriteCriteria(criteria);
     }
 
 	public static Command rewrite(Command command, QueryMetadataInterface metadata, CommandContext context, Map<ElementSymbol, Expression> variableValues) throws TeiidComponentException, TeiidProcessingException{
@@ -2271,6 +2280,13 @@ public class QueryRewriter {
         		xmlQuery.compileXqueryExpression();
         		return xmlQuery;
         	}
+        } else if (expression instanceof Reference) {
+            if (preEvaluation) {
+                Reference ref = (Reference)expression;
+                if (ref.isPositional()) {
+                    return evaluate(expression, isBindEligible);
+                }
+            }
         } else {
         	rewriteExpressions(expression);
         } 

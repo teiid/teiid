@@ -516,6 +516,16 @@ public class PlanToProcessConverter {
 				selnode.setCriteria(crit);
 				//in case the parent was a source
 				selnode.setProjectedExpressions((List<Expression>) node.getProperty(NodeConstants.Info.PROJECT_COLS));
+				//there's a chance that we have positional references that can be pre-evaluated
+				boolean postitional = false;
+				for (Reference ref : ReferenceCollectorVisitor.getReferences(crit)) {
+				    if (ref.isPositional()) {
+				        postitional = true;
+				        break;
+				    }
+				}
+                selnode.setShouldEvaluateExpressions(postitional);
+
 				processNode = selnode;
                 
 				break;

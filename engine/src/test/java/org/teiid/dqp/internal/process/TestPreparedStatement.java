@@ -23,7 +23,6 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.TreeSet;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -49,7 +48,6 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -532,10 +530,21 @@ public class TestPreparedStatement {
 		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
     }
     
-    public static void main(String[] args) {
-        TreeSet set = new TreeSet<>();
+    @Test public void testBranchPruningPrepared() throws Exception {
+        String preparedSql = "select * from (select 'a' as branch, e1 from pm1.g1 union all select 'b', pm1.g2.e1 as branch from pm1.g2, pm1.g1) as x where branch = ?"; //$NON-NLS-1$
         
-        set.containsAll(Arrays.asList(new Object()));
+        List<?> values = Arrays.asList("a"); //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] { 
+            Arrays.asList("a", "b"),
+        };    
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0", new List<?>[] {Arrays.asList("b")});
+        CapabilitiesFinder caps = TestOptimizer.getGenericFinder(false);
+        
+        helpTestProcessing(preparedSql, values, expected, dataManager, caps, metadata, null, false, false, false, RealMetadataFactory.example1VDB());
     }
     
 }
