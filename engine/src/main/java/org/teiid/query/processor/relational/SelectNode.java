@@ -37,6 +37,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.Expression;
@@ -46,12 +47,16 @@ import org.teiid.query.util.CommandContext;
 public class SelectNode extends SubqueryAwareRelationalNode {
 
 	private Criteria criteria;
+	private Criteria preEvalCriteria;
 	private List<Expression> projectedExpressions;
+	private boolean shouldEvaluate = false;
     
     // Derived element lookup map
     private Map<Expression, Integer> elementMap; 
     private int[] projectionIndexes;
 	
+    private boolean noRows;
+    
     // State if blocked on evaluating a criteria
     private TupleBatch currentBatch;
     private int currentRow = 1;
@@ -69,6 +74,8 @@ public class SelectNode extends SubqueryAwareRelationalNode {
         
         currentBatch = null;
         currentRow = 1;
+        noRows = false;
+        preEvalCriteria = null;
     }
 
 	public void setCriteria(Criteria criteria) { 
@@ -100,6 +107,11 @@ public class SelectNode extends SubqueryAwareRelationalNode {
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		
+	    if (noRows) {
+	        this.terminateBatches();
+            return pullBatch();
+	    }
+	    
         if(currentBatch == null) {
         	currentBatch = this.getChildren()[0].nextBatch();
         }
@@ -107,7 +119,7 @@ public class SelectNode extends SubqueryAwareRelationalNode {
         while (currentRow <= currentBatch.getEndRow() && !isBatchFull()) {
     		List<?> tuple = currentBatch.getTuple(currentRow);
 
-            if(getEvaluator(this.elementMap).evaluate(this.criteria, tuple)) {
+            if(getEvaluator(this.elementMap).evaluate(this.preEvalCriteria!=null?preEvalCriteria:criteria, tuple)) {
                 addBatchRow(projectTuple(this.projectionIndexes, tuple));
             }
             currentRow++;
@@ -140,6 +152,7 @@ public class SelectNode extends SubqueryAwareRelationalNode {
 		target.elementMap = elementMap;
 		target.projectionIndexes = projectionIndexes;
 		target.projectedExpressions = projectedExpressions;
+		target.shouldEvaluate = shouldEvaluate;
 	}
     
     public PlanNode getDescriptionProperties() {   
@@ -151,6 +164,23 @@ public class SelectNode extends SubqueryAwareRelationalNode {
     @Override
     protected Collection<? extends LanguageObject> getObjects() {
     	return Arrays.asList(this.criteria);
+    }
+    
+    public void setShouldEvaluateExpressions(boolean shouldEvaluate) {
+        this.shouldEvaluate = shouldEvaluate;
+    }
+    
+    @Override
+    public void open()
+            throws TeiidComponentException, TeiidProcessingException {
+        if (shouldEvaluate) {
+            preEvalCriteria = QueryRewriter.evaluateAndRewrite((Criteria)criteria.clone(), getEvaluator(elementMap), getContext(), this.getContext().getMetadata());
+            if (preEvalCriteria.equals(QueryRewriter.FALSE_CRITERIA) || preEvalCriteria.equals(QueryRewriter.UNKNOWN_CRITERIA)) {
+                noRows = true;
+                return;
+            }
+        }
+        super.open();
     }
     
 }

@@ -144,16 +144,18 @@ public class QueryRewriter {
 	private boolean rewriteAggs = true;
 
 	private boolean preserveUnknown;
-
-	private QueryMetadataInterface metadata;
-	private CommandContext context;
-
-	private boolean rewriteSubcommands;
-	private boolean processing;
-	private Evaluator evaluator;
-	private Map<ElementSymbol, Expression> variables; // constant propagation
-
-	private QueryRewriter(QueryMetadataInterface metadata, CommandContext context) {
+    
+    private QueryMetadataInterface metadata;
+    private CommandContext context;
+    
+    private boolean rewriteSubcommands;
+    private boolean processing;
+    private boolean preEvaluation;
+    private Evaluator evaluator;
+    private Map<ElementSymbol, Expression> variables; //constant propagation
+    
+    private QueryRewriter(QueryMetadataInterface metadata,
+			CommandContext context) {
 		this.metadata = metadata;
 		this.context = context;
 		this.evaluator = new Evaluator(Collections.emptyMap(), null, context);
@@ -166,7 +168,15 @@ public class QueryRewriter {
 		queryRewriter.rewriteSubcommands = true;
 		queryRewriter.processing = true;
 		return queryRewriter.rewriteCommand(command, false);
-	}
+    }
+    
+    public static Criteria evaluateAndRewrite(Criteria criteria, Evaluator eval, CommandContext context, QueryMetadataInterface metadata) throws TeiidProcessingException, TeiidComponentException {
+        QueryRewriter queryRewriter = new QueryRewriter(metadata, context);
+        queryRewriter.evaluator = eval;
+        queryRewriter.rewriteSubcommands = true;
+        queryRewriter.preEvaluation = true;
+        return queryRewriter.rewriteCriteria(criteria);
+    }
 
 	public static Command rewrite(Command command, QueryMetadataInterface metadata, CommandContext context,
 			Map<ElementSymbol, Expression> variableValues) throws TeiidComponentException, TeiidProcessingException {
@@ -2299,61 +2309,67 @@ public class QueryRewriter {
 			isBindEligible = !isConstantConvert(expression);
 			expression = rewriteFunction((Function) expression);
 		} else if (expression instanceof CaseExpression) {
-			expression = rewriteCaseExpression((CaseExpression) expression);
-		} else if (expression instanceof SearchedCaseExpression) {
-			expression = rewriteCaseExpression((SearchedCaseExpression) expression);
-		} else if (expression instanceof ScalarSubquery) {
-			ScalarSubquery subquery = (ScalarSubquery) expression;
-			if (subquery.shouldEvaluate() && processing) {
-				return new Constant(evaluator.evaluate(subquery, null), subquery.getType());
-			}
-			rewriteSubqueryContainer(subquery, true);
-			if (!RelationalNodeUtil.shouldExecute(subquery.getCommand(), false, true)) {
-				return new Constant(null, subquery.getType());
-			}
-			if (subquery.getCommand().getProcessorPlan() == null) {
-				addImplicitLimit(subquery, 2);
-			}
-			return expression;
-		} else if (expression instanceof ExpressionSymbol) {
-			expression = rewriteExpressionDirect(((ExpressionSymbol) expression).getExpression());
-		} else if (expression instanceof Criteria) {
-			expression = rewriteCriteria((Criteria) expression);
-		} else if (expression instanceof XMLSerialize) {
-			rewriteExpressions(expression);
-			XMLSerialize serialize = (XMLSerialize) expression;
-			if (isNull(serialize.getExpression())) {
-				return new Constant(null, serialize.getType());
-			}
-			if (serialize.getDeclaration() == null && serialize.isDocument()) {
-				if ((serialize.getVersion() != null && !serialize.getVersion().equals("1.0"))) { //$NON-NLS-1$
-					serialize.setDeclaration(true);
-				} else if (serialize.getEncoding() != null) {
-					Charset encoding = Charset.forName(serialize.getEncoding());
-					if (!encoding.equals(Charset.forName("UTF-8")) && !encoding.equals(Charset.forName("UTF-16"))) { //$NON-NLS-1$ //$NON-NLS-2$
-						serialize.setDeclaration(true);
-					}
-				}
-			}
-		} else if (expression instanceof XMLCast) {
-			XMLCast cast = (XMLCast) expression;
-			if (cast.getType() == DefaultDataClasses.XML) {
-				XMLQuery xmlQuery = new XMLQuery();
-				xmlQuery.setXquery("$i"); //$NON-NLS-1$
-				xmlQuery.setPassing(Arrays.asList(new DerivedColumn("i", cast.getExpression()))); //$NON-NLS-1$
-				xmlQuery.compileXqueryExpression();
-				return xmlQuery;
-			}
-		} else {
-			rewriteExpressions(expression);
-		}
-
-		if (!processing) {
-			if (!EvaluatableVisitor.isFullyEvaluatable(expression, true)) {
-				return expression;
-			}
-		} else if (!(expression instanceof Reference)
-				&& !EvaluatableVisitor.isEvaluatable(expression, EvaluationLevel.PROCESSING)) {
+			expression = rewriteCaseExpression((CaseExpression)expression);
+        } else if (expression instanceof SearchedCaseExpression) {
+        	expression = rewriteCaseExpression((SearchedCaseExpression)expression);
+        } else if (expression instanceof ScalarSubquery) {
+        	ScalarSubquery subquery = (ScalarSubquery)expression;
+        	if (subquery.shouldEvaluate() && processing) {
+        		return new Constant(evaluator.evaluate(subquery, null), subquery.getType());
+        	}
+            rewriteSubqueryContainer(subquery, true);
+            if (!RelationalNodeUtil.shouldExecute(subquery.getCommand(), false, true)) {
+            	return new Constant(null, subquery.getType());
+            }
+            if (subquery.getCommand().getProcessorPlan() == null) {
+            	addImplicitLimit(subquery, 2);
+            }
+            return expression;
+        } else if (expression instanceof ExpressionSymbol) {
+        	expression = rewriteExpressionDirect(((ExpressionSymbol)expression).getExpression());
+        } else if (expression instanceof Criteria) {
+        	expression = rewriteCriteria((Criteria)expression);
+        } else if (expression instanceof XMLSerialize) {
+        	rewriteExpressions(expression);
+        	XMLSerialize serialize = (XMLSerialize)expression;
+        	if (isNull(serialize.getExpression())) {
+        		return new Constant(null, serialize.getType());
+        	}
+        	if (serialize.getDeclaration() == null && serialize.isDocument()) {
+        		if ((serialize.getVersion() != null && !serialize.getVersion().equals("1.0"))) { //$NON-NLS-1$
+        			serialize.setDeclaration(true);
+        		} else if (serialize.getEncoding() != null) {
+        			Charset encoding = Charset.forName(serialize.getEncoding());
+        			if (!encoding.equals(Charset.forName("UTF-8")) && !encoding.equals(Charset.forName("UTF-16"))) { //$NON-NLS-1$ //$NON-NLS-2$
+            			serialize.setDeclaration(true);
+        			}
+        		}
+        	}
+        } else if (expression instanceof XMLCast) {
+        	XMLCast cast = (XMLCast)expression;
+        	if (cast.getType() == DefaultDataClasses.XML) {
+        		XMLQuery xmlQuery = new XMLQuery();
+        		xmlQuery.setXquery("$i"); //$NON-NLS-1$
+        		xmlQuery.setPassing(Arrays.asList(new DerivedColumn("i", cast.getExpression()))); //$NON-NLS-1$
+        		xmlQuery.compileXqueryExpression();
+        		return xmlQuery;
+        	}
+        } else if (expression instanceof Reference) {
+            if (preEvaluation) {
+                Reference ref = (Reference)expression;
+                if (ref.isPositional()) {
+                    return evaluate(expression, isBindEligible);
+                }
+            }
+        } else {
+        	rewriteExpressions(expression);
+        } 
+    	
+        if(!processing) {
+        	if (!EvaluatableVisitor.isFullyEvaluatable(expression, true)) {
+        		return expression;
+        	}
+		} else if (!(expression instanceof Reference) && !EvaluatableVisitor.isEvaluatable(expression, EvaluationLevel.PROCESSING)) {
 			return expression;
 		}
 
