@@ -1040,32 +1040,31 @@ public class RulePushAggregates implements
             return result;
         }
         for (T aggregateSymbol : expressions) {
-        	boolean countStar = false;
         	if (aggs) {
         		AggregateSymbol as = (AggregateSymbol)aggregateSymbol;
         		if ((!as.canStage() && as.isCardinalityDependent())) {
             		return null;
         		}
-        		countStar = isCountStar(as);
         	}
         	PlanNode originatingNode = null;
-        	Set<GroupSymbol> groups = null;
-        	if (countStar) {
+        	Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(aggregateSymbol);
+        	if (groups.isEmpty()) {
+        	    if (!aggs) {
+        	        continue;
+        	    }
+        	    AggregateSymbol as = (AggregateSymbol)aggregateSymbol;
+                if (as.getAggregateFunction() == Type.AVG || as.isEnhancedNumeric()) {
+                    continue; //don't need to map these, they will just become constants
+                }
         		//TODO make a better choice as to the side
         		PlanNode joinNode = NodeEditor.findAllNodes(groupNode, NodeConstants.Types.JOIN).get(0);
         		float left = joinNode.getFirstChild().getCardinality();
         		float right = joinNode.getLastChild().getCardinality();
         		boolean useLeft = true;
-        		if (left != -1 && right != -1 && right > left) {
+        		if (left != NewCalculateCostUtil.UNKNOWN_VALUE && right != NewCalculateCostUtil.UNKNOWN_VALUE && right > left) {
     				useLeft = false;
         		}
         		groups = (useLeft?joinNode.getFirstChild():joinNode.getLastChild()).getGroups();
-        	} else {
-                groups = GroupsUsedByElementsVisitor.getGroups(aggregateSymbol);
-                if (groups.isEmpty()) {
-                	continue;
-                }
-                
         	}
         	originatingNode = FrameUtil.findOriginatingNode(groupNode.getFirstChild(), groups);
             
@@ -1201,10 +1200,19 @@ public class RulePushAggregates implements
                 nestedAggregates.add(sumSqAgg);
             } else {
                 //AGG(X) -> AGG(AGG(X))
-                newExpression = new AggregateSymbol(aggFunction.name(), false, partitionAgg);
-                if (partitionAgg.getFunctionDescriptor() != null) {
-                	((AggregateSymbol)newExpression).setFunctionDescriptor(partitionAgg.getFunctionDescriptor().clone());
+                AggregateSymbol newAgg = null;
+                if (join && partitionAgg.getArgs().length == 1 && GroupsUsedByElementsVisitor.getGroups(partitionAgg).isEmpty()) {
+                    //count * case (if on the inner side of an outer join)
+                    Function ifnull = new Function(FunctionLibrary.IFNULL, new Expression[] {partitionAgg, partitionAgg.getArg(0)});
+                    newAgg = new AggregateSymbol(aggFunction.name(), false, ifnull);
+                } else {
+                    newAgg = new AggregateSymbol(aggFunction.name(), false, partitionAgg);
                 }
+                newExpression = newAgg;
+                if (partitionAgg.getFunctionDescriptor() != null) {
+                	newAgg.setFunctionDescriptor(partitionAgg.getFunctionDescriptor().clone());
+                }
+                ResolverVisitor.resolveLanguageObject(newAgg, metadata);
                 nestedAggregates.add(partitionAgg);
             }
 
