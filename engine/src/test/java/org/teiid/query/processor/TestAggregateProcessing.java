@@ -35,8 +35,10 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.UserDefinedAggregate;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.ClobImpl;
@@ -1372,4 +1374,27 @@ public class TestAggregateProcessing {
                 hdm, new List<?>[] {Arrays.asList(1), Arrays.asList(2), Arrays.asList(1)});
     }
     
+    @Test public void testSumLiteralOverJoin() {
+        String sql = "select sum(2) from pm1.g1 a full outer join pm1.g2 b on a.e1 = b.e1"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", Arrays.asList("a"));
+        hdm.addData("SELECT pm1.g2.e1 FROM pm1.g2", Arrays.asList("b"));
+        
+        helpProcess(plan, hdm, new List[] {Arrays.asList(4l)});
+    }
+    
+    @Test public void testAvgLiteralOverJoin() throws QueryMetadataException, TeiidComponentException {
+        String sql = "select avg(2) from pm1.g1 a left outer join pm1.g2 b on a.e1 = b.e1"; //$NON-NLS-1$
+
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", 500, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", 1000, metadata);
+        ProcessorPlan plan = helpGetPlan(sql, metadata);
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", Arrays.asList("a"));
+        hdm.addData("SELECT pm1.g2.e1 FROM pm1.g2", Arrays.asList("b"));
+        helpProcess(plan, hdm, new List[] {Arrays.asList(BigDecimal.valueOf(2))});
+    }
 }

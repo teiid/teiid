@@ -2404,31 +2404,29 @@ public class QueryRewriter {
 			return false;
 		}
 		return isConstantConvert(f.getArg(0));
-	}
 
-	private Expression rewriteExpression(AggregateSymbol expression)
-			throws TeiidComponentException, TeiidProcessingException {
-		if (expression.isBoolean()) {
-			if (expression.getAggregateFunction() == Type.EVERY) {
-				expression.setAggregateFunction(Type.MIN);
-			} else {
-				expression.setAggregateFunction(Type.MAX);
-			}
-		}
-		if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN)) {
-			if (expression.isDistinct()) {
-				expression.setDistinct(false);
-			}
-			if (rewriteAggs && expression.getArg(0) != null
-					&& EvaluatableVisitor.willBecomeConstant(expression.getArg(0))) {
-				return expression.getArg(0);
-			}
-		}
-		if (expression.isDistinct() && expression.getAggregateFunction() == Type.USER_DEFINED
-				&& expression.getFunctionDescriptor().getMethod().getAggregateAttributes().usesDistinctRows()) {
-			expression.setDistinct(false);
-		}
-		Expression[] args = expression.getArgs();
+    }
+    
+    private Expression rewriteExpression(AggregateSymbol expression) throws TeiidComponentException, TeiidProcessingException {
+    	if (expression.isBoolean()) {
+    		if (expression.getAggregateFunction() == Type.EVERY) {
+    			expression.setAggregateFunction(Type.MIN);
+    		} else {
+    			expression.setAggregateFunction(Type.MAX);
+    		}
+    	}
+    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN || expression.getAggregateFunction() == Type.AVG)) {
+    		if (expression.getAggregateFunction() != Type.AVG && expression.isDistinct()) {
+    			expression.setDistinct(false);
+    		}
+    		if (rewriteAggs && expression.getArg(0) != null && EvaluatableVisitor.willBecomeConstant(expression.getArg(0))) {
+        		return expression.getArg(0);
+        	}
+    	}
+    	if (expression.isDistinct() && expression.getAggregateFunction() == Type.USER_DEFINED && expression.getFunctionDescriptor().getMethod().getAggregateAttributes().usesDistinctRows()) {
+    		expression.setDistinct(false);
+    	}
+    	Expression[] args = expression.getArgs();
 		if (args.length == 1 && expression.getCondition() != null && !expression.respectsNulls()) {
 			Expression cond = expression.getCondition();
 			Expression ex = expression.getArg(0);
