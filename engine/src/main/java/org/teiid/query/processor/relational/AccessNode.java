@@ -36,6 +36,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.process.multisource.MultiSourceElementReplacementVisitor;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
@@ -344,7 +345,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 			throws TeiidProcessingException, TeiidComponentException {
 		try {
 		    // Defect 16059 - Rewrite the command to replace references, etc. with values.
-			atomicCommand = QueryRewriter.evaluateAndRewrite(atomicCommand, eval, context, metadata);
+			Command cmd = QueryRewriter.evaluateAndRewrite(atomicCommand, eval, context, metadata);
+			//we don't expect the command to change at this point
+			Assertion.assertTrue(cmd == atomicCommand);
 		} catch (QueryValidatorException e) {
 		     throw new TeiidProcessingException(QueryPlugin.Event.TEIID30174, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30174, atomicCommand));
 		}
