@@ -2341,8 +2341,8 @@ public class QueryRewriter {
     			expression.setAggregateFunction(Type.MAX);
     		}
     	}
-    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN)) {
-    		if (expression.isDistinct()) {
+    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN || expression.getAggregateFunction() == Type.AVG)) {
+    		if (expression.getAggregateFunction() != Type.AVG && expression.isDistinct()) {
     			expression.setDistinct(false);
     		}
     		if (rewriteAggs && expression.getArg(0) != null && EvaluatableVisitor.willBecomeConstant(expression.getArg(0))) {
