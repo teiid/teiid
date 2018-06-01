@@ -34,6 +34,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
@@ -2267,9 +2268,10 @@ public class RealMetadataFactory {
 	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
 	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 	    Table physGroup1 = createPhysicalGroup("Phys1", physModel); //$NON-NLS-1$
-	    createElements(physGroup1,
-	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
-	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+        List<Column> cols = createElements(physGroup1,
+                new String[] { "a", "b", "c" }, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+        cols.get(2).setProperty(MultiSourceMetadataWrapper.MULTISOURCE_PARTITIONED_PROPERTY, Boolean.TRUE.toString());
 	    
 	    Table physGroup2 = createPhysicalGroup("Phys2", physModel); //$NON-NLS-1$
 	    createElements(physGroup2,

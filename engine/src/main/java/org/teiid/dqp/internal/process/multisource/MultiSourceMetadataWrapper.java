@@ -30,6 +30,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
@@ -45,6 +46,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	
 	public static final String MULTISOURCE_COLUMN_NAME = "multisource.columnName"; //$NON-NLS-1$
+	public static final String MULTISOURCE_PARTITIONED_PROPERTY = AbstractMetadataRecord.RELATIONAL_URI + "multisource.partitioned"; //$NON-NLS-1$
 	
 	private static class MultiSourceGroup {
 		Object multiSourceElement;

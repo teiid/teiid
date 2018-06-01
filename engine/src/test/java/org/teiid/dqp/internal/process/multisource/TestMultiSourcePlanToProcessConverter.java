@@ -722,4 +722,43 @@ public class TestMultiSourcePlanToProcessConverter {
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
     }
     
+    @Test public void testOtherPartitionedGroupBy() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+
+        final String userSql = "SELECT max(a) FROM MultiModel.Phys1 group by c"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = new List<?>[] {
+            Arrays.asList("a"),
+            Arrays.asList("a")
+        };
+        final HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+        dataMgr.addData("SELECT MAX(g_0.a) FROM Phys1 AS g_0 GROUP BY g_0.c", //$NON-NLS-1$
+                        new List<?>[] {
+                            Arrays.asList("a")}); 
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
+    }
+    
+    @Test public void testNotPartitionedGroupBy() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+
+        final String userSql = "SELECT max(a) FROM MultiModel.Phys1 group by b"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = new List<?>[] {
+            Arrays.asList("a")
+        };
+        final HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+        dataMgr.addData("SELECT g_0.b, MAX(g_0.a) FROM Phys1 AS g_0 GROUP BY g_0.b", //$NON-NLS-1$
+                        new List<?>[] {
+                            Arrays.asList("b", "a")}); 
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
+    }
+    
 }

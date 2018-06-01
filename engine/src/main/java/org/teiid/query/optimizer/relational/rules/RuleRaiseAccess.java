@@ -32,6 +32,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -1209,8 +1210,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		boolean partitioned = false;
 		for (Expression expression : project) {
 			Expression ex = SymbolMap.getExpression(expression);
-			if (ex.getType() == DataTypeManager.DefaultDataClasses.STRING 
-					&& isMultiSourceColumn(metadata, ex, node)) {
+			if (isMultiSourceColumn(metadata, ex, node)) {
 				partitioned = true;
 				break;
 			}
@@ -1231,7 +1231,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			return false;
 		}
 		ElementSymbol es = (ElementSymbol) ex;
-		if (metadata.isMultiSourceElement(es.getMetadataID())) {
+		if (metadata.isMultiSourceElement(es.getMetadataID())
+		        || Boolean.valueOf(metadata.getExtensionProperty(es.getMetadataID(), MultiSourceMetadataWrapper.MULTISOURCE_PARTITIONED_PROPERTY, false))) {
 			return true;
 		}
 		if (node == null || node.getFirstChild() == null) {
