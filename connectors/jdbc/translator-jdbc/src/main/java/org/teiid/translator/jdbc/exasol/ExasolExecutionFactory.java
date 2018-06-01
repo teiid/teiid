@@ -305,8 +305,8 @@ public class ExasolExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public boolean supportsConvert(int fromType, int toType) {
-        if (fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.VARBINARY || fromType == RUNTIME_CODES.TIME || fromType == RUNTIME_CODES.BLOB || fromType == RUNTIME_CODES.XML
-                || toType == RUNTIME_CODES.OBJECT || toType == RUNTIME_CODES.VARBINARY || toType == RUNTIME_CODES.TIME || toType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.XML) {
+        if (fromType == RUNTIME_CODES.BYTE || fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.VARBINARY || fromType == RUNTIME_CODES.TIME || fromType == RUNTIME_CODES.BLOB || fromType == RUNTIME_CODES.XML
+                || toType == RUNTIME_CODES.BYTE || toType == RUNTIME_CODES.OBJECT || toType == RUNTIME_CODES.VARBINARY || toType == RUNTIME_CODES.TIME || toType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.XML) {
             return false;
         }
         return true;
@@ -400,5 +400,10 @@ public class ExasolExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsInlineViews() {
         return true;
+    }
+
+    @Override
+    public boolean supportsCorrelatedSubqueries() {
+        return false;
     }
 }
