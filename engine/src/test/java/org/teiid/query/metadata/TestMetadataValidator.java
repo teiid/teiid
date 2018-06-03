@@ -19,6 +19,7 @@ package org.teiid.query.metadata;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -26,6 +27,9 @@ import org.junit.Test;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.ParseException;
@@ -610,6 +614,22 @@ public class TestMetadataValidator {
         //old is not resolvable with insert
         assertTrue(printError(report), report.hasItems());
     }
+    
+    @Test
+    public void testMultipleUnique() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(\n" +
+                "e1 integer primary key,\n" +
+                "e2 varchar(10) unique,\n" +
+                "e3 date not null unique)";
+        
+        buildModel("phy1", true, this.vdb, this.store, ddl);
+        
+        buildTransformationMetadata();
+        
+        ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
+        
+        assertFalse(printError(report), report.hasItems());
+    }   
     
 	private ValidatorReport helpTest(String ddl, boolean expectErrors) throws Exception {
 		buildModel("pm1", true, this.vdb, this.store, ddl);
