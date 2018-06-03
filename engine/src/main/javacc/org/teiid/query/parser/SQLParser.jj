@@ -6081,7 +6081,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	    if (index){
 	 		factory.addIndex("INDEX"+table.getIndexes().size(), true, columnName, table);
 	 	} else if (unique){
-	 		factory.addIndex("UNIQUE"+table.getIndexes().size(), false, columnName, table);
+	 		factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnName, table);
 	 	} else if (pk) {
 	    	if (table.getPrimaryKey() != null) {
 	    		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
