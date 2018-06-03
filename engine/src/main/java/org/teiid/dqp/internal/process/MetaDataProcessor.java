@@ -61,7 +61,9 @@ import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
@@ -92,8 +94,6 @@ public class MetaDataProcessor {
     
     private boolean labelAsName;
 
-    private boolean useJDBCDefaultPrecision = true;
-    
     private boolean useJDBCDefaultPrecision = true;
     
     public MetaDataProcessor(DQPCore requestManager, SessionAwareCache<PreparedPlan> planCache, String vdbName, int vdbVersion) {
