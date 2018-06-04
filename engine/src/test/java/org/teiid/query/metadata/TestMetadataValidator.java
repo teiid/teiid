@@ -32,12 +32,19 @@ import org.junit.Test;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+<<<<<<< HEAD
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+||||||| parent of b335ba12bc... broken TEIID-5356 logic to infer metadata, rather than use defaults for views
+=======
+import org.teiid.metadata.BaseColumn.NullType;
+>>>>>>> b335ba12bc... broken TEIID-5356 logic to infer metadata, rather than use defaults for views
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.ParseException;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.Table;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.parser.QueryParser;
@@ -453,6 +460,7 @@ public class TestMetadataValidator {
 		ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
 		assertTrue(printError(report), report.hasItems());
     }
+<<<<<<< HEAD
 
     @Test
     public void testViewWithoutColumns() throws Exception {
@@ -553,6 +561,76 @@ public class TestMetadataValidator {
         assertEquals(14, e3.getPrecision());
         assertEquals(5, e3.getScale());
     }
+||||||| parent of b335ba12bc... broken TEIID-5356 logic to infer metadata, rather than use defaults for views
+=======
+
+    @Test
+    public void testViewWithoutColumns() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(\n" +
+                "e1 integer primary key,\n" +
+                "e2 varchar(10) unique,\n" +
+                "e3 date not null unique,\n" +
+                "e4 decimal(12,3) default 12.2 options (searchable 'unsearchable'),\n" +
+                "e5 integer auto_increment INDEX OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE 'NO'),\n" +
+                "e6 varchar index default 'hello')\n" +
+                "OPTIONS (CARDINALITY 12, UUID 'uuid2',  UPDATABLE 'true', FOO 'BAR', ANNOTATION 'Test Table'); "
+                + " create view v1 as select G1.*, 'a' from G1;";
+        
+        buildModel("phy1", true, this.vdb, this.store, ddl);
+        
+        buildTransformationMetadata();
+        
+        ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
+        
+        assertFalse(printError(report), report.hasItems());
+        
+        Table table = store.getSchema("phy1").getTable("v1");
+        
+        assertTrue(table.isVirtual());
+        assertFalse(table.isSystem());
+        assertFalse(table.isMaterialized());
+        assertFalse(table.isDeletePlanEnabled());
+        assertFalse(table.supportsUpdate());
+        
+        assertEquals(6, table.getColumns().size());
+        
+        List<Column> columns = table.getColumns();
+        Column e1 = columns.get(0);
+        Column e2 = columns.get(1);
+        Column e3 = columns.get(2);
+        Column e4 = columns.get(3);
+        Column e6 = columns.get(4);
+        Column e7 = columns.get(5);
+        
+        assertEquals("e1", e1.getName());
+        assertEquals("integer", e1.getDatatype().getName());
+        
+        assertEquals("e2", e2.getName());
+        assertEquals("string", e2.getDatatype().getName());
+        assertEquals(NullType.Nullable, e2.getNullType());
+        assertEquals(10, e2.getLength());
+        assertEquals(0, e2.getPrecision());
+        
+        assertEquals("e3", e3.getName());
+        assertEquals("date", e3.getDatatype().getName());
+        assertEquals(NullType.No_Nulls, e3.getNullType());      
+        
+        assertEquals("e4", e4.getName());
+        assertEquals("bigdecimal", e4.getDatatype().getName());
+        assertEquals(false, e4.isAutoIncremented());
+        assertEquals(12, e4.getPrecision());
+        assertEquals(3, e4.getScale());
+        assertEquals(SearchType.Searchable, e4.getSearchType());
+        assertEquals(null, e4.getDefaultValue());
+        
+        assertEquals("e6", e6.getName());
+        assertEquals("string", e6.getDatatype().getName());
+        
+        assertEquals("expr2", e7.getName());
+        assertEquals("string", e7.getDatatype().getName());
+        assertEquals(4000, e7.getLength());
+    }  
+>>>>>>> b335ba12bc... broken TEIID-5356 logic to infer metadata, rather than use defaults for views
     
 	private ValidatorReport helpTest(String ddl, boolean expectErrors) throws Exception {
 		buildModel("pm1", true, this.vdb, this.store, ddl);

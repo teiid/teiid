@@ -44,6 +44,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
@@ -60,9 +61,7 @@ import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
@@ -92,6 +91,8 @@ public class MetaDataProcessor {
     private RequestID requestID;
     
     private boolean labelAsName;
+
+    private boolean useJDBCDefaultPrecision = true;
     
     private boolean useJDBCDefaultPrecision = true;
     
@@ -142,6 +143,17 @@ public class MetaDataProcessor {
         } 
         return obtainMetadataForPreparedSql(preparedSql, workContext, allowDoubleQuotedVariable);
     }
+    
+    private Map<Integer, Object> createXMLColumnMetadata(Query xmlCommand) {
+    	GroupSymbol doc = xmlCommand.getFrom().getGroups().get(0);
+    	Map<Integer, Object> xmlMetadata = getDefaultColumn(doc.getName(), XML_COLUMN_NAME, XMLType.class);
+    	// Override size as XML may be big        
+    	xmlMetadata.put(ResultsMetadataConstants.DISPLAY_SIZE, JDBCSQLTypeInfo.XML_COLUMN_LENGTH);
+    	MetaDataProcessor mdp = new MetaDataProcessor(null, null, "", 1);
+    	
+    	return xmlMetadata;
+    }
+
     
     // For each projected symbol, construct a metadata map
     private MetadataResult getMetadataForCommand(Command originalCommand) throws TeiidComponentException {
@@ -242,9 +254,7 @@ public class MetaDataProcessor {
         for(int i=0; symbolIter.hasNext(); i++) {
             Expression symbol = symbolIter.next();
             String shortColumnName = Symbol.getShortName(Symbol.getOutputName(symbol));
-            if(symbol instanceof AliasSymbol) {
-                symbol = ((AliasSymbol)symbol).getSymbol();
-            }
+            symbol = SymbolMap.getExpression(symbol);
             try {
                 columnMetadata[i] = createColumnMetadata(shortColumnName, symbol);
             } catch(QueryMetadataException e) {
@@ -305,14 +315,45 @@ public class MetaDataProcessor {
         return getMetadataForCommand(command);            
     }
 
-    private Map<Integer, Object> createXMLColumnMetadata(Query xmlCommand) {
-        GroupSymbol doc = xmlCommand.getFrom().getGroups().get(0);
-        Map<Integer, Object> xmlMetadata = getDefaultColumn(doc.getName(), XML_COLUMN_NAME, XMLType.class);
-
-        // Override size as XML may be big        
-        xmlMetadata.put(ResultsMetadataConstants.DISPLAY_SIZE, JDBCSQLTypeInfo.XML_COLUMN_LENGTH);
+    /**
+     * Set the easily determined metadata from symbol on the given Column  
+     * @param column
+     * @param symbol
+     * @param metadata
+     * @throws QueryMetadataException
+     * @throws TeiidComponentException
+     */
+    public static void setColumnMetadata(Column column, Expression symbol, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+        //do a dummy initialization of the metadataprocessor
+        String empty = ""; //$NON-NLS-1$
+        MetaDataProcessor mdp = new MetaDataProcessor(null, null, empty, 1);
+        mdp.metadata = metadata;
+        mdp.useJDBCDefaultPrecision = false;
+        Map<Integer, Object> metadataMap = mdp.createColumnMetadata(empty, symbol);
         
-        return xmlMetadata;
+        //set the fields from the column metadata
+        column.setCaseSensitive(Boolean.TRUE.equals(metadataMap.get(ResultsMetadataConstants.CASE_SENSITIVE)));
+        column.setCurrency(Boolean.TRUE.equals(metadataMap.get(ResultsMetadataConstants.CURRENCY)));
+        Object nullable = metadataMap.get(ResultsMetadataConstants.NULLABLE);
+        if (nullable == ResultsMetadataConstants.NULL_TYPES.NOT_NULL) {
+            column.setNullType(NullType.No_Nulls);
+        } else if (nullable == ResultsMetadataConstants.NULL_TYPES.NULLABLE) {
+            column.setNullType(NullType.Nullable);
+        }
+        Integer val = (Integer)metadataMap.get(ResultsMetadataConstants.PRECISION);
+        if (val != null) {
+            column.setPrecision(val);
+            column.setLength(val);
+        }
+        val = (Integer)metadataMap.get(ResultsMetadataConstants.RADIX);
+        if (val != null) {
+            column.setRadix(val);
+        }
+        val = (Integer)metadataMap.get(ResultsMetadataConstants.SCALE);
+        if (val != null) {
+            column.setScale(val);
+        }
+        column.setSigned(Boolean.TRUE.equals(metadataMap.get(ResultsMetadataConstants.SIGNED)));
     }
 
     private Map<Integer, Object> createColumnMetadata(String label, Expression symbol) throws QueryMetadataException, TeiidComponentException {
@@ -451,7 +492,10 @@ public class MetaDataProcessor {
                 return precision;
             }
         }
-        return JDBCSQLTypeInfo.getDefaultPrecision(dataType).intValue();
+        if (useJDBCDefaultPrecision) {
+            return JDBCSQLTypeInfo.getDefaultPrecision(dataType).intValue();
+        }
+        return 0;
     }
     
     /**
@@ -529,10 +573,14 @@ public class MetaDataProcessor {
         column.put(ResultsMetadataConstants.CURRENCY, Boolean.FALSE);
         column.put(ResultsMetadataConstants.DATA_TYPE, DataTypeManager.getDataTypeName(javaType));
         column.put(ResultsMetadataConstants.RADIX, JDBCSQLTypeInfo.DEFAULT_RADIX);
-        column.put(ResultsMetadataConstants.SCALE, JDBCSQLTypeInfo.DEFAULT_SCALE);
         column.put(ResultsMetadataConstants.SIGNED, Boolean.TRUE);
+                
+        if (useJDBCDefaultPrecision) {
+            column.put(ResultsMetadataConstants.PRECISION, JDBCSQLTypeInfo.getDefaultPrecision(javaType));
+            column.put(ResultsMetadataConstants.SCALE, JDBCSQLTypeInfo.DEFAULT_SCALE);
+        }
+        //otherwise do not set precision and scale explicitly as we have default logic around the type
         
-        column.put(ResultsMetadataConstants.PRECISION, JDBCSQLTypeInfo.getDefaultPrecision(javaType));
         column.put(ResultsMetadataConstants.DISPLAY_SIZE, JDBCSQLTypeInfo.getMaxDisplaySize(javaType));
         return column;        
     }

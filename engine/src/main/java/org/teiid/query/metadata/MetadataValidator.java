@@ -34,6 +34,7 @@ import java.util.TreeSet;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
@@ -67,6 +68,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -324,7 +326,7 @@ public class MetadataValidator {
     				    List<Expression> symbols = command.getProjectedSymbols();
     					for (Expression column:symbols) {
     						try {
-								addColumn(Symbol.getShortName(column), column.getType(), t, mf);
+								addColumn(column, t, mf, metadata);
 							} catch (TranslatorException e) {
 								log(report, model, e.getMessage());
 							}
@@ -471,12 +473,38 @@ public class MetadataValidator {
 		}
 	}
 
-	private Column addColumn(String name, Class<?> type, Table table, MetadataFactory mf) throws TranslatorException {
+	private Column addColumn(Expression toCopy, Table table, MetadataFactory mf, QueryMetadataInterface metadata) throws TranslatorException, QueryMetadataException, TeiidComponentException {
+	    String name = Symbol.getShortName(toCopy);
+	    Class<?> type = toCopy.getType();
 		if (type == null) {
 			throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31086, name, table.getFullName()));
 		}
 		Column column = mf.addColumn(name, DataTypeManager.getDataTypeName(type), table);
 		column.setUpdatable(table.supportsUpdate());
+		//determine the column metadata
+		toCopy = SymbolMap.getExpression(toCopy);
+		boolean metadataSet = false;
+		if (toCopy instanceof ElementSymbol) {
+		    Object mid = ((ElementSymbol) toCopy).getMetadataID();
+		    if (mid instanceof Column) {
+		        metadataSet = true;
+		        Column other = (Column)mid;
+		        column.setCaseSensitive(other.isCaseSensitive());
+		        column.setCharOctetLength(other.getCharOctetLength());
+		        column.setCurrency(other.isCurrency());
+		        column.setFixedLength(other.isFixedLength());
+		        column.setFormat(other.getFormat());
+		        column.setLength(other.getLength());
+		        column.setNullType(other.getNullType());
+		        column.setPrecision(other.getPrecision());
+		        column.setRadix(other.getRadix());
+		        column.setScale(other.getScale());
+		        column.setSigned(other.isSigned());
+		    }
+		} 
+		if (!metadataSet) {
+		    MetaDataProcessor.setColumnMetadata(column, toCopy, metadata);
+		}
 		return column;		
 	}
 	
