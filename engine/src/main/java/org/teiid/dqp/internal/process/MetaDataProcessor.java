@@ -422,7 +422,7 @@ public class MetaDataProcessor {
         column.put(ResultsMetadataConstants.ELEMENT_NAME, labelAsName?columnLabel:columnName);
         column.put(ResultsMetadataConstants.ELEMENT_LABEL, columnLabel);
         column.put(ResultsMetadataConstants.AUTO_INCREMENTING, Boolean.FALSE);
-        column.put(ResultsMetadataConstants.CASE_SENSITIVE, Boolean.FALSE);
+        column.put(ResultsMetadataConstants.CASE_SENSITIVE, Boolean.TRUE);
         column.put(ResultsMetadataConstants.NULLABLE, ResultsMetadataConstants.NULL_TYPES.NULLABLE);  
         column.put(ResultsMetadataConstants.SEARCHABLE, ResultsMetadataConstants.SEARCH_TYPES.SEARCHABLE);
         column.put(ResultsMetadataConstants.WRITABLE, Boolean.TRUE);

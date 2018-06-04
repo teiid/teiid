@@ -25,8 +25,6 @@ package org.teiid.jdbc;
 import java.util.Map;
 
 import org.teiid.dqp.internal.process.MetaDataProcessor;
-import org.teiid.jdbc.ResultSetMetaDataImpl;
-import org.teiid.jdbc.MetadataProvider;
 
 import junit.framework.TestCase;
 
@@ -61,7 +59,7 @@ public class TestResultsMetadataWithProvider extends TestCase {
         ResultSetMetaDataImpl rmd = new ResultSetMetaDataImpl(exampleProvider(), null);
         
         assertEquals(false, rmd.isAutoIncrement(1));
-        assertEquals(false, rmd.isCaseSensitive(1));
+        assertEquals(true, rmd.isCaseSensitive(1));
         assertEquals(false, rmd.isCurrency(1));
         assertEquals(true, rmd.isDefinitelyWritable(1));
         assertEquals(false, rmd.isReadOnly(1));
@@ -80,7 +78,7 @@ public class TestResultsMetadataWithProvider extends TestCase {
         ResultSetMetaDataImpl rmd = new ResultSetMetaDataImpl(exampleProvider(), "false");
         
         assertEquals(false, rmd.isAutoIncrement(1));
-        assertEquals(false, rmd.isCaseSensitive(1));
+        assertEquals(true, rmd.isCaseSensitive(1));
         assertEquals(false, rmd.isCurrency(1));
         assertEquals(true, rmd.isDefinitelyWritable(1));
         assertEquals(false, rmd.isReadOnly(1));
