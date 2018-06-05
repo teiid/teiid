@@ -586,7 +586,8 @@ public class MetadataValidator {
     				QueryResolver.resolveCommand(command, metadata);
     				resolverReport =  Validator.validate(command, metadata);
     				if (!resolverReport.hasItems() && (t.getColumns() == null || t.getColumns().isEmpty())) {
-    					List<Expression> symbols = command.getProjectedSymbols();
+
+    				    List<Expression> symbols = command.getProjectedSymbols();
     					for (Expression column:symbols) {
     						try {
 								addColumn(column, t, mf, metadata);
@@ -594,6 +595,11 @@ public class MetadataValidator {
 								log(report, model, e.getMessage());
 							}
     					}
+    					
+                        if (command instanceof SetQuery) {
+                            MetaDataProcessor.updateMetadataAcrossBranches((SetQuery) command, t.getColumns(), metadata);
+                        }
+    					
 					}
     				
                     node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);

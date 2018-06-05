@@ -630,6 +630,39 @@ public class TestMetadataValidator {
         
         assertFalse(printError(report), report.hasItems());
     }   
+    
+    @Test
+    public void testSetQueryViewWithoutColumns() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(\n" +
+                "e1 varchar(10) primary key,\n" +
+                "e2 varchar(100) unique,\n" +
+                "e3 decimal(12,5),\n" +
+                "e4 decimal(14,3));"
+                + " create view v1 as select e1, e3 from G1 union all select e2, e4 from G1;";
+        
+        buildModel("phy1", true, this.vdb, this.store, ddl);
+        
+        buildTransformationMetadata();
+        
+        ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
+        
+        assertFalse(printError(report), report.hasItems());
+        
+        Table table = store.getSchema("phy1").getTable("v1");
+        
+        List<Column> columns = table.getColumns();
+        Column e1 = columns.get(0);
+        Column e3 = columns.get(1);
+        
+        assertEquals("e1", e1.getName());
+        assertEquals("string", e1.getDatatype().getName());
+        assertEquals(100, e1.getLength());
+        
+        assertEquals("e3", e3.getName());
+        assertEquals("bigdecimal", e3.getDatatype().getName());
+        assertEquals(14, e3.getPrecision());
+        assertEquals(5, e3.getScale());
+    }
 
     @Test
     public void testViewWithoutColumns() throws Exception {
@@ -695,7 +728,7 @@ public class TestMetadataValidator {
         
         assertEquals("expr2", e7.getName());
         assertEquals("string", e7.getDatatype().getName());
-        assertEquals(4000, e7.getLength());
+        assertEquals(1, e7.getLength());
     }  
     
 	private ValidatorReport helpTest(String ddl, boolean expectErrors) throws Exception {

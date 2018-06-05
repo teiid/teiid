@@ -361,7 +361,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     
     /** ATTRIBUTES */
 
-    // driver's connection object used in constructin this object.
+    // driver's connection object used in constructing this object.
     private ConnectionImpl driverConnection;
 
     /**
