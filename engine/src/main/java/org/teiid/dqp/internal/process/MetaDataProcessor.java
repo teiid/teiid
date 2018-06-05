@@ -22,6 +22,8 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,6 +44,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.metadata.Column;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -54,9 +57,19 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
@@ -79,6 +92,8 @@ public class MetaDataProcessor {
     private RequestID requestID;
     
     private boolean labelAsName;
+    
+    private boolean useJDBCDefaultPrecision = true;
     
     public MetaDataProcessor(DQPCore requestManager, SessionAwareCache<PreparedPlan> planCache, String vdbName, int vdbVersion) {
         this.requestManager = requestManager;
@@ -187,6 +202,29 @@ public class MetaDataProcessor {
         
         return new MetadataResult(columnMetadata, paramMetadata);
     }
+    
+    public static void updateMetadataAcrossBranches(SetQuery originalCommand, List<Column> columns, QueryMetadataInterface metadata) throws TeiidComponentException {
+        String empty = ""; //$NON-NLS-1$
+        MetaDataProcessor mdp = new MetaDataProcessor(null, null, empty, 1);
+        mdp.metadata = metadata;
+        mdp.useJDBCDefaultPrecision = false;
+        Map<Integer, Object>[] metadataMaps = mdp.createProjectedSymbolMetadata(originalCommand);
+        
+        for (int i = 0; i < columns.size(); i++) {
+            Column column = columns.get(i);
+            Map<Integer, Object> metadataMap = metadataMaps[i];
+            
+            Integer val = (Integer)metadataMap.get(ResultsMetadataConstants.PRECISION);
+            if (val != null) {
+                column.setPrecision(val);
+                column.setLength(val);
+            }
+            val = (Integer)metadataMap.get(ResultsMetadataConstants.SCALE);
+            if (val != null) {
+                column.setScale(val);
+            }
+        }
+    }
 
     private Map<Integer, Object>[] createProjectedSymbolMetadata(Command originalCommand) throws TeiidComponentException {
         Map<Integer, Object>[] columnMetadata;
@@ -213,7 +251,41 @@ public class MetaDataProcessor {
                  throw new TeiidComponentException(QueryPlugin.Event.TEIID30559, e);
             }
         }
+        
+        if (originalCommand instanceof SetQuery) {
+            SetQuery setQuery = (SetQuery)originalCommand;
+            
+            //only redo the left if there are additional branches to consider
+            if (!(setQuery.getLeftQuery() instanceof Query)) {
+                Map<Integer, Object>[] leftResult = createProjectedSymbolMetadata(setQuery.getLeftQuery());
+                for(int i=0; i < leftResult.length; i++) {
+                    setCombinedMax(columnMetadata, leftResult, i, ResultsMetadataConstants.PRECISION);
+                    setCombinedMax(columnMetadata, leftResult, i, ResultsMetadataConstants.SCALE);
+                }
+            } 
+            
+            //only use the right if we're a union
+            if (setQuery.getOperation() == Operation.UNION) {
+                Map<Integer, Object>[] rightResult = createProjectedSymbolMetadata(setQuery.getRightQuery());
+                
+                for(int i=0; i < rightResult.length; i++) {
+                    setCombinedMax(columnMetadata, rightResult, i, ResultsMetadataConstants.PRECISION);
+                    setCombinedMax(columnMetadata, rightResult, i, ResultsMetadataConstants.SCALE);
+                }
+            }
+            
+            return columnMetadata;
+        }
         return columnMetadata;
+    }
+
+    private void setCombinedMax(Map<Integer, Object>[] leftResult,
+            Map<Integer, Object>[] rightResult, int i, int key) {
+        Integer lval = (Integer)leftResult[i].get(key);
+        Integer rval = (Integer)rightResult[i].get(key);
+        if (lval != null && rval != null) {
+            leftResult[i].put(key, Math.max(lval, rval));
+        }
     }
 
     private MetadataResult obtainMetadataForPreparedSql(String sql, DQPWorkContext workContext, boolean isDoubleQuotedVariablesAllowed) throws QueryParserException, QueryResolverException, TeiidComponentException {
@@ -336,7 +408,35 @@ public class MetaDataProcessor {
     }
 
     private Map<Integer, Object> createTypedMetadata(String shortColumnName, Expression symbol) {
-        return getDefaultColumn(null, shortColumnName, symbol.getType());
+        Map<Integer, Object> result = getDefaultColumn(null, shortColumnName, symbol.getType());
+        if (symbol instanceof Constant) {
+            Constant c = (Constant)symbol;
+            Object value = c.getValue();
+            if (value instanceof String) {
+                int length = ((String)value).length();
+                result.put(ResultsMetadataConstants.PRECISION, length);
+                result.put(ResultsMetadataConstants.DISPLAY_SIZE, length);
+            } else if (value instanceof byte[]) {
+                int length = ((byte[])value).length;
+                result.put(ResultsMetadataConstants.PRECISION, length);
+            } else if (value instanceof BigDecimal) {
+                BigDecimal val = (BigDecimal)value;
+                result.put(ResultsMetadataConstants.PRECISION, val.precision());
+                result.put(ResultsMetadataConstants.DISPLAY_SIZE, val.precision()+1);
+                result.put(ResultsMetadataConstants.SCALE, val.scale());
+            } else if (value instanceof BigInteger) {
+                BigInteger val = (BigInteger)value;
+                int precision = new BigDecimal(val).precision();
+                result.put(ResultsMetadataConstants.PRECISION, precision);
+                result.put(ResultsMetadataConstants.DISPLAY_SIZE, precision+1);
+            } else if (value == null) {
+                if (symbol.getType() == DataTypeManager.DefaultDataClasses.STRING) {
+                    result.put(ResultsMetadataConstants.PRECISION, 1);
+                    result.put(ResultsMetadataConstants.DISPLAY_SIZE, 1);
+                }
+            }
+        }
+        return result;
     }
     
     private int getColumnPrecision(Class<?> dataType, Object elementID) throws QueryMetadataException, TeiidComponentException {

@@ -353,7 +353,7 @@ public class TestEmbeddedServerAdmin {
 	@Test
 	public void testGetSchema() throws AdminException {
 		String expected = "CREATE VIEW helloworld (\n" + 
-						  "	expr1 string\n" +
+						  "	expr1 string(11)\n" +
 						  ")\n"  +
 						  "AS\n" +
 						  "SELECT 'HELLO WORLD';";

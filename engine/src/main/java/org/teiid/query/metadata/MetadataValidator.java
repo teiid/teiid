@@ -39,6 +39,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.MetaDataProcessor;
 import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -319,7 +320,8 @@ public class MetadataValidator {
     				QueryResolver.resolveCommand(command, metadata);
     				resolverReport =  Validator.validate(command, metadata);
     				if (!resolverReport.hasItems() && (t.getColumns() == null || t.getColumns().isEmpty())) {
-    					List<Expression> symbols = command.getProjectedSymbols();
+
+    				    List<Expression> symbols = command.getProjectedSymbols();
     					for (Expression column:symbols) {
     						try {
 								addColumn(Symbol.getShortName(column), column.getType(), t, mf);
@@ -327,6 +329,11 @@ public class MetadataValidator {
 								log(report, model, e.getMessage());
 							}
     					}
+    					
+                        if (command instanceof SetQuery) {
+                            MetaDataProcessor.updateMetadataAcrossBranches((SetQuery) command, t.getColumns(), metadata);
+                        }
+    					
 					}
     				if (t.getColumns() != null && !t.getColumns().isEmpty()) { 
 	    				determineDependencies(t, command);
