@@ -45,7 +45,7 @@ public class FileStorageManager implements StorageManager {
 	
 	private static final long MB = 1024L * 1024L;
 	public static final int DEFAULT_MAX_OPEN_FILES = 64;
-	public static final long DEFAULT_MAX_BUFFERSPACE = 50L * 1024L * MB;
+	public static final long DEFAULT_MAX_BUFFERSPACE = 5L * 1024L * MB; //5 GB
 	private static final String FILE_PREFIX = "b_"; //$NON-NLS-1$
 	
 	private long maxBufferSpace = DEFAULT_MAX_BUFFERSPACE;
