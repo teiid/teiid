@@ -76,7 +76,7 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		addPushDownFunction(JCR, JCR_ISDESCENDANTNODE, BOOLEAN, STRING, STRING);
 		addPushDownFunction(JCR, JCR_ISSAMENODE, BOOLEAN, STRING, STRING);
 		addPushDownFunction(JCR, JCR_CONTAINS, BOOLEAN, STRING, STRING);
-		addPushDownFunction(JCR, JCR_REFERENCE, BOOLEAN, STRING);
+		addPushDownFunction(JCR, JCR_REFERENCE, STRING, STRING);
 		
     	LogManager.logTrace(LogConstants.CTX_CONNECTOR, "ModeShape Translator Started"); //$NON-NLS-1$
      }    
