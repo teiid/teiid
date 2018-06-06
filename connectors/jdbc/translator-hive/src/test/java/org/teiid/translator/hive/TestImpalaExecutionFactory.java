@@ -136,7 +136,7 @@ public class TestImpalaExecutionFactory {
     }
     
     @Test public void testPredicateFunctions() {
-        Select obj = (Select)TranslationHelper.helpTranslate("/bqt.vdb", null, impalaTranslator.getPushDownFunctions(), "select stringnum FROM bqt1.SmallA where ilike(stringkey, 'a_') and not(ilike(stringkey, '_b'))");
+        Select obj = (Select)TranslationHelper.helpTranslate("/bqt.vdb", impalaTranslator.getPushDownFunctions(), "select stringnum FROM bqt1.SmallA where ilike(stringkey, 'a_') and not(ilike(stringkey, '_b'))");
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
         sqlVisitor.append(obj);
         assertEquals("SELECT SmallA.StringNum FROM SmallA WHERE (SmallA.StringKey ilike 'a_') AND NOT((SmallA.StringKey ilike '_b'))", sqlVisitor.toString());

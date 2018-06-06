@@ -34,19 +34,15 @@ import org.jboss.metadata.property.PropertyResolver;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
-import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
-import org.teiid.query.metadata.VDBResources;
 import org.xml.sax.SAXException;
 
 
@@ -83,14 +79,6 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 					public boolean accepts(VirtualFile file) {
 						if (file.isDirectory()) {
 							return false;
-						}
-						if (file.getName().toLowerCase().endsWith(VDBResources.MODEL_EXT)) {
-							UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
-							if (udf == null) {
-								udf = new FileUDFMetaData();
-								deploymentUnit.putAttachment(TeiidAttachments.UDF_METADATA, udf);
-							}
-							((FileUDFMetaData)udf).addModelFile(file);
 						}
 						return false;
 					}
@@ -186,33 +174,13 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
     public void undeploy(final DeploymentUnit context) {
     }	
     
-	protected VDBMetaData mergeMetaData(DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
+	protected VDBMetaData mergeMetaData(DeploymentUnit deploymentUnit) {
 		VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
-		UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
 		
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		if (vdb == null) {
 			LogManager.logError(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50016,file.getName())); 
 			return null;
-		}
-		
-		try {
-			if (udf != null) {
-				// load the UDF
-				for(Model model:vdb.getModels()) {
-					if (model.getModelType().equals(Model.Type.FUNCTION)) {
-						String path = ((ModelMetaData)model).getPath();
-						if (path == null) {
-							throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50075, model.getName()));
-						}
-						((FileUDFMetaData)udf).buildFunctionModelFile(model.getName(), path);
-					}
-				}		
-			}
-		} catch(IOException e) {
-			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e); 
-		} catch (XMLStreamException e) {
-			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}
 				
 		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", file.getName(), "has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$

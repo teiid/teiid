@@ -23,6 +23,7 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.CoreConstants;
 import org.teiid.language.Command;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
@@ -41,7 +42,6 @@ public class TestModeShapeSqlTranslator {
 
 	private static ModeShapeExecutionFactory TRANSLATOR;
 	private static TranslationUtility UTIL;
-    private static String UDF = "/JCRFunctions.xmi"; //$NON-NLS-1$;
 
     @BeforeClass
     public static void setUp() throws TranslatorException {
@@ -49,7 +49,7 @@ public class TestModeShapeSqlTranslator {
         TRANSLATOR.setUseBindVariables(false);
         TRANSLATOR.start();
         UTIL = new TranslationUtility(getMetadata());
-        TranslationHelper.loadUDFs(UDF, UTIL);
+        UTIL.addUDF(CoreConstants.SYSTEM_MODEL, TRANSLATOR.getPushDownFunctions());
     }
     
     public static TransformationMetadata getMetadata() {

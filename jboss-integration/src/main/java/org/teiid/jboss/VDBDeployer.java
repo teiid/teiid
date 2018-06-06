@@ -142,10 +142,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
             throw new DeploymentUnitProcessingException(e1);
         }
 		
-		UDFMetaData udf = deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
-		if (udf == null) {
-			udf = new UDFMetaData();
-		}
+		UDFMetaData udf = new UDFMetaData();
 		udf.setFunctionClassLoader(classLoader);
 		deployment.addAttchment(UDFMetaData.class, udf);
 		

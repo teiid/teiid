@@ -43,6 +43,11 @@
 
 <h4>from 10.2</h4>
 <ul>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5365">TEIID-5365</a> Function model support has been completely removed from the server.  VDBs utilizing function models should be migrated to having those functions located on physical or virtual models.</li>
+</ul>
+
+<h4>from 10.2</h4>
+<ul>
   <li><a href="https://issues.jboss.org/browse/TEIID-5294">TEIID-5294</a> The name escaping performed by the SQL/XML logic and JSONTOXML function did not properly escape values.  Instead of _uHHHH_, _xHHHH_ should have been used.  That correction has been made.  If you want the old behavior set the system property org.teiid.useXMLxEscape to false.</li>
 </ul>
 

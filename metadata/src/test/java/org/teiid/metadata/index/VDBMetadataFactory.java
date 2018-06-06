@@ -25,14 +25,11 @@ import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.LRUCache;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
-import org.teiid.query.function.UDFSource;
-import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.PureZipFileSystem;
 import org.teiid.query.metadata.SystemMetadata;
@@ -53,13 +50,13 @@ public class VDBMetadataFactory {
 	public static TransformationMetadata getVDBMetadata(String vdbFile) {
 		try {
 			File f = new File(vdbFile);
-			return getVDBMetadata(f.getName(), f.toURI().toURL(), null);
+			return getVDBMetadata(f.getName(), f.toURI().toURL());
 		} catch (IOException e) {
 			throw new TeiidRuntimeException(e);
 		}
     }
 	
-	public static TransformationMetadata getVDBMetadata(String vdbName, URL vdbURL, URL udfFile) throws IOException {
+	public static TransformationMetadata getVDBMetadata(String vdbName, URL vdbURL) throws IOException {
 		TransformationMetadata vdbmetadata = VDB_CACHE.get(vdbURL);
 		if (vdbmetadata != null) {
 			return vdbmetadata;
@@ -74,11 +71,6 @@ public class VDBMetadataFactory {
 			}
 			Collection <FunctionMethod> methods = null;
 			Collection<FunctionTree> trees = null;
-			if (udfFile != null) {
-				String schema = FileUtils.getFilenameWithoutExtension(udfFile.getPath());
-				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
-				trees = Arrays.asList(new FunctionTree(schema, new UDFSource(methods), true));
-			}
 			SystemFunctionManager sfm = SystemMetadata.getInstance().getSystemFunctionManager();
 			vdbmetadata = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(SystemMetadata.getInstance().getSystemStore(), imf.store)), imf.resources.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);

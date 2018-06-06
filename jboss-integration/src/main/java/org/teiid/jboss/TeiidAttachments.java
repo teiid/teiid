@@ -22,7 +22,6 @@ import org.jboss.as.server.deployment.AttachmentKey;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.deployers.UDFMetaData;
 
 public final class TeiidAttachments {
 	
@@ -30,7 +29,6 @@ public final class TeiidAttachments {
 	
 	public static final AttachmentKey<VDBTranslatorMetaData> TRANSLATOR_METADATA = AttachmentKey.create(VDBTranslatorMetaData.class);
     public static final AttachmentKey<VDBMetaData> VDB_METADATA = AttachmentKey.create(VDBMetaData.class);
-    public static final AttachmentKey<UDFMetaData> UDF_METADATA = AttachmentKey.create(UDFMetaData.class);
     
     public static final AttachmentKey<DeploymentType> DEPLOYMENT_TYPE = AttachmentKey.create(DeploymentType.class);
     
