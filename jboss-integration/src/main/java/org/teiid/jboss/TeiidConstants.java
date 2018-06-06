@@ -219,7 +219,6 @@ public class TeiidConstants {
         .setXmlName(Element.MAX_BUFFER_SPACE_ATTRIBUTE.getXMLName())
         .setAllowNull(true)
         .setAllowExpression(false)
-        .setDefaultValue(new ModelNode(51200))
         .setMeasurementUnit(MeasurementUnit.MEGABYTES)
         .build();  
     

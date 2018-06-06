@@ -187,6 +187,12 @@ specified and isSourceRequired should return false (see setSourceRequired).  If 
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
+<h4>from 10.3</h4>
+<ul>
+   <li><a href="https://issues.jboss.org/browse/TEIIDTOOLS-381">TEIIDTOOLS-381</a> the default max buffer space for Teiid embedded and derived runtimes (Thorntail/Spring Boot) is 5 gigabytes, rather than 50.  
+   For the full WildFly environment the default is still 50 gigabytes (51200 megabytes), via the stanadlone-teiid buffer-service max-buffer-space attribute. 
+</ul>
+
 <h4>from 10.2</h4>
 <ul>
    <li><a href="https://issues.jboss.org/browse/TEIID-5323">TEIID-5323</a> User query command log entries are now logged at the DEBUG level on the org.teiid.COMMAND_LOG context.  Source events are logged on the org.teiid.COMMAND_LOG.SOURCE context at the DEBUG level.  This allows command logging of just the user query events by setting the logging level to DEBUG for the overall context, but INFO or higher for the SOURCE child context.  The level will default to WARN in the standard install or to DEBUG when running the auditcommand scripts.
