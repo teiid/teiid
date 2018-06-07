@@ -1357,7 +1357,11 @@ public class SQLStringVisitor extends LanguageVisitor {
     	if (obj.getGroup() == null) {
     		append(Tokens.ALL_COLS);
     	} else {
-    		visitNode(obj.getGroup());
+    	    if (obj.getGroup().getDefinition() != null) {
+    	        append(escapeSinglePart(obj.getGroup().getName()));
+    	    } else {
+    	        visitNode(obj.getGroup());
+    	    }
     		append(Tokens.DOT);
     		append(Tokens.ALL_COLS);
     	}
