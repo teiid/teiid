@@ -2973,6 +2973,15 @@ public class TestResolver {
         helpResolveException(sql);
     }
     
+    @Test public void testTableAliasString() throws Exception {
+        String sql = "select \"pm1g2\".* from pm1.g1 as \"pm1g2\"";
+        Query query = (Query)helpResolve(sql);
+        UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
+        GroupSymbol gs = ufc.getGroup();
+        assertEquals("pm1g2", gs.getName());
+        assertEquals("SELECT pm1g2.* FROM pm1.g1 AS pm1g2", query.toString());
+    }
+    
     private void helpTestWidenToString(String sql) {
     	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
     	tm.setWidenComparisonToString(false);
