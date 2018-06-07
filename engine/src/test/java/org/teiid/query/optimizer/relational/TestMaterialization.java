@@ -50,7 +50,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
@@ -67,7 +67,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
 
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
@@ -83,7 +83,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
@@ -100,7 +100,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
@@ -116,7 +116,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
@@ -127,7 +127,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE g_0.e1 = '1'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
@@ -138,7 +138,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0 WHERE g_0.x = '1'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
@@ -149,7 +149,7 @@ public class TestMaterialization {
         TransformationMetadata metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         CommandContext cc = new CommandContext();
     	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
     	cc.setGlobalTableStore(gts);
@@ -167,7 +167,7 @@ public class TestMaterialization {
         TransformationMetadata metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         CommandContext cc = new CommandContext();
         GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
     	cc.setGlobalTableStore(gts);
@@ -186,7 +186,7 @@ public class TestMaterialization {
         TransformationMetadata metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         CommandContext cc = new CommandContext();
         GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
     	cc.setGlobalTableStore(gts);
@@ -204,7 +204,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         RelationalPlan plan = (RelationalPlan) TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(),
                 analysis,
@@ -223,7 +223,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         
@@ -253,7 +253,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(),
                 analysis,
@@ -269,7 +269,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         BasicSourceCapabilities capabilities = getTypicalCapabilities();
         capabilities.setCapabilitySupport(Capability.QUERY_UNION, true);
         TestOptimizer.helpPlanCommand(command, metadata, new DefaultCapabilitiesFinder(capabilities),
@@ -285,7 +285,7 @@ public class TestMaterialization {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
-        Command command = helpGetCommand(userSql, metadata, null);
+        Command command = helpGetCommand(userSql, metadata);
         BasicSourceCapabilities capabilities = getTypicalCapabilities();
         capabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         capabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);

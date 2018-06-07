@@ -166,7 +166,7 @@ public class TestOrderByProcessing {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         CommandContext cc = new CommandContext();
         cc.setOptions(new Options().pushdownDefaultNullOrder(true));
-        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", metadata, null), metadata, capFinder, null, true, cc);
+        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", metadata), metadata, capFinder, null, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS LAST"}, plan);  //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
@@ -183,7 +183,7 @@ public class TestOrderByProcessing {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         CommandContext cc = new CommandContext();
         cc.setOptions(new Options().pushdownDefaultNullOrder(true));
-        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", metadata, null), metadata, capFinder, null, true, cc);
+        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", metadata), metadata, capFinder, null, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC, g_0.e2"}, plan);  //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
@@ -201,7 +201,7 @@ public class TestOrderByProcessing {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         CommandContext cc = new CommandContext();
         cc.setOptions(new Options().pushdownDefaultNullOrder(true));
-        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc", metadata, null), metadata, capFinder, null, true, cc);
+        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc", metadata), metadata, capFinder, null, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS FIRST"}, plan);  //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }

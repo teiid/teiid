@@ -1276,7 +1276,7 @@ public class TestDependentJoins {
         CommandContext cc = new CommandContext();
         cc.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
         ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select pm1.g1.e1, pm1.g1.e2, pm1.g3.e2 FROM pm1.g1 inner join pm1.g3 on pm1.g1.e1 = pm1.g3.e1 inner join pm1.g2 on pm1.g3.e2 = pm1.g2.e2 left outer join pm2.g2 on pm1.g3.e4 = pm2.g2.e4 order by pm1.g1.e1", 
-                metadata, null), metadata, capFinder, null, true, cc);
+                metadata), metadata, capFinder, null, true, cc);
 
         TestOptimizer.checkAtomicQueries(new String[] {"WITH TEIID_TEMP__1 (col1, col2, col3, col4) AS (<dependent values>) SELECT g_0.col2 AS c_0, g_0.col3 AS c_1, g_0.col4 AS c_2 FROM TEIID_TEMP__1 AS g_0 LEFT OUTER JOIN pm2.g2 AS g_1 ON g_0.col1 = g_1.e4 ORDER BY c_0" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -1303,7 +1303,7 @@ public class TestDependentJoins {
     	String sql = "select pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 where (pm1.g1.e1 = pm2.g1.e1) option makedep pm1.g1(no join)";
 		assertEquals("SELECT pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 OPTION MAKEDEP pm1.g1(NO JOIN)", QueryParser.getQueryParser().parseCommand(sql).toString());
 		//pass a debug analysisrecord to test debug annotations
-		TestOptimizer.helpPlanCommand(TestOptimizer.helpGetCommand(sql, TestOptimizer.example1(), null), TestOptimizer.example1(), 
+		TestOptimizer.helpPlanCommand(TestOptimizer.helpGetCommand(sql, TestOptimizer.example1()), TestOptimizer.example1(), 
 				new DefaultCapabilitiesFinder(caps), new AnalysisRecord(true, true), 
 				new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -1363,7 +1363,7 @@ public class TestDependentJoins {
     	RealMetadataFactory.setCardinality("pm2.g1", 1000, metadata);
     	CommandContext cc = new CommandContext();
     	cc.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-		ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), null, true, cc);
+		ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), null, true, cc);
 		TestOptimizer.checkAtomicQueries(new String[] {"WITH TEIID_TEMP__1 (col1, col2) AS (<dependent values>) SELECT g_0.col1 AS c_0, g_0.col2 AS c_1, g_1.e2 AS c_2 FROM TEIID_TEMP__1 AS g_0, pm2.g1 AS g_1 WHERE g_0.col1 = g_1.e1 LIMIT 10" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		List<?>[] expected = new List<?>[] { 
@@ -1376,7 +1376,7 @@ public class TestDependentJoins {
 		TestProcessor.helpProcess(plan, dataManager, expected);
 		
 		caps.setCapabilitySupport(Capability.ROW_LIMIT, false);
-		plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), null, true, cc);
+		plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), null, true, cc);
 		TestOptimizer.checkAtomicQueries(new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
     }
     

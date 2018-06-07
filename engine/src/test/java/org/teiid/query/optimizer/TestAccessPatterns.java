@@ -285,7 +285,7 @@ public class TestAccessPatterns {
         
         AnalysisRecord record = new AnalysisRecord(true, true);
         
-        TestOptimizer.helpPlanCommand(TestOptimizer.helpGetCommand(sql, metadata, null), metadata, TestOptimizer.getGenericFinder(false), record, 
+        TestOptimizer.helpPlanCommand(TestOptimizer.helpGetCommand(sql, metadata), metadata, TestOptimizer.getGenericFinder(false), record, 
 						new String[] {
 								"SELECT g_0.e2, g_0.e1 FROM pm5.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", //$NON-NLS-1$ 
 								"SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0", //$NON-NLS-1$

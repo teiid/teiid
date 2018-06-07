@@ -39,7 +39,9 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		Table,
 		View,
 		Document,
+		@Deprecated
 		XmlMappingClass,
+		@Deprecated
 		XmlStagingTable,
 		MaterializedTable,
 		/** Temporary from a Teiid Perspective - physical will not have a parent set */
@@ -113,10 +115,12 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	 * Used in xml document models mapping classes to represent input parameters
 	 * @return
 	 */
+	@Deprecated
     public List<String> getBindings() {
 		return bindings;
 	}
 
+	@Deprecated
 	public void setBindings(List<String> bindings) {
 		this.bindings = bindings;
 	}

@@ -18,9 +18,6 @@
 
 package org.teiid.query.mapping.relational;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
@@ -39,7 +36,6 @@ public class QueryNode {
 
 	// Initial state
 	private String query;
-	private List<String> bindings;     // optional - construct if needed
 	// After parsing and resolution
 	private Command command;
 	private UpdateInfo updateInfo;
@@ -66,34 +62,6 @@ public class QueryNode {
      */
     public void setQuery(String query) {
         this.query = query;
-    }
-
-    /**
-     * Add parameter binding to this node.  Bindings should be added in
-     * the order they appear in the query.
-     * @param binding Binding reference
-     */
-    public void addBinding(String binding) {
-        if(this.bindings == null) {
-            this.bindings = new ArrayList<String>();
-        }
-        this.bindings.add(binding);
-    }
-
-    /**
-     * Get list of bindings.
-     * @return bindings
-     */
-    public List<String> getBindings() {
-        return this.bindings;
-    }
-
-    /**
-     * Set all of the bindings (existing are dropped)
-     * @param bindings New bindings
-     */
-    public void setBindings(List<String> bindings) {
-        this.bindings = new ArrayList<String>(bindings);
     }
 
     /**

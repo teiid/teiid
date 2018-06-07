@@ -1666,7 +1666,6 @@ public class RealMetadataFactory {
         table.setVirtual(true);
         table.setTableType(org.teiid.metadata.Table.Type.View);
         table.setSelectTransformation(plan.getQuery());
-    	table.setBindings(plan.getBindings());
 		return table;
 	}
 	

@@ -21,8 +21,6 @@ package org.teiid.query.resolver;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -55,14 +53,9 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
-import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.Symbol;
-import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.UpdateValidator;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
@@ -139,7 +132,7 @@ public class QueryResolver {
 	    case Command.TYPE_QUERY:
 	        QueryNode queryNode = metadata.getVirtualPlan(container.getMetadataID());
             
-	        return resolveWithBindingMetadata(currentCommand, metadata, queryNode, false);
+	        return resolveCommand(currentCommand, metadata, false);
     	case Command.TYPE_INSERT:
     	case Command.TYPE_UPDATE:
     	case Command.TYPE_DELETE:
@@ -147,98 +140,6 @@ public class QueryResolver {
     		ProcedureContainerResolver.findChildCommandMetadata(currentCommand, container, type, metadata, inferProcedureResultSetColumns);
     	}
     	return resolveCommand(currentCommand, metadata, false);
-    }
-
-	/**
-	 * Bindings are a poor mans input parameters.  They are represented in legacy metadata
-	 * by ElementSymbols and placed positionally into the command or by alias symbols
-	 * and matched by names.  After resolving bindings will be replaced with their
-	 * referenced symbols (input names will not be used) and those symbols will
-	 * be marked as external references.
-	 */
-	public static TempMetadataStore resolveWithBindingMetadata(Command currentCommand,
-			QueryMetadataInterface metadata, QueryNode queryNode, boolean replaceBindings)
-			throws TeiidComponentException, QueryResolverException {
-		Map<ElementSymbol, ElementSymbol> symbolMap = null;
-		if (queryNode.getBindings() != null && queryNode.getBindings().size() > 0) {
-			symbolMap = new HashMap<ElementSymbol, ElementSymbol>();
-
-		    // Create ElementSymbols for each InputParameter
-		    final List<ElementSymbol> elements = new ArrayList<ElementSymbol>(queryNode.getBindings().size());
-		    boolean positional = true;
-		    for (Expression ses : parseBindings(queryNode)) {
-		    	String name = Symbol.getShortName(ses);
-		    	if (ses instanceof AliasSymbol) {
-		    		ses = ((AliasSymbol)ses).getSymbol();
-		    		positional = false;
-		    	}
-		    	ElementSymbol elementSymbol = (ElementSymbol)ses;
-		    	ResolverVisitor.resolveLanguageObject(elementSymbol, metadata);
-		    	elementSymbol.setIsExternalReference(true);
-		    	if (!positional) {
-		    		symbolMap.put(new ElementSymbol("INPUT" + Symbol.SEPARATOR + name), elementSymbol.clone());
-		    		symbolMap.put(new ElementSymbol(BINDING_GROUP + Symbol.SEPARATOR + name), elementSymbol.clone());
-		    		elementSymbol.setShortName(name);
-		    	}
-		        elements.add(elementSymbol);
-		    }
-		    if (positional) {
-		    	ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
-		    		@Override
-		    		public Expression replaceExpression(Expression element) {
-			    		if (!(element instanceof Reference)) {
-			    			return element;
-			    		}
-			    		Reference ref = (Reference)element;
-			    		if (!ref.isPositional()) {
-			    			return ref;
-			    		}
-			    		return elements.get(ref.getIndex()).clone();
-		    		}
-		    	};
-		    	DeepPostOrderNavigator.doVisit(currentCommand, emv);
-		    } else {
-		        TempMetadataStore rootExternalStore = new TempMetadataStore();
-		        
-		        GroupContext externalGroups = new GroupContext();
-		        
-		        ProcedureContainerResolver.addScalarGroup("INPUT", rootExternalStore, externalGroups, elements); //$NON-NLS-1$
-		        ProcedureContainerResolver.addScalarGroup(BINDING_GROUP, rootExternalStore, externalGroups, elements);
-		        QueryResolver.setChildMetadata(currentCommand, rootExternalStore, externalGroups);
-		    }
-		}
-		TempMetadataStore result = resolveCommand(currentCommand, metadata, false);
-		if (replaceBindings && symbolMap != null && !symbolMap.isEmpty()) {
-			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(symbolMap);
-			DeepPostOrderNavigator.doVisit(currentCommand, emv);
-		}
-		return result;
-	}
-
-	/**
-	 * Bindings are a poor mans input parameters.  They are represented in legacy metadata
-	 * by ElementSymbols and placed positionally into the command or by alias symbols
-	 * and matched by names.
-	 * @param planNode
-	 * @return
-	 * @throws TeiidComponentException
-	 */
-    public static List<Expression> parseBindings(QueryNode planNode) throws TeiidComponentException {
-        Collection<String> bindingsCol = planNode.getBindings();
-        if (bindingsCol == null) {
-            return Collections.emptyList();
-        }
-        
-        List<Expression> parsedBindings = new ArrayList<Expression>(bindingsCol.size());
-        for (Iterator<String> bindings=bindingsCol.iterator(); bindings.hasNext();) {
-            try {
-                Expression binding = QueryParser.getQueryParser().parseSelectExpression(bindings.next());
-                parsedBindings.add(binding);
-            } catch (QueryParserException err) {
-                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30063, err);
-            }
-        }
-        return parsedBindings;
     }
 
     public static TempMetadataStore resolveCommand(Command currentCommand, QueryMetadataInterface metadata, boolean resolveNullLiterals)
@@ -385,7 +286,6 @@ public class QueryResolver {
 		QueryNode cachedNode = (QueryNode)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), cacheString);
         if (cachedNode == null) {
         	Command result = qnode.getCommand();
-        	List<String> bindings = null;
             if (result == null) {
                 try {
                 	result = QueryParser.getQueryParser().parseCommand(qnode.getQuery());
@@ -393,15 +293,10 @@ public class QueryResolver {
                      throw new QueryResolverException(QueryPlugin.Event.TEIID30065, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30065, virtualGroup));
                 }
                 
-                bindings = qnode.getBindings();
             } else {
             	result = (Command) result.clone();
             }
-            if (bindings != null && !bindings.isEmpty()) {
-            	QueryResolver.resolveWithBindingMetadata(result, qmi, qnode, true);
-            } else {
-            	QueryResolver.resolveCommand(result, qmi, false);
-            }
+        	QueryResolver.resolveCommand(result, qmi, false);
 	        Request.validateWithVisitor(new ValidationVisitor(), qmi, result);
             
 	        validateProjectedSymbols(virtualGroup, qmi, result);

@@ -64,8 +64,8 @@ public class TestRulePushSelectCriteria {
     
     @Test public void testPushAcrossFrameWithAccessNode() throws Exception {
     	QueryMetadataInterface metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore());
-    	Command command = TestOptimizer.helpGetCommand("select * from (select * from pm1.g1 union select * from pm1.g2) x where e1 = 1", metadata, null); //$NON-NLS-1$
-    	Command subCommand = TestOptimizer.helpGetCommand("select * from pm1.g1 union select * from pm1.g2", metadata, null); //$NON-NLS-1$
+    	Command command = TestOptimizer.helpGetCommand("select * from (select * from pm1.g1 union select * from pm1.g2) x where e1 = 1", metadata); //$NON-NLS-1$
+    	Command subCommand = TestOptimizer.helpGetCommand("select * from pm1.g1 union select * from pm1.g2", metadata); //$NON-NLS-1$
     	RelationalPlanner p = new RelationalPlanner();
     	CommandContext cc = new CommandContext();
     	p.initialize(command, null, metadata, null, null, cc);

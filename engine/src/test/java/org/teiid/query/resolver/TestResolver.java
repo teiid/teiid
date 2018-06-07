@@ -54,7 +54,6 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
-import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -195,24 +194,6 @@ public class TestResolver {
         return criteria;
     }
     
-    public static Command helpResolveWithBindings(String sql, QueryMetadataInterface metadata, List bindings) throws QueryResolverException, TeiidComponentException { 
-       
-        // parse
-        Command command = helpParse(sql);
-        
-        QueryNode qn = new QueryNode(sql);
-        qn.setBindings(bindings);
-        // resolve
-    	QueryResolver.resolveWithBindingMetadata(command, metadata, qn, true);
-
-        CheckSymbolsAreResolvedVisitor vis = new CheckSymbolsAreResolvedVisitor();
-        DeepPreOrderNavigator.doVisit(command, vis);
-
-        Collection<LanguageObject> unresolvedSymbols = vis.getUnresolvedSymbols();
-        assertTrue("Found unresolved symbols: " + unresolvedSymbols, unresolvedSymbols.isEmpty()); //$NON-NLS-1$
-        return command;
-    }
-
     static void helpResolveException(String sql, QueryMetadataInterface queryMetadata){
     	helpResolveException(sql, queryMetadata, null);	
     }
@@ -791,51 +772,6 @@ public class TestResolver {
 		helpResolve("SELECT dayofmonth('2002-01-01') FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
-    @Test public void testResolveParameters() throws Exception {
-        List bindings = new ArrayList();
-        bindings.add("pm1.g2.e1"); //$NON-NLS-1$
-        bindings.add("pm1.g2.e2"); //$NON-NLS-1$
-        
-        Query resolvedQuery = (Query) helpResolveWithBindings("SELECT pm1.g1.e1, ? FROM pm1.g1 WHERE pm1.g1.e1 = ?", metadata, bindings); //$NON-NLS-1$
-
-        helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
-        helpCheckSelect(resolvedQuery, new String[] { "pm1.g1.e1", "expr2" }); //$NON-NLS-1$ //$NON-NLS-2$
-        helpCheckElements(resolvedQuery.getCriteria(), 
-            new String[] { "pm1.g1.e1", "pm1.g2.e2" }, //$NON-NLS-1$
-            new String[] { "pm1.g1.e1", "pm1.g2.e2" } ); //$NON-NLS-1$
-            
-    }
-    
-    @Test public void testResolveInputParameters() throws Exception {
-        List bindings = new ArrayList();
-        bindings.add("pm1.g2.e1 as x"); //$NON-NLS-1$
-        
-        Query resolvedQuery = (Query) helpResolveWithBindings("SELECT pm1.g1.e1, input.x FROM pm1.g1", metadata, bindings); //$NON-NLS-1$
-
-        helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
-        assertEquals("SELECT pm1.g1.e1, pm1.g2.e1 AS x FROM pm1.g1", resolvedQuery.toString());
-    }
-
-    @Test public void testResolveParametersInsert() throws Exception {
-    	List<String> bindings = Arrays.asList("pm1.g2.e1"); //$NON-NLS-1$
-        
-        helpResolveWithBindings("INSERT INTO pm1.g1 (e1) VALUES (?)", metadata, bindings); //$NON-NLS-1$
-    }
-    
-    @Test public void testResolveParametersExec() throws Exception {
-        List<String> bindings = Arrays.asList("pm1.g2.e1"); //$NON-NLS-1$
-        
-        Query resolvedQuery = (Query)helpResolveWithBindings("SELECT * FROM (exec pm1.sq2(?)) as a", metadata, bindings); //$NON-NLS-1$
-        StoredProcedure sp = (StoredProcedure)((SubqueryFromClause)resolvedQuery.getFrom().getClauses().get(0)).getCommand();
-        assertEquals(String.class, sp.getInputParameters().get(0).getExpression().getType());
-    }
-    
-    @Test public void testResolveParametersExecNamed() throws Exception {
-        List<String> bindings = Arrays.asList("pm1.g2.e1 as x"); //$NON-NLS-1$
-        
-        helpResolveWithBindings("SELECT * FROM (exec pm1.sq2(input.x)) as a", metadata, bindings); //$NON-NLS-1$
-    }
-
     @Test public void testUseNonExistentAlias() {
         helpResolveException("SELECT portfoliob.e1 FROM ((pm1.g1 AS portfoliob JOIN pm1.g2 AS portidentb ON portfoliob.e1 = portidentb.e1) RIGHT OUTER JOIN pm1.g3 AS identifiersb ON portidentb.e1 = 'ISIN' and portidentb.e2 = identifiersb.e2) RIGHT OUTER JOIN pm1.g1 AS issuesb ON a.identifiersb.e1 = issuesb.e1"); //$NON-NLS-1$
     }       

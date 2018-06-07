@@ -517,14 +517,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
         LiveTableQueryNode queryNode = new LiveTableQueryNode(tableRecord);
 
-        // get any bindings and add them onto the query node
-        List<String> bindings = tableRecord.getBindings();
-        if(bindings != null) {
-            for(Iterator<String> bindIter = bindings.iterator();bindIter.hasNext();) {
-                queryNode.addBinding(bindIter.next());
-            }
-        }
-
         return queryNode;
     }
 

@@ -91,7 +91,7 @@ public abstract class BaseQueryTest extends TestCase {
 			List[] expectedResults, boolean debug, CommandContext context)
 			throws TeiidComponentException, TeiidProcessingException,
 			QueryMetadataException, QueryPlannerException, Exception {
-		Command command = TestOptimizer.helpGetCommand(sql, metadata, null);
+		Command command = TestOptimizer.helpGetCommand(sql, metadata);
 
         // plan
         AnalysisRecord analysisRecord = new AnalysisRecord(false, debug);

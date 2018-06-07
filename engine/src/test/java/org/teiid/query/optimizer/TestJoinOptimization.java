@@ -1280,7 +1280,7 @@ public class TestJoinOptimization {
         cc.getOptions().setAssumeMatchingCollation(false);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(TestOptimizer.helpGetCommand(sql, RealMetadataFactory.exampleBQTCached(), null), RealMetadataFactory.exampleBQTCached(), new DefaultCapabilitiesFinder(bsc), cc);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestOptimizer.helpGetCommand(sql, RealMetadataFactory.exampleBQTCached()), RealMetadataFactory.exampleBQTCached(), new DefaultCapabilitiesFinder(bsc), cc);
 
         HardcodedDataManager hdm = new HardcodedDataManager();
         hdm.addData("SELECT g_0.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0", Arrays.asList("b", 1), Arrays.asList("a", 3));

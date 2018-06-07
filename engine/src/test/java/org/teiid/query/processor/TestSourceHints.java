@@ -99,7 +99,7 @@ public class TestSourceHints {
 		CommandContext cc = TestProcessor.createCommandContext();
 		cc.setDQPWorkContext(new DQPWorkContext());
 		cc.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
-		ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), null, true, cc);
+		ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, RealMetadataFactory.example1Cached()), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), null, true, cc);
 		TestOptimizer.checkAtomicQueries(new String[] {"SELECT /*+sh KEEP ALIASES bar:'leading(g)' */ g.e1 AS c_0 FROM pm1.g1 AS g ORDER BY c_0"}, plan);
         
         List<?>[] expected = new List[] {};

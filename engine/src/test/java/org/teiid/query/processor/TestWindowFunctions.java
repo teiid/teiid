@@ -494,7 +494,7 @@ public class TestWindowFunctions {
         
         String sql = "SELECT y.LEAD(ALL convert(amount, string)) OVER (PARTITION BY team ORDER BY \"year\") FROM team_target";
         
-        TestOptimizer.getPlan(helpGetCommand(sql, metadata, null), 
+        TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
                 metadata, new DefaultCapabilitiesFinder(bsc), 
                 null, false, new CommandContext()); //$NON-NLS-1$
     }
@@ -504,7 +504,7 @@ public class TestWindowFunctions {
         
         String sql = "SELECT FIRST_VALUE(e1) over (order by e2), LAST_VALUE(e2) over (order by e1) from pm1.g1";
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
@@ -529,7 +529,7 @@ public class TestWindowFunctions {
         
         String sql = "SELECT FIRST_VALUE(e1) over (order by e2), LAST_VALUE(e1) over (order by e2) from pm1.g1";
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
@@ -550,7 +550,7 @@ public class TestWindowFunctions {
         
         String sql = "SELECT LEAD(e1) over (order by e2), LEAD(e1, 2, 'c') over (order by e2) from pm1.g1";
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
@@ -575,7 +575,7 @@ public class TestWindowFunctions {
         
         String sql = "SELECT LEAD(e1, 1, 'default') over (order by e2) from pm1.g1";
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
@@ -595,7 +595,7 @@ public class TestWindowFunctions {
         
         String sql = "SELECT e1, e3, e2, LAG(e1, 2, 'd') over (partition by e3 order by e2) from pm1.g1";
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
@@ -626,7 +626,7 @@ public class TestWindowFunctions {
         
         String sql = "select stringkey, lead(stringkey) over (order by stringkey) l from bqt1.smalla order by l";
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached(), null), 
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
@@ -654,7 +654,7 @@ public class TestWindowFunctions {
         
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached(), null), 
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
@@ -677,7 +677,7 @@ public class TestWindowFunctions {
                 "    from bqt1.smallb csr\n" + 
                 ") v group by rang";
 
-        plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached(), null), 
+        plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
@@ -694,7 +694,7 @@ public class TestWindowFunctions {
                 "    from bqt1.smallb csr\n" + 
                 ") v"; 
         
-        plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached(), null), 
+        plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
