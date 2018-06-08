@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.jboss.teiid</groupId>
 		<artifactId>connectors</artifactId>
-		<version>8.12.13.6_4</version>
+		<version>8.12.14.6_4</version>
 	</parent>
     
 	<groupId>org.jboss.teiid.connectors</groupId>
