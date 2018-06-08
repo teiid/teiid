@@ -20,9 +20,13 @@ package org.teiid.translator.simpledb;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.visitor.SQLStringVisitor;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -48,6 +52,7 @@ public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConn
         List<String> domains = connection.getDomains();
         for (String domain : domains) {
             Table table = metadataFactory.addTable(domain);
+            table.setNameInSource(quote(domain));
             table.setSupportsUpdate(true);
             
             Column itemName = metadataFactory.addColumn(DISPLAY_ITEM_NAME, TypeFacility.RUNTIME_NAMES.STRING, table);
@@ -64,10 +69,15 @@ public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConn
                 else {
                     column = metadataFactory.addColumn(attribute.getName(), TypeFacility.RUNTIME_NAMES.STRING, table);
                 }
+                column.setNameInSource(quote(attribute.getName()));
                 column.setUpdatable(true);
                 column.setNullType(NullType.Nullable);
             }
         }        
+    }
+
+    private String quote(String name) {
+        return '`' + StringUtil.replaceAll(name, "`", "``") + '`'; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public static String getName(AbstractMetadataRecord record) {

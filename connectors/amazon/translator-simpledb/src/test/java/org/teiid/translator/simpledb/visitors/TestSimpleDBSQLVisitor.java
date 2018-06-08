@@ -228,5 +228,20 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT attribute FROM item WHERE attribute = '1' OR attribute = '2'", visitor.toString());
-    }     
+    }
+    
+    @Test 
+    public void testNameInSource() throws Exception {
+        SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
+        translator.start();
+        
+        MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, \"or\" string options (nameinsource '`or`')) options (nameinsource '`item`');", "y");
+        TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
+        TranslationUtility tu = new TranslationUtility(metadata);
+
+        Command c = tu.parseCommand("select \"or\" from item");
+        SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
+        visitor.append(c);
+        assertEquals("SELECT `or` FROM `item`", visitor.toString());
+    } 
 }
