@@ -2208,12 +2208,10 @@ public class QueryRewriter {
                 Expression value = variables.get(es);
 
                 if (value == null) {
-                	if (es.getGroupSymbol().getSchema() == null) {
-                        String grpName = es.getGroupSymbol().getName();
-		                if (grpName.equals(ProcedureReservedWords.CHANGING)) {
-		                    Assertion.failed("Changing value should not be null"); //$NON-NLS-1$
-		                } 
-                	}
+                    String grpName = es.getGroupSymbol().getName();
+	                if (grpName.equals(ProcedureReservedWords.CHANGING)) {
+	                    Assertion.failed("Changing value should not be null"); //$NON-NLS-1$
+	                } 
                 } else if (value instanceof Constant) {
                 	if (value.getType() == type) {
                 		return value;

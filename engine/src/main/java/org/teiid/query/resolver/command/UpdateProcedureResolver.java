@@ -346,7 +346,7 @@ public class UpdateProcedureResolver implements CommandResolver {
             variable.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.VARIABLES));
             variable.setOutputName(outputName);
         } else {
-        	if (gs.getSchema() != null || !gs.getShortName().equalsIgnoreCase(ProcedureReservedWords.VARIABLES)) {
+        	if (!gs.getName().equalsIgnoreCase(ProcedureReservedWords.VARIABLES)) {
                 handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString("ERR.015.010.0031", new Object[]{ProcedureReservedWords.VARIABLES, variable})); //$NON-NLS-1$
             }
         }

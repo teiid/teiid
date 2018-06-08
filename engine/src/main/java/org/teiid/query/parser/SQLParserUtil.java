@@ -183,6 +183,16 @@ public class SQLParserUtil {
         return id;
     }
     
+    void validateQuotedName(String aliasID, String rawAlias) throws ParseException {
+        String adjustedAlias = aliasID;
+        if (rawAlias.charAt(0) == '"') {
+          adjustedAlias = '"' + StringUtil.replaceAll(aliasID, "\"", "\"\"") + '"'; //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        if (!rawAlias.equals(adjustedAlias)) {
+          throw new ParseException(QueryPlugin.Util.getString("SQLParser.ddl_id_unqualified", rawAlias)); //$NON-NLS-1$ 
+        }
+    }
+    
     static String removeEscapeChars(String str, String tickChar) {
         return StringUtil.replaceAll(str, tickChar + tickChar, tickChar);
     }

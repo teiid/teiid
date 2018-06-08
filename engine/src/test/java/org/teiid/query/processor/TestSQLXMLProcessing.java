@@ -316,6 +316,17 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlTableWithPeriodAlias() throws Exception {
+        String sql = "select \"x.b\".* from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as \"x.b\""; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList(null, "first"),
+                Arrays.asList("attr", "second"),
+        };    
+    
+        process(sql, expected);
+    }
+    
     @Test(expected=QueryParserException.class) public void testXmlTableWithComplexIdentifier() throws Exception {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns \"x.y\" string path '@x', val string path '/.') as x"; //$NON-NLS-1$
         

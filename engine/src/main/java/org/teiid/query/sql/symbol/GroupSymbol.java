@@ -52,7 +52,10 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     private boolean isProcedure;
     
     private String outputDefinition;
-    private String schema;
+    //possible qualifier, not included with the short name
+    //due do legacy choice this is ambiguous with schema and may be part of the name
+    //TODO: refactor to be a proper schema reference
+    private String qualifier; 
     
     private Object checkMatViewStatus;
     
@@ -77,7 +80,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	}
 	
 	private GroupSymbol(String schmea, String shortName, String definition) {
-		this.schema = schmea;
+		this.qualifier = schmea;
 		this.setShortName(shortName);
 		this.setDefinition(definition);
 	}
@@ -185,7 +188,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	 * @return Deep copy of the object
 	 */
 	public GroupSymbol clone() {
-		GroupSymbol copy = new GroupSymbol(schema, getShortName(), getDefinition());
+		GroupSymbol copy = new GroupSymbol(qualifier, getShortName(), getDefinition());
 		copy.metadataID = this.metadataID;
         copy.setIsTempTable(isTempTable);
         copy.setProcedure(isProcedure);
@@ -211,10 +214,10 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 		}
 		GroupSymbol other = (GroupSymbol) obj;
 
-		if (this.schema == null || other.schema == null) {
+		if (this.qualifier == null || other.qualifier == null) {
 			return this.getName().equals(other.getName());
 		}
-		return EquivalenceUtil.areEqual(this.schema, other.schema) && this.getShortName().equals(other.getShortName());
+		return EquivalenceUtil.areEqual(this.qualifier, other.qualifier) && this.getShortName().equals(other.getShortName());
 	}
     
     public boolean hasAlias() {
@@ -275,16 +278,16 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     
     @Override
     public String getName() {
-    	if (this.schema != null) {
-    		return this.schema + Symbol.SEPARATOR + this.getShortName();
+    	if (this.qualifier != null) {
+    		return this.qualifier + Symbol.SEPARATOR + this.getShortName();
     	}
     	return super.getName();
     }
     
     @Override
     public int hashCode() {
-    	if (this.schema != null) {
-    		return HashCodeUtil.hashCode(this.schema.hashCode(), this.getShortName().hashCode());
+    	if (this.qualifier != null) {
+    		return HashCodeUtil.hashCode(this.qualifier.hashCode(), this.getShortName().hashCode());
     	}
     	return super.hashCode();
     }
@@ -292,17 +295,13 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     public void setName(String name) {
     	int index = name.indexOf('.');
     	if (index > 0) {
-    		this.schema = new String(name.substring(0, index));
+    		this.qualifier = new String(name.substring(0, index));
     		name = new String(name.substring(index + 1));
     	} else {
-    		this.schema = null;
+    		this.qualifier = null;
     	}
     	super.setShortName(name);
     }
-
-	public String getSchema() {
-		return schema;
-	}
 
     public void setCheckMatStatus(Object viewMatadataId) {
         this.checkMatViewStatus = viewMatadataId;

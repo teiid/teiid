@@ -7994,5 +7994,24 @@ public class TestProcessor {
         TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1,1,1)});
     }
 	
+	@Test public void testTableAliasWithPeriod() throws Exception {
+        String sql = "select \"pm1.g2\".* from pm1.g1 as \"pm1.g2\"";
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps));
+        HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+        dataManager.addData("SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g1 AS g_0", new List<?>[0]);
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[0]);
+    }
+	
+   @Test public void testTableAliasWithPeriodCorrelated() throws Exception {
+        String sql = "select (select e2 from pm1.g3 where e1 = \"pm1.g2\".e1) from pm1.g1 as \"pm1.g2\"";
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps));
+        HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0", new List<?>[] {Arrays.asList("a")});
+        dataManager.addData("SELECT g_0.e2 FROM g3 AS g_0 WHERE g_0.e1 = 'a'", new List<?>[] {Arrays.asList(1)});
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)});
+    }
+	
     private static final boolean DEBUG = false;
 }

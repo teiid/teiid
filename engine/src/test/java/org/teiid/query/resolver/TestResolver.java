@@ -2917,6 +2917,56 @@ public class TestResolver {
         assertEquals("pm1g2", gs.getName());
         assertEquals("SELECT pm1g2.* FROM pm1.g1 AS pm1g2", query.toString());
     }
+
+    /**
+     * This is not correct behavior, but it is acceptable to prevent other issues
+     */
+    @Test public void testTableAliasWithPeriodAmbiguous() throws Exception {
+        String sql = "select \"pm1.g2\".*, pm1.g2.* from pm1.g1 as \"pm1.g2\", pm1.g2";
+        helpResolveException(sql);
+    }
+    
+    @Test public void testTableAliasWithPeriod() throws Exception {
+        String sql = "select \"pm1.g2\".*, e1, \"pm1.g2\".e2, pm1.g2.e2 from pm1.g1 as \"pm1.g2\"";
+        Query query = (Query)helpResolve(sql);
+        UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
+        GroupSymbol gs = ufc.getGroup();
+        assertEquals("pm1.g2", gs.getName());
+        assertEquals("pm1.g1", gs.getDefinition());
+        assertFalse(gs.isTempTable());
+        assertEquals("SELECT \"pm1.g2\".*, e1, \"pm1.g2\".e2, \"pm1.g2\".e2 FROM pm1.g1 AS \"pm1.g2\"", query.toString());
+        assertEquals("[\"pm1.g2\".e1, \"pm1.g2\".e2, \"pm1.g2\".e3, \"pm1.g2\".e4, e1, \"pm1.g2\".e2, \"pm1.g2\".e2]", query.getProjectedSymbols().toString());
+    }
+    
+    @Test public void testTableAliasWithMultiplePeriods() throws Exception {
+        String sql = "select \"pm1..g2\".e1 from pm1.g1 as \"pm1..g2\"";
+        Query query = (Query)helpResolve(sql);
+        UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
+        GroupSymbol gs = ufc.getGroup();
+        assertEquals("pm1..g2", gs.getName());
+        assertEquals("pm1.g1", gs.getDefinition());
+        assertEquals("SELECT \"pm1..g2\".e1 FROM pm1.g1 AS \"pm1..g2\"", query.toString());
+        assertEquals("[\"pm1..g2\".e1]", query.getProjectedSymbols().toString());
+    }
+    
+    @Test public void testSubqueryAliasWithPeriod() throws Exception {
+        String sql = "select \"pm1.g2\".x from (select 1 as x) as \"pm1.g2\"";
+        Query query = (Query)helpResolve(sql);
+        SubqueryFromClause sfc = (SubqueryFromClause)query.getFrom().getClauses().get(0);
+        GroupSymbol gs = sfc.getGroupSymbol();
+        assertEquals("pm1.g2", gs.getName());
+        assertNull(gs.getDefinition());
+        assertEquals("SELECT \"pm1.g2\".x FROM (SELECT 1 AS x) AS \"pm1.g2\"", query.toString());
+        assertEquals("SELECT \"pm1.g2\".x FROM (SELECT 1 AS x) AS \"pm1.g2\"", query.clone().toString());
+        assertEquals("[\"pm1.g2\".x]", query.getProjectedSymbols().toString());
+    }
+    
+    @Test public void testTextTableAliasWithPeriod() throws Exception {
+        Command command = helpResolve("select \"x.y.z\".*, \"x.y.z\".x  from pm1.g1, texttable(e1 COLUMNS x string) \"x.y.z\""); //$NON-NLS-1$
+        assertEquals(2, command.getProjectedSymbols().size());
+        assertEquals("SELECT \"x.y.z\".*, \"x.y.z\".x FROM pm1.g1, TEXTTABLE(e1 COLUMNS x string) AS \"x.y.z\"", command.toString());
+        assertEquals("SELECT \"x.y.z\".*, \"x.y.z\".x FROM pm1.g1, TEXTTABLE(e1 COLUMNS x string) AS \"x.y.z\"", command.clone().toString());
+    }
     
     private void helpTestWidenToString(String sql) {
     	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();

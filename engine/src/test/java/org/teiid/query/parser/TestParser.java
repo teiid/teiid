@@ -5295,6 +5295,11 @@ public class TestParser {
         helpTest(sql, "SELECT y AS \"_name\"", query); //$NON-NLS-1$
     }
     
+    @Test public void testInvalidAlias() {
+        String sql = "SELECT 1 from y AS \"bad\".\"name\"";
+        helpException(sql); //$NON-NLS-1$
+    }
+    
     @Test public void testCharLength() {
         helpException("select cast('abc' as char(2))");
     }

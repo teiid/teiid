@@ -2585,7 +2585,9 @@ ArrayTable arrayTable(ParseInfo info) :
  	<COLUMNS>
  	columns = createElementsWithTypes(info) 
  	<RPAREN>
- 	[<AS>] aliasID=id(Boolean.FALSE)
+ 	[<AS>] aliasID=id(null) {
+ 	    validateQuotedName(aliasID, getToken(0).image);
+	}
  	{
  		ArrayTable result = new ArrayTable();
  		result.setArrayValue(array);
@@ -2674,7 +2676,9 @@ TextTable textTable(ParseInfo info) :
       }
   	]
  	<RPAREN>
- 	[<AS>] aliasID=id(Boolean.FALSE)
+ 	[<AS>] aliasID=id(null) {
+ 	    validateQuotedName(aliasID, getToken(0).image);
+	}
  	{
  		TextTable result = new TextTable();
  		result.setFile(file);
@@ -2899,7 +2903,9 @@ ObjectTable objectTable(ParseInfo info) :
       }
     )*
  	<RPAREN>
- 	[<AS>] aliasID=id(Boolean.FALSE)
+ 	[<AS>] aliasID=id(null) {
+ 	    validateQuotedName(aliasID, getToken(0).image);
+	}
  	{
  		ObjectTable result = new ObjectTable();
  		result.setScriptingLanguage(lang);
@@ -2984,7 +2990,9 @@ XMLTable xmlTable(ParseInfo info) :
  	  )*
  	]
  	<RPAREN>
- 	[<AS>] aliasID=id(Boolean.FALSE)
+ 	[<AS>] aliasID=id(null) {
+ 	    validateQuotedName(aliasID, getToken(0).image);
+	}
  	{
  		XMLTable result = new XMLTable();
  		result.setXquery(xquery);
@@ -3071,8 +3079,9 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
       command = storedProcedure(info, 1) )
 	<RPAREN>
 	[<AS>]
-	aliasID = id(Boolean.FALSE)
-	
+	aliasID = id(null) {
+		    validateQuotedName(aliasID, getToken(0).image);
+	}
 	{
 		SubqueryFromClause clause = new SubqueryFromClause(aliasID, command);
         setFromClauseOptions(lparen, clause);
@@ -3095,7 +3104,11 @@ UnaryFromClause unaryFromClause(ParseInfo info) :
 	UnaryFromClause clause = null;
 }
 {	
-	(groupID=id(null) {groupToken = getToken(0);} [[<AS>] aliasID=id(Boolean.FALSE)])
+	(groupID=id(null) {groupToken = getToken(0);} [
+	   [<AS>] aliasID=id(null) {
+		    validateQuotedName(aliasID, getToken(0).image);
+		}
+	])
 	{
     	if(aliasID != null) {		
             group = new GroupSymbol(aliasID, groupID);

@@ -1363,8 +1363,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
     }
 
-	private void validateAlterTarget(Alter<?> obj) {
-		if (getMetadata().getImportedModels().contains(obj.getTarget().getSchema())) {
+	private void validateAlterTarget(Alter<?> obj) throws QueryMetadataException, TeiidComponentException {
+	    Object schemaId = obj.getTarget().getMetadataID();
+	    if (schemaId == null) {
+	        return;
+	    }
+		if (getMetadata().getImportedModels().contains(getMetadata().getName(schemaId))) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_alter", obj.getTarget()), obj.getTarget()); //$NON-NLS-1$
 		}
 	}
@@ -1372,8 +1376,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     @Override
     public void visit(AlterProcedure obj) {
     	GroupSymbol gs = obj.getTarget();
-    	validateAlterTarget(obj);
     	try {
+    	    validateAlterTarget(obj);
 	    	if (!gs.isProcedure() || !getMetadata().isVirtualModel(getMetadata().getModelID(gs.getMetadataID()))) {
 	    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.not_a_procedure", gs), gs); //$NON-NLS-1$
 	    		return;
@@ -1453,13 +1457,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(AlterTrigger obj) {
-    	validateAlterTarget(obj);
-    	if (obj.isAfter()) {
-    	    handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.after_not_alterable"), obj); //$NON-NLS-1$
-    	} else {
-    	    validateGroupSupportsUpdate(obj.getTarget());
-    	}
 		try {
+		    validateAlterTarget(obj);
+	        if (obj.isAfter()) {
+	            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.after_not_alterable"), obj); //$NON-NLS-1$
+	        } else {
+	            validateGroupSupportsUpdate(obj.getTarget());
+	        }
 			if (obj.getDefinition() != null) {
 				Validator.validate(obj.getDefinition(), getMetadata(), this);
 			}			
