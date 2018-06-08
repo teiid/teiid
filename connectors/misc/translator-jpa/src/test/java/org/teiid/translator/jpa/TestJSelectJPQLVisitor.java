@@ -51,7 +51,7 @@ public class TestJSelectJPQLVisitor {
     
     @Test
     public void testProjectionBasedJoin() throws Exception {
-    	helpExecute("select * from customer as c", "SELECT c.customer_id, J_0.store_id, c.first_name, c.last_name, c.email, J_1.address_id, c.active, c.create_date, c.last_update FROM customer AS c INNER JOIN c.store AS J_0 INNER JOIN c.address AS J_1");
+    	helpExecute("select * from customer as c", "SELECT c.customer_id, J_0.store_id, c.first_name, c.last_name, c.email, J_1.address_id, c.active, c.create_date, c.last_update FROM customer AS c LEFT OUTER JOIN c.store AS J_0 LEFT OUTER JOIN c.address AS J_1");
     }
     
     @Test

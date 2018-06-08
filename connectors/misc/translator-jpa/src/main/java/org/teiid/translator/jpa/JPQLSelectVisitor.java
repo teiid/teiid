@@ -120,7 +120,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     	}
     	else {
 	    	for (NamedTable table:this.implicitGroups.values()) {
-    			this.joins.add(new JoinTable(obj, table, JoinType.INNER_JOIN));
+    			this.joins.add(new JoinTable(obj, table, JoinType.LEFT_OUTER_JOIN));
 	    	}
     	}
     }
@@ -133,7 +133,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
 	    		NamedTable parent = findParent(table);
 	    		if (parent != null) {
 	    			if (!alreadyInJoin(table.getMetadataObject().getFullName())) {
-	    				this.joins.add(new JoinTable(parent, table, JoinType.INNER_JOIN));
+	    				this.joins.add(new JoinTable(parent, table, JoinType.LEFT_OUTER_JOIN));
 	    			}
 	    		}
 	    		else {
