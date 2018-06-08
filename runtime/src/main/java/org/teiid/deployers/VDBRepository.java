@@ -382,14 +382,10 @@ public class VDBRepository implements Serializable{
 		}
 	}
 	
-	/**
-	 * Add the listener and return the current set of active vdbs
-	 */
-	public Collection<CompositeVDB> addListener(VDBLifeCycleListener listener) {
+	public void addListener(VDBLifeCycleListener listener) {
 	    lock.lock();
 	    try {
 	        this.listeners.add(listener);
-	        return new ArrayList<CompositeVDB>(vdbRepo.values());
 	    } finally {
 	        lock.unlock();
 	    }
