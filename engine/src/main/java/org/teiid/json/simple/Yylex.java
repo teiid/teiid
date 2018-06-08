@@ -4,6 +4,9 @@
 
 package org.teiid.json.simple;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 class Yylex {
 
   /** This character denotes the end of file */
@@ -605,7 +608,7 @@ int getPosition(){
           }
         case 32: break;
         case 21: 
-          { Double val=Double.valueOf(yytext()); return new Yytoken(Yytoken.TYPE_VALUE, val);
+          { BigDecimal val=new BigDecimal(yytext()); return new Yytoken(Yytoken.TYPE_VALUE, val);
           }
         case 33: break;
         case 1: 
@@ -659,7 +662,11 @@ int getPosition(){
           }
         case 44: break;
         case 2: 
-          { Long val=Long.valueOf(yytext()); return new Yytoken(Yytoken.TYPE_VALUE, val);
+          { 
+              try {
+                  Long val=Long.valueOf(yytext()); return new Yytoken(Yytoken.TYPE_VALUE, val);
+              } catch (NumberFormatException e) {
+                  BigInteger val=new BigInteger(yytext()); return new Yytoken(Yytoken.TYPE_VALUE, val);              }
           }
         case 45: break;
         case 18: 
