@@ -258,30 +258,30 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     	String parentAttributeName;
     	JoinType joinType;
     	
-    	JoinTable(NamedTable customer, NamedTable address, JoinType type) {
-    		this.left = customer;
-    		this.right = address;
+    	JoinTable(NamedTable left, NamedTable right, JoinType type) {
+    		this.left = left;
+    		this.right = right;
     		this.joinType = type;
-    		if (address == null) {
-    			this.parent = customer;
-    			this.parentAttributeName = customer.getName();
+    		if (right == null) {
+    			this.parent = left;
+    			this.parentAttributeName = left.getName();
     		}
     		else {
-	    		for (ForeignKey fk:customer.getMetadataObject().getForeignKeys()){
-	    			if (fk.getReferenceKey().getParent().equals(address.getMetadataObject())) {
-	    				this.parent = customer;
-	    				this.child = address;
+	    		for (ForeignKey fk:left.getMetadataObject().getForeignKeys()){
+	    			if (fk.getReferenceKey().getParent().equals(right.getMetadataObject())) {
+	    				this.parent = left;
+	    				this.child = right;
 	    				this.childAttributeName = fk.getSourceName();
-	    				this.parentAttributeName = customer.getName();
+	    				this.parentAttributeName = left.getName();
 	    			}
 	    		}
 	    		if (this.parent == null) {
-	        		for (ForeignKey fk:address.getMetadataObject().getForeignKeys()){
-	        			if (fk.getReferenceKey().getParent().equals(customer.getMetadataObject())) {
-	            			this.parent = address;
-	            			this.child = customer;
+	        		for (ForeignKey fk:right.getMetadataObject().getForeignKeys()){
+	        			if (fk.getReferenceKey().getParent().equals(left.getMetadataObject())) {
+	            			this.parent = right;
+	            			this.child = left;
 	        				this.childAttributeName = fk.getSourceName();
-	        				this.parentAttributeName = customer.getName();
+	        				this.parentAttributeName = left.getName();
 	        			}
 	        		}    			
 	    		}
