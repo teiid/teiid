@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.simpledb.visitors;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -80,18 +80,18 @@ public class TestSimpleDBMetadataProcessor {
         String ddl = getDDL(props); 
 
         String expectedDDL = "CREATE FOREIGN TABLE G1 (\n" + 
-        		"\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" + 
-        		"\te1 string,\n" + 
-        		"\te2 string,\n" + 
-        		"\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" + 
-        		") OPTIONS (UPDATABLE TRUE);\n" + 
-        		"\n" + 
-        		"CREATE FOREIGN TABLE G2 (\n" + 
-        		"\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" + 
-        		"\te1 string,\n" + 
-        		"\te2 string[],\n" + 
-        		"\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" + 
-        		") OPTIONS (UPDATABLE TRUE);";
+                "\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" + 
+                "\te1 string OPTIONS (NAMEINSOURCE '`e1`'),\n" + 
+                "\te2 string OPTIONS (NAMEINSOURCE '`e2`'),\n" + 
+                "\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" + 
+                ") OPTIONS (NAMEINSOURCE '`G1`', UPDATABLE TRUE);\n" + 
+                "\n" + 
+                "CREATE FOREIGN TABLE G2 (\n" + 
+                "\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" + 
+                "\te1 string OPTIONS (NAMEINSOURCE '`e1`'),\n" + 
+                "\te2 string[] OPTIONS (NAMEINSOURCE '`e2`'),\n" + 
+                "\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" + 
+                ") OPTIONS (NAMEINSOURCE '`G2`', UPDATABLE TRUE);";
 
         assertEquals(expectedDDL, ddl);
     }    
