@@ -318,6 +318,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					TextColumn col = table.getColumns().get(output);
 					String val = null;
 					int index = output;
+					boolean missing = false;
 					
 					if (col.isOrdinal()) {
 						if (rowNumber > Integer.MAX_VALUE) {
@@ -331,9 +332,14 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 						vals = this.parentLines.get(col.getSelector());
 						index = col.getPosition() - 1;
 					} else if (nameIndexes != null) {
-						index = nameIndexes.get(col.getName());
+						Integer headerIndex = nameIndexes.get(col.getName());
+						if (headerIndex != null) {
+						    index = headerIndex;
+						} else {
+						    missing = true;
+						}
 					}
-					if (vals == null || index >= vals.size()) {
+					if (vals == null || index >= vals.size() || missing) {
 						//throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
 						tuple.add(null);
 						continue;
@@ -477,7 +483,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 	}
 
-	private void processHeader(List<String> line) throws TeiidProcessingException {
+	private void processHeader(List<String> line) {
 		nameIndexes = new HashMap<String, Integer>();
 		this.lineWidth = DataTypeManager.MAX_STRING_LENGTH * line.size();
 		for (String string : line) {
@@ -496,7 +502,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			}
 			Integer index = nameIndexes.get(name);
 			if (index == null) {
-				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30181, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30181, col.getName(), systemId));
+			    getContext().addWarning(new TeiidProcessingException(QueryPlugin.Event.TEIID30181, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30181, col.getName(), systemId)));
 			}
 			nameIndexes.put(col.getName(), index);
 		}

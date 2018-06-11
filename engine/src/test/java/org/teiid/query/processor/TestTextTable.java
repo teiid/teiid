@@ -258,10 +258,10 @@ public class TestTextTable {
         process(sql, expected);
     }
 	
-	@Test(expected=TeiidProcessingException.class) public void testHeaderError() throws Exception {
-    	String sql = "select * from texttable('notc1,notc2' COLUMNS c1 string, c2 string HEADER) x"; //$NON-NLS-1$
+	@Test public void testHeaderError() throws Exception {
+    	String sql = "select * from texttable('notc1,notc2\n1,2' COLUMNS c1 string, c2 string HEADER) x"; //$NON-NLS-1$
     	
-        List<?>[] expected = new List<?>[] {};    
+        List<?>[] expected = new List<?>[] {Arrays.asList(null, null)};    
     
         process(sql, expected);
     }
