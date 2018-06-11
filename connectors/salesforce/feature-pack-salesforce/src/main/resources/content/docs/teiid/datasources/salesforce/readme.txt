@@ -4,7 +4,7 @@ In Teiid, for Salesforce datasource a JCA connector is provided and deployed at 
 salesforce datasource connection edit the "standalone-teiid.xml" file or "doamin-teiid.xml" file and add 
 the contents of the salesforce.xml or salesforce-xx.xml under "resource-adapters" subsystem section.
 
-NOTE: salesforce-xx.xml uses the newer salesforce API version xx, where as salesforce.xml uses version 22
+NOTE: salesforce-xx.xml uses the newer salesforce API version xx, where as salesforce.xml uses version 34
 
 Option 2:
 

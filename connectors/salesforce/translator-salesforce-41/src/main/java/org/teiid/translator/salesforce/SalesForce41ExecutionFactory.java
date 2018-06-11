@@ -19,23 +19,8 @@
 package org.teiid.translator.salesforce;
 
 import org.teiid.translator.Translator;
-import org.teiid.translator.salesforce.SalesForceExecutionFactory;
-
-import com.sforce.soap.partner.QueryResult;
-import com.sforce.soap.partner.sobject.SObject;
 
 @Translator(name="salesforce-41", description="A translator for Salesforce With API version 41")
 public class SalesForce41ExecutionFactory extends SalesForceExecutionFactory {
     
-    /*
-     * Handles an api difference with {@link QueryResult}.setRecords
-     */
-    @Override
-    public QueryResult buildQueryResult(SObject[] results) {
-        QueryResult result = new QueryResult();
-        result.setRecords(results);         
-        result.setSize(results.length);
-        result.setDone(true);
-        return result;
-    }
 }
