@@ -39,6 +39,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
 import com.amazonaws.services.simpledb.model.*;
+import com.amazonaws.services.simpledb.util.SimpleDBUtils;
 
 public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBConnection {
     private AmazonSimpleDBClient client;
@@ -87,7 +88,7 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
         DomainMetadataRequest domainMetadataRequest = new DomainMetadataRequest(domainName);
         DomainMetadataResult metadataResult = client.domainMetadata(domainMetadataRequest);
         int attributesCount = metadataResult.getAttributeNameCount();
-        SelectResult selectResult = client.select(new SelectRequest("SELECT * FROM " + domainName)); //$NON-NLS-1$
+        SelectResult selectResult = client.select(new SelectRequest("SELECT * FROM " + SimpleDBUtils.quoteName(domainName))); //$NON-NLS-1$
         return getAttributeNamesFromSelectResult(selectResult, attributesCount);
     }
 
