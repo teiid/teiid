@@ -14,6 +14,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
@@ -66,7 +68,14 @@ public class SimpleDbAPIClassTest {
         items.add(new Item("1", Arrays.asList(new Attribute("c", "d"), new Attribute("a", "b"))));
         stub(result.getItems()).toReturn(items);
         when(metadataResult.getAttributeNameCount()).thenReturn(2);
-        when(client.select(any(SelectRequest.class))).thenReturn(result);
+        when(client.select(any(SelectRequest.class))).thenAnswer(new Answer<SelectResult>() {
+            @Override
+            public SelectResult answer(InvocationOnMock invocation)
+                    throws Throwable {
+                assertEquals("SELECT * FROM `x`", ((SelectRequest)invocation.getArguments()[0]).getSelectExpression());
+                return result;
+            }
+        });
         when(client.domainMetadata(any(DomainMetadataRequest.class))).thenReturn(metadataResult);
 
         assertEquals("c", simpleDbApi.getAttributeNames("x").iterator().next().getName());
