@@ -24,10 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,19 +37,19 @@ import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 
 import com.sforce.ws.ConnectorConfig;
-import com.sforce.ws.MessageHandler;
-import com.sforce.ws.MessageHandlerWithHeaders;
 import com.sforce.ws.tools.VersionInfo;
-import com.sforce.ws.transport.JdkHttpTransport;
+import com.sforce.ws.transport.LimitingInputStream;
+import com.sforce.ws.transport.LimitingOutputStream;
+import com.sforce.ws.transport.Transport;
 import com.sforce.ws.util.Base64;
 import com.sforce.ws.util.FileUtil;
 
-public class SalesforceCXFTransport extends JdkHttpTransport {
+@SuppressWarnings("nls")
+public class SalesforceCXFTransport implements Transport {
     private ByteArrayOutputStream payload = new ByteArrayOutputStream();
     private boolean successful;
     private SalesforceConnectorConfig config;
     private WebClient client;
-    private URL url;
 
     public void setConfig(ConnectorConfig config) {
         this.config = (SalesforceConnectorConfig)config;
@@ -64,7 +61,6 @@ public class SalesforceCXFTransport extends JdkHttpTransport {
             soapAction = "";
         }
 
-        this.url = new URL(uri);
         HashMap<String, String> header = new HashMap<String, String>();
 
         header.put("SOAPAction", "\"" + soapAction + "\"");
@@ -94,18 +90,13 @@ public class SalesforceCXFTransport extends JdkHttpTransport {
         }
 
         if (config.isTraceMessage()) {
-            output = new TeeOutputStream(output);
-        }
-
-        if (config.hasMessageHandlers()) {
-            output = new MessageHandlerOutputStream(output);
+            output = config.teeOutputStream(output);
         }
 
         return output;
     }
 
-    private OutputStream connectRaw(String uri, HashMap<String, String> httpHeaders, boolean enableCompression)
-            throws IOException {
+    private OutputStream connectRaw(String uri, HashMap<String, String> httpHeaders, boolean enableCompression) {
         
         if (config.isTraceMessage()) {
             config.getTraceStream().println( "WSC: Creating a new connection to " + uri + " Proxy = " +
@@ -198,54 +189,36 @@ public class SalesforceCXFTransport extends JdkHttpTransport {
             byte[] bytes = FileUtil.toBytes(in);
             in = new ByteArrayInputStream(bytes);
 
-            if (config.hasMessageHandlers()) {
-                Iterator<MessageHandler> it = config.getMessagerHandlers();
-                while(it.hasNext()) {
-                    MessageHandler handler = it.next();
-                    if (handler instanceof MessageHandlerWithHeaders) {
-                        ((MessageHandlerWithHeaders) handler).handleResponse(url, bytes, modify(response.getHeaders()));
-                    } else {
-                        handler.handleResponse(url, bytes);
-                    }
-                }
-            }
-
             if (config.isTraceMessage()) {
                 MultivaluedMap<String, Object> headers = response.getHeaders();
-                for (Map.Entry header : headers.entrySet()) {
+                for (Map.Entry<String, List<Object>> header : headers.entrySet()) {
                     config.getTraceStream().print(header.getKey());
                     config.getTraceStream().print("=");
                     config.getTraceStream().println(header.getValue());
                 }
                 
-                new TeeInputStream(config, bytes);
+                config.teeInputStream(bytes);
             }
         }
 
         return in;
     }
 
-    private Map<String, List<String>> modify(MultivaluedMap<String, Object> orig) {
-        
-        HashMap<String, List<String>> modified = new HashMap<String, List<String>>();
-        for (String key:orig.keySet()) {
-            Object anObj = orig.get(key);
-            List<String> modifiedList = new ArrayList<String>();
-            if (anObj instanceof List<?>) {
-                List<?> list = (List<?>)anObj;
-                for (Object o:list) {
-                    modifiedList.add(o.toString());
-                }
-            } else {
-                modifiedList.add(anObj.toString());                
-            }
-            modified.put(key, modifiedList);
-        }
-        return modified;
-    }
-    
     @Override
     public boolean isSuccessful() {
         return successful;
     }
+
+    @Override
+    public OutputStream connect(String endpoint, HashMap<String, String> headers)
+            throws IOException {
+        return connectLocal(endpoint, headers, true);
+    }
+
+    @Override
+    public OutputStream connect(String endpoint,
+            HashMap<String, String> httpHeaders, boolean b) throws IOException {
+        return connectLocal(endpoint, httpHeaders, b);
+    }
 }
+    

@@ -13,6 +13,6 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
-        <module name="com.force.api" slot="22" export="true"/>
+        <module name="com.force.api" slot="34" export="true"/>
     </dependencies>
 </module>
