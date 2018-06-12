@@ -1511,12 +1511,33 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     private void outputDisplayName( String name ) {
-        String[] pathParts = name.split("\\."); //$NON-NLS-1$
-        for (int i = 0; i < pathParts.length; i++) {
-            if (i > 0) {
-                append(Symbol.SEPARATOR);
+        int start = 0;
+        int end = 0;
+        while (true) {
+            end = name.indexOf(Symbol.SEPARATOR, end);
+            if (end == -1) {
+                append(escapeSinglePart(name.substring(start, name.length())));
+                return;
             }
-            append(escapeSinglePart(pathParts[i]));
+            
+            while (end < name.length() - 1 && name.charAt(end + 1) == '.') {
+                end++;
+            }
+            
+            if (start != end) {
+                if (end == name.length() -1) {
+                    end++;
+                }
+                append(escapeSinglePart(name.substring(start, end)));
+                if (end == name.length()) {
+                    return;
+                }
+                end++;
+                start = end;
+                append(Symbol.SEPARATOR);
+            } else {
+                end++;
+            }
         }
     }
 

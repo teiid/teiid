@@ -5307,5 +5307,23 @@ public class TestParser {
     @Test public void testVarcharLength() {
         helpException("select cast('abc' as varchar(0))");
     }
+    
+    @Test public void testNameStartsWithPeriod() throws QueryParserException {
+        String sql = "SELECT * from \".table\"";
+        assertEquals("SELECT * FROM \".table\"", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
+    }
+    
+    @Test public void testNameEndsWithPeriod() throws QueryParserException {
+        String sql = "SELECT * from \"table.\"";
+        assertEquals("SELECT * FROM \"table.\"", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
+    }
+    
+    @Test public void testConsecutivePeriod() throws QueryParserException {
+        String sql = "SELECT * from \"t..able\"";
+        //by our current naming rules this is the same - but as we don't allow . in the schema name it is not correct.
+        assertEquals("SELECT * FROM \"t.\".able", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
+        //ensures a stable parsing
+        assertEquals("SELECT * FROM \"t.\".able", QueryParser.getQueryParser().parseCommand("SELECT * FROM \"t.\".able", ParseInfo.DEFAULT_INSTANCE).toString());
+    }
 
 }
