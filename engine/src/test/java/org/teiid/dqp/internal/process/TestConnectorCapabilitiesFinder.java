@@ -23,6 +23,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -34,6 +35,7 @@ import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -132,5 +134,26 @@ public class TestConnectorCapabilitiesFinder {
     	BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
         assertTrue(bsc.supportsFunction("convert")); //$NON-NLS-1$ 
         assertFalse(bsc.supportsConvert(TypeFacility.RUNTIME_CODES.BIG_DECIMAL, TypeFacility.RUNTIME_CODES.BIG_INTEGER));
+    }
+    
+    @Test public void testCTESupport() throws Exception {
+        final AtomicBoolean bool = new AtomicBoolean(false);
+        ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
+            @Override
+            public boolean supportsCommonTableExpressions() {
+                return bool.get();
+            }
+            @Override
+            public boolean supportsRecursiveCommonTableExpressions() {
+                return true;
+            }
+        };
+        ef.start();
+        BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
+        assertFalse(bsc.supportsCapability(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS));
+        
+        bool.set(true);
+        bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
+        assertTrue(bsc.supportsCapability(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS));
     }
 }

@@ -100,7 +100,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, srcCaps.supportsOrderByNullOrdering());
         tgtCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, srcCaps.supportsBulkUpdate());
         tgtCaps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, srcCaps.supportsCommonTableExpressions());
-        tgtCaps.setCapabilitySupport(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, srcCaps.supportsRecursiveCommonTableExpressions());
+        setSupports(connectorID, tgtCaps, Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, srcCaps.supportsRecursiveCommonTableExpressions(), Capability.COMMON_TABLE_EXPRESSIONS);
         tgtCaps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, srcCaps.supportsElementaryOlapOperations());
         setSupports(connectorID, tgtCaps, Capability.ADVANCED_OLAP, srcCaps.supportsAdvancedOlapOperations(), Capability.ELEMENTARY_OLAP);
         setSupports(connectorID, tgtCaps, Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, srcCaps.supportsWindowOrderByWithAggregates(), Capability.ELEMENTARY_OLAP);
@@ -125,7 +125,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.SUBQUERY_CORRELATED_LIMIT, srcCaps.supportsCorrelatedSubqueryLimit());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, srcCaps.supportsScalarSubqueryProjection());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, srcCaps.supportsLateralJoin());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL_CONDITION, srcCaps.supportsLateralJoin() && srcCaps.supportsLateralJoinCondition());
+        setSupports(connectorID, tgtCaps, Capability.QUERY_FROM_JOIN_LATERAL_CONDITION, srcCaps.supportsLateralJoinCondition(), Capability.QUERY_FROM_JOIN_LATERAL);
         tgtCaps.setCapabilitySupport(Capability.QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE, srcCaps.supportsOnlyLateralJoinProcedure());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_PROCEDURE_TABLE, srcCaps.supportsProcedureTable());
         tgtCaps.setCapabilitySupport(Capability.QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, srcCaps.supportsGroupByMultipleDistinctAggregates());
