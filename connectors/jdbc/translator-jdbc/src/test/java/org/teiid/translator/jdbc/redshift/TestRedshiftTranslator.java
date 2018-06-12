@@ -34,6 +34,7 @@ public class TestRedshiftTranslator {
     public static void setUp() throws TranslatorException {
         TRANSLATOR = new RedshiftExecutionFactory();
         TRANSLATOR.setUseBindVariables(false);
+        TRANSLATOR.setDatabaseVersion(RedshiftExecutionFactory.NINE_3);
         TRANSLATOR.start();
     }
     
@@ -53,6 +54,11 @@ public class TestRedshiftTranslator {
     
     @Test public void testTimezoneFormat() throws Exception {
     	assertFalse(TRANSLATOR.supportsFormatLiteral("hh:MM:ss Z", Format.DATE));
+    }
+    
+    @Test public void testTempTable() throws Exception {
+        assertEquals("create temporary  table foo (COL1 int4, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+        assertEquals("create temporary  table foo (COL1 int4, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(TRANSLATOR, false));
     }
 
 }
