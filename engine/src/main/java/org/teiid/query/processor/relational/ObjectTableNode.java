@@ -234,7 +234,7 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 				}
 				continue;
 			}
-			value = FunctionDescriptor.importValue(value, proColumn.getSymbol().getType());
+			value = FunctionDescriptor.importValue(value, proColumn.getSymbol().getType(), getContext());
 			tuple.add(value);
 		}
 		item = null;

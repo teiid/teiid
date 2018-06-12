@@ -372,7 +372,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				value = i.getStringValue();
 			}
 		}
-		return FunctionDescriptor.importValue(value, type);
+		return FunctionDescriptor.importValue(value, type, context);
 	}
 
 	static private Object getValue(AtomicValue value, CommandContext context) throws XPathException {

@@ -21,6 +21,7 @@ package org.teiid.client.util;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import org.teiid.client.SourceWarning;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
@@ -117,7 +118,7 @@ public class ExceptionUtil {
 		if (perserveStack) {
 			result.setStackTrace(t.getStackTrace());
 		} else {
-			result.setStackTrace(new StackTraceElement[0]);
+			result.setStackTrace(SourceWarning.EMPTY_STACK_TRACE);
 		}
 		return result;
 	}

@@ -25,8 +25,10 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.CoreConstants;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
@@ -199,7 +201,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	 * @param values Values that should match 1-to-1 with the types described in the
 	 * function descriptor
 	 * @param context 
-	 * @param functionTarget TODO
+	 * @param functionTarget the object to invoke the function on
 	 * @param fd Function descriptor describing the name and types of the arguments
 	 * @return Result of invoking the function
 	 */
@@ -279,7 +281,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
             if (context != null && getDeterministic().ordinal() <= Determinism.USER_DETERMINISTIC.ordinal()) {
             	context.setDeterminismLevel(getDeterministic());
             }
-            return importValue(result, getReturnType());
+            return importValue(result, getReturnType(), context);
         } catch(ArithmeticException e) {
     		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getFullName()));
         } catch(InvocationTargetException e) {
@@ -302,7 +304,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         }
     }
 
-	public static Object importValue(Object result, Class<?> expectedType)
+	public static Object importValue(Object result, Class<?> expectedType, CommandContext context)
 			throws ArithmeticException, TransformationException {
 		if (!ALLOW_NAN_INFINITY) {
 			if (result instanceof Double) {
@@ -325,6 +327,11 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 		if (result != null && expectedType == DataTypeManager.DefaultDataClasses.STRING) {
 			String s = (String)result;
 			if (s.length() > DataTypeManager.MAX_STRING_LENGTH) {
+			    if (context != null) {
+			        TeiidProcessingException warning = new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31274, s.length(), DataTypeManager.MAX_STRING_LENGTH));
+			        warning.setStackTrace(SourceWarning.EMPTY_STACK_TRACE);
+                    context.addWarning(warning);
+			    }
 				return s.substring(0, DataTypeManager.MAX_STRING_LENGTH);
 			}
 		}
