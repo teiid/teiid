@@ -43,11 +43,10 @@ import org.teiid.util.Version;
 @Translator(name="db2", description="A translator for IBM DB2 Database")
 public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	
-	public static final Version EIGHT_0 = Version.getVersion("8.0"); //$NON-NLS-1$
 	public static final Version NINE_1 = Version.getVersion("9.1"); //$NON-NLS-1$
 	public static final Version NINE_5 = Version.getVersion("9.5"); //$NON-NLS-1$
+	public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
 
-	public static final Version FIVE_4 = Version.getVersion("5.4"); //$NON-NLS-1$
 	public static final Version SIX_1 = Version.getVersion("6.1"); //$NON-NLS-1$
     private static final String WEEK_ISO = "WEEK_ISO";
 	
@@ -225,6 +224,11 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
             }
             
         };
+    }
+    
+    @Override
+    public boolean supportsRecursiveCommonTableExpressions() {
+        return getVersion().compareTo(TEN_0) >= 0;
     }
 	
 }
