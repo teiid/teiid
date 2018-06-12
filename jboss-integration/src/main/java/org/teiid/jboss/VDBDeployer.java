@@ -199,6 +199,9 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		//ensure that the secondary services have started
 		vdbService.addDependency(TeiidServiceNames.MATVIEW_SERVICE);
         //vdbService.addDependency(TeiidServiceNames.REST_WAR_SERVICE);
+		
+		// REST dependencies
+        vdbService.addDependency(Services.JBOSS_SERVER_CONTROLLER, ModelController.class, vdb.controllerValue);
 				
 		// VDB restart switch, control the vdbservice by adding removing the switch service. If you
 		// remove the service by setting status remove, there is no way start it back up if vdbservice used alone
