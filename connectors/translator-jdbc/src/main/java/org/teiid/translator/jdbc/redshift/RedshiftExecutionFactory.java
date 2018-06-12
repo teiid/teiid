@@ -104,4 +104,9 @@ public class RedshiftExecutionFactory extends PostgreSQLExecutionFactory {
 		return super.convertToken(group);
 	}
 	
+    @Override
+    public String getCreateTemporaryTablePostfix(boolean inTransaction) {
+        return ""; //$NON-NLS-1$ //redshift does not support the ON COMMIT clause
+    }
+	
 }
