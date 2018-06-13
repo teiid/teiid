@@ -29,6 +29,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.TestPreparedStatement;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
@@ -36,6 +37,8 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.processor.proc.CreateCursorResultSetInstruction;
 import org.teiid.query.processor.proc.ProcedurePlan;
@@ -657,7 +660,9 @@ public class TestProcedureRelational {
         // Plan query
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());  
         // Run query
-        TestProcessor.helpProcess(plan, dataManager, expected); 
+        CommandContext context = TestProcessor.createCommandContext();
+        context.setMetadata(RealMetadataFactory.example1Cached());
+        TestProcessor.helpProcess(plan, context, dataManager, expected); 
     }
        
     /*
@@ -813,5 +818,24 @@ public class TestProcedureRelational {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
 
-    
+    @Test public void testProcAsTable3Prepared() throws Exception{
+        String sql = "select param1, param2, e1, e2 from pm1.vsp26 where param1 in (?,?,?) and param2 in ('a', 'b') order by param1, param2"; //$NON-NLS-1$
+
+        // Create expected results
+        List<?>[] expected = new List[] { 
+            Arrays.asList(new Object[] { new Integer(1), "a", "a", new Integer(3)}), //$NON-NLS-1$  //$NON-NLS-2$
+            Arrays.asList(new Object[] { new Integer(1), "b", "b", new Integer(2)}), //$NON-NLS-1$  //$NON-NLS-2$
+            Arrays.asList(new Object[] { new Integer(2), "a", "a", new Integer(3)}), //$NON-NLS-1$  //$NON-NLS-2$
+            Arrays.asList(new Object[] { new Integer(2), "b", "b", new Integer(2)}), //$NON-NLS-1$  //$NON-NLS-2$
+            Arrays.asList(new Object[] { new Integer(3), "a", "a", new Integer(3)}), //$NON-NLS-1$  //$NON-NLS-2$
+        };       
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);   
+
+        List<?> values = Arrays.asList(1, 2, 3);
+        //values = Collections.EMPTY_LIST;
+        TempMetadataAdapter tma = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore());
+        TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, tma, false, RealMetadataFactory.example1VDB());
+    }
+
 }
