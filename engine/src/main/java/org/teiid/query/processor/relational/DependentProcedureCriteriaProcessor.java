@@ -108,7 +108,7 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
                 }
                 parameter = (Reference)compare.getLeftExpression();
             } else {
-                Assertion.failed("Unknown predicate type"); //$NON-NLS-1$
+                Assertion.failed("Unknown predicate type " + crit); //$NON-NLS-1$
             }
 
             validRow = setParam(context, value, nullAllowed, parameter);
