@@ -56,7 +56,7 @@ public class TestPreparedStatement {
 	
 	private static final int SESSION_ID = 6;
 	
-    public static void helpTestProcessing(String preparedSql, List<?> values, List<?>[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, VDBMetaData vdb) throws Exception { 
+    static void helpTestProcessing(String preparedSql, List<?> values, List<?>[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, VDBMetaData vdb) throws Exception { 
     	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false, vdb);
     }
 

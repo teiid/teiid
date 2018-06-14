@@ -20,8 +20,6 @@ package org.teiid.query.processor.relational;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
@@ -31,13 +29,12 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
 
 
 //TODO: consolidate with QueryProcessor
-public class PlanExecutionNode extends SubqueryAwareRelationalNode {
+public class PlanExecutionNode extends RelationalNode {
 
     // Initialization state
     private ProcessorPlan plan;
@@ -181,11 +178,6 @@ public class PlanExecutionNode extends SubqueryAwareRelationalNode {
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
 		return getProcessorPlan().requiresTransaction(transactionalReads);
-    }
-
-    @Override
-    public Collection<? extends LanguageObject> getObjects() {
-        return Collections.emptyList();
     }
     
 }

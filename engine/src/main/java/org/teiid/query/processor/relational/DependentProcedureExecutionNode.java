@@ -18,13 +18,11 @@
 
 package org.teiid.query.processor.relational;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.util.CommandContext;
 
@@ -80,9 +78,7 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
                                           TeiidComponentException, TeiidProcessingException {
 
         if (this.criteriaProcessor == null) {
-            Criteria crit = (Criteria)inputCriteria.clone();
-            crit = QueryRewriter.evaluateAndRewrite(crit, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
-            this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, crit, inputReferences, inputDefaults);
+            this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, (Criteria)inputCriteria.clone(), inputReferences, inputDefaults);
         }
         
         return criteriaProcessor.prepareNextCommand(this.getProcessorPlan().getContext().getVariableContext());
