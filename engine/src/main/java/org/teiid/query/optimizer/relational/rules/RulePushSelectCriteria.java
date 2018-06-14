@@ -41,6 +41,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.AccessPattern;
+import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
@@ -799,27 +800,38 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 			if(placeConvertedSelectNode(critNode, virtualGroup, projectNode, childMap, metadata)) {
                 if (handleSetOp) {
                     PlanNode newSelect = projectNode.getFirstChild();
-                    projectNode.replaceChild(newSelect, newSelect.getFirstChild());
-                    
-                    Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
                     Criteria crit = (Criteria) newSelect.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+                    
+                    if (createdNodes != null || (crit != QueryRewriter.UNKNOWN_CRITERIA && crit != QueryRewriter.FALSE_CRITERIA)) {
+                        //remove if it's not going to cause the tree to prune
+                        projectNode.replaceChild(newSelect, newSelect.getFirstChild());
+                    }
+                        
+                    Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
                     
                     if(newSelect.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)
                             && context != null && CapabilitiesUtil.supportsInlineView(modelID, metadata, capFinder)
                             && CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, modelID, metadata, capFinder, null) ) { 
-                        accessNode.getFirstChild().addAsParent(newSelect);
                         
                         List<Expression> old = (List<Expression>) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
                         
                         //create a project node based upon the created group and add it as the parent of the select
                         PlanNode project = RelationalPlanner.createProjectNode(LanguageObject.Util.deepClone(old, Expression.class));
-                        newSelect.addAsParent(project);
+                        accessNode.getFirstChild().addAsParent(project);
                         
-                        PlanNode newSourceNode = RuleDecomposeJoin.rebuild(new GroupSymbol("intermediate"), null, newSelect.getFirstChild(), metadata, context, projectNode); //$NON-NLS-1$
+                        PlanNode newSourceNode = RuleDecomposeJoin.rebuild(new GroupSymbol("intermediate"), null, project.getFirstChild(), metadata, context, projectNode); //$NON-NLS-1$
                         newSourceNode.setProperty(NodeConstants.Info.INLINE_VIEW, true);
                         
                         accessNode.addGroups(newSourceNode.getGroups());
-                        markDependent(newSelect, accessNode, metadata, capFinder);
+                        
+                        accessNode.setProperty(Info.EST_COL_STATS, null);
+                        
+                        childMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), (List) project.getProperty(NodeConstants.Info.PROJECT_COLS));
+                        
+                        if (!placeConvertedSelectNode(critNode, virtualGroup, project, childMap, metadata)) {
+                            //sanity check, this should always be a valid placement
+                            throw new AssertionError();
+                        }
                     } else {
                         //TODO: see if the predicate should be duplicated for each branch under the access node
                         //or an inline view could be used similar to the above

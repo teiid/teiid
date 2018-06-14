@@ -1338,8 +1338,9 @@ public class NewCalculateCostUtil {
 		        	targets.add(target);
 					DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
 					depExpressions.add(dsc.getExpression());
-					//TODO: we need better handling for set op situations
-					continue;
+					//TODO: we may need better handling for set op situations
+					//for now the strategy is to mark both the union root and the children as targets
+					//continue;
 		        }
 				if (!rpsc.pushAcrossFrame(sourceNode, critNode, metadata, capFinder, null)) {
 					if (target.hasBooleanProperty(Info.MAKE_NOT_DEP)) {
