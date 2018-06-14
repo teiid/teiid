@@ -179,9 +179,9 @@ public final class RuleRaiseNull implements OptimizerRule {
                 NodeEditor.removeChildNode(parentNode, nullNode);
 
                 PlanNode grandParent = parentNode.getParent();
+                PlanNode nestedSetOp = NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
                 
                 if (!isAll) { //ensure that the new child is distinct
-                	PlanNode nestedSetOp = NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
                 	if (nestedSetOp != null) {
                 		nestedSetOp.setProperty(NodeConstants.Info.USE_ALL, false);
                 	} else if (NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE) == null) {
@@ -194,13 +194,19 @@ public final class RuleRaiseNull implements OptimizerRule {
                     parentNode.removeChild(newRoot);
                     return newRoot;
                 }
+                
+                //the old estimates should be considered invalid
+                grandParent.setProperty(Info.EST_CARDINALITY, null);
+                grandParent.setProperty(Info.EST_COL_STATS, null);
 
                 //remove the set op
                 NodeEditor.removeChildNode(grandParent, parentNode);
                 
                 PlanNode sourceNode = NodeEditor.findParent(grandParent.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SET_OP);
-                                
-                if (sourceNode != null) {
+                PlanNode accessNode = NodeEditor.findParent(sourceNode, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE);
+                              
+                //remove the source node only if it doesn't create a situation that is invalid for dependent join processing
+                if (sourceNode != null && (nestedSetOp == null || accessNode == null || !accessNode.hasBooleanProperty(Info.IS_DEPENDENT_SET))) {
                     return RuleMergeVirtual.doMerge(sourceNode, rootNode, false, metadata, capFinder);
                 }
                 return null;
