@@ -356,4 +356,22 @@ public class TestSqlServerConversionVisitor {
         
         TranslationHelper.helpTestVisitor("create foreign table tbl (txt string options (native_type 'ntext'))", input, output, trans);
     }
+    
+    @Test public void testRecursiveCTEWithStringLiteral() throws Exception {
+        String input = "WITH tmp_cte(id, name, fk, fkname, lvl) AS \n" + 
+                "    (SELECT id, name, fk, cast(NULL as string) as fkname, 0 as lvl \n" + 
+                "            FROM cte_source WHERE fk IS NULL \n" + 
+                "     UNION ALL \n" + 
+                "     SELECT e.id, e.name, e.fk, ecte.name as fkname, lvl + 1 as lvl \n" + 
+                "           FROM cte_source AS e \n" + 
+                "           INNER JOIN tmp_cte AS ecte ON ecte.id = e.fk\n" + 
+                "     ) \n" + 
+                "SELECT * FROM tmp_cte order by lvl"; //$NON-NLS-1$
+        String output = "WITH tmp_cte (id, name, fk, fkname, lvl) AS (SELECT cast(cte_source.id AS int), cte_source.name, cast(cte_source.fk AS int), cast(NULL AS varchar(4000)) AS fkname, cast(0 AS int) AS lvl FROM cte_source WHERE cte_source.fk IS NULL UNION ALL SELECT cast(e.id AS int), e.name, cast(e.fk AS int), cast(ecte.name AS varchar(4000)) AS fkname, cast((ecte.lvl + 1) AS int) AS lvl FROM cte_source e INNER JOIN tmp_cte ecte ON ecte.id = e.fk) "
+                + "SELECT tmp_cte.id, tmp_cte.name, tmp_cte.fk, tmp_cte.fkname, tmp_cte.lvl FROM tmp_cte ORDER BY tmp_cte.lvl";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor("create foreign table cte_source (id integer, name string options (native_type 'varchar(255)'), fk integer)", input,
+                output, trans);
+    }
+       
 }

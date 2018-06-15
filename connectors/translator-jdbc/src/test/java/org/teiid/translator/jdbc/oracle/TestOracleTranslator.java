@@ -357,6 +357,24 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void testRecursiveCTEWithStringLiteral() throws Exception {
+        String input = "WITH tmp_cte(id, name, fk, fkname, lvl) AS \n" + 
+                "    (SELECT id, name, fk, cast(NULL as string) as fkname, 0 as lvl \n" + 
+                "            FROM cte_source WHERE fk IS NULL \n" + 
+                "     UNION ALL \n" + 
+                "     SELECT e.id, e.name, e.fk, ecte.name as fkname, lvl + 1 as lvl \n" + 
+                "           FROM cte_source AS e \n" + 
+                "           INNER JOIN tmp_cte AS ecte ON ecte.id = e.fk\n" + 
+                "     ) \n" + 
+                "SELECT * FROM tmp_cte order by lvl"; //$NON-NLS-1$
+        String output = "WITH tmp_cte (id, name, fk, fkname, lvl) AS (SELECT cte_source.id, cte_source.name, cte_source.fk, NULL AS fkname, 0 AS lvl FROM cte_source WHERE cte_source.fk IS NULL UNION ALL SELECT e.id, e.name, e.fk, ecte.name AS fkname, (ecte.lvl + 1) AS lvl FROM cte_source e INNER JOIN tmp_cte ecte ON ecte.id = e.fk) "
+                + "SELECT tmp_cte.id, tmp_cte.name, tmp_cte.fk, tmp_cte.fkname, tmp_cte.lvl FROM tmp_cte ORDER BY tmp_cte.lvl";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor("create foreign table cte_source (id integer, name string options (native_type 'varchar(255)'), fk integer)", input,
+                output, TRANSLATOR);
+    }
+    
     @Test public void testRowLimit1() throws Exception {
         String input = "select intkey from bqt1.smalla limit 10, 0"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) VIEW_FOR_LIMIT WHERE ROWNUM <= 10) WHERE ROWNUM_ > 10"; //$NON-NLS-1$
@@ -1317,4 +1335,5 @@ public class TestOracleTranslator {
             null,
             output);
     }
+
 }
