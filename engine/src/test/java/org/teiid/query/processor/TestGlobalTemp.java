@@ -80,4 +80,28 @@ public class TestGlobalTemp {
         harness.execute("select count(*) from tabglob", new List<?>[] {Arrays.asList(2)});
     }
 	
+	@Test public void testTempInFunctionAndProcedure() throws Exception {
+	    String ddl = "CREATE GLOBAL TEMPORARY TABLE teiidtemp(val integer) OPTIONS (UPDATABLE 'TRUE');\n" + 
+	            " \n" + 
+	            "            CREATE VIRTUAL FUNCTION f1() RETURNS string AS\n" + 
+	            "            BEGIN\n" + 
+	            "                INSERT INTO teiidtemp(val) VALUES (1);\n" + 
+	            "                DECLARE string v1 = SELECT 'default'||COUNT(val) FROM teiidtemp;\n" + 
+	            "                RETURN v1;\n" + 
+	            "            END;\n" + 
+	            "        CREATE VIRTUAL PROCEDURE p1() RETURNS (v1 string) AS\n" + 
+	            "            BEGIN\n" + 
+	            "                INSERT INTO teiidtemp(val) VALUES (1);\n" + 
+	            "                SELECT 'default'||COUNT(val) FROM teiidtemp;\n" + 
+	            "            END;";
+	    
+	    TempTableTestHarness harness = new TempTableTestHarness();
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        HardcodedDataManager dm = new HardcodedDataManager();
+        harness.setUp(metadata, dm);
+        harness.execute("INSERT INTO teiidtemp(val) VALUES (1)", new List<?>[] {Arrays.asList(1)});
+        harness.execute("SELECT f1()", new List<?>[] {Arrays.asList("default2")});
+        harness.execute("SELECT a.v1 FROM (CALL p1()) a", new List<?>[] {Arrays.asList("default3")});
+	}
+	
 }

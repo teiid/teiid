@@ -529,7 +529,7 @@ public class TempTableStore {
 				Create create = GlobalTableStoreImpl.getCreateCommand(group, false, metadata);
 				tts.addTempTable(tempTableID, create, buffer, true, context);
 			}
-			return getTempTable(tempTableID, command, buffer, delegate, forUpdate, context);
+			return tts.getTempTable(tempTableID, command, buffer, delegate, forUpdate, context);
 		}
     	TempTable tempTable = getTempTable(tempTableID, command, buffer, delegate, forUpdate, context);
     	if (tempTable != null) {
