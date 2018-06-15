@@ -1638,8 +1638,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         }
         if (obj instanceof ColumnReference) {
             ColumnReference cr = (ColumnReference)obj;
-            return cr.getMetadataObject() == null 
-                    || (StringUtil.startsWithIgnoreCase(cr.getMetadataObject().getNativeType(), "N")); //$NON-NLS-1$
+            return cr.getMetadataObject() != null 
+                    && (StringUtil.startsWithIgnoreCase(cr.getMetadataObject().getNativeType(), "N")); //$NON-NLS-1$
             
         }
         if (obj.getType() == TypeFacility.RUNTIME_TYPES.CLOB) {
