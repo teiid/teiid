@@ -584,7 +584,7 @@ public class DQPCore implements DQP {
 	}	
 	
     void logMMCommand(RequestWorkItem workItem, Event status, Long rowCount, Long cpuTime) {
-    	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO))
+    	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL))
     			|| (status == Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE))) {
     		return;
     	}
