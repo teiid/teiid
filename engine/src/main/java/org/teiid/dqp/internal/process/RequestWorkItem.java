@@ -90,6 +90,9 @@ import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.GeneratedKeysImpl;
 import org.teiid.query.util.Options;
+import org.teiid.query.util.TeiidTracingUtil;
+
+import io.opentracing.Span;
 
 /**
  * Compiles results and other information for the client.  There is quite a bit of logic
@@ -228,6 +231,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	private long planningEnd;
 	
 	private ThreadCpuTimer timer = new ThreadCpuTimer();
+
+    private Span span;
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
@@ -268,6 +273,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		
 	@Override
 	public void run() {
+	    io.opentracing.Scope scope = null;
+	    if (this.span != null) {
+	        scope = TeiidTracingUtil.getInstance().activateSpan(this.span);
+	    }
 		hasThread = true;
 		timer.start();
 		LogManager.putMdc(REQUEST_KEY, requestID.toString());
@@ -300,6 +309,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			timer.stop();
 			LogManager.removeMdc(REQUEST_KEY);
 			hasThread = false;
+			if (scope != null) {
+			    scope.close();
+			}
 		}
 	}
 
@@ -1256,6 +1268,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     }
     
     public void requestMore(int batchFirst, int batchLast, ResultsReceiver<ResultsMessage> receiver) {
+        if (span != null) {
+            span.log("requested more results"); //$NON-NLS-1$
+        }
     	this.requestResults(batchFirst, batchLast, receiver);
     	this.doMoreWork(); 
     }
@@ -1400,5 +1415,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     public RequestID getRequestID() {
 		return requestID;
 	}
+
+    public void setTracingSpan(Span span) {
+        this.span = span;
+    }
+    
+    public Span getTracingSpan() {
+        return this.span;
+    }
 
 }

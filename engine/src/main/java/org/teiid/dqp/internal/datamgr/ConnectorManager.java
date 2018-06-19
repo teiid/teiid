@@ -23,7 +23,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.InitialContext;
@@ -45,11 +47,17 @@ import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.util.TeiidTracingUtil;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+
+import io.opentracing.Span;
+import io.opentracing.log.Fields;
+import io.opentracing.tag.Tags;
 
 
 /**
@@ -61,6 +69,7 @@ public class ConnectorManager  {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
 
 	private final String translatorName;
+	private String translatorType;
 	private final String connectionName;
 	private final String jndiName;
 	private final List<String> id;
@@ -94,6 +103,10 @@ public class ConnectorManager  {
     	this.executionFactory = ef;
     	this.id = Arrays.asList(translatorName, connectionName);
     	if (ef != null) {
+    	    Translator annotation = ef.getClass().getAnnotation(Translator.class);
+            if (annotation != null) {
+                this.translatorType = annotation.name();
+            }
     	    ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
     	    try {
     	        Thread.currentThread().setContextClassLoader(ef.getClass().getClassLoader());
@@ -262,15 +275,15 @@ public class ConnectorManager  {
 		}
     }
     
-    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Long finalRowCnt, Long cpuTime) {
-    	logSRCCommand(qr, context, cmdStatus, finalRowCnt, cpuTime, null);
+    void logSRCCommand(ConnectorWorkItem cwi, AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Long finalRowCnt, Long cpuTime) {
+    	logSRCCommand(cwi, qr, context, cmdStatus, finalRowCnt, cpuTime, null);
     }
 
     /**
      * Add begin point to transaction monitoring table.
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
-    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Long finalRowCnt, Long cpuTime, Object[] command) {
+    void logSRCCommand(ConnectorWorkItem cwi, AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Long finalRowCnt, Long cpuTime, Object[] command) {
     	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING_SOURCE, MessageLevel.DETAIL)) {
     		return;
     	}
@@ -293,11 +306,39 @@ public class ConnectorManager  {
         CommandLogMessage message = null;
         if (cmdStatus == Event.NEW) {
             message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), sid.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, sqlStr, context);
+            Span span = TeiidTracingUtil.getInstance().buildSourceSpan(message, translatorType);
+            cwi.setTracingSpan(span);
         } 
         else {
             message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), sid.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, finalRowCnt, cmdStatus, context, cpuTime);
             if (cmdStatus == Event.SOURCE) {
             	message.setSourceCommand(command);
+            }
+            Span span = cwi.getTracingSpan();
+            if (span != null) {
+                switch (cmdStatus) {
+                case SOURCE:
+                    if (command != null) {
+                        Map<String, String> map = new HashMap<String, String>();
+                        map.put("source-command", Arrays.toString(command)); //$NON-NLS-1$
+                        span.log(map);
+                    }
+                    break;
+                case CANCEL:
+                    span.log("cancel"); //$NON-NLS-1$
+                    break;
+                case END:
+                    span.finish();
+                    break;
+                case ERROR:
+                    Tags.ERROR.set(span, true);
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put(Fields.EVENT, "error"); //$NON-NLS-1$
+                    span.log(map);
+                    break;
+                default:
+                    break;
+                }
             }
         }      
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING_SOURCE, message);

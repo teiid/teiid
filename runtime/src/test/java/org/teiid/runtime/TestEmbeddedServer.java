@@ -76,10 +76,14 @@ import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.jdbc.SQLStates;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidSQLException;
+import org.teiid.jdbc.tracing.GlobalTracerInjector;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.CollectorVisitor;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.Logger;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
@@ -87,6 +91,7 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.util.TeiidTracingUtil;
 import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -100,6 +105,11 @@ import org.teiid.translator.UpdateExecution;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.WireProtocol;
+
+import io.opentracing.Scope;
+import io.opentracing.mock.MockSpan;
+import io.opentracing.mock.MockTracer;
+import io.opentracing.util.GlobalTracer;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
@@ -2469,6 +2479,96 @@ public class TestEmbeddedServer {
         }
         rs.close();
         assertEquals(100, count);
+    }
+    
+    @Test public void testOpenTracing() throws Exception {
+        MockTracer tracer = new MockTracer();
+        GlobalTracerInjector.setTracer(tracer);
+        TeiidTracingUtil.getInstance().setWithActiveSpanOnly(true);
+        Logger logger = Mockito.mock(Logger.class);
+        Mockito.stub(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)).toReturn(true);
+        Mockito.stub(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING_SOURCE, MessageLevel.DETAIL)).toReturn(true);
+        Logger old = org.teiid.logging.LogManager.setLogListener(logger);
+        try {
+            SocketConfiguration s = new SocketConfiguration();
+            InetSocketAddress addr = new InetSocketAddress(0);
+            s.setBindAddress(addr.getHostName());
+            s.setPortNumber(addr.getPort());
+            s.setProtocol(WireProtocol.teiid);
+            EmbeddedConfiguration config = new EmbeddedConfiguration();
+            config.addTransport(s);
+            es.start(config);
+            
+            HardCodedExecutionFactory hcef = new HardCodedExecutionFactory();
+            hcef.addData("SELECT t1.col_t1 FROM t1", Arrays.asList(Arrays.asList("a")));
+            hcef.addData("SELECT t2.col_t2 FROM t2", Arrays.asList(Arrays.asList("b")));
+            es.addTranslator("y", hcef);
+            
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("y");
+            mmd.addSourceMetadata("ddl", "create foreign table t1(col_t1 varchar) options (cardinality 20); "
+                    + "create foreign table t2(col_t2 varchar) options (cardinality 20);");
+            mmd.addSourceMapping("y", "y", null);
+            es.deployVDB("x", mmd);
+            Connection c = es.getDriver().connect("jdbc:teiid:x;", null);
+            Statement stmt = c.createStatement();
+            
+            ResultSet rs = stmt.executeQuery("select * from t1 union all select * from t2");
+            while (rs.next()) {
+                
+            }
+            stmt.close();
+            
+            List<MockSpan> spans = tracer.finishedSpans();
+            assertEquals(0, spans.size());
+            
+            try (Scope ignored = tracer.buildSpan("some operation").startActive(true)) {
+                assertNotNull(tracer.activeSpan());
+                stmt = c.createStatement();
+                //execute with an active span
+                rs = stmt.executeQuery("select * from t1 union all select * from t2");
+                while (rs.next()) {
+                    
+                }
+                stmt.close();
+            }
+            
+            spans = tracer.finishedSpans();
+            
+            //parent span started here, and a child span for the query execution, 2 source queries 
+            assertEquals(spans.toString(), 4, spans.size());
+            
+            tracer.reset();
+            
+            //remote propagation
+            Connection remote = TeiidDriver.getInstance().connect("jdbc:teiid:x@mm://"+addr.getHostName()+":"+es.transports.get(0).getPort(), null);
+            
+            try (Scope ignored = tracer.buildSpan("some remote operation").startActive(true)) {
+                assertNotNull(tracer.activeSpan());
+                stmt = remote.createStatement();
+                //execute with an active span
+                rs = stmt.executeQuery("select * from t1 union all select * from t2");
+                while (rs.next()) {
+                    
+                }
+                stmt.close();
+            }
+            
+            //this isn't ideal, but close is an async event
+            for (int i = 0; i < 1000; i++) {
+                spans = tracer.finishedSpans();
+                if (spans.size() == 2) {
+                    break;
+                }
+                Thread.sleep(10);
+            }
+            
+            //parent span started here, and a child span for the query execution, 2 source queries 
+            assertEquals(4, spans.size());
+        } finally {
+            GlobalTracerInjector.setTracer(GlobalTracer.get());
+            org.teiid.logging.LogManager.setLogListener(old);
+        }
     }
 
 }

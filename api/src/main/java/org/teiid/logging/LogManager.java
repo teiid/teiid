@@ -374,14 +374,16 @@ public final class LogManager {
     	logListener.log(msgLevel, context, e, message);
     }
 
-    public static void setLogListener(Logger listener) {
-    	logListener.shutdown();
+    public static Logger setLogListener(Logger listener) {
+    	Logger old = logListener;
+        logListener.shutdown();
     	if (listener != null) {
     		logListener = listener;
     	}
     	else {
     		logListener = new JavaLogger();
     	}
+    	return old;
     }
     	
     /**
