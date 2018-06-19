@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -36,6 +37,7 @@ import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -264,5 +266,24 @@ public class TestCompositeVDB {
 		vdb = repo.getLiveVDB("ex");
 		assertEquals(1, vdb.getDataPolicyMap().get("x").getSchemas().size());
 	}
+	
+    @Test public void testFunctionValidationError() throws Exception {
+    	VDBRepository repo = new VDBRepository();
+	    repo.start();
+	    repo.setSystemStore(RealMetadataFactory.example1Cached().getMetadataStore());
+		repo.setSystemFunctionManager(RealMetadataFactory.SFM);
+		MetadataStore metadataStore = new MetadataStore();
+		RealMetadataFactory.createPhysicalModel("x", metadataStore);
+		FunctionMethod method = MetadataFactory.createFunctionFromMethod("getProperty", System.class.getMethod("getProperty", String.class));
+		method.setInvocationClass("?");
+		method.setMethod(null);
+		metadataStore.getSchema("x").addFunction(method);
+		VDBMetaData vdb = createVDBMetadata(metadataStore, "bqt");
+		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
+		cmr.addConnectorManager("x", new ConnectorManager("y", "z"));
+		repo.addVDB(vdb, metadataStore, null, null, cmr);
+		repo.finishDeployment(vdb.getName(), vdb.getVersion());
+		assertEquals(vdb.getStatus(), Status.FAILED);
+	}	
 	
 }

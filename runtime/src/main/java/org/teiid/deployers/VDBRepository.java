@@ -295,7 +295,6 @@ public class VDBRepository implements Serializable{
 			}
 			return;
 		}
-		v.metadataLoadFinished();
 		synchronized (metadataAwareVDB) {
 			try {
 				try {
