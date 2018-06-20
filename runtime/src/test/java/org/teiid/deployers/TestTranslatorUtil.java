@@ -88,7 +88,7 @@ public class TestTranslatorUtil {
                 importProperties.add(prop);
             }
         }
-        assertEquals(1, importProperties.size());
+        assertEquals(7, importProperties.size());
         assertEquals("importer.ImportProperty", importProperties.get(0).name);
         assertEquals("java.lang.String", importProperties.get(0).dataType);
         assertEquals(false, importProperties.get(0).required);

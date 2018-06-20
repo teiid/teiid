@@ -27,7 +27,6 @@ import javax.resource.ResourceException;
 
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.AccessibleByteArrayOutputStream;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
@@ -94,7 +93,7 @@ public class NativeMetadataRepository extends MetadataRepository {
 			executionFactory.closeConnection(connection, connectionFactory);
 		}
 		
-		if (PropertiesUtils.getBooleanProperty(factory.getModelProperties(), IMPORT_PUSHDOWN_FUNCTIONS, false)) { //$NON-NLS-1$
+		if (factory.isImportPushdownFunctions()) {
 			List<FunctionMethod> functions = executionFactory.getPushDownFunctions();
 			//create a copy and add to the schema
 			if (!functions.isEmpty()) {

@@ -225,7 +225,7 @@ public class IntegrationTestDeployment {
         }
 
         props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.IMPORT);
-        assertEquals(2, props.size());
+        assertEquals(8, props.size());
         for (PropertyDefinition p: props) {
             if (p.getName().equals("importer.ColumnNamePattern")) {
                 assertEquals("java.lang.String", p.getPropertyTypeClassName());
