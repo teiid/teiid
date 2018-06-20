@@ -18,7 +18,9 @@
 
 package org.teiid.jdbc.tracing;
 
-import org.teiid.core.TeiidException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.teiid.core.util.ReflectionHelper;
 
 /**
@@ -30,13 +32,16 @@ public class TracingHelper {
         String getSpanContext();
     }
     
+    private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+    
     private static Injector INJECTOR;
     
     public static String getSpanContext() {
         if (INJECTOR == null) {
             try {
                 INJECTOR = (Injector) ReflectionHelper.create("org.teiid.jdbc.tracing.GlobalTracerInjector", null, TracingHelper.class.getClassLoader()); //$NON-NLS-1$
-            } catch (TeiidException e) {
+            } catch (Throwable e) { //must catch both Error and Exception
+                logger.log(Level.FINE, "Unable to load opentracing libraries, propagation will not be used", e); //$NON-NLS-1$
             }
             if (INJECTOR == null) {
                 INJECTOR = new Injector() {
