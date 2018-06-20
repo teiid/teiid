@@ -74,10 +74,14 @@ import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.TeiidTracingUtil;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.*;
 import org.teiid.translator.ExecutionFactory.TransactionSupport;
 import org.teiid.util.XMLInputStream;
+
+import io.opentracing.Scope;
+import io.opentracing.Span;
 
 public class ConnectorWorkItem implements ConnectorWork {
 	
@@ -122,6 +126,8 @@ public class ConnectorWorkItem implements ConnectorWork {
 	private ThreadCpuTimer timer = new ThreadCpuTimer();
 	
 	private boolean unmodifiableList;
+	
+	private Span span;
 	
 	ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
         this.id = message.getAtomicRequestID();
@@ -201,7 +207,7 @@ public class ConnectorWorkItem implements ConnectorWork {
             	Execution ex = this.execution;
             	if(ex != null) {
             		if (abnormal) {
-                		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1l, null);
+                		this.manager.logSRCCommand(this, this.requestMsg, this.securityContext, Event.CANCEL, -1l, null);
             		}
     	            ex.cancel();
     	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
@@ -226,13 +232,20 @@ public class ConnectorWorkItem implements ConnectorWork {
     		throw handleError(this.conversionError);
     	}
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing MORE request"}); //$NON-NLS-1$
+    	Scope scope = null;
     	try {
         	timer.start();
+        	if (span != null) {
+        	    scope = TeiidTracingUtil.getInstance().activateSpan(span);
+        	}
     		return handleBatch();
     	} catch (Throwable t) {
     		throw handleError(t);
     	} finally {
     		timer.stop();
+    		if (scope != null) {
+    		    scope.close();
+    		}
     	}
     }
     
@@ -246,8 +259,12 @@ public class ConnectorWorkItem implements ConnectorWork {
     		return; //already closed
     	}
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing Close :", this.requestMsg.getCommand()}); //$NON-NLS-1$
+    	Scope scope = null;
         try {
         	timer.start();
+        	if (this.span != null) {
+        	    scope = TeiidTracingUtil.getInstance().activateSpan(this.span);
+        	}
 	        if (execution != null) {
 	            execution.close();
 	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed execution"}); //$NON-NLS-1$
@@ -268,7 +285,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 			    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         	}
         	Long time = timer.stop();
-            manager.logSRCCommand(this.requestMsg, this.securityContext, Event.END, this.rowCount, time);
+            manager.logSRCCommand(this, this.requestMsg, this.securityContext, Event.END, this.rowCount, time);
+            if (scope != null) {
+                scope.close();
+            }
         } 
     }
     
@@ -284,7 +304,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         if (isCancelled.get()) {            
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
         } else {
-            manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null, null);
+            manager.logSRCCommand(this, this.requestMsg, this.securityContext, Event.ERROR, null, null);
 
         	Throwable toLog = t;
         	if (this.requestMsg.getCommandContext().getOptions().isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
@@ -306,6 +326,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         if(isCancelled()) {
     		 throw new TranslatorException(QueryPlugin.Event.TEIID30476, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30476));
     	}
+        Scope scope = null;
         timer.start();
     	try {
 	        if (this.execution == null) {
@@ -352,7 +373,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 				
 		        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$      
 		        //Log the Source Command (Must be after obtaining the execution context)
-		        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.NEW, null, null); 
+		        manager.logSRCCommand(this, this.requestMsg, this.securityContext, Event.NEW, null, null);
+		        if (this.span != null) {
+		            scope = TeiidTracingUtil.getInstance().activateSpan(this.span);
+		        }
 	    	}
 	        // Execute query
 	    	this.execution.execute();
@@ -361,6 +385,9 @@ public class ConnectorWorkItem implements ConnectorWork {
     		throw handleError(t);
     	} finally {
     		timer.stop();
+    		if (scope != null) {
+    		    scope.close();
+    		}
     	}
 	}
 
@@ -770,7 +797,15 @@ public class ConnectorWorkItem implements ConnectorWork {
     }
 
 	public void logCommand(Object... command) {
-		this.manager.logSRCCommand(this.requestMsg, securityContext, Event.SOURCE, null, null, command);
+		this.manager.logSRCCommand(this, this.requestMsg, securityContext, Event.SOURCE, null, null, command);
 	}
+
+    public void setTracingSpan(Span span) {
+        this.span = span;
+    }
+    
+    public Span getTracingSpan() {
+        return span;
+    }
 
 }

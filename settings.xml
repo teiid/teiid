@@ -7,6 +7,15 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
       <id>jboss-public-repository</id>
       <repositories>
         <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>http://repo.maven.apache.org/maven2/</url>
+            <snapshots>
+                <enabled>false</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+        <repository>
           <id>jboss-public-repository-group</id>
           <name>JBoss Public Maven Repository Group</name>
           <url>http://repository.jboss.org/nexus/content/groups/public/</url>
