@@ -294,4 +294,14 @@ public class ConcurrentBitSet {
 		return -1;
 	}
 	
+	@Override
+	public String toString() {
+	    StringBuilder sb = new StringBuilder();
+	    for (int i = 0; i < segments.length; i++) {
+	        sb.append(i).append(' ').append(segments[i].bitSet.toString());
+	        sb.append('\n');
+	    }
+	    return sb.toString();
+	}
+	
 }
