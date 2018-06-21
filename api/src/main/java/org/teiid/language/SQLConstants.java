@@ -121,6 +121,7 @@ public class SQLConstants {
 		public static final String DISABLED = "DISABLED"; //$NON-NLS-1$
 		
 		public static final String TRIM = "TRIM"; //$NON-NLS-1$
+		public static final String POSITION = "POSITION"; //$NON-NLS-1$
 		public static final String RESULT = "RESULT"; //$NON-NLS-1$
 		public static final String OBJECTTABLE = "OBJECTTABLE"; //$NON-NLS-1$
 		public static final String VERSION = "VERSION"; //$NON-NLS-1$

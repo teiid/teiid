@@ -519,6 +519,7 @@ TOKEN : /* NonReserved words */
 |   <RENAME: "rename">
 |   <DOMAIN: "domain">
 |   <USAGE: "usage">
+|   <POSITION: "position">
 }
 /*
 name=all in group identifier
@@ -628,7 +629,7 @@ Token nonReserved() :
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
-     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>)
+     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>)
     {
     	return getToken(0);
     }	
@@ -3285,7 +3286,7 @@ Token operator() :
 }
 
 /*
-name=IS Distinct
+name=is distinct
 description=Is Distinct Right Hand Side
 example=[source,sql]\n----\nIS DISTINCT FROM expression\n----\n
 */
@@ -3760,7 +3761,8 @@ Limit limit(ParseInfo info) :
 {
     {t = getToken(1);}
     ((<LIMIT> offset = intParam(info)
-	[<COMMA> limit = intParam(info)])
+	[(<COMMA> limit = intParam(info))|
+	 (<OFFSET> limit = intParam(info) {Expression temp = limit; limit = offset; offset = temp;})])
 	{
 	  if (limit == null) {
 	    limit = offset;
@@ -4534,7 +4536,9 @@ Expression function(ParseInfo info) :
 		{
 			return expression;
 		}
-	|   
+	|   LOOKAHEAD(<POSITION><LPAREN>) (funcToken = <POSITION> {funcToken.image="locate";} <LPAREN> expression = commonValueExpression(info) {args.add(expression);} 
+	     <IN> expression = commonValueExpression(info) {args.add(expression);} <RPAREN>)
+	|
 	(	funcName = id(null)
 		<LPAREN>
 		[<ALL> { distinct = false; } | <DISTINCT> {distinct = true;} ]
@@ -4543,7 +4547,7 @@ Expression function(ParseInfo info) :
 		<RPAREN>
 		[condition = filterClause(info)]
 	)
-	|   (funcToken = <CURRENT_DATE><LPAREN><RPAREN>)
+	|   (funcToken = <CURRENT_DATE>[<LPAREN><RPAREN>])
     |   
     (   (funcToken = <CURRENT_TIMESTAMP>| funcToken = <CURRENT_TIME>)
     	[<LPAREN> intVal = intVal() <RPAREN> {args.add(new Constant(intVal));}]

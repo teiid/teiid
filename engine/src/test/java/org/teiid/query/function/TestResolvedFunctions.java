@@ -88,6 +88,13 @@ public class TestResolvedFunctions extends TestCase {
         
         assertEquals(DataTypeManager.DefaultDataClasses.DATE, getFunctionResult(sql).getClass());
     }
+    
+    public void testCharLength() throws Exception {
+        
+        String sql = "char_length('a')"; //$NON-NLS-1$
+        
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, getFunctionResult(sql).getClass());
+    }
 
     private Object getFunctionResult(String sql) throws QueryParserException,
                                               ExpressionEvaluationException,

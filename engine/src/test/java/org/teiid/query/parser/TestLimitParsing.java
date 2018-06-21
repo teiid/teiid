@@ -28,11 +28,11 @@ import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.symbol.MultipleElementSymbol;
+import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 
 public class TestLimitParsing {
@@ -136,6 +136,16 @@ public class TestLimitParsing {
         query.setFrom(from);
         query.setLimit(new Limit(new Constant(2), new Constant(5)));
         helpTest("Select * from a offset 2 rows fetch first 5 rows only", "SELECT * FROM a LIMIT 2, 5", query); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testLimitWithOffsetKeyword() {
+        Query query = new Query();
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
+        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setLimit(new Limit(new Constant(new Integer(50)), new Constant(new Integer(100))));
+        helpTest("Select * from a limit 100 offset 50", "SELECT * FROM a LIMIT 50, 100", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 }

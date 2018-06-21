@@ -127,6 +127,8 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 		                  
         // string
         addStringFunction(SourceSystemFunctions.LENGTH, QueryPlugin.Util.getString("SystemSource.Length_result"), "length", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ 
+        addStringFunction("character_length", QueryPlugin.Util.getString("SystemSource.Length_result"), "length", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addStringFunction("char_length", QueryPlugin.Util.getString("SystemSource.Length_result"), "length", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         addStringFunction(SourceSystemFunctions.UCASE, QueryPlugin.Util.getString("SystemSource.Ucase_result"), "upperCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         addStringFunction(SourceSystemFunctions.LCASE, QueryPlugin.Util.getString("SystemSource.Lcase_result"), "lowerCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
 		addStringFunction("lower", QueryPlugin.Util.getString("SystemSource.Lower_result"), "lowerCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

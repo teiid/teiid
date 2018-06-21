@@ -1806,6 +1806,18 @@ public class TestSQLStringVisitor {
         helpTest(command, "SELECT current_date()"); //$NON-NLS-1$
     }
     
+    @Test public void testCurrentDateNoParens() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("select current_date"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        helpTest(command, "SELECT current_date()"); //$NON-NLS-1$
+    }
+    
+    @Test public void testPosition() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("select position('a' in e1) from pm1.g1"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        helpTest(command, "SELECT locate('a', e1) FROM pm1.g1"); //$NON-NLS-1$
+    }
+    
     @Test public void testCurrentTime() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("select current_time, current_time(1)"); //$NON-NLS-1$
         QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());

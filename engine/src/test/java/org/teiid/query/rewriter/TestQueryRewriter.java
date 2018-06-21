@@ -1824,5 +1824,10 @@ public class TestQueryRewriter {
                 
         helpTestRewriteCommand(sql, expected);        
     }
+    
+    @Test public void testCharLengthFunctions() {
+        helpTestRewriteCommand("SELECT char_length(e1), character_length(e1) FROM pm1.g1", //$NON-NLS-1$
+                                "SELECT length(e1), length(e1) FROM pm1.g1"); //$NON-NLS-1$
+    }
 
 }
