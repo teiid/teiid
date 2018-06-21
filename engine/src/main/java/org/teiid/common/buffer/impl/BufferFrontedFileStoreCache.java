@@ -279,7 +279,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			if (inodeBuffer == null) {
 				if (inode == EMPTY_ADDRESS) {
 					this.inode = inodesInuse.getAndSetNextClearBit();
-					if (this.inode == -1) {
+					if (this.inode == EMPTY_ADDRESS) {
 						throw new AssertionError("Out of inodes"); //$NON-NLS-1$
 					}
 					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
@@ -641,9 +641,11 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			if (!newEntry) {
 				synchronized (info) {
 					if (info.adding) {
+					    info = null; //clear the info to prevent finally block actions
 						return false; //someone else is responsible for adding this cache entry
 					}
 					if (!shouldPlaceInMemoryBuffer(info)) {
+					    info = null; //clear the info to prevent finally block actions
 						return true; //safe to remove from tier 1 
 					}
 					info.adding = true;
@@ -667,12 +669,20 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
             synchronized (map) {
             	if (physicalMapping.containsKey(s.getId()) && map.containsKey(entry.getId())) {
         			synchronized (info) {
+        			    //sanity check
+        				if (info.inode != EMPTY_ADDRESS) {
+            			    throw new AssertionError("The object already has an inode failing this add attempt"); //$NON-NLS-1$
+            			}
         				//set the size first, since it may raise an exceptional condition
             			info.setSize(bos.getBytesWritten());
             			info.inode = blockManager.getInode();
         				memoryBufferEntries.add(info);
 					}
             		success = true;
+            	} else {
+            	    if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+                        LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "removed during add", s.getId(), entry.getId()); //$NON-NLS-1$
+                    }
             	}
 			}
 		} catch (Throwable e) {
