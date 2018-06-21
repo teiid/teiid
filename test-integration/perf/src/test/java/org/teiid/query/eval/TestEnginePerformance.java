@@ -290,6 +290,7 @@ public class TestEnginePerformance {
 		cache.initialize();
 		bm.setCache(cache);
 		bm.initialize();
+		bm.setMaxBatchManagerSizeEstimate(Long.MAX_VALUE);
 		
 		es = Executors.newCachedThreadPool();
 	}
@@ -610,6 +611,7 @@ public class TestEnginePerformance {
 		System.out.println(bm.getWriteCount());
 		System.out.println(cache.getStorageReads());
 		System.out.println(cache.getStorageWrites());
+		System.out.println(cache.getMemoryInUseBytes());
 	}
 
 	/**

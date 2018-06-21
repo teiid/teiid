@@ -44,6 +44,8 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -686,6 +688,27 @@ public class TestTempTables extends TempTableTestHarness {
         }
 
         execute("delete from x where e1 not in ('2000', '1')", new List[] {Arrays.asList(2046)}); //$NON-NLS-1$
+    }
+	
+	@Test public void testLargeException() throws Exception {
+	    BufferManagerImpl bm = BufferManagerFactory.getTestBufferManager(20480, 256);
+	    bm.setMaxBatchManagerSizeEstimate(100000);
+	    FakeDataManager fdm = new FakeDataManager();
+        TestProcessor.sampleData1(fdm);
+	    setUp(RealMetadataFactory.example1Cached(), fdm, bm);
+	    
+        execute("create local temporary table x (e1 string, e2 string)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("insert into x (e2, e1) values (1, 1)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        
+        for (int i = 0; i < 10; i++) {
+            try {
+                execute("insert into x (e2, e1) select * from x", new List[] {Arrays.asList(1<<i)}); //$NON-NLS-1$
+            } catch (TeiidComponentException e) {
+                assertTrue(e.getCode().equals("TEIID31261"));
+                return;
+            }
+        }
+        fail();
     }
 	
 }

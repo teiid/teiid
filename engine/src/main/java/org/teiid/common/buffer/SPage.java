@@ -224,7 +224,9 @@ class SPage implements Cloneable {
 			return values;
 		}
 		if (managedBatch == null) {
-			throw new AssertionError("Batch removed"); //$NON-NLS-1$
+		    //we need this to be a check exception as the batch can be removed
+		    //by the size check at the buffermanager level
+			throw new TeiidComponentException("Batch removed"); //$NON-NLS-1$
 		}
 		for (int i = 0; i < 10; i++) {
 			CleanupReference ref = (CleanupReference)QUEUE.poll();

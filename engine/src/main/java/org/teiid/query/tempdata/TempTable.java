@@ -278,6 +278,7 @@ public class TempTable implements Cloneable, SearchableTable {
 								undo(tuple);
 							} catch (TeiidException e) {
 								LogManager.logError(LogConstants.CTX_DQP, e, e.getMessage());								
+								break;
 							}
 						}
 					}

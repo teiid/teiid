@@ -84,7 +84,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	private static final int SYSTEM_OVERHEAD_MEGS = 150;
 
 	/**
-	 * Asynch cleaner attempts to age out old entries and to reduce the memory size when 
+	 * Async cleaner attempts to age out old entries and to reduce the memory size when 
 	 * little is reserved.
 	 */
 	private static final int MAX_READ_AGE = 1<<19;
@@ -109,7 +109,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				    checkForOrphanedMemoryEntries(impl);
 	                long evicted = impl.doEvictions(impl.maxProcessingBytes, true, impl.initialEvictionQueue);
 					if (evicted != 0 && LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", evicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
+						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Async eviction run", evicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
+					}
+					if (evicted < impl.maxProcessingBytes) {
+    					long secondEvicted = impl.doEvictions(impl.maxProcessingBytes/2, true, impl.evictionQueue);
+                        if (secondEvicted != 0 && LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+                            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Async eviction run", secondEvicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
+                        }
 					}
 				} catch (Throwable t) {
 					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, t, "Exception during cleaning run"); //$NON-NLS-1$
@@ -182,6 +188,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		private long totalSize;
 		private long currentSize;
 		private long rowsSampled;
+        private boolean removed;
 
 		private BatchManagerImpl(Long newID, Class<?>[] types) {
 			this.id = newID;
@@ -231,6 +238,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		public Long createManagedBatch(List<? extends List<?>> batch,
 				Long previous, boolean removeOld)
 				throws TeiidComponentException {
+		    if (removed) {
+		        throw new TeiidComponentException(id + " has already been removed"); //$NON-NLS-1$
+		    }
 			if (cleanup == null) {
 				cache.createCacheGroup(id);
 				cleanup = AutoCleanupUtil.setCleanupReference(this, new Remover(id, prefersMemory));
@@ -397,6 +407,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
 		@Override
 		public void remove() {
+		    this.removed = true;
 			if (cleanup != null) {
 			    try {
                     updateEstimates(currentSize, true);
@@ -1400,6 +1411,11 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	public void setMaxSessionBatchManagerSizeEstimate(
             long maxSessionBatchManagerSizeEstimate) {
         this.maxSessionBatchManagerSizeEstimate = maxSessionBatchManagerSizeEstimate;
+    }
+	
+	public void setMaxBatchManagerSizeEstimate(
+            long maxBatchManagerSizeEstimate) {
+        this.maxBatchManagerSizeEstimate = maxBatchManagerSizeEstimate;
     }
 
 }
