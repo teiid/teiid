@@ -184,8 +184,9 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 								if (pk != null) { // TODO: entities must have PK, so this check is not needed.
 									ArrayList<String> keys = new ArrayList<String>();
 									for (Column column:pk.getColumns()) {
-										addColumn(mf, column.getName(), column.getDatatype().getRuntimeTypeName(), entityTable);
-										keys.add(column.getName());
+										String fk = attr.getName() + "_" + column.getName();
+										Column c = addColumn(mf, fk, column.getDatatype().getRuntimeTypeName(), entityTable);
+										keys.add(fk);
 									}
 									if (!foreignKeyExists(keys, entityTable)) {
 										addForeignKey(mf, attr.getName(), keys, attributeTable.getName(), entityTable);
