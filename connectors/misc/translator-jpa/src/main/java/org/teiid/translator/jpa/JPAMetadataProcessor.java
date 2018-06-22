@@ -54,6 +54,10 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
     
     @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Foreign Table Name", description="Applicable on Foreign Key columns")
 	public static final String KEY_ASSOSIATED_WITH_FOREIGN_TABLE = MetadataFactory.JPA_URI+"assosiated_with_table";
+	@ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Relation Property", description="Applicable on Foreign Key columns")
+	public static final String RELATION_PROPERTY = MetadataFactory.JPA_URI+"relation_property";
+	@ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Relation Key", description="Applicable on Foreign Key columns")
+	public static final String RELATION_KEY = MetadataFactory.JPA_URI+"relation_key";
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
 	public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class";
@@ -186,6 +190,8 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 									for (Column column:pk.getColumns()) {
 										String fk = attr.getName() + "_" + column.getName();
 										Column c = addColumn(mf, fk, column.getDatatype().getRuntimeTypeName(), entityTable);
+										c.setProperty(RELATION_PROPERTY, attr.getName());
+										c.setProperty(RELATION_KEY, column.getName());
 										keys.add(fk);
 									}
 									if (!foreignKeyExists(keys, entityTable)) {
