@@ -83,6 +83,26 @@ public class TestJSelectJPQLVisitor {
     	helpExecute("select c.first_name, c.last_name, a.address_id, a.phone, ci.city from customer c join address a on c.address_Id=a.address_Id right join city ci on ci.city_id = a.city_id where c.last_Name='MYERS' OR c.last_Name='TALBERT' order by c.first_Name", 
     			"SELECT c.first_name, c.last_name, a.address_id, a.phone, ci.city FROM customer AS c INNER JOIN c.address AS a RIGHT OUTER JOIN a.city AS ci WHERE c.last_name IN ('TALBERT', 'MYERS') ORDER BY c.first_name");
     }
-    
+
+    @Test
+	public void testRelationOverlappingIdsAndOverlappingTypes() throws Exception {
+    	helpExecute("select * from thing as t",
+				"SELECT t.id, J_0.id, J_1.id, J_2.id FROM thing AS t LEFT OUTER JOIN t.parent AS J_0 LEFT OUTER JOIN t.thing_type AS J_1 LEFT OUTER JOIN t.thing_subtype AS J_2");
+	}
+
+	@Test
+	public void testMultiLevelJoin() throws Exception {
+    	helpExecute("select t.id, t.thing_type_id, tp.id, tp.thing_type_id, tpp.id " +
+						"from thing as t " +
+						"join thing as tp on t.parent_id = tp.id " +
+						"join thing as tpp on tp.parent_id = tpp.id",
+				"SELECT t.id, J_0.id, tp.id, J_1.id, tpp.id " +
+						"FROM thing AS t " +
+						"INNER JOIN t.parent AS tp " +
+						"INNER JOIN tp.parent AS tpp " +
+						"LEFT OUTER JOIN t.thing_type AS J_0 " +
+						"LEFT OUTER JOIN tp.thing_type AS J_1");
+	}
+
 	// needs one with composite PK
 }
