@@ -535,6 +535,12 @@ public class TestDDLParser {
 		String ddl = "CREATE FUNCTION SourceFunc() RETURNS string; CREATE FUNCTION SourceFunc(param string) RETURNS string";
 		helpParse(ddl, "model");
 	}
+	
+	@Test(expected=org.teiid.metadata.ParseException.class)
+    public void testFunctionDefault() throws Exception {
+        String ddl = "CREATE FUNCTION SourceFunc(param string default 'a') RETURNS string";
+        helpParse(ddl, "model");
+    }
 
 	@Test
 	public void testUDF() throws Exception {

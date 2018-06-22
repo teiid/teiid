@@ -465,6 +465,9 @@ public class SQLParserUtil {
 				method.setOutputParameter(fp);
 				fp.setPosition(0);
 			}
+			if (pp.getDefaultValue() != null) {
+			    throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_default", proc.getName())); //$NON-NLS-1$
+			}
 		}
 		method.setInputParameters(ins);
 		
