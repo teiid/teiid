@@ -265,16 +265,6 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.getVirtualPlan(groupID);
 	}
 
-	public List getXMLSchemas(Object groupID)
-			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.getXMLSchemas(groupID);
-	}
-
-	public Collection getXMLTempGroups(Object groupID)
-			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.getXMLTempGroups(groupID);
-	}
-
 	public boolean groupSupports(Object groupID, int groupConstant)
 			throws TeiidComponentException, QueryMetadataException {
 		return actualMetadata.groupSupports(groupID, groupConstant);

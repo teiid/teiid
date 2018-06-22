@@ -575,15 +575,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.getElementIDsInAccessPattern(accessPattern);
 	}
 
-	public Collection getXMLTempGroups(Object groupID) 
-        throws TeiidComponentException, QueryMetadataException{
-    	
-        if(groupID instanceof TempMetadataID) {
-            return Collections.EMPTY_SET;
-        }
-        return this.actualMetadata.getXMLTempGroups(groupID);    
-    }
-    
     public float getCardinality(Object groupID) 
     	throws TeiidComponentException, QueryMetadataException{
     	
@@ -603,13 +594,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         }
         
         return this.actualMetadata.getCardinality(groupID);    
-    }
-
-    public List getXMLSchemas(Object groupID) throws TeiidComponentException, QueryMetadataException {
-        if(groupID instanceof TempMetadataID) {
-            return Collections.EMPTY_LIST;
-        }
-        return this.actualMetadata.getXMLSchemas(groupID);
     }
 
     public Properties getExtensionProperties(Object metadataID)

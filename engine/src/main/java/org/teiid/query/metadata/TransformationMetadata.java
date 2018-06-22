@@ -745,77 +745,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		return vdbMetaData;
 	}
     
-    /**
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getXMLTempGroups(java.lang.Object)
-     */
-    public Collection<Table> getXMLTempGroups(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        Table tableRecord = (Table) groupID;
-
-        if(tableRecord.getTableType() == Table.Type.Document) {
-            return this.store.getXMLTempGroups(tableRecord);
-        }
-        return Collections.emptySet();
-    }
-
     @Override
     public float getCardinality(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         return ((Table) groupID).getCardinalityAsFloat();
     }
-
-    public List<SQLXMLImpl> getXMLSchemas(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        Table tableRecord = (Table) groupID;
-
-        // lookup transformation record for the group
-        String groupName = tableRecord.getFullName();
-
-        // get the schema Paths
-        List<String> schemaPaths = tableRecord.getSchemaPaths();
-        
-        List<SQLXMLImpl> schemas = new LinkedList<SQLXMLImpl>();
-        if (schemaPaths == null) {
-        	return schemas;
-        }
-        String path = getParentPath(tableRecord.getResourcePath());
-        for (String string : schemaPaths) {
-        	String parentPath = path;
-        	boolean relative = false;
-        	while (string.startsWith("../")) { //$NON-NLS-1$
-        		relative = true;
-        		string = string.substring(3);
-        		parentPath = getParentPath(parentPath);
-        	}
-        	SQLXMLImpl schema = null;
-        	if (!relative) {
-        		schema = getVDBResourceAsSQLXML(string);
-        	}
-        	if (schema == null) {
-        		if (!parentPath.endsWith("/")) { //$NON-NLS-1$
-        			parentPath += "/"; //$NON-NLS-1$
-        		}
-        		schema = getVDBResourceAsSQLXML(parentPath + string);
-        	}
-        	
-        	if (schema == null) {
-        		 throw new QueryMetadataException(QueryPlugin.Event.TEIID30364, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30364,groupName));
-        	}
-        	schemas.add(schema);
-        }
-        
-        return schemas;
-    }
-
-	private String getParentPath(String path) {
-		if (path == null) {
-			return ""; //$NON-NLS-1$
-		}
-		int index = path.lastIndexOf('/');
-        if (index > 0) {
-        	path = path.substring(0, index);
-        } else {
-        	path = ""; //$NON-NLS-1$
-        }
-		return path;
-	}
 
     public String getNameInSource(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
         return ((AbstractMetadataRecord) metadataID).getNameInSource();

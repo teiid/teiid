@@ -58,8 +58,6 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
@@ -1440,15 +1438,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		final SystemProcs sysTable = SystemProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
 		switch (sysTable) {
 		case GETXMLSCHEMAS:
-			try {
-				Object groupID = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
-				List<SQLXMLImpl> schemas = indexMetadata.getXMLSchemas(groupID);
-				for (SQLXMLImpl schema : schemas) {
-					rows.add(Arrays.asList(new XMLType(schema)));
-				}
-			} catch (QueryMetadataException e) {
-				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30553, e);
-			}
+		    //no rows -deprecated
 			break;
 		case ARRAYITERATE:
 			Object array = ((Constant)proc.getParameter(1).getExpression()).getValue();

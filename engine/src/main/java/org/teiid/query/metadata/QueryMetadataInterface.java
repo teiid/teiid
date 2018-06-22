@@ -452,14 +452,6 @@ public interface QueryMetadataInterface {
     String getVirtualDatabaseName() 
         throws TeiidComponentException, QueryMetadataException ;
         
-    /**
-     * Return a list of all the temp groups used in this document.
-     * @param groupID XML virtual document groupID 
-     * @return List of all the temp groups used in this document.
-     */
-    Collection getXMLTempGroups(Object groupID) 
-        throws TeiidComponentException, QueryMetadataException;
-       
    /**
     * Return the cardinality for this group
     * @param groupID Metadata identifier specifying group
@@ -468,14 +460,6 @@ public interface QueryMetadataInterface {
    float getCardinality(Object groupID) 
     	throws TeiidComponentException, QueryMetadataException;
         
-   /**
-    * Get XML schemas for a document group.
-    * @param groupID Document group ID
-    * @return List of String where each string is an XML schema for the document
-    */
-   List getXMLSchemas(Object groupID)
-    throws TeiidComponentException, QueryMetadataException;
-    
     /**
      * Get the name in source of the metadata identifier specified. This metadata
      * identifier was previously returned by some other method.
