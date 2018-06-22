@@ -21,7 +21,6 @@ package org.teiid.jdbc;
 import static org.junit.Assert.*;
 
 import java.sql.DriverPropertyInfo;
-import java.util.Arrays;
 import java.util.Properties;
 
 import org.junit.Test;
@@ -135,7 +134,7 @@ public class TestTeiidDriver {
     @Test public void testGetPropertyInfo1() throws Exception {        
         DriverPropertyInfo info[] = drv.getPropertyInfo("jdbc:teiid:vdb@mm://localhost:12345;applicationName=x", null); //$NON-NLS-1$
 
-        assertEquals(26, info.length);
+        assertEquals(27, info.length);
         assertEquals(false, info[1].required);
         assertEquals("ApplicationName", info[1].name); //$NON-NLS-1$
         assertEquals("x", info[1].value); //$NON-NLS-1$

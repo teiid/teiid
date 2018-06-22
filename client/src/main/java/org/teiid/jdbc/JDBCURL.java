@@ -83,6 +83,7 @@ public class JDBCURL {
     	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS,
     	        TeiidURL.CONNECTION.LOGIN_TIMEOUT,
     	        DatabaseMetaDataImpl.REPORT_AS_VIEWS,
+    	        DatabaseMetaDataImpl.NULL_SORT,
     	        ResultSetImpl.DISABLE_FETCH_SIZE));
     	props.addAll(EXECUTION_PROPERTIES.keySet());
     	Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);

@@ -27,6 +27,7 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-4520">TEIID-4520</a> Added the Exasol translator.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-5356">TEIID-5356</a> Improved column metadata with DDL views - and other metadata fixes such as TEIID-5361 and TEIID-5359</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-3439">TEIID-3439</a> Added support for table aliases to contain a period '.' character</li>
+  <li>Various SQL compatibility issues to support <a link="https://www.jooq.org">JOQL</a></li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -46,6 +47,8 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-5365">TEIID-5365</a> Function model support has been completely removed from the server.  VDBs utilizing function models should be migrated to having those functions located on physical or virtual models.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-5083">TEIID-5083</a> The salesforce translator and resource adapter now provide 34.0 api access rather than 22.0.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-5370">TEIID-5370</a> A warning rather than an exception will be generated when the HEADER option is specified for a TEXTTABLE, but the header/column does not exist in the file.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5360">TEIID-5360</a> JDBC DatabaseMetaData will no longer by default report nullsAreSortedLow as true since that behavior in not guaranteed and can be adjusted on the server side.  
+  If you need a particular value reported, use the connection property nullsAreSorted={AtStart,AtEnd,High,Low}</li>
 </ul>
 
 <h4>from 10.2</h4>

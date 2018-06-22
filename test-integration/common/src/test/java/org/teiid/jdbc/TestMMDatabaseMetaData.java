@@ -801,7 +801,7 @@ public class TestMMDatabaseMetaData {
         expected.put("nullsAreSortedAtEnd", Boolean.FALSE); //$NON-NLS-1$
         expected.put("nullsAreSortedAtStart", Boolean.FALSE); //$NON-NLS-1$
         expected.put("nullsAreSortedHigh", Boolean.FALSE); //$NON-NLS-1$
-        expected.put("nullsAreSortedLow", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("nullsAreSortedLow", Boolean.FALSE); //$NON-NLS-1$
         expected.put("storesLowerCaseIdentifiers", Boolean.FALSE); //$NON-NLS-1$
         expected.put("storesLowerCaseQuotedIdentifiers", Boolean.FALSE); //$NON-NLS-1$
         expected.put("storesMixedCaseIdentifiers", Boolean.TRUE); //$NON-NLS-1$

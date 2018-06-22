@@ -22,12 +22,11 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.sql.Array;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hamcrest.CoreMatchers;
-import org.hamcrest.Matcher;
-import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -106,6 +105,14 @@ public class TestConnection {
 
     @Test public void testGetMetaData() throws Exception {
         assertNotNull(getMMConnection().getMetaData());
+    }
+    
+    @Test public void testNullSorts() throws Exception {
+        DatabaseMetaData metadata = getMMConnection("jdbc:teiid:QT_Ora9DS@mm://localhost:7001;version=1;NullsAreSorted=AtEnd").getMetaData();
+        assertTrue(metadata.nullsAreSortedAtEnd());
+        assertFalse(metadata.nullsAreSortedLow());
+        metadata = getMMConnection("jdbc:teiid:QT_Ora9DS@mm://localhost:7001;version=1").getMetaData();
+        assertFalse(metadata.nullsAreSortedAtEnd());
     }
 
     @Test public void testGetSchema() throws Exception {
