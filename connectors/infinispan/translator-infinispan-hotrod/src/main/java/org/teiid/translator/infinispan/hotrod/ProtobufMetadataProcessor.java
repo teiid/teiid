@@ -132,10 +132,6 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 
         String protobufFile = getProtoFilePath();
         String protoContents = null;
-        String cacheName = "default";
-        if (connection != null) {
-            cacheName = connection.getCache().getName();            
-        }
         if( protobufFile != null &&  !protobufFile.isEmpty()) {
             File f = new File(protobufFile);
             if(f == null || !f.exists() || !f.isFile()) {
@@ -149,12 +145,12 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
             }
 			this.protoResource = new ProtobufResource(this.protobufName != null ? this.protobufName : protobufFile,
 					protoContents);
-            toTeiidSchema(protobufFile, protoContents, metadataFactory, cacheName);
+            toTeiidSchema(protobufFile, protoContents, metadataFactory);
         } else if( this.protobufName != null) {
             // Read from cache
             boolean added = false;
-            BasicCache<Object, Object> metadataCache = connection
-                    .getCacheFactory().getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+			BasicCache<Object, Object> metadataCache = connection
+					.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME, false);
             for (Object key : metadataCache.keySet()) {
                 if (!this.protobufName.equalsIgnoreCase((String)key)) {
                     continue;
@@ -162,7 +158,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                 protobufFile = (String)key;
                 protoContents = (String)metadataCache.get(key);
                 // read all the schemas
-                toTeiidSchema(protobufFile, protoContents, metadataFactory, cacheName);
+                toTeiidSchema(protobufFile, protoContents, metadataFactory);
                 this.protoResource = new ProtobufResource(protobufFile, protoContents);
                 added = true;
                 break;
@@ -173,8 +169,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                         InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25012, this.protobufName));
             }
         } else if (this.protoResource != null) {
-            toTeiidSchema(this.protoResource.getIdentifier(), this.protoResource.getContents(), metadataFactory,
-                    cacheName);
+            toTeiidSchema(this.protoResource.getIdentifier(), this.protoResource.getContents(), metadataFactory);
         } else {
             // expand the error message
             throw new TranslatorException(InfinispanPlugin.Event.TEIID25011,
@@ -194,7 +189,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
     }
 
     private void toTeiidSchema(String name, String contents,
-            MetadataFactory mf, String cacheName) throws TranslatorException {
+            MetadataFactory mf) throws TranslatorException {
 
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Processing Proto file:", name, "  with contents\n", contents);
 
@@ -215,7 +210,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                 	// of child tables, as they will be part of parent, and we do not want discrepancy 
                 	// in metadata, as both parent child must be in single cache.
                 	if (getParentTag(t) == -1) {
-                		t.setProperty(CACHE, cacheName);
+                		t.setProperty(CACHE, t.getName());
                 	}
                 }
             }

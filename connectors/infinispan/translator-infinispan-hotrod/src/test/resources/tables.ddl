@@ -17,7 +17,7 @@ CREATE FOREIGN TABLE G2 (
 	e5 varbinary OPTIONS (ANNOTATION '@IndexedField(index=false)', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'bytes', "teiid_ispn:TAG" '7'),
 	e6 long OPTIONS (SEARCHABLE 'Searchable', NATIVE_TYPE 'fixed64', "teiid_ispn:TAG" '8'),
 	CONSTRAINT PK_E1 PRIMARY KEY(e1)
-) OPTIONS (ANNOTATION '@Indexed', NAMEINSOURCE 'pm1.G2', UPDATABLE TRUE, "teiid_ispn:CACHE" 'default');
+) OPTIONS (ANNOTATION '@Indexed @Cache(name=default)', NAMEINSOURCE 'pm1.G2', UPDATABLE TRUE, "teiid_ispn:CACHE" 'default');
 
 CREATE FOREIGN TABLE G4 (
 	e1 integer NOT NULL OPTIONS (SEARCHABLE 'Searchable', NATIVE_TYPE 'int32', "teiid_ispn:TAG" '1'),
@@ -46,4 +46,4 @@ CREATE FOREIGN TABLE G5 (
 	e17 xml OPTIONS (SEARCHABLE 'Unsearchable', NATIVE_TYPE 'bytes', "teiid_ispn:TAG" '17'),
 	e18 geometry OPTIONS (SEARCHABLE 'Unsearchable', NATIVE_TYPE 'bytes', "teiid_ispn:TAG" '18'),
 	CONSTRAINT PK_E1 PRIMARY KEY(e1)
-) OPTIONS (ANNOTATION '@Indexed', NAMEINSOURCE 'pm1.G5', UPDATABLE TRUE, "teiid_ispn:CACHE" 'default');
+) OPTIONS (ANNOTATION '@Indexed @Cache(name=default)', NAMEINSOURCE 'pm1.G5', UPDATABLE TRUE, "teiid_ispn:CACHE" 'default');

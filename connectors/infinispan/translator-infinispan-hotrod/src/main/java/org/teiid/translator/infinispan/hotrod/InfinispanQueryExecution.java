@@ -149,10 +149,13 @@ public class InfinispanQueryExecution implements ResultSetExecution {
     }
 
     static RemoteCache<Object, Object> getCache(Table table, InfinispanConnection connection) throws TranslatorException {
-        RemoteCache<Object, Object> cache = (RemoteCache<Object, Object>)connection.getCache();
+    	RemoteCache<Object, Object> cache = (RemoteCache<Object, Object>)connection.getCache();
         String cacheName = table.getProperty(ProtobufMetadataProcessor.CACHE, false);
         if (cacheName != null && !cacheName.equals(connection.getCache().getName())) {
-            cache = ((RemoteCacheManager)connection.getCacheFactory()).getCache(cacheName);
+            cache = (RemoteCache<Object, Object>)connection.getCache(cacheName, true);
+            if (cache == null) {
+            	throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020, cacheName));
+            }
         }
         return cache;
     }

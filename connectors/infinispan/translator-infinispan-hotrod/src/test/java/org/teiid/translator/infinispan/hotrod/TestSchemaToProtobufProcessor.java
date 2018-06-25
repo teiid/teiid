@@ -60,7 +60,7 @@ public class TestSchemaToProtobufProcessor {
                 "    repeated string e5 = 5;\n" +
                 "}\n" +
                 "\n" +
-                "/* @Indexed */\n" +
+                "/* @Indexed @Cache(name=default) */\n" +
                 "message G2 {\n" +
                 "    /* @Id */\n" +
                 "    required int32 e1 = 1;\n" +
@@ -80,7 +80,7 @@ public class TestSchemaToProtobufProcessor {
                 "    optional int32 e1 = 3;\n" +
                 "}\n" +
                 "\n" +
-                "/* @Indexed */\n" + 
+                "/* @Indexed @Cache(name=default) */\n" + 
                 "message G5 {\n" + 
                 "    /* @Id */\n"+
                 "    required int32 e1 = 1;\n" + 

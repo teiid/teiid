@@ -19,7 +19,7 @@ message G1 {
    repeated string e5 = 5;
 }
 
-/* @Indexed */
+/* @Indexed @Cache(name=default)*/
 message G2 {
    /*@Id*/
    required int32 e1 = 1;
@@ -44,7 +44,7 @@ message G4 {
    required string e2 = 2;
 }
 
-/* @Indexed */
+/* @Indexed @Cache(name=default)*/
 message G5 {
     /*@Id*/
     required int32 e1 = 1;
