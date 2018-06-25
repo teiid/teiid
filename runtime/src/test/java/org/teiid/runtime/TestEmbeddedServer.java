@@ -91,7 +91,6 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.util.TeiidTracingUtil;
 import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -2484,10 +2483,9 @@ public class TestEmbeddedServer {
     @Test public void testOpenTracing() throws Exception {
         MockTracer tracer = new MockTracer();
         GlobalTracerInjector.setTracer(tracer);
-        TeiidTracingUtil.getInstance().setWithActiveSpanOnly(true);
         Logger logger = Mockito.mock(Logger.class);
-        Mockito.stub(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)).toReturn(true);
-        Mockito.stub(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING_SOURCE, MessageLevel.DETAIL)).toReturn(true);
+        Mockito.stub(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)).toReturn(false);
+        Mockito.stub(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING_SOURCE, MessageLevel.DETAIL)).toReturn(false);
         Logger old = org.teiid.logging.LogManager.setLogListener(logger);
         try {
             SocketConfiguration s = new SocketConfiguration();

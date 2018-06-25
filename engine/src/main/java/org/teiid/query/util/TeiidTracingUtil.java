@@ -36,12 +36,12 @@ import io.opentracing.tag.Tags;
 
 public class TeiidTracingUtil {
 
-    private boolean withActiveSpanOnly;
     private Tracer tracer = GlobalTracerInjector.getTracer();
     
     private static TeiidTracingUtil INSTANCE = new TeiidTracingUtil();
 
     public static TeiidTracingUtil getInstance() {
+        //to prevent issues with initialization, get a fresh instance
         INSTANCE.tracer = GlobalTracerInjector.getTracer();
         return INSTANCE;
     }
@@ -53,20 +53,16 @@ public class TeiidTracingUtil {
         this.tracer = tracer;
     }
     
-    public void setWithActiveSpanOnly(boolean withActiveSpanOnly) {
-        this.withActiveSpanOnly = withActiveSpanOnly;
-    }
-    
     /**
      * Build a {@link Span} from the {@link CommandLogMessage} and incoming span context
      * @param message
      * @param spanContextJson
      * @return
      */
-    public Span buildSpan(CommandLogMessage msg, String spanContextJson) {
-        if (withActiveSpanOnly && tracer.activeSpan() == null && spanContextJson == null) {
+    public Span buildSpan(Options options, CommandLogMessage msg, String spanContextJson) {
+        if (!isTracingEnabled(options, spanContextJson)) {
             return null;
-        } 
+        }
 
         Tracer.SpanBuilder spanBuilder = tracer
                 .buildSpan("USER COMMAND") //$NON-NLS-1$
@@ -76,7 +72,7 @@ public class TeiidTracingUtil {
             SpanContext parent = extractSpanContext(spanContextJson);
             if (parent != null) {
                 spanBuilder.asChildOf(parent);
-            } else if (withActiveSpanOnly) {
+            } else if (options.isTracingWithActiveSpanOnly()) {
                 return null;
             }
         }
@@ -94,6 +90,19 @@ public class TeiidTracingUtil {
         span.setTag("teiid-request", msg.getRequestID()); //$NON-NLS-1$
         
         return span;
+    }
+
+    /**
+     * Return true if tracing is enabled.
+     * 
+     * Both arguments may be null, in which case true will be returned only if there is an active span
+     * @param options
+     * @param spanContextJson
+     * @return
+     */
+    public boolean isTracingEnabled(Options options, String spanContextJson) {
+        boolean withActiveSpanOnly = options == null?true:options.isTracingWithActiveSpanOnly();
+        return !withActiveSpanOnly || tracer.activeSpan() != null || spanContextJson != null;
     }
     
     /**

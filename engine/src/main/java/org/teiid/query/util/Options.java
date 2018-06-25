@@ -37,6 +37,7 @@ public class Options {
 	public static final String ASSUME_MATCHING_COLLATION = "org.teiid.assumeMatchingCollation"; //$NON-NLS-1$
 	public static final String AGGRESSIVE_JOIN_GROUPING = "org.teiid.aggressiveJoinGrouping"; //$NON-NLS-1$
 	public static final String MAX_SESSION_BUFFER_SIZE_ESTIMATE = "org.teiid.maxSessionBufferSizeEstimate"; //$NON-NLS-1$
+	public static final String TRACING_WITH_ACTIVE_SPAN_ONLY = "org.teiid.tracingWithActiveSpanOnly"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault = false;
@@ -49,6 +50,7 @@ public class Options {
 	private boolean assumeMatchingCollation = true;
 	private boolean aggressiveJoinGrouping = true;
 	private long maxSessionBufferSizeEstimate = Long.MAX_VALUE;
+	private boolean tracingWithActiveSpanOnly = true;
 	
 	public Properties getProperties() {
 		return properties;
@@ -189,4 +191,18 @@ public class Options {
 	public long getMaxSessionBufferSizeEstimate() {
         return maxSessionBufferSizeEstimate;
     }
+	
+	public void setTracingWithActiveSpanOnly(
+            boolean tracingWithActiveSpanOnly) {
+        this.tracingWithActiveSpanOnly = tracingWithActiveSpanOnly;
+    }
+	
+	public boolean isTracingWithActiveSpanOnly() {
+        return tracingWithActiveSpanOnly;
+    }
+	
+	public Options tracingWithActiveSpanOnly(boolean b) {
+	    this.tracingWithActiveSpanOnly = b;
+	    return this;
+	}
 }

@@ -594,7 +594,10 @@ public class DQPCore implements DQP {
     void logMMCommand(RequestWorkItem workItem, Event status, Long rowCount, Long cpuTime) {
     	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL))
     			|| (status == Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE))) {
-    		return;
+    		if (!TeiidTracingUtil.getInstance().isTracingEnabled(options, workItem.requestMsg.getSpanContext())) {
+    		    return;
+    		}
+    		//else tracing is enabled
     	}
     	
         RequestMessage msg = workItem.requestMsg;
@@ -610,7 +613,7 @@ public class DQPCore implements DQP {
         CommandLogMessage message = null;
         if (status == Event.NEW) {
             message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), appName, workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), msg.getCommandString(), cpuTime);
-            workItem.setTracingSpan(TeiidTracingUtil.getInstance().buildSpan(message, msg.getSpanContext()));
+            workItem.setTracingSpan(TeiidTracingUtil.getInstance().buildSpan(options, message, msg.getSpanContext()));
         } else {
             QueryProcessor qp = workItem.getProcessor();
             PlanNode plan = null;
