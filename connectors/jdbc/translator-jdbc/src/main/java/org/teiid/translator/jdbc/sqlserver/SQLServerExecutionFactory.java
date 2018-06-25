@@ -33,6 +33,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
@@ -60,7 +62,48 @@ import org.teiid.util.Version;
 @Translator(name="sqlserver", description="A translator for Microsoft SQL Server Database")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
-	private final class UpperLowerFunctionModifier
+	final class SQLServerMetadataProcessor
+            extends JDBCMetadataProcessor {
+        Pattern PROCEDURE_PATTERN = Pattern.compile("(.*);\\d*"); //$NON-NLS-1$
+
+        @Override
+        protected Column addColumn(ResultSet columns, Table table,
+                MetadataFactory metadataFactory, int rsColumns)
+                throws SQLException {
+            Column c = super.addColumn(columns, table, metadataFactory, rsColumns);
+            //The ms jdbc driver does not correctly report the auto incremented column
+            if (!c.isAutoIncremented() && c.getNativeType() != null && StringUtil.endsWithIgnoreCase(c.getNativeType(), " identity")) { //$NON-NLS-1$
+                c.setAutoIncremented(true);
+            }
+            return c;
+        }
+
+        @Override
+        protected ResultSet executeSequenceQuery(Connection conn)
+                throws SQLException {
+            if (getVersion().compareTo(ELEVEN_0) < 0) {
+                return null;
+            }
+            String query = "select db_name() as sequence_catalog, SCHEMA_NAME(schema_id) as sequence_schema, name as sequence_name from sys.sequences" //$NON-NLS-1$
+                    + "where db_name() like ? and SCHEMA_NAME(schema_id) like ? and name like ?"; //$NON-NLS-1$
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setString(1, getCatalog()==null?"%":getCatalog()); //$NON-NLS-1$
+            ps.setString(2, getSchemaPattern()==null?"%":getSchemaPattern()); //$NON-NLS-1$
+            ps.setString(3, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
+            return ps.executeQuery();
+        }
+
+        @Override
+        protected String modifyProcedureNameInSource(String nameInSource) {
+            Matcher m = PROCEDURE_PATTERN.matcher(nameInSource);
+            if (m.matches()) {
+                return m.group(1);
+            }
+            return nameInSource;
+        }
+    }
+
+    private final class UpperLowerFunctionModifier
             extends AliasModifier {
         private UpperLowerFunctionModifier(String alias) {
             super(alias);
@@ -506,34 +549,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-        return new JDBCMetadataProcessor() {
-            @Override
-            protected Column addColumn(ResultSet columns, Table table,
-                    MetadataFactory metadataFactory, int rsColumns)
-                    throws SQLException {
-                Column c = super.addColumn(columns, table, metadataFactory, rsColumns);
-                //The ms jdbc driver does not correctly report the auto incremented column
-                if (!c.isAutoIncremented() && c.getNativeType() != null && StringUtil.endsWithIgnoreCase(c.getNativeType(), " identity")) { //$NON-NLS-1$
-                    c.setAutoIncremented(true);
-                }
-                return c;
-            }
-            
-            @Override
-            protected ResultSet executeSequenceQuery(Connection conn)
-                    throws SQLException {
-                if (getVersion().compareTo(ELEVEN_0) < 0) {
-                    return null;
-                }
-                String query = "select db_name() as sequence_catalog, SCHEMA_NAME(schema_id) as sequence_schema, name as sequence_name from sys.sequences" //$NON-NLS-1$
-                        + "where db_name() like ? and SCHEMA_NAME(schema_id) like ? and name like ?"; //$NON-NLS-1$
-                PreparedStatement ps = conn.prepareStatement(query);
-                ps.setString(1, getCatalog()==null?"%":getCatalog()); //$NON-NLS-1$
-                ps.setString(2, getSchemaPattern()==null?"%":getSchemaPattern()); //$NON-NLS-1$
-                ps.setString(3, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
-                return ps.executeQuery();
-            }
-        };
+        return new SQLServerMetadataProcessor();
     }
     
     

@@ -241,6 +241,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 					procedureName = nameInSource;
 				}
 			}
+			nameInSource = modifyProcedureNameInSource(nameInSource);
 			String fullProcedureName = getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName);
 			if ((excludeProcedures != null && excludeProcedures.matcher(fullProcedureName).matches()) || isHiddenSchema(procedureCatalog, procedureSchema)) {
 				continue;
@@ -316,7 +317,16 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		procedures.close();
 	}
 
-	private int checkForUnsigned(int sqlType, String typeName) {
+	/**
+	 * Override to modify the nameInSource for a procedure
+	 * @param nameInSource
+	 * @return
+	 */
+	protected String modifyProcedureNameInSource(String nameInSource) {
+        return nameInSource;
+    }
+
+    private int checkForUnsigned(int sqlType, String typeName) {
 		if (widenUnsingedTypes && unsignedTypes.contains(typeName)) {
 			switch (sqlType) {
 			case Types.TINYINT:
