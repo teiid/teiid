@@ -22,8 +22,11 @@ import java.util.Properties;
 import org.teiid.PreParser;
 import org.teiid.client.RequestMessage;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.jdbc.tracing.GlobalTracerInjector;
 import org.teiid.query.util.Options;
 
+import io.opentracing.Tracer;
+import io.opentracing.contrib.concurrent.TracedRunnable;
 
 public class DQPConfiguration{
 	
@@ -176,7 +179,14 @@ public class DQPConfiguration{
 	}
 
 	public TeiidExecutor getTeiidExecutor() {
-		return new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, getMaxThreads());
+	    return new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, getMaxThreads()) {
+	        Tracer tracer = GlobalTracerInjector.getTracer();
+	        @Override
+	        public void execute(Runnable command) {
+	            super.execute(tracer.activeSpan() == null ? command :
+	                new TracedRunnable(command, tracer));
+	        }
+	    };
 	}
 	
 	public void setPreParser(PreParser preParser) {

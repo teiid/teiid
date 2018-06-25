@@ -137,16 +137,10 @@
       <artifactId>picketbox</artifactId>
       <scope>test</scope>
     </dependency>
-    <!--
     <dependency>
       <groupId>io.opentracing</groupId>
       <artifactId>opentracing-mock</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-    <groupId>io.jaegertracing</groupId>
-    <artifactId>jaeger-core</artifactId>
-    <version>0.29.0</version>
-</dependency>-->
   </dependencies>
 </project>
