@@ -216,7 +216,17 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
 	@Override
     public boolean supportsSelfJoins() {
     	return true;
-    }	
+    }
+
+	@Override
+	public boolean supportsRowLimit() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowOffset() {
+		return true;
+	}
 
 	@Override
 	public List<String> getSupportedFunctions() {
