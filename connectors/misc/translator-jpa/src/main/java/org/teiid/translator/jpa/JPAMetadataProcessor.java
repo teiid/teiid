@@ -54,6 +54,10 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
     
     @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Foreign Table Name", description="Applicable on Foreign Key columns")
 	public static final String KEY_ASSOSIATED_WITH_FOREIGN_TABLE = MetadataFactory.JPA_URI+"assosiated_with_table";
+	@ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Relation Property", description="Applicable on Foreign Key columns")
+	public static final String RELATION_PROPERTY = MetadataFactory.JPA_URI+"relation_property";
+	@ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Relation Key", description="Applicable on Foreign Key columns")
+	public static final String RELATION_KEY = MetadataFactory.JPA_URI+"relation_key";
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
 	public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class";
@@ -108,12 +112,6 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 		for (EntityType<?> entity:entities) {
 			addEntity(mf, filteredModel, entity);
 		}
-		
-		// take a second swipe and add Foreign Keys
-		for (EntityType<?> entity:entities) {
-			Table t = mf.getSchema().getTable(entity.getName());
-			addForeignKeys(mf, filteredModel, entity, t);
-		}		
 	}
 
 	private Table addEntity(MetadataFactory mf, Metamodel model, EntityType<?> entity) throws TranslatorException {
@@ -190,8 +188,11 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 								if (pk != null) { // TODO: entities must have PK, so this check is not needed.
 									ArrayList<String> keys = new ArrayList<String>();
 									for (Column column:pk.getColumns()) {
-										addColumn(mf, column.getName(), column.getDatatype().getRuntimeTypeName(), entityTable);
-										keys.add(column.getName());
+										String fk = attr.getName() + "_" + column.getName();
+										Column c = addColumn(mf, fk, column.getDatatype().getRuntimeTypeName(), entityTable);
+										c.setProperty(RELATION_PROPERTY, attr.getName());
+										c.setProperty(RELATION_KEY, column.getName());
+										keys.add(fk);
 									}
 									if (!foreignKeyExists(keys, entityTable)) {
 										addForeignKey(mf, attr.getName(), keys, attributeTable.getName(), entityTable);
@@ -220,40 +221,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 				|| type.equals(BigInteger.class)
 				|| TypeFacility.getRuntimeType(type) != Object.class;
 	}
-	
-	private void addForeignKeys(MetadataFactory mf, Metamodel model, ManagedType<?> entity, Table entityTable) throws TranslatorException {
-		for (Attribute<?, ?> attr:entity.getAttributes()) {
-			if (attr.isCollection()) {
-				
-				PluralAttribute pa = (PluralAttribute)attr;
-				Table forignTable = null;
-				
-				for (EntityType et:model.getEntities()) {
-					if (et.getJavaType().equals(pa.getElementType().getJavaType())) {
-						forignTable = mf.getSchema().getTable(et.getName());
-						break;
-					}
-				}
-				
-				if (forignTable == null) {
-					continue;
-				}
-				
-				// add foreign keys as columns in table first; check if they exist first
-				ArrayList<String> keys = new ArrayList<String>();
-				KeyRecord pk = entityTable.getPrimaryKey();
-				for (Column entityColumn:pk.getColumns()) {
-					addColumn(mf, entityColumn.getName(), entityColumn.getDatatype().getRuntimeTypeName(), forignTable);
-					keys.add(entityColumn.getName());
-				}
 
-				if (!foreignKeyExists(keys, forignTable)) {
-					addForeignKey(mf, attr.getName(), keys, entityTable.getName(), forignTable);
-				}
-			}
-		}
-	}
-	
 	private boolean foreignKeyExists(List<String> keys, Table forignTable) {
 		boolean fkExists = false;
 		for (ForeignKey fk:forignTable.getForeignKeys()) {
