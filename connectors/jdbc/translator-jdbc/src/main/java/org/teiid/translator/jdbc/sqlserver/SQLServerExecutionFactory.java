@@ -161,6 +161,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		registerFunctionModifier(SourceSystemFunctions.SHA2_512, new TemplateFunctionModifier("HASHBYTES('SHA2_512', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new UpperLowerFunctionModifier("upper")); //$NON-NLS-1$ 
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new UpperLowerFunctionModifier("lower")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("unicode")); //$NON-NLS-1$
 	}
 	
 	@Override
