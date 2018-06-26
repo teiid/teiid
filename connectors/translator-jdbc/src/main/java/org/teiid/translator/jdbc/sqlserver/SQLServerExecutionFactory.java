@@ -90,6 +90,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 			}
 		});
 		registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("CHARINDEX")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("unicode")); //$NON-NLS-1$
 	}
 	
 	@Override

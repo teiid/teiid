@@ -142,7 +142,6 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     
     public void start() throws TranslatorException {
         super.start();
-        registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("unicode")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory())); //$NON-NLS-1$
         if (nullPlusNonNullIsNull()) {
         	registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("+")); //$NON-NLS-1$
