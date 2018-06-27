@@ -45,6 +45,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.TranslationHelper;
 
 @SuppressWarnings("nls")
@@ -372,6 +373,11 @@ public class TestSqlServerConversionVisitor {
 
         TranslationHelper.helpTestVisitor("create foreign table cte_source (id integer, name string options (native_type 'varchar(255)'), fk integer)", input,
                 output, trans);
+    }
+    
+    @Test
+    public void testVariantCast() throws Exception {
+        assertTrue(trans.supportsConvert(FunctionModifier.OBJECT, FunctionModifier.STRING));
     }
        
 }
