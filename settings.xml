@@ -16,6 +16,15 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
             </snapshots>
         </repository>
         <repository>
+            <id>sonatype</id>
+            <name>Sonatype</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>        
+        <repository>
           <id>jboss-public-repository-group</id>
           <name>JBoss Public Maven Repository Group</name>
           <url>http://repository.jboss.org/nexus/content/groups/public/</url>
