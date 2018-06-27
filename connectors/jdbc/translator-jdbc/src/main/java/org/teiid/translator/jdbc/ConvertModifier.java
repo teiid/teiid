@@ -214,8 +214,13 @@ public class ConvertModifier extends FunctionModifier {
 		this.booleanNullable = booleanNullable;
 	}
 	
+	/**
+	 * Return true if there is a type mapping or simple modifier for the given type
+	 * @param type
+	 * @return
+	 */
 	public boolean hasTypeMapping(int type) {
-		return this.typeMapping.containsKey(type);
+		return this.typeMapping.containsKey(type) || this.typeModifier.containsKey(type);
 	}
 
 }
