@@ -24,6 +24,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.teiid.language.Limit;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
@@ -52,8 +53,25 @@ public class JPQLQueryExecution extends JPQLBaseExecution implements ResultSetEx
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "JPA Source-Query:", jpql); //$NON-NLS-1$
 		
 		Query query = this.enityManager.createQuery(jpql);
+		handleLimit(this.command, query);
 		List results = query.getResultList();
 		this.resultsIterator = results.iterator();
+	}
+
+	/**
+	 * If the query specifies a Limit, apply that to the query as firstResult
+	 * and maxResults.
+	 *
+	 * @param command the teiid query to be executed
+	 * @param query the JPA query to be executed
+	 */
+	private void handleLimit(QueryExpression command, Query query) {
+		Limit limit = command.getLimit();
+		if (limit == null) {
+			return;
+		}
+		query.setFirstResult(limit.getRowOffset())
+				.setMaxResults(limit.getRowLimit());
 	}
 
 	@Override
