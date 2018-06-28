@@ -259,6 +259,10 @@ public class TranslatorUtil {
 	}
 
 	public static VDBTranslatorMetaData buildTranslatorMetadata(ExecutionFactory factory, String moduleName) {
+	    return buildTranslatorMetadata(factory, moduleName, true);
+	}
+	
+	public static VDBTranslatorMetaData buildTranslatorMetadata(ExecutionFactory factory, String moduleName, boolean useNewInstance) {
 		
 		org.teiid.translator.Translator translator = factory.getClass().getAnnotation(org.teiid.translator.Translator.class);
 		if (translator == null) {
@@ -277,7 +281,10 @@ public class TranslatorUtil {
 		ExtendedPropertyMetadataList propertyDefns = new ExtendedPropertyMetadataList();
 		
 		try {
-			Object instance = factory.getClass().newInstance();
+		    Object instance = factory;
+		    if (useNewInstance) {
+		        instance = factory.getClass().newInstance();
+		    }
 			buildTranslatorProperties(factory, metadata, propertyDefns, instance);
 			buildExtensionMetadataProperties(factory, metadata, propertyDefns, instance);
 		} catch (InstantiationException e) {

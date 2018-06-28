@@ -45,6 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import javax.transaction.TransactionManager;
 import javax.xml.stream.XMLStreamException;
@@ -666,7 +667,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
      */
     public void addTranslator(String name, ExecutionFactory<?, ?> ef) {
         translators.put(name, ef);
-        VDBTranslatorMetaData vdbTranslatorMetaData = TranslatorUtil.buildTranslatorMetadata(ef, null);
+        VDBTranslatorMetaData vdbTranslatorMetaData = TranslatorUtil.buildTranslatorMetadata(ef, null, true);
+        if (vdbTranslatorMetaData != null) {
+            this.translatorRepository.addTranslatorMetadata(vdbTranslatorMetaData.getName(), vdbTranslatorMetaData);
+        }
+        vdbTranslatorMetaData = TranslatorUtil.buildTranslatorMetadata(ef, null, false);
         if (vdbTranslatorMetaData != null) {
             this.translatorRepository.addTranslatorMetadata(name, vdbTranslatorMetaData);
         }
@@ -964,8 +969,19 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			throws ConnectorManagerException {
 		ExecutionFactory<?, ?> ef = translators.get(name);
 		if (ef == null) {
+		    //map to the expected map
+            IdentityHashMap<org.teiid.adminapi.Translator, ExecutionFactory<Object, Object>> map = translators
+                    .entrySet().stream()
+                    .filter(e -> this.translatorRepository
+                            .getTranslatorMetaData(e.getKey()) != null)
+                    .collect(Collectors.toMap(
+                            e -> (org.teiid.adminapi.Translator) this.translatorRepository
+                                    .getTranslatorMetaData(e.getKey()),
+                            e -> (ExecutionFactory<Object, Object>) e
+                                    .getValue(),
+                            (x, y) -> x, IdentityHashMap::new));
 		    return TranslatorUtil.getExecutionFactory(name, this.translatorRepository, this.translatorRepository, 
-		            null, new IdentityHashMap<org.teiid.adminapi.Translator, ExecutionFactory<Object,Object>>(), new HashSet<String>());
+		            null, map, new HashSet<String>());
 		}
 		return (ExecutionFactory<Object, Object>) ef;
 	}

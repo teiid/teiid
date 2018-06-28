@@ -21,6 +21,7 @@ package org.teiid.translator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
@@ -1040,6 +1041,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public CacheDirective getCacheDirective(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws TranslatorException {
+	    if (cachePattern != null && cachePattern.matcher(command.toString()).matches()) {
+	        //return a new cache directive with defaults and ttl set
+	        CacheDirective cacheDirective = new CacheDirective();
+	        cacheDirective.setTtl(cacheTtl);
+	        return cacheDirective;
+	    }
 		return delegate.getCacheDirective(command, executionContext, metadata);
 	}
 	
@@ -1476,5 +1483,28 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsOnlyTimestampAddLiteral(
             boolean supportsOnlyTimestampAddLiteral) {
         this.supportsOnlyTimestampAddLiteral = supportsOnlyTimestampAddLiteral;
+    }
+    
+    private Pattern cachePattern;
+    @TranslatorProperty(display="Cache Pattern", advanced=true)
+    public String getCachePattern() {
+        if (this.cachePattern != null) {
+            return this.cachePattern.pattern();
+        }
+        return null;
+    }
+    
+    public void setCachePattern(String cachePattern) {
+        this.cachePattern = Pattern.compile(cachePattern);
+    }
+    
+    Long cacheTtl;
+    @TranslatorProperty(display="Cache TTL", advanced=true)
+    public Long getCacheTtl() {
+        return cacheTtl;
+    }
+    
+    public void setCacheTtl(Long ttl) {
+        this.cacheTtl = ttl;
     }
 }
