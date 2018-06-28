@@ -283,7 +283,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 						throw new AssertionError("Out of inodes"); //$NON-NLS-1$
 					}
 					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Allocating inode", this.inode, "to", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$
+						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Allocating inode", this.inode, "to", gid, oid, "; total inodes", getInodesInUse()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					}
 					ByteBuffer bb = getInodeBlock();
 					bb.putInt(EMPTY_ADDRESS);
@@ -557,13 +557,10 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	
 	@Override
 	public void initialize() throws TeiidComponentException {
-		initialize(true);
-	}
-	
-	void initialize(boolean allocateMemory) throws TeiidComponentException {
 		storageManager.initialize();
 		memoryBufferSpace = Math.max(memoryBufferSpace, maxStorageObjectSize);
 		blocks = (int) Math.min(Integer.MAX_VALUE, (memoryBufferSpace>>LOG_BLOCK_SIZE)*ADDRESSES_PER_BLOCK/(ADDRESSES_PER_BLOCK+1));
+		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, blocks, "max blocks"); //$NON-NLS-1$
 		inodesInuse = new ConcurrentBitSet(blocks+1, BufferManagerImpl.CONCURRENCY_LEVEL);
 		blocksInuse = new ConcurrentBitSet(blocks, BufferManagerImpl.CONCURRENCY_LEVEL);
 		this.blockByteBuffer = new BlockByteBuffer(30, blocks, LOG_BLOCK_SIZE, direct);
