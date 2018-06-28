@@ -547,4 +547,41 @@ public class TestPreparedStatement {
         helpTestProcessing(preparedSql, values, expected, dataManager, caps, metadata, null, false, false, false, RealMetadataFactory.example1VDB());
     }
     
+    @Test public void testParallelIn() throws Exception {
+        String preparedSql = "select e1 from pm1.g1 where pm1.g1.e2 in (?,?,?,?,?,?,?,?)"; //$NON-NLS-1$
+        
+        List<?> values = Arrays.asList(1,2,3,4,5,6,7,8); //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] { 
+            Arrays.asList("a"),
+            Arrays.asList("b"),
+        };    
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        int maxInSize = 4;
+        dataManager.getLanguageBridgeFactory().setMaxInPredicateSize(maxInSize); //normally set in the connectorworkitem
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 IN (1, 2, 3, 4) OR g_0.e2 IN (5, 6, 7, 8)", new List<?>[] {Arrays.asList("a"), Arrays.asList("b")});
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, maxInSize);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+        helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+        
+        dataManager.clearData();
+        //should cause two parallel queries
+        bsc.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 IN (1, 2, 3, 4)", new List<?>[] {Arrays.asList("a")});
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 IN (5, 6, 7, 8)", new List<?>[] {Arrays.asList("b")});
+        helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+        
+        dataManager.clearData();
+        preparedSql = "select e1 from pm1.g1 where pm1.g1.e2 in (1,2,3,4,5,6,7,8) and e1 < ?"; //$NON-NLS-1$
+        values = Arrays.asList("c"); //$NON-NLS-1$
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e1 < 'c' AND g_0.e2 IN (1, 2, 3, 4)", new List<?>[] {Arrays.asList("a")});
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e1 < 'c' AND g_0.e2 IN (5, 6, 7, 8)", new List<?>[] {Arrays.asList("b")});
+        helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+    }
+    
 }
+

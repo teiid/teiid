@@ -18,6 +18,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
+import java.util.Collection;
 import java.util.Collections;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -33,6 +34,8 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -55,8 +58,20 @@ public class RulePushLargeIn implements OptimizerRule {
                 continue;
             }
             SetCriteria setCriteria = (SetCriteria)crit;
-            if (setCriteria.isNegated() || !setCriteria.isAllConstants()) {
+            if (setCriteria.isNegated()) {
                 continue;
+            }
+            if (!setCriteria.isAllConstants()) {
+                boolean allowed = true;
+                for (Expression ex : (Collection<Expression>)setCriteria.getValues()) {
+                    if (!EvaluatableVisitor.willBecomeConstant(ex)) {
+                        allowed = false;
+                        break;
+                    }
+                }
+                if (!allowed) {
+                    continue;
+                }
             }
             //we need to be directly over an access node
             PlanNode childAccess = critNode.getFirstChild();
