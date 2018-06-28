@@ -226,8 +226,27 @@ public class TestPreparedStatementBatchedUpdate {
                 Arrays.asList(1)
         };
     	
+    	//no upsert nor bulk/batch support, will use a compensating procedure
+    	
     	// Create the plan and process the query
     	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
+    	
+    	//without upsert support it should function the same regardless of batching/bulk support
+    	prepPlanCache.clearAll();
+    	caps.setCapabilitySupport(Capability.BATCHED_UPDATES, true);
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
+    	
+        prepPlanCache.clearAll();
+        caps.setCapabilitySupport(Capability.BATCHED_UPDATES, false);
+        caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
+        TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
+        
+        //with upsert full pushdown is expected
+        prepPlanCache.clearAll();
+        caps.setCapabilitySupport(Capability.UPSERT, true);
+        caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
+        dataManager.addData("UPSERT INTO x (y, z) VALUES (?, ?)", Arrays.asList(1), Arrays.asList(1));
+        TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
     }
     
     /**
