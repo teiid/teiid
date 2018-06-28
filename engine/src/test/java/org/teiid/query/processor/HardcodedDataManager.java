@@ -74,6 +74,10 @@ public class HardcodedDataManager implements
     	this.mustRegisterCommands = mustRegisterCommands;
     }
     
+    public LanguageBridgeFactory getLanguageBridgeFactory() {
+        return lbf;
+    }
+    
     public void addData(String sql, List<?>... rows) {
         data.put(sql, rows);
     }
