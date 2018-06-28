@@ -18,12 +18,13 @@
 
 package org.teiid.query.optimizer;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
@@ -56,12 +57,8 @@ import org.teiid.query.validator.ValidatorReport;
 /** 
  * @since 4.2
  */
-public class TestBatchedUpdatePlanner extends TestCase {
+public class TestBatchedUpdatePlanner {
 
-    public TestBatchedUpdatePlanner(String name) {
-        super(name);
-    }
-    
     public static List<Command> helpGetCommands(String[] sql, QueryMetadataInterface md) throws TeiidComponentException, TeiidProcessingException  { 
         if(DEBUG) System.out.println("\n####################################\n" + sql);  //$NON-NLS-1$
         List<Command> commands = new ArrayList<Command>(sql.length);
@@ -169,7 +166,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
         }
     }    
     
-    public void testPlannerAllCommandsBatched() throws Exception {
+    @Test public void testPlannerAllCommandsBatched() throws Exception {
         String[] sql = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "INSERT INTO pm1.g2 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "DELETE FROM pm1.g1 WHERE e2 > 5000", //$NON-NLS-1$
@@ -179,7 +176,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
         helpTestPlanner(sql, expectedBatching);
     }
     
-    public void testPlannerNoCommandsBatched() throws Exception {
+    @Test public void testPlannerNoCommandsBatched() throws Exception {
         String[] sql = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "INSERT INTO pm1.g2 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "DELETE FROM pm1.g1 WHERE e2 > 5000", //$NON-NLS-1$
@@ -191,7 +188,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
         helpTestPlanner(sql, expectedBatching, finder);
     }
     
-    public void testPlannerSomeCommandsBatched() throws Exception {
+    @Test public void testPlannerSomeCommandsBatched() throws Exception {
         String[] sql = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "INSERT INTO pm1.g2 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "DELETE FROM pm2.g1 WHERE e2 > 5000", //$NON-NLS-1$
