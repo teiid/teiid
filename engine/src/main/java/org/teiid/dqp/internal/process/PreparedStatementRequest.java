@@ -52,7 +52,6 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
-import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
@@ -173,20 +172,17 @@ public class PreparedStatementRequest extends Request {
 		}
 		boolean supportPreparedBatchUpdate = false;
 		Command command = null;
-		if (this.processPlan instanceof RelationalPlan) {
-			RelationalPlan rPlan = (RelationalPlan)this.processPlan;
-			if (rPlan.getRootNode() instanceof AccessNode) {
-				AccessNode aNode = (AccessNode)rPlan.getRootNode();
-				String modelName = aNode.getModelName();
-				command = aNode.getCommand();
-		        SourceCapabilities caps = capabilitiesFinder.findCapabilities(modelName);
-		        supportPreparedBatchUpdate = caps.supportsCapability(SourceCapabilities.Capability.BULK_UPDATE);
-		        if (supportPreparedBatchUpdate
-		                //only allow the plan if the multi-valued references result in expressions that can be pushed
-		                && !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(command, metadata.getModelID(modelName), metadata, capabilitiesFinder, analysisRecord, false, false, true)) {
-		            supportPreparedBatchUpdate = false;
-		        }
-			}
+		AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(this.processPlan);
+		if (aNode != null) {
+			String modelName = aNode.getModelName();
+			command = aNode.getCommand();
+	        SourceCapabilities caps = capabilitiesFinder.findCapabilities(modelName);
+	        supportPreparedBatchUpdate = caps.supportsCapability(SourceCapabilities.Capability.BULK_UPDATE);
+	        if (supportPreparedBatchUpdate
+	                //only allow the plan if the multi-valued references result in expressions that can be pushed
+	                && !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(command, metadata.getModelID(modelName), metadata, capabilitiesFinder, analysisRecord, false, false, true)) {
+	            supportPreparedBatchUpdate = false;
+	        }
 		}
 		List<Command> commands = new LinkedList<Command>();
 		List<VariableContext> contexts = new LinkedList<VariableContext>();

@@ -33,8 +33,10 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
+import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
 import org.teiid.query.processor.BatchedUpdatePlan;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.BatchedUpdateNode;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -93,6 +95,15 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         List<VariableContext> planContexts = null;
         if (allContexts != null) {
         	planContexts = new ArrayList<VariableContext>(allContexts.size());
+        }
+        //pre-plan the commands to determine pushdown/batching eligibility
+        for (int commandIndex = 0; commandIndex < numCommands; commandIndex++) {
+            Command cmd = batchedUpdateCommand.getUpdateCommands().get(commandIndex);
+            ProcessorPlan plan = cmd.getProcessorPlan();
+            if (plan == null) {
+                plan = QueryOptimizer.optimizePlan(cmd, metadata, idGenerator, capFinder, analysisRecord, context);
+                cmd.setProcessorPlan(plan);
+            }
         }
         for (int commandIndex = 0; commandIndex < numCommands; commandIndex++) {
             // Potentially the first command of a batch
@@ -163,9 +174,6 @@ public class BatchedUpdatePlanner implements CommandPlanner {
             if (!commandWasBatched) { // If the command wasn't batched, just add the plan for this command to the list of plans
             	Command cmd = batchedUpdateCommand.getUpdateCommands().get(commandIndex);
             	ProcessorPlan plan = cmd.getProcessorPlan();
-            	if (plan == null) {
-            		plan = QueryOptimizer.optimizePlan(cmd, metadata, idGenerator, capFinder, analysisRecord, context);
-            	}
                 childPlans.add(plan);
                 if (allContexts != null) {
                 	planContexts.add(allContexts.get(commandIndex));
@@ -203,8 +211,10 @@ public class BatchedUpdatePlanner implements CommandPlanner {
      * @since 4.2
      */
     public static boolean isEligibleForBatching(Command command, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+        ProcessorPlan plan = command.getProcessorPlan();
+        AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(plan);
         // If the command updates a physical group, it's eligible
-        return !metadata.isVirtualGroup(getUpdatedGroup(command).getMetadataID());
+        return aNode != null && !metadata.isVirtualGroup(getUpdatedGroup(command).getMetadataID());
     }
     
     /**

@@ -112,7 +112,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }            
             case NodeConstants.Types.PROJECT:
             {         
-            	if (CapabilitiesUtil.supports(Capability.NO_PROJECTION, modelID, metadata, capFinder)) {
+                //if the source does not support projection and this is not an update we can't raise
+            	if (CapabilitiesUtil.supports(Capability.NO_PROJECTION, modelID, metadata, capFinder) 
+            	        && FrameUtil.getNonQueryCommand(accessNode) == null) {
             		return null;
             	}
             	
