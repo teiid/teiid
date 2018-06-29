@@ -250,6 +250,10 @@ public abstract class AbstractMetadataRecord implements Serializable {
         return getUUID().hashCode();
     }
     
+    /**
+     * Objects used to make this object.  Never null.
+     * @return 
+     */
     public Collection<AbstractMetadataRecord> getIncomingObjects() {
     	if (incomingObjects == null) {
     		return EMPTY_INCOMING;

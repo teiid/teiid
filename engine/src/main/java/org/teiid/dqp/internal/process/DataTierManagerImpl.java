@@ -936,27 +936,30 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(vdb.getName());
 				row.add(currentParent.getUUID());
 				row.add(getType(currentParent));
-				if (currentParent instanceof Column) {
-				    row.add(currentParent.getParent().getParent().getName());
-                    row.add(currentParent.getParent().getName());
-                    row.add(currentParent.getName());
-				} else {
-				    row.add(currentParent.getParent().getName());
-	                row.add(currentParent.getName());
-	                row.add(null);
-				}
+				addNames(row, currentParent);
 				row.add(entry.getUUID());
 				row.add(getType(entry));
-				if (entry instanceof Column) {
-					row.add(entry.getParent().getParent().getName());
-					row.add(entry.getParent().getName());
-					row.add(entry.getName()); 
-				} else {
-					row.add(entry.getParent().getName());
-					row.add(entry.getName());
-					row.add(null);
-				}
+				addNames(row, entry);
         	}
+
+            private void addNames(List<Object> row,
+                    AbstractMetadataRecord record) {
+                if (record instanceof Column) {
+				    if (record.getParent().getParent() instanceof Procedure) {
+				        //parameter, skip the result set parent
+                        row.add(record.getParent().getParent().getParent().getName());
+                        row.add(record.getParent().getParent().getName());				        
+				    } else {
+	                    row.add(record.getParent().getParent().getName());
+	                    row.add(record.getParent().getName());
+				    }
+                    row.add(record.getName());
+				} else {
+				    row.add(record.getParent().getName());
+	                row.add(record.getName());
+	                row.add(null);
+				}
+            }
         	
         	private String getType(AbstractMetadataRecord record) {
         		if (record instanceof Table) {
@@ -982,6 +985,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	
         	@Override
         	protected Collection<AbstractMetadataRecord> getChildren(AbstractMetadataRecord parent, CommandContext cc) {
+        	    if (parent.getParent() != null && parent.getParent().getParent() instanceof Procedure) {
+        	        System.out.println(parent);
+        	    }
         		return parent.getIncomingObjects();
         	}
 		});

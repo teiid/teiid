@@ -51,12 +51,18 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
+import org.teiid.query.sql.navigator.PreOrderNavigator;
+import org.teiid.query.sql.proc.Block;
+import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -692,6 +698,31 @@ public class MetadataValidator {
 		        c.setIncomingObjects(columnValues);
                 determineDependencies(command, c, i, columnValues);
 		    }
+		} else if (p instanceof Procedure) {
+		    final Procedure proc = (Procedure) p;
+		    if (proc.getResultSet() == null) {
+		        return;
+		    }
+		    CreateProcedureCommand cpc = (CreateProcedureCommand)command;
+		    Block b = cpc.getBlock();
+		    PreOrderNavigator.doVisit(b, new LanguageVisitor() {
+		        public void visit(CommandStatement obj) {
+		            if (!obj.isReturnable() || obj.getCommand() instanceof DynamicCommand) {
+		                return;
+		            }
+		            for (int i = 0; i < proc.getResultSet().getColumns().size(); i++) {
+	                    Column c = proc.getResultSet().getColumns().get(i);
+	                    LinkedHashSet<AbstractMetadataRecord> columnValues = null;
+	                    if (c.getIncomingObjects() instanceof LinkedHashSet) {
+	                        columnValues = (LinkedHashSet<AbstractMetadataRecord>) c.getIncomingObjects();
+	                    } else {
+	                        columnValues = new LinkedHashSet<>();
+	                        c.setIncomingObjects(columnValues);
+	                    }
+	                    determineDependencies(obj.getCommand(), c, i, columnValues);
+	                }
+		        }
+            });
 		}
 	}
 
@@ -720,7 +751,7 @@ public class MetadataValidator {
     }
 
     private static void determineDependencies(Command command, Column c, int index, LinkedHashSet<AbstractMetadataRecord> columnValues) {
-        if (command instanceof Query) {
+        if (command instanceof Query || command instanceof StoredProcedure) {
             Expression ex = command.getProjectedSymbols().get(index);
             collectDependencies(ex, columnValues);
         } else if (command instanceof SetQuery) {
