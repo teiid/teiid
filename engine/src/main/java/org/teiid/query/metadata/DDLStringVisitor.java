@@ -387,6 +387,9 @@ public class DDLStringVisitor {
                     continue;
                 }
             }
+            if (this.filter != null && !filter.matcher(record.getName()).matches()) {
+                continue;
+            }
             if (first) {
                 first = false;
             }
@@ -405,10 +408,6 @@ public class DDLStringVisitor {
 	}
 
 	private void visit(Table table) {
-		if (this.filter != null && !filter.matcher(table.getName()).matches()) {
-			return;
-		}
-		
 		append(CREATE).append(SPACE);
 		if (table.isPhysical()) {
 			append(FOREIGN_TABLE);
@@ -853,10 +852,6 @@ public class DDLStringVisitor {
 	}
 	
 	private void visit(Procedure procedure) {
-		if (this.filter != null && !filter.matcher(procedure.getName()).matches()) {
-			return;
-		}
-		
 		append(CREATE).append(SPACE);
 		if (procedure.isVirtual()) {
 			append(VIRTUAL);
@@ -955,9 +950,6 @@ public class DDLStringVisitor {
 	}	
 
 	private void visit(FunctionMethod function) {
-		if (this.filter != null && !filter.matcher(function.getName()).matches()) {
-			return;
-		}		
 		append(CREATE).append(SPACE);
 		if (function.getPushdown().equals(FunctionMethod.PushDown.MUST_PUSHDOWN)) {
 			append(FOREIGN);
