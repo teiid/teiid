@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>couchbase</artifactId>
-      <version>10.2.3</version>
+      <version>10.2.4-SNAPSHOT</version>
     </parent>
     <groupId>org.teiid.connectors</groupId> 
     <artifactId>connector-couchbase</artifactId>
