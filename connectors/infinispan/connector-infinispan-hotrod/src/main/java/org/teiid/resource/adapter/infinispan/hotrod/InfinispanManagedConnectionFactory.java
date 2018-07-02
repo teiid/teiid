@@ -53,8 +53,9 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     private String password;
     private String authenticationRealm;
     private String authenticationServerName;
-
-    private String trustStoreFileName = System.getProperty("javax.net.ssl.trustStore");
+    private String cacheTemplate;
+    
+	private String trustStoreFileName = System.getProperty("javax.net.ssl.trustStore");
     private String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
     private String keyStoreFileName = System.getProperty("javax.net.ssl.keyStore");
     private String keyStorePassword = System.getProperty("javax.net.ssl.keyStorePassword");
@@ -228,7 +229,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
         @Override
         public InfinispanConnectionImpl getConnection() throws ResourceException {
-            return new InfinispanConnectionImpl(this.cacheManager, this.scriptCacheManager, cacheName,this.ctx, this);
+			return new InfinispanConnectionImpl(this.cacheManager, this.scriptCacheManager, cacheName, this.ctx, this,
+					cacheTemplate);
         }
     }
 
@@ -304,6 +306,14 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         this.keyStorePassword = keyStorePassword;
     }
     
+    public String getCacheTemplate() {
+		return cacheTemplate;
+	}
+
+	public void setCacheTemplate(String cacheTemplate) {
+		this.cacheTemplate = cacheTemplate;
+	}
+	
     @Override
     public int hashCode() {
         final int prime = 31;

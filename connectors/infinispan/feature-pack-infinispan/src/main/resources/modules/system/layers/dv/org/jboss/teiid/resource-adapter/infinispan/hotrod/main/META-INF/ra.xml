@@ -97,7 +97,13 @@
                 <description>{$display:"Authentication User Password",$description:"Authentication User Password",$required:"false",$masked:"true"}</description>
                <config-property-name>Password</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-            </config-property>     
+            </config-property>    
+            
+            <config-property>
+                <description>{$display:"Cache Template",$description:"Default Cache template to use to create dynamic cache stores",$required:"false",$masked:"false"}</description>
+               <config-property-name>CacheTemplate</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property> 
  
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>

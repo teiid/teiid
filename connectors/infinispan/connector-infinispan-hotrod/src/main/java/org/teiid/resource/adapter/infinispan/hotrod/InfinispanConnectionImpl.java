@@ -19,14 +19,15 @@
 package org.teiid.resource.adapter.infinispan.hotrod;
 
 
+import java.util.EnumSet;
 import java.util.Map;
 
 import javax.resource.ResourceException;
 
+import org.infinispan.client.hotrod.AdminFlag;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.commons.api.BasicCache;
-import org.infinispan.commons.api.BasicCacheContainer;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContext.MarshallerProvider;
@@ -47,9 +48,10 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
     private ThreadAwareMarshallerProvider marshallerProvider = new ThreadAwareMarshallerProvider();
     private InfinispanConnectionFactory icf;
     private RemoteCacheManager scriptManager;
+    private String cacheTemplate;
 
 	public InfinispanConnectionImpl(RemoteCacheManager manager, RemoteCacheManager scriptManager, String cacheName,
-			SerializationContext ctx, InfinispanConnectionFactory icf) throws ResourceException {
+			SerializationContext ctx, InfinispanConnectionFactory icf, String cacheTemplate) throws ResourceException {
         this.cacheManager = manager;
         this.cacheName = cacheName;
         this.ctx = ctx;
@@ -61,16 +63,12 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
             throw new ResourceException(t);
         }
         this.scriptManager = scriptManager;
+        this.cacheTemplate = cacheTemplate;
     }
 
     @Override
     public void registerProtobufFile(ProtobufResource protobuf) throws TranslatorException {
         this.icf.registerProtobufFile(protobuf);
-    }
-
-    @Override
-    public BasicCacheContainer getCacheFactory() throws TranslatorException {
-        return this.cacheManager;
     }
 
     @Override
@@ -83,6 +81,16 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
     @Override
     public BasicCache getCache() throws TranslatorException {
         return defaultCache;
+    }
+    
+    @Override
+    public <K, V> BasicCache<K, V> getCache(String cacheName, boolean createIfNotExists) throws TranslatorException{
+    	RemoteCache<Object, Object> cache = cacheManager.getCache(cacheName);
+    	if (cache == null && createIfNotExists) {
+    		cacheManager.administration().createCache(cacheName, this.cacheTemplate, EnumSet.of(AdminFlag.PERSISTENT));
+    		cache = cacheManager.getCache(cacheName);
+    	}
+    	return (BasicCache<K,V>)cache;
     }
 
     @Override
