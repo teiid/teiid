@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>misc</artifactId>
-        <version>10.3.2</version>
+        <version>10.3.3-SNAPSHOT</version>
     </parent>
     <artifactId>translator-jpa</artifactId>
     <groupId>org.teiid.connectors</groupId>
