@@ -115,3 +115,10 @@ CREATE FOREIGN TABLE thing (
   FOREIGN KEY (thing_type_id) REFERENCES thing_type (id) OPTIONS(NAMEINSOURCE 'thing_type'),
   FOREIGN KEY (thing_subtype_id) REFERENCES thing_type (id) OPTIONS(NAMEINSOURCE 'thing_subtype')
 );
+
+CREATE FOREIGN TABLE thing_with_embedded (
+  id integer NOT NULL AUTO_INCREMENT,
+  prop1 integer OPTIONS(NAMEINSOURCE 'embedded.prop1'),
+  prop2 integer OPTIONS(NAMEINSOURCE 'embedded.prop2'),
+  PRIMARY KEY (id)
+);
