@@ -424,7 +424,12 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     		if (record != null) {
     			String name = record.getProperty(JPAMetadataProcessor.KEY_ASSOSIATED_WITH_FOREIGN_TABLE, false); 
     			if (name == null) {
-					buffer.append(column.getTable().getCorrelationName()).append(Tokens.DOT).append(column.getMetadataObject().getName());
+					/*
+					 * The fallback to getName() is really there just to save me
+					 * the trouble of updating the test data in sakila.ddl.
+					 */
+					buffer.append(column.getTable().getCorrelationName()).append(Tokens.DOT)
+							.append(record.getNameInSource() != null ? column.getMetadataObject().getNameInSource() : record.getName());
     			}
     			else {
 					String attrName = record.getProperty(JPAMetadataProcessor.RELATION_PROPERTY, false);

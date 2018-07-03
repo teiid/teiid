@@ -104,5 +104,12 @@ public class TestJSelectJPQLVisitor {
 						"LEFT OUTER JOIN tp.thing_type AS J_1");
 	}
 
+	@Test
+	public void testEmbedded() throws Exception {
+    	helpExecute("select * from thing_with_embedded as t",
+				"SELECT t.id, t.embedded.prop1, t.embedded.prop2 " +
+						"FROM thing_with_embedded AS t");
+	}
+
 	// needs one with composite PK
 }
