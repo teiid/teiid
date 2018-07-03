@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
@@ -121,7 +122,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 			table.setSupportsUpdate(true);
 			table.setProperty(ENTITYCLASS, entity.getJavaType().getCanonicalName());
 			addPrimaryKey(mf, model, entity, table);
-			addSingularAttributes(mf, model, entity, table);
+			addSingularAttributes(mf, model, entity, table, Collections.EMPTY_LIST);
 		}
 		return table;
 	}
@@ -129,7 +130,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 	private boolean columnExists(String name, Table table) {
 		return table.getColumnByName(name) != null;
 	}
-	
+
 	private Column addColumn(MetadataFactory mf, String name, String type, Table entityTable) throws TranslatorException {
 		if (!columnExists(name, entityTable)) {
 			Column c = mf.addColumn(name, type, entityTable);
@@ -148,23 +149,31 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 		fk.setNameInSource(name);
 	}
 
-	private void addSingularAttributes(MetadataFactory mf, Metamodel model, ManagedType<?> entity, Table entityTable) throws TranslatorException {
+	private void addSingularAttributes(MetadataFactory mf, Metamodel model,
+			ManagedType<?> entity, Table entityTable, List<String> path)
+			throws TranslatorException {
 		for (Attribute<?, ?> attr:entity.getAttributes()) {
 			if (!attr.isCollection()) {
+				List<String> attrPath = new LinkedList<>(path);
+				attrPath.add(attr.getName());
+
 				boolean simpleType = isSimpleType(attr.getJavaType());
 				if (simpleType) {
-					Column column = addColumn(mf, attr.getName(), TypeFacility.getDataTypeName(getJavaDataType(attr.getJavaType())), entityTable);
+					Column column = addColumn(mf, String.join("_", attrPath),
+							TypeFacility.getDataTypeName(getJavaDataType(attr.getJavaType())), entityTable);
 					if (((SingularAttribute)attr).isOptional()) {
 						column.setDefaultValue(null);
 					}
+					column.setNameInSource(String.join(".", attrPath));
 				}
 				else if (attr.getJavaType().isEnum()) {
-					Column column = addColumn(mf, attr.getName(),
+					Column column = addColumn(mf, String.join("_", attrPath),
 							DataTypeManager.DefaultDataTypes.STRING, entityTable);
 					if (((SingularAttribute)attr).isOptional()) {
 						column.setDefaultValue(null);
 					}
 					column.setNativeType(attr.getJavaType().getName());
+					column.setNameInSource(String.join(".", attrPath));
 				}
 				else {
 					boolean classFound = false;
@@ -172,7 +181,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 					// this tables columns
 					for (EmbeddableType<?> embeddable:model.getEmbeddables()) {
 						if (embeddable.getJavaType().equals(attr.getJavaType())) {
-							addSingularAttributes(mf, model, embeddable, entityTable);
+							addSingularAttributes(mf, model, embeddable, entityTable, attrPath);
 							classFound = true;
 							break;
 						}
@@ -192,6 +201,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 										Column c = addColumn(mf, fk, column.getDatatype().getRuntimeTypeName(), entityTable);
 										c.setProperty(RELATION_PROPERTY, attr.getName());
 										c.setProperty(RELATION_KEY, column.getName());
+										c.setNameInSource(column.getNameInSource());
 										keys.add(fk);
 									}
 									if (!foreignKeyExists(keys, entityTable)) {
@@ -214,7 +224,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 			}
 		}
 	}
-	
+
 	private boolean isSimpleType(Class type) {
 		return type.isPrimitive() || type.equals(String.class)
 				|| type.equals(BigDecimal.class) || type.equals(Date.class)
@@ -260,13 +270,13 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 				SingularAttribute<?, ?> pkattr = entity.getId(entity.getIdType().getJavaType());
 				for (EmbeddableType<?> embeddable:model.getEmbeddables()) {
 					if (embeddable.getJavaType().equals(pkattr.getJavaType())) {
-						addSingularAttributes(mf, model, embeddable, entityTable);
+						addSingularAttributes(mf, model, embeddable, entityTable, Collections.singletonList(pkattr.getName()));
 						ArrayList<String> keys = new ArrayList<String>();
 						for (Attribute<?, ?> attr:embeddable.getAttributes()) {
-							if (isSimpleType(attr.getJavaType())) {
-								keys.add(attr.getName());
-							}
-							else {
+							if (isSimpleType(attr.getJavaType())
+									|| attr.getJavaType().isEnum()) {
+								keys.add(String.join("_", pkattr.getName(), attr.getName()));
+							} else {
 								throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14003, entityTable.getName()));
 							}
 						}
