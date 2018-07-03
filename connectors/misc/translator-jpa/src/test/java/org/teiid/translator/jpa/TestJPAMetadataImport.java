@@ -59,10 +59,10 @@ public class TestJPAMetadataImport {
         assertEquals("SET NAMESPACE 'http://www.teiid.org/translator/jpa/2014' AS teiid_jpa;\n" + 
                 "\n" + 
                 "CREATE FOREIGN TABLE Marketdata (\n" + 
-                "\tid string,\n" + 
-                "\tprice bigdecimal,\n" + 
-                "\texchange_name string OPTIONS (\"teiid_jpa:assosiated_with_table\" 'market.Exchange', \"teiid_jpa:relation_key\" 'name', \"teiid_jpa:relation_property\" 'exchange'),\n" + 
-                "\tstock_id string OPTIONS (\"teiid_jpa:assosiated_with_table\" 'market.Stock', \"teiid_jpa:relation_key\" 'id', \"teiid_jpa:relation_property\" 'stock'),\n" + 
+                "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" + 
+                "\tprice bigdecimal OPTIONS (NAMEINSOURCE 'price'),\n" + 
+                "\texchange_name string OPTIONS (NAMEINSOURCE 'name', \"teiid_jpa:assosiated_with_table\" 'market.Exchange', \"teiid_jpa:relation_key\" 'name', \"teiid_jpa:relation_property\" 'exchange'),\n" + 
+                "\tstock_id string OPTIONS (NAMEINSOURCE 'id', \"teiid_jpa:assosiated_with_table\" 'market.Stock', \"teiid_jpa:relation_key\" 'id', \"teiid_jpa:relation_property\" 'stock'),\n" + 
                 "\tCONSTRAINT PK_Marketdata PRIMARY KEY(id),\n" + 
                 "\tCONSTRAINT FK_exchange FOREIGN KEY(exchange_name) REFERENCES Exchange  OPTIONS (NAMEINSOURCE 'exchange'),\n" + 
                 "\tCONSTRAINT FK_stock FOREIGN KEY(stock_id) REFERENCES Stock  OPTIONS (NAMEINSOURCE 'stock')\n" + 
@@ -72,9 +72,9 @@ public class TestJPAMetadataImport {
         assertEquals("SET NAMESPACE 'http://www.teiid.org/translator/jpa/2014' AS teiid_jpa;\n" + 
                 "\n" +
                 "CREATE FOREIGN TABLE Stock (\n" + 
-                "\tid string,\n" + 
-                "\tsymbol string,\n" + 
-                "\tcompanyName string,\n" + 
+                "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" + 
+                "\tsymbol string OPTIONS (NAMEINSOURCE 'symbol'),\n" + 
+                "\tcompanyName string OPTIONS (NAMEINSOURCE 'companyName'),\n" + 
                 "\tCONSTRAINT PK_Stock PRIMARY KEY(id)\n" + 
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_jpa:entity_class\" 'org.teiid.translator.jpa.model.Stock');", ddl);
         
@@ -82,7 +82,7 @@ public class TestJPAMetadataImport {
         assertEquals("SET NAMESPACE 'http://www.teiid.org/translator/jpa/2014' AS teiid_jpa;\n" + 
                 "\n" +
                 "CREATE FOREIGN TABLE Exchange (\n" + 
-                "\tname string,\n" + 
+                "\tname string OPTIONS (NAMEINSOURCE 'name'),\n" + 
                 "\tCONSTRAINT PK_Exchange PRIMARY KEY(name)\n" + 
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_jpa:entity_class\" 'org.teiid.translator.jpa.model.Exchange');", ddl);
     }      

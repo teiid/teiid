@@ -24,12 +24,23 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.teiid.language.*;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.Condition;
+import org.teiid.language.Function;
+import org.teiid.language.Join;
 import org.teiid.language.Join.JoinType;
+import org.teiid.language.NamedTable;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.Select;
+import org.teiid.language.TableReference;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.language.visitor.SQLStringVisitor;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 /**
  * This visitor converts the Teiid command into JPQL string 
@@ -424,12 +435,8 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     		if (record != null) {
     			String name = record.getProperty(JPAMetadataProcessor.KEY_ASSOSIATED_WITH_FOREIGN_TABLE, false); 
     			if (name == null) {
-					/*
-					 * The fallback to getName() is really there just to save me
-					 * the trouble of updating the test data in sakila.ddl.
-					 */
 					buffer.append(column.getTable().getCorrelationName()).append(Tokens.DOT)
-							.append(record.getNameInSource() != null ? column.getMetadataObject().getNameInSource() : record.getName());
+							.append(record.getSourceName());
     			}
     			else {
 					String attrName = record.getProperty(JPAMetadataProcessor.RELATION_PROPERTY, false);
