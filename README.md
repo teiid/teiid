@@ -18,7 +18,6 @@ Teiid is a data virtualization system that allows applications to use data from 
 - install JDK 1.8 or higher
 - install maven 3.2+ - http://maven.apache.org/download.html
 - Create a github account and fork Teiid
-- Use the -Ddocker=true argument to enable image building, which requires a running Docker daemon.
 
 Enter the following:
 

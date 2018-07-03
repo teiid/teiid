@@ -15,8 +15,6 @@
       <dir.wildfly>wildfly-${version.org.wildfly}</dir.wildfly>
       <!-- Teiid server directory name. -->
       <dir.teiid>teiid-${project.version}</dir.teiid>
-      <!-- explicitly declare for docker plugin -->
-      <project.version>${project.version}</project.version>
   </properties>
   
     <build>
@@ -156,50 +154,5 @@
 			</plugin>
         </plugins>
     </build>
-    
-    <profiles>
-		<profile>
-			<id>docker-build</id>
-			<activation>
-				<property>
-					<name>docker</name>
-					<value>true</value>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-			         <plugin>
-		                <groupId>io.fabric8</groupId>
-		                <artifactId>docker-maven-plugin</artifactId>
-		                <configuration>
-		                    <registry>registry.hub.docker.com</registry>
-		                    <images>
-		                        <image>
-		                            <name>teiid/teiid:${project.version}</name>
-		                            <alias>server</alias>
-		                            <build>
-		                                <filter>@</filter>
-		                                <dockerFileDir>${project.basedir}/docker</dockerFileDir>
-		                                <assembly>
-		                                    <descriptor>${project.basedir}/assembly/wildfly-server.xml</descriptor>
-		                                </assembly>
-		                            </build>
-		                        </image>
-		                    </images>
-		                </configuration>
-		                <executions>
-		                    <execution>
-		                        <id>docker-build</id>
-		                        <goals>
-		                            <goal>build</goal>
-		                            <goal>push</goal>
-		                        </goals>
-		                    </execution>
-		                </executions>
-		            </plugin>
-				</plugins>
-			</build>
-		</profile>
-    </profiles>
     
 </project>
