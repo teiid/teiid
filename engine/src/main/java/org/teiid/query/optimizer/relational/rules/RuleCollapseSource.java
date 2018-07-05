@@ -380,7 +380,14 @@ public final class RuleCollapseSource implements OptimizerRule {
     	}
         
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
-        	
+            //check for the projection from the access node
+            //partial pushdown of select expressions creates expressions that reference the
+            //view output columns
+            for (Expression ex : (List<Expression>) accessNode.getProperty(Info.OUTPUT_COLS)) {
+                if (!(SymbolMap.getExpression(ex) instanceof ElementSymbol)) {
+                    return root;
+                }
+            }
         	child.removeProperty(NodeConstants.Info.INLINE_VIEW);
         	root = RuleRaiseAccess.performRaise(root, child, accessNode);
             //add the groups from the lower project
