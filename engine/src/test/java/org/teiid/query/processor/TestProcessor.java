@@ -8013,5 +8013,34 @@ public class TestProcessor {
         TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)});
     }
 	
+   @Test public void testPartialProjectionPushdownWithInlineView() throws Exception {
+       String sql = "select \n" + 
+               "    timestampdiff(SQL_TSI_HOUR, ObsoleteDate, storn) as diff,\n" + 
+               "    case when UnitMeasureCode='platnosci' or UnitMeasureCode like '%PayU - szybkie%' then 'PAYU' else '' end as payu,\n" + 
+               "    case when UnitMeasureCode in ('moneyorder','Przelew bankowy') then 'przelew' else '' end as przelew \n" + 
+               "from (select ObsoleteDate,UnitMeasureCode, MIN(ModifiedDate) as storn from nw.billofmaterials group by ObsoleteDate,UnitMeasureCode ) w";
+       
+       TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE billofmaterials (\n" + 
+               "AssemblyID integer, \n" + 
+               "BillOfMaterialsID integer PRIMARY KEY,\n" + 
+               "ComponentID integer,\n" + 
+               "BOMLevel integer,\n" + 
+               "UnitMeasureCode varchar(3),\n" + 
+               "ObsoleteDate timestamp,\n" + 
+               "ModifiedDate timestamp)", "TEIID-5408", "nw");
+       
+       BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+       caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+       caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
+       caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+       caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+       
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(caps));
+       HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+       dataManager.addData("SELECT v_0.c_0, v_0.c_1, CASE WHEN v_0.c_2 = 'platnosci' OR v_0.c_2 LIKE '%PayU - szybkie%' THEN 'PAYU' ELSE '' END, CASE WHEN v_0.c_2 IN ('moneyorder', 'Przelew bankowy') THEN 'przelew' ELSE '' END FROM (SELECT g_0.ObsoleteDate AS c_0, MIN(g_0.ModifiedDate) AS c_1, g_0.UnitMeasureCode AS c_2 FROM billofmaterials AS g_0 GROUP BY g_0.ObsoleteDate, g_0.UnitMeasureCode) AS v_0",
+               new List<?>[] {Arrays.asList(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), TimestampUtil.createTimestamp(0, 0, 0, 5, 0, 0, 0), "abc", "xyz")});
+       TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(5l, "abc", "xyz")});
+   }
+	
     private static final boolean DEBUG = false;
 }
