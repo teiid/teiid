@@ -5315,7 +5315,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_3.IntKey FROM (BQT1.SmallA AS g_0 CROSS JOIN BQT1.SmallA AS g_1) CROSS JOIN (BQT1.MediumB AS g_2 LEFT OUTER JOIN BQT1.MediumA AS g_3 ON g_3.IntKey = g_2.IntKey)"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_2.IntKey FROM (BQT1.SmallA AS g_0 CROSS JOIN BQT1.SmallA AS g_1) CROSS JOIN (BQT1.MediumA AS g_2 LEFT OUTER JOIN BQT1.MediumB AS g_3 ON g_2.IntKey = g_3.IntKey)"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
         
         checkNodeTypes(plan, FULL_PUSHDOWN);        
