@@ -396,7 +396,7 @@ public class RulePlanJoins implements OptimizerRule {
                     accessNodes.remove(k < i ? k : k - 1);
 
                     //build a new join node
-                    PlanNode joinNode = createJoinNode(accessNode1, accessNode2, joinCriteria, joinType);
+                    PlanNode joinNode = createJoinNode(accessNode2, accessNode1, joinCriteria, joinType);
                     PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, joinNode.getFirstChild(), entry.getKey(), capFinder, metadata, false);
                     for (PlanNode critNode : joinCriteriaNodes) {
                         critNode.removeFromParent();
@@ -430,13 +430,21 @@ public class RulePlanJoins implements OptimizerRule {
         }
     }
 
+    /**
+     * create a join node with accessNode1 as the left child and accessNode2 as the right
+     * @param accessNode1
+     * @param accessNode2
+     * @param joinCriteria
+     * @param joinType
+     * @return
+     */
     private PlanNode createJoinNode(PlanNode accessNode1, PlanNode accessNode2,
             List<Criteria> joinCriteria, JoinType joinType) {
         PlanNode joinNode = createJoinNode();
         joinNode.getGroups().addAll(accessNode1.getGroups());
         joinNode.getGroups().addAll(accessNode2.getGroups());
-        joinNode.addFirstChild(accessNode2);
-        joinNode.addLastChild(accessNode1);
+        joinNode.addFirstChild(accessNode1);
+        joinNode.addLastChild(accessNode2);
         joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, joinType);
         joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
         return joinNode;

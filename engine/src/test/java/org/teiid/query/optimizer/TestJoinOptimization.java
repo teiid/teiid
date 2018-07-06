@@ -503,7 +503,7 @@ public class TestJoinOptimization {
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                                    new String[] {"SELECT g_2.IntKey, g_3.IntKey FROM (BQT1.MediumA AS g_0 CROSS JOIN BQT1.MediumB AS g_1) INNER JOIN (BQT1.SmallA AS g_2 LEFT OUTER JOIN BQT1.SmallB AS g_3 ON g_2.StringKey = g_3.StringKey) ON ((g_3.IntKey + g_0.IntKey) + g_1.IntKey) = 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                                    new String[] {"SELECT g_3.IntKey, g_2.IntKey FROM (BQT1.MediumA AS g_0 CROSS JOIN BQT1.MediumB AS g_1) INNER JOIN (BQT1.SmallB AS g_2 LEFT OUTER JOIN BQT1.SmallA AS g_3 ON g_3.StringKey = g_2.StringKey) ON ((g_2.IntKey + g_0.IntKey) + g_1.IntKey) = 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
     }
@@ -1497,7 +1497,7 @@ public class TestJoinOptimization {
         DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e2 AS c_0, g_0.e1 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm2.g3 AS g_0 ORDER BY c_0", 
-            "SELECT g_1.e1 AS c_0, g_1.e2 AS c_1, g_0.e1 AS c_2, g_0.e3 AS c_3, g_1.e3 AS c_4, g_1.e4 AS c_5 FROM pm1.g4 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_1.e4 = g_0.e4 ORDER BY c_0", 
+            "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_1.e1 AS c_2, g_1.e3 AS c_3, g_0.e3 AS c_4, g_0.e4 AS c_5 FROM pm1.g2 AS g_0 LEFT OUTER JOIN pm1.g4 AS g_1 ON g_0.e4 = g_1.e4 ORDER BY c_0", 
             "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm2.g1 AS g_0 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
