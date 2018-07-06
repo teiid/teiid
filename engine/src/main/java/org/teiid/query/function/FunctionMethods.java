@@ -82,7 +82,6 @@ import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReaderInputStream;
@@ -666,7 +665,9 @@ public final class FunctionMethods {
     }
 	
 	public static Object timestampAdd(String intervalType, long count, Timestamp timestamp) throws FunctionExecutionException {
-		Calendar cal = TimestampWithTimezone.getCalendar();
+	    integerRangeCheck(count); //for compatibility with pushdown only allow int values
+	    
+	    Calendar cal = TimestampWithTimezone.getCalendar();
 
 		long nanos = timestamp.getNanos();
 		cal.setTime(timestamp);
