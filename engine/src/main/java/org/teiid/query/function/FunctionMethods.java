@@ -107,7 +107,9 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public final class FunctionMethods {
 	
-	private static final class UpperLowerReader extends FilterReader {
+	private static final int ONE_BILLION = 1000000000;
+
+    private static final class UpperLowerReader extends FilterReader {
         int c1 = -1;
         private boolean upper;
 
@@ -186,7 +188,12 @@ public final class FunctionMethods {
 
 	public static int plus(int x, int y) throws FunctionExecutionException {
 		long result = (long)x + y;
-		if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+		return integerRangeCheck(result);
+	}
+
+    public static int integerRangeCheck(long result)
+            throws FunctionExecutionException {
+        if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
 			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, result));
 		}
 		return (int)result;
@@ -223,10 +230,7 @@ public final class FunctionMethods {
 
 	public static int minus(int x, int y) throws FunctionExecutionException {
 		long result = (long)x - y;
-		if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
-			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, result));
-		}
-		return (int)result;
+		return integerRangeCheck(result);
 	}
 	
 	public static long minus(long x, long y) throws FunctionExecutionException {
@@ -260,10 +264,7 @@ public final class FunctionMethods {
 
 	public static int multiply(int x, int y) throws FunctionExecutionException {
 		long result = (long)x * y;
-		if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
-			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, result));
-		}
-		return (int)result;
+		return integerRangeCheck(result);
 	}
 	
 	public static long multiply(long x, long y) throws FunctionExecutionException {
@@ -658,41 +659,42 @@ public final class FunctionMethods {
     }
 	
 	//	================== Function = timestampadd =====================
-
-	public static Object timestampAdd(String intervalType, Integer count, Timestamp timestamp) {
+	
+	public static Object timestampAdd(String intervalType, int count, Timestamp timestamp) throws FunctionExecutionException {
 		Calendar cal = TimestampWithTimezone.getCalendar();
 
-		int nanos = timestamp.getNanos();
+		long nanos = timestamp.getNanos();
 		cal.setTime(timestamp);
 
 		// case of interval = 1, fractional seconds (nanos), don't go to branches of addField()
 		if (intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_FRAC_SECOND)) {
-			int countValue = count.intValue();
-			nanos += countValue;
+			nanos = plus(nanos, count);
 
 			// Handle the case of nanos > 999,999,999 and increase the second.
-			// Since the count number is an interger, so the maximum is definite,
+			// Since the count number is an integer, so the maximum is definite,
 			// and nanos/999,999,999 can at most be added to second
-			if ( nanos > 999999999) {
-				int addSecond = nanos / 999999999;
-				int leftNanos = nanos % 999999999;
-				cal.add(Calendar.SECOND, addSecond);
-
-				Timestamp ts = new Timestamp(cal.getTime().getTime());
-				ts.setNanos(leftNanos);
-				return ts;
+			if (Math.abs(nanos) >= ONE_BILLION) {
+				long addSecond = nanos / ONE_BILLION;
+				nanos = (int)(nanos % ONE_BILLION);
+				
+				cal.add(Calendar.SECOND, integerRangeCheck(addSecond));
 			} 
-            // nanos <= 999,999,999
-			Timestamp ts = new Timestamp(cal.getTime().getTime());
-			ts.setNanos(nanos);
-			return ts;
+            
+			if (nanos < 0) {
+                cal.add(Calendar.SECOND, -1);
+                nanos = ONE_BILLION + nanos;
+            }
+
+            Timestamp ts = new Timestamp(cal.getTime().getTime());
+            ts.setNanos((int)nanos);
+            return ts;
 		}
         // for interval from 2 to 9
-		addField(intervalType, count, cal);
+		addField(intervalType, integerRangeCheck(count), cal);
 		Timestamp ts = new Timestamp(cal.getTime().getTime());
 
 		//rectify returned timestamp with original nanos
-		ts.setNanos(nanos);
+		ts.setNanos((int)nanos);
 		return ts;
 	}
 	
@@ -742,7 +744,7 @@ public final class FunctionMethods {
         	if (Math.abs(tsDiff) > Integer.MAX_VALUE) {
         		throw new FunctionExecutionException(QueryPlugin.Event.TEIID31144, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31144));
         	}
-            count = tsDiff * 1000000000 + ts2Obj.getNanos() - ts1Obj.getNanos();
+            count = tsDiff * ONE_BILLION + ts2Obj.getNanos() - ts1Obj.getNanos();
         } else { 
             if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_SECOND)) {
                 count = tsDiff;
