@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -626,6 +627,32 @@ public class TestFunctionPushdown {
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(bsc));
         TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
                 dataMgr, new List<?>[] {Arrays.asList("a")});
+    }
+    
+    @Test public void testTimestampAddLong() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table tbl (long_col long, ts_col timestamp);", "x", "y");
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+
+        String sql = "SELECT timestampadd(sql_tsi_second, long_col, ts_col) from tbl";
+        
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        bsc.setFunctionSupport(SourceSystemFunctions.TIMESTAMPADD, true);
+        
+        dataMgr.addData("SELECT y.tbl.long_col, y.tbl.ts_col FROM y.tbl", Arrays.asList(1l, null));
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(bsc));
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                dataMgr, new List<?>[] {Collections.singletonList(null)});
+        
+        dataMgr.clearData();
+        bsc.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        dataMgr.addData("SELECT timestampadd(sql_tsi_second, y.tbl.long_col, y.tbl.ts_col) FROM y.tbl", Collections.singletonList(null));
+        
+        plan = TestProcessor.helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(bsc));
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                dataMgr, new List<?>[] {Collections.singletonList(null)});
+
     }
 	
 }

@@ -18,24 +18,20 @@
 
 package org.teiid.dqp.internal.datamgr;
 
+import static org.junit.Assert.*;
+
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
+import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.symbol.Constant;
 
-
-public class TestFunctionImpl extends TestCase {
-
-    /**
-     * Constructor for TestFunctionImpl.
-     * @param name
-     */
-    public TestFunctionImpl(String name) {
-        super(name);
-    }
+@SuppressWarnings("nls")
+public class TestFunctionImpl {
 
     public static org.teiid.query.sql.symbol.Function helpExample(String name) {
         Constant c1 = new Constant(new Integer(100));
@@ -49,11 +45,11 @@ public class TestFunctionImpl extends TestCase {
         return (Function) TstLanguageBridgeFactory.factory.translate(helpExample(name));
     }
 
-    public void testGetName() throws Exception {
+    @Test public void testGetName() throws Exception {
         assertEquals("testName", example("testName").getName()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testGetParameters() throws Exception {
+    @Test public void testGetParameters() throws Exception {
         List<Expression> params = example("testFunction").getParameters(); //$NON-NLS-1$
         assertNotNull(params);
         assertEquals(2, params.size());
@@ -62,8 +58,26 @@ public class TestFunctionImpl extends TestCase {
         }
     }
 
-    public void testGetType() throws Exception {
+    @Test public void testGetType() throws Exception {
         assertEquals(Integer.class, example("test").getType()); //$NON-NLS-1$
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testLongTimestampAddLiteral() throws Exception {
+        org.teiid.query.sql.symbol.Expression ex = TestFunctionResolving.getExpression("timestampadd(sql_tsi_second, 9999999999, now())");
+        TstLanguageBridgeFactory.factory.translate(ex);
+    }
+    
+    @Test public void testLongTimestampAddLiteral1() throws Exception {
+        org.teiid.query.sql.symbol.Function ex = (org.teiid.query.sql.symbol.Function)TestFunctionResolving.getExpression("timestampadd(sql_tsi_second, 1, now())");
+        ex.getArgs()[1] = new Constant(1l);
+        Function f = (Function) TstLanguageBridgeFactory.factory.translate(ex);
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, f.getParameters().get(1).getType());
+    }
+    
+    @Test public void testLongTimestampAddLongExpression() throws Exception {
+        org.teiid.query.sql.symbol.Function ex = (org.teiid.query.sql.symbol.Function)TestFunctionResolving.getExpression("timestampadd(sql_tsi_second, cast(1 as long), now())");
+        Function f = (Function) TstLanguageBridgeFactory.factory.translate(ex);
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, f.getParameters().get(1).getType());
     }
 
 }

@@ -20,6 +20,7 @@ package org.teiid.dqp.internal.datamgr;
 
 import java.util.*;
 
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.TupleBuffer;
@@ -45,6 +46,7 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
@@ -177,7 +179,7 @@ public class LanguageBridgeFactory {
     public void setExcludeWithName(String excludeWithName) {
 		this.excludeWithName = excludeWithName;
 	}
-
+    
     public org.teiid.language.Command translate(Command command) {
     	try {
 	        if (command == null) {
@@ -800,6 +802,22 @@ public class LanguageBridgeFactory {
 				caseExpr.setType(DataTypeManager.DefaultDataClasses.STRING);
 				return translate(caseExpr);
             }
+        	if (function.getFunctionDescriptor().getMethod().getParent() == null && name.equalsIgnoreCase(SourceSystemFunctions.TIMESTAMPADD) 
+        	        && function.getArg(1).getType() == DataTypeManager.DefaultDataClasses.LONG) {
+        	    //TEIID-5406 only allow integer literal pushdown for backwards compatibility
+        	    if (params.get(1) instanceof Literal) {
+        	        try {
+                        params.set(1, new Literal(FunctionMethods.integerRangeCheck((Long)((Literal)params.get(1)).getValue()), DataTypeManager.DefaultDataClasses.INTEGER));
+                    } catch (FunctionExecutionException e) {
+                        //corner case - for now we'll just throw an exception, but we could also prevent pushdown
+                        throw new TeiidRuntimeException(QueryPlugin.Event.TEIID31275, e);
+                    }
+        	    } else {
+        	        //cast - will be supported by the check in CriteriaCapabilityValidatorVisitor
+        	        params.set(1, new org.teiid.language.Function(SourceSystemFunctions.CONVERT, 
+        	                Arrays.asList(params.get(1), new Literal(DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataClasses.STRING)), DataTypeManager.DefaultDataClasses.INTEGER));
+        	    }
+        	}
         	//check for translator pushdown functions, and use the name in source if possible
         	if (function.getFunctionDescriptor().getMethod().getNameInSource() != null && 
         			(CoreConstants.SYSTEM_MODEL.equals(function.getFunctionDescriptor().getSchema()) 

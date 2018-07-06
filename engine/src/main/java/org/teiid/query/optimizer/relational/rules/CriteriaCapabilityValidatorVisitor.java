@@ -446,7 +446,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 return;
             }
             String name = obj.getName();
-            if (CapabilitiesUtil.supports(Capability.ONLY_FORMAT_LITERALS, modelID, metadata, capFinder) && parseFormat.contains(name)) {
+            if (caps.supportsCapability(Capability.ONLY_FORMAT_LITERALS) && parseFormat.contains(name)) {
                 //if the function can be evaluated then return as it will get replaced during the final rewrite 
                 if (willBecomeConstant(obj)) { 
                     return; 
@@ -460,27 +460,35 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             		markInvalid(obj, obj.getName() + " non-literal parse format function not supported by source"); //$NON-NLS-1$
                     return;
             	}
-            	if (!CapabilitiesUtil.getCapabilities(modelID, metadata, capFinder).supportsFormatLiteral((String)c.getValue(), StringUtil.endsWithIgnoreCase(name, DataTypeManager.DefaultDataTypes.TIMESTAMP)?Format.DATE:Format.NUMBER)) {
+            	if (!caps.supportsFormatLiteral((String)c.getValue(), StringUtil.endsWithIgnoreCase(name, DataTypeManager.DefaultDataTypes.TIMESTAMP)?Format.DATE:Format.NUMBER)) {
             		markInvalid(obj, obj.getName() + " literal parse " + c + " not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$
                     return;
             	}
             	c.setBindEligible(false);
             }
-            if (CapabilitiesUtil.supports(Capability.ONLY_TIMESTAMPADD_LITERAL, modelID, metadata, capFinder) && name.equalsIgnoreCase(SourceSystemFunctions.TIMESTAMPADD)) {
-                //if the function can be evaluated then return as it will get replaced during the final rewrite 
-                if (willBecomeConstant(obj)) { 
-                    return; 
+            if (name.equalsIgnoreCase(SourceSystemFunctions.TIMESTAMPADD)) {
+                if (caps.supportsCapability(Capability.ONLY_TIMESTAMPADD_LITERAL)) {
+                    //if the function can be evaluated then return as it will get replaced during the final rewrite 
+                    if (willBecomeConstant(obj)) { 
+                        return; 
+                    }
+                    if (!(obj.getArg(1) instanceof Constant)) {
+                        markInvalid(obj, obj.getName() + " non-literal timestampadd not supported by source"); //$NON-NLS-1$
+                        return;
+                    }
+                    Constant c = (Constant)obj.getArg(1);
+                    if (c.isMultiValued()) {
+                        markInvalid(obj, obj.getName() + " non-literal timestampadd function not supported by source"); //$NON-NLS-1$
+                        return;
+                    }
+                    c.setBindEligible(false);
                 }
-                if (!(obj.getArg(1) instanceof Constant)) {
-                    markInvalid(obj, obj.getName() + " non-literal timestampadd not supported by source"); //$NON-NLS-1$
+                if (obj.getArg(1).getType() == DataTypeManager.DefaultDataClasses.LONG 
+                        && !willBecomeConstant(obj.getArg(1)) 
+                        && !(caps.supportsFunction(SourceSystemFunctions.CONVERT) && caps.supportsConvert(DataTypeManager.DefaultTypeCodes.LONG, DataTypeManager.DefaultTypeCodes.INTEGER))) {
+                    markInvalid(obj, obj.getName() + " cannot narrow long argument timestampadd argument to int"); //$NON-NLS-1$
                     return;
                 }
-                Constant c = (Constant)obj.getArg(1);
-                if (c.isMultiValued()) {
-                    markInvalid(obj, obj.getName() + " non-literal timestampadd function not supported by source"); //$NON-NLS-1$
-                    return;
-                }
-                c.setBindEligible(false);
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
