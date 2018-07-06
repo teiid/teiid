@@ -873,7 +873,15 @@ public class TestFunction {
     @Test public void testTimestampAdd2() throws Exception {
     	assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 18, 20, 30, 0), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
     }
-
+    
+    @Test public void testTimestampAdd3() throws Exception {
+        assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 29, 999999999), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_FRAC_SECOND, -1, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
+    }
+    
+    @Test public void testTimestampAdd4() throws Exception {
+        assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 31, 2), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_FRAC_SECOND, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 999999999)));
+    }
+    
     @Test public void testTimestampDiffTimeStamp_FracSec_1() throws Exception {
         helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND, 
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 3, 9, 35, 1),

@@ -1072,13 +1072,13 @@ public class TestFunctionLibrary {
 			TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 12, 101));	
 	}
 
-	/** timestamp + nanos --> count=2100000000, inteval=1, result should be 2003-05-15 03:10:01.100000003
+	/** timestamp + nanos --> count=2100000000, inteval=1, result should be 2003-05-15 03:10:01.100000001
 	 *  with increase in second and minutes, because second already at 59 sec originally
 	 */
 	@Test public void testInvokeTimestampAddTimestamp3() {
 		helpInvokeMethod("timestampAdd", new Object[] {NonReserved.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
 			new Integer(2100000000), TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 59, 1)}, 
-			TimestampUtil.createTimestamp(103, 4, 15, 3, 10, 1, 100000003));	
+			TimestampUtil.createTimestamp(103, 4, 15, 3, 10, 1, 100000001));	
 	}
 			
 	/** time --> interval=hour, time1 = 03:04:45, time2= 05:05:36 return = 2  */
