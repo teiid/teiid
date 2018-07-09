@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.core.id.UUID;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.util.Assertion;
 import org.teiid.internal.core.index.EntryResult;
@@ -31,6 +30,8 @@ import org.teiid.metadata.KeyRecord.Type;
  * RuntimeAdapter
  */
 public class RecordFactory {
+    public static final String PROTOCOL = "mmuuid"; //$NON-NLS-1$
+
 	/** Delimiter used to separate the URI string from the URI fragment */
     public static final String URI_REFERENCE_DELIMITER = "#"; //$NON-NLS-1$
     
@@ -264,7 +265,7 @@ public class RecordFactory {
     public static String extractUUIDString(final IEntryResult result) {
         char[] word = result.getWord();
         String baseStr = new String(word);
-        int beginIndex = baseStr.indexOf(UUID.PROTOCOL);
+        int beginIndex = baseStr.indexOf(PROTOCOL);
         int endIndex   = word.length;
         Assertion.assertTrue(beginIndex != -1);
         for (int i = beginIndex; i < word.length; i++) {
