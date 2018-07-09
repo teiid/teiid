@@ -47,7 +47,6 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -262,19 +261,6 @@ public class TempTableDataManager implements ProcessorDataManager {
     		String tempTableName = ((Drop)command).getTable().getName();
     		contextStore.removeTempTableByName(tempTableName, context);
             return CollectionTupleSource.createUpdateCountTupleSource(0);
-    	}
-    	if (command instanceof AlterTempTable) {
-    	    //non longer used, was part of xml logic
-    		AlterTempTable att = (AlterTempTable)command;
-    		TempTable tt = contextStore.getTempTable(att.getTempTable());
-    		Assertion.isNotNull(tt, "Table doesn't exist"); //$NON-NLS-1$
-    		tt.setUpdatable(false);
-    		if (att.getIndexColumns() != null && tt.getRowCount() > 2*tt.getTree().getPageSize(true)) {
-    			for (List<ElementSymbol> cols : att.getIndexColumns()) {
-    				tt.addIndex(cols, false);
-    			}
-    		}
-    		return CollectionTupleSource.createUpdateCountTupleSource(0);
     	}
         return null;
     }
