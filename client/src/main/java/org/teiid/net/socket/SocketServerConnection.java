@@ -63,7 +63,7 @@ public class SocketServerConnection implements ServerConnection {
 	
 	private static final int FAILOVER_PING_INTERVAL = 1000;
 	private SocketServerInstanceFactory connectionFactory;
-    private ServerDiscovery serverDiscovery;
+    private UrlServerDiscovery serverDiscovery;
     private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 
 	private boolean secure;
@@ -81,7 +81,7 @@ public class SocketServerConnection implements ServerConnection {
     
 	public SocketServerConnection(
 			SocketServerInstanceFactory connectionFactory, boolean secure,
-			ServerDiscovery serverDiscovery, Properties connProps) throws CommunicationException, ConnectionException {
+			UrlServerDiscovery serverDiscovery, Properties connProps) throws CommunicationException, ConnectionException {
 		this.connectionFactory = connectionFactory;
 		this.serverDiscovery = serverDiscovery;
 		this.connProps = connProps;
@@ -127,7 +127,6 @@ public class SocketServerConnection implements ServerConnection {
 				if (this.logonResult == null) {
 			        try {
 			            logon(newLogon, logoff);
-						this.serverDiscovery.connectionSuccessful(hostInfo);
 			            if (discoverHosts) {
 				            List<HostInfo> updatedHosts = this.serverDiscovery.getKnownHosts(logonResult, this.serverInstance);
 				            if (updatedHosts.size() > 1 && new HashSet<HostInfo>(updatedHosts).size() > new HashSet<HostInfo>(hostCopy).size()) {
@@ -154,7 +153,6 @@ public class SocketServerConnection implements ServerConnection {
 			} catch (SingleInstanceCommunicationException e) { 
 				ex = e;
 			} 	
-			this.serverDiscovery.markInstanceAsBad(hostInfo);
 			if (knownHosts == 1) { //just a single host, use the exception
 				if (ex instanceof UnknownHostException) {
 					 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20019, ex, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20019, hostInfo.getHostName()));
@@ -307,7 +305,6 @@ public class SocketServerConnection implements ServerConnection {
 		logoffAll();
 		
 		this.closed = true;
-		this.serverDiscovery.shutdown();
 	}
 
 	private void logoffAll() {

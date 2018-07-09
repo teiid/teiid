@@ -51,7 +51,6 @@ import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 import org.teiid.net.socket.SocketUtil;
-import org.teiid.net.socket.UrlServerDiscovery;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.TestSocketRemoting.FakeService;
 
@@ -182,7 +181,6 @@ public class TestCommSockets {
 		String url = new TeiidURL(addr.getHostName(), listener.getPort(), clientSecure).getAppServerURL();
 		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); 
 		p.setProperty(TeiidURL.CONNECTION.APP_NAME, "test");
-		p.setProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
 		if (sscf == null) {
 			sscf = new SocketServerConnectionFactory();
 			sscf.initialize(socketConfig);

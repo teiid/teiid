@@ -54,11 +54,6 @@ public class TeiidURL {
 		 */
 		public static final String AUTO_FAILOVER = "autoFailover";  //$NON-NLS-1$
 		
-		/**
-		 * A plugable discovery strategy for the client.  Defaults to using the AdminApi. 
-		 */
-		public static final String DISCOVERY_STRATEGY = "discoveryStategy"; //$NON-NLS-1$
-		
 		public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
 		/**
 		 * Non-secure Protocol.

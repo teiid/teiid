@@ -76,7 +76,6 @@ public class JDBCURL {
     	        BaseDataSource.PASSWORD,
     	        LocalProfile.WAIT_FOR_LOAD,
     	        TeiidURL.CONNECTION.AUTO_FAILOVER,
-    	        TeiidURL.CONNECTION.DISCOVERY_STRATEGY,
     	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
     	        TeiidURL.CONNECTION.JAAS_NAME,
     	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,

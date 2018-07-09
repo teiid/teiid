@@ -34,9 +34,7 @@ import java.util.logging.Logger;
 
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.SessionToken;
-import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.core.util.ReflectionHelper;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -58,8 +56,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 
 	private static final String V_10_2 = "10.02"; //$NON-NLS-1$
 
-    private static final String URL = "URL"; //$NON-NLS-1$
-	
 	private static SocketServerConnectionFactory INSTANCE;
 	private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 
@@ -284,19 +280,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 			 throw new ConnectionException(JDBCPlugin.Event.TEIID20014, e1, e1.getMessage());
 		}
 		
-		String discoveryStrategyName = connectionProperties.getProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, URL);
-
-		ServerDiscovery discovery;
-
-		if (URL.equalsIgnoreCase(discoveryStrategyName)) {
-			discovery = new UrlServerDiscovery();
-		} else {
-			try {
-				discovery = (ServerDiscovery)ReflectionHelper.create(discoveryStrategyName, null, this.getClass().getClassLoader());
-			} catch (TeiidException e) {
-				 throw new ConnectionException(e);
-			}
-		}
+		UrlServerDiscovery discovery = new UrlServerDiscovery();
 		
 		discovery.init(url, connectionProperties);
 		

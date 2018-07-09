@@ -30,7 +30,7 @@ import org.teiid.net.TeiidURL;
  * Simple URL discovery strategy with a random load balancing policy
  * TOOD: add black listing support
  */
-public class UrlServerDiscovery implements ServerDiscovery {
+public class UrlServerDiscovery {
 
 	private TeiidURL url;
 	
@@ -41,33 +41,15 @@ public class UrlServerDiscovery implements ServerDiscovery {
 		this.url = url;
 	}
 	
-	@Override
 	public List<HostInfo> getKnownHosts(LogonResult result,
 			SocketServerInstance instance) {
 		return url.getHostInfo();
 	}
 
-	@Override
 	public void init(TeiidURL url, Properties p) {
 		this.url = url;
 	}
 	
-	@Override
-	public void connectionSuccessful(HostInfo info) {
-		
-	}
-
-	@Override
-	public void markInstanceAsBad(HostInfo info) {
-		
-	}
-		
-	@Override
-	public void shutdown() {
-		
-	}
-	
-	@Override
 	public HostInfo selectNextInstance(List<HostInfo> hosts) {
 		return hosts.remove((int) (Math.random() * hosts.size()));
 	}

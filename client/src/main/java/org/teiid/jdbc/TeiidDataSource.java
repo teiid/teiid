@@ -91,8 +91,6 @@ public class TeiidDataSource extends BaseDataSource {
      */
     private String autoFailover;
     
-    private String discoveryStrategy;
-    
     /**
      * when "true", in the "embedded" scenario, authentication is information is read in pass though manner.
      */
@@ -133,10 +131,6 @@ public class TeiidDataSource extends BaseDataSource {
         
         if (this.getAutoFailover() != null) {
             props.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
-        }
-        
-        if (this.getDiscoveryStrategy() != null) {
-        	props.setProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, this.getDiscoveryStrategy());
         }
         
         if (this.encryptRequests) {
@@ -475,14 +469,6 @@ public class TeiidDataSource extends BaseDataSource {
         this.autoFailover = autoFailover;
     }
 
-	public String getDiscoveryStrategy() {
-		return discoveryStrategy;
-	}
-
-	public void setDiscoveryStrategy(String discoveryStrategy) {
-		this.discoveryStrategy = discoveryStrategy;
-	}
-	
 	/**
 	 * When true, this connection uses the passed in security domain to do the authentication. 
 	 * @return

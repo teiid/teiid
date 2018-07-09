@@ -40,7 +40,6 @@ import org.teiid.net.HostInfo;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.net.socket.SocketServerConnectionFactory;
-import org.teiid.net.socket.UrlServerDiscovery;
 import org.teiid.transport.TestSocketRemoting.FakeService;
 
 
@@ -73,7 +72,6 @@ public class TestFailover {
 		teiidUrl.getHostInfo().add(new HostInfo(addr.getHostName(), listener1.getPort()));
 		String url = teiidUrl.getAppServerURL();
 		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); 
-		p.setProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
 		p.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
 		if (sscf == null) {
 			sscf = new SocketServerConnectionFactory();

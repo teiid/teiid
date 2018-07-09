@@ -140,7 +140,7 @@ public class TestSocketServerConnection {
 		Properties p = new Properties();
 		SocketServerInstanceFactory instanceFactory = Mockito.mock(SocketServerInstanceFactory.class);
 		Mockito.stub(instanceFactory.getServerInstance((HostInfo)Mockito.anyObject())).toThrow(new SingleInstanceCommunicationException());
-		ServerDiscovery discovery = new UrlServerDiscovery(new TeiidURL("mm://host1:1,host2:2")); //$NON-NLS-1$
+		UrlServerDiscovery discovery = new UrlServerDiscovery(new TeiidURL("mm://host1:1,host2:2")); //$NON-NLS-1$
 		try {
 			new SocketServerConnection(instanceFactory, false, discovery, p);
 			fail("exception expected"); //$NON-NLS-1$
@@ -198,7 +198,7 @@ public class TestSocketServerConnection {
 	
 	private SocketServerConnection createConnection(final Throwable t, final HostInfo hostInfo, Properties p)
 			throws CommunicationException, ConnectionException {
-		ServerDiscovery discovery = new UrlServerDiscovery(new TeiidURL(hostInfo.getHostName(), hostInfo.getPortNumber(), false));
+	    UrlServerDiscovery discovery = new UrlServerDiscovery(new TeiidURL(hostInfo.getHostName(), hostInfo.getPortNumber(), false));
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
 			FakeILogon logon = new FakeILogon(t);
 			
