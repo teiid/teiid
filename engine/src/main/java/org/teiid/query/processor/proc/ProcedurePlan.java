@@ -717,6 +717,11 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     }
 
 	private void removeAllCursors(VariableContext cs) {
+	    if (this.currentState != null) {
+	        //in error situations the current state will still need cleared
+	        removeState(currentState);
+	        this.currentState = null;
+	    }
 		for (Map.Entry<Object, Object> entry : cs.getVariableMap().entrySet()) {
 			removeState((CursorState) entry.getValue());
 		}

@@ -29,19 +29,26 @@ import javax.transaction.Transaction;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.dqp.service.TransactionService;
+import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.resolver.TestProcedureResolving;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -273,6 +280,82 @@ public class TestProcErrors {
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         
     	helpTestProcess(plan, new List[] {Arrays.asList(1)}, dataManager, tm);
+    }
+    
+    @Test public void testExceptionHandlingLoopException() throws Exception {
+        String ddl = 
+                "create virtual procedure pr() as\n" + 
+                "begin\n" + 
+                "    error 'a';\n" + 
+                "end ;;";
+        TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);     
+
+        String sql = "BEGIN\n" + 
+                "    LOOP ON (SELECT 1 union all select 2) AS market\n" + 
+                "    BEGIN\n" + 
+                "        CALL pr();\n" + 
+                "    EXCEPTION e\n" + 
+                "    END\n" + 
+                "END ;"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        
+        helpTestProcess(plan, new List[] {}, dataManager, tm);
+    }
+    
+    @Test public void testExceptionHandlingLoopExceptionUpdate() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();     
+
+        String sql = "BEGIN\n" + 
+                "    LOOP ON (SELECT 1 union all select 2) AS market\n" + 
+                "    BEGIN\n" + 
+                "        insert into pm1.g1 (e1) values ('a');\n" + 
+                "    EXCEPTION e\n" + 
+                "    END\n" + 
+                "END ;"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        ProcessorDataManager dataManager = new ProcessorDataManager() {
+            
+            @Override
+            public TupleSource registerRequest(CommandContext context,
+                    Command command, String modelName,
+                    RegisterRequestParameter parameterObject)
+                    throws TeiidComponentException, TeiidProcessingException {
+                return new TupleSource() {
+                    
+                    @Override
+                    public List<?> nextTuple()
+                            throws TeiidComponentException, TeiidProcessingException {
+                        throw new TeiidProcessingException(); //will be caught
+                    }
+                    
+                    @Override
+                    public void closeSource() {
+                        
+                    }
+                };
+            }
+
+            @Override
+            public Object lookupCodeValue(CommandContext context,
+                    String codeTableName, String returnElementName,
+                    String keyElementName, Object keyValue)
+                    throws BlockedException, TeiidComponentException,
+                    TeiidProcessingException {
+                return null;
+            }
+
+            @Override
+            public EventDistributor getEventDistributor() {
+                return null;
+            }
+        };
+        
+        helpTestProcess(plan, new List[] {}, dataManager, tm);
     }
 	
 }
