@@ -65,5 +65,7 @@ class OperationsConstants {
 	public static final SimpleAttributeDefinition VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition SCHEMA = new SimpleAttributeDefinition("schema", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition DDL = new SimpleAttributeDefinition("ddl", ModelType.STRING, false); //$NON-NLS-1$
-	public static final SimpleAttributeDefinition PERSIST = new SimpleAttributeDefinition("persist", ModelType.BOOLEAN, false); //$NON-NLS-1$	
+	public static final SimpleAttributeDefinition PERSIST = new SimpleAttributeDefinition("persist", ModelType.BOOLEAN, false); //$NON-NLS-1$
+	
+	public static final SimpleAttributeDefinition INCLUDE_SCHEMA = new SimpleAttributeDefinition("include-schema", ModelType.STRING, true); //$NON-NLS-1$	
 }
