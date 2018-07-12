@@ -22,7 +22,7 @@
 	    <illegaltransitivereportonly>true</illegaltransitivereportonly>
 	    <!-- Overrides to allow the release process to commit: https://jira.codehaus.org/browse/MRELEASE-812 -->
 	    <version.release.plugin>2.5</version.release.plugin>
-        <version.teiid.console>3.0.1</version.teiid.console>
+        <version.teiid.console>3.1.0</version.teiid.console>
         
         <version.teiid.bom>1.1.0</version.teiid.bom>
         
