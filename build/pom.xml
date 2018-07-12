@@ -96,7 +96,7 @@
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>org.jboss.teiid.hal</groupId>
+                                    <groupId>org.teiid.hal</groupId>
                                     <artifactId>dist</artifactId>
                                     <version>${version.teiid.console}</version>
                                     <classifier>overlay</classifier>
