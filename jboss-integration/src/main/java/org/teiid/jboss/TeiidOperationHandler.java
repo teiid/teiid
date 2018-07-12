@@ -846,32 +846,29 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.VDB_VERSION.getName()+MISSING));
 		}
 
+		boolean includeSchema = true;
+		if (operation.hasDefined(OperationsConstants.INCLUDE_SCHEMA.getName())) {
+			includeSchema = operation.get(OperationsConstants.INCLUDE_SCHEMA.getName()).asBoolean();
+		}
+		
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
 		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
 
 		VDBMetaData vdb = repo.getVDB(vdbName, vdbVersion);
 		if (vdb != null) {
-			VDBMetadataMapper.INSTANCE.wrap(vdb, result);
+			VDBMetadataMapper.INSTANCE.wrap(vdb, result, includeSchema);
 		}
 	}
 
 
 	@Override
-    public OperationDefinition getOperationDefinition() {
-    	final AttributeDefinition[] parameters = new AttributeDefinition[] {OperationsConstants.VDB_NAME, OperationsConstants.VDB_VERSION};
-    	final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
-        return new OperationDefinition(name(), OperationEntry.EntryType.PUBLIC, EnumSet.noneOf(OperationEntry.Flag.class), ModelType.OBJECT, null, true, null, null, parameters) {
-			@Override
-			public DescriptionProvider getDescriptionProvider() {
-				return new DefaultOperationDescriptionProvider(name(), resolver, resolver,  ModelType.OBJECT, ModelType.OBJECT, null, null, this.parameters) {
-					@Override
-				    protected ModelNode getReplyValueTypeDescription(ResourceDescriptionResolver descriptionResolver, Locale locale, ResourceBundle bundle) {
-						return VDBMetadataMapper.INSTANCE.describe( new ModelNode());
-				    }
-				};
-			}
-        };
+	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
+		builder.addParameter(OperationsConstants.VDB_NAME);
+		builder.addParameter(OperationsConstants.VDB_VERSION);
+		builder.addParameter(OperationsConstants.INCLUDE_SCHEMA);
+		builder.setReplyType(ModelType.OBJECT);
+		builder.setReplyParameters(VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
     }
 }
 
@@ -974,29 +971,24 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 
 	@Override
 	protected void executeOperation(OperationContext context, VDBRepository repo, ModelNode operation) throws OperationFailedException {
+		boolean includeSchema = true;
+		if (operation.hasDefined(OperationsConstants.INCLUDE_SCHEMA.getName())) {
+			includeSchema = operation.get(OperationsConstants.INCLUDE_SCHEMA.getName()).asBoolean();
+		}
+		
 		ModelNode result = context.getResult();
 		List<VDBMetaData> vdbs = repo.getVDBs();
 		for (VDBMetaData vdb:vdbs) {
-			VDBMetadataMapper.INSTANCE.wrap(vdb, result.add());
+			VDBMetadataMapper.INSTANCE.wrap(vdb, result.add(), includeSchema);
 		}
 	}
 
 	@Override
-    public OperationDefinition getOperationDefinition() {
-    	final AttributeDefinition[] parameters = new AttributeDefinition[0];
-    	final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
-        return new OperationDefinition(name(), OperationEntry.EntryType.PUBLIC, EnumSet.noneOf(OperationEntry.Flag.class), ModelType.OBJECT, null, true, null, null, parameters) {
-			@Override
-			public DescriptionProvider getDescriptionProvider() {
-				return new DefaultOperationDescriptionProvider(name(), resolver, resolver,  ModelType.LIST, ModelType.OBJECT, null, null, this.parameters) {
-					@Override
-				    protected ModelNode getReplyValueTypeDescription(ResourceDescriptionResolver descriptionResolver, Locale locale, ResourceBundle bundle) {
-						return VDBMetadataMapper.INSTANCE.describe( new ModelNode());
-				    }
-				};
-			}
-        };
-    }
+	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
+		builder.addParameter(OperationsConstants.INCLUDE_SCHEMA);
+		builder.setReplyType(ModelType.LIST);
+		builder.setReplyParameters(VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
+	}
 }
 
 class ListTranslators extends TranslatorOperationHandler{

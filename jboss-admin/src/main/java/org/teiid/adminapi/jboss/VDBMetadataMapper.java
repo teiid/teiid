@@ -60,6 +60,10 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	public static VDBMetadataMapper INSTANCE = new VDBMetadataMapper();
 	
 	public ModelNode wrap(VDBMetaData vdb, ModelNode node) {
+		return wrap(vdb, node, true);
+	}
+	
+	public ModelNode wrap(VDBMetaData vdb, ModelNode node, boolean includeMetadata) {
 		if (vdb == null) {
 			return null;
 		}
@@ -99,7 +103,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		if (models != null && !models.isEmpty()) {
 			ModelNode modelNodes = node.get(MODELS);		
 			for(ModelMetaData model:models.values()) {
-				modelNodes.add(ModelMetadataMapper.INSTANCE.wrap(model, new ModelNode()));
+				modelNodes.add(ModelMetadataMapper.INSTANCE.wrap(model, new ModelNode(), includeMetadata));
 			}
 		}
 		
@@ -291,6 +295,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			};
 	}	
 	
+
+
 	private static void addProperties(ModelNode node, AdminObjectImpl object) {
 		Map<String, String> properties = object.getPropertiesMap();
 		if (properties!= null && !properties.isEmpty()) {
@@ -318,10 +324,12 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String METADATA_TYPE = "metadata-type"; //$NON-NLS-1$
 		private static final String METADATA_STATUS = "metadata-status"; //$NON-NLS-1$
 		
-		
 		public static ModelMetadataMapper INSTANCE = new ModelMetadataMapper();
-		
+
 		public ModelNode wrap(ModelMetaData model, ModelNode node) {
+			return wrap(model, node, true);
+		}		
+		public ModelNode wrap(ModelMetaData model, ModelNode node, boolean includeMetadata) {
 			if (model == null) {
 				return null;
 			}
@@ -353,17 +361,18 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 					errorsNode.add(ValidationErrorMapper.INSTANCE.wrap(error, new ModelNode()));
 				}
 			}
-			
-			if (!model.getSourceMetadataType().isEmpty()) {
-				ModelNode metadataNodes = node.get(METADATAS);
-				for (int i = 0; i < model.getSourceMetadataType().size(); i++) {
-					ModelNode metadataNode = new ModelNode();
-					metadataNode.get(METADATA_TYPE).set(model.getSourceMetadataType().get(i));
-					String text = model.getSourceMetadataText().get(i);
-					if (text != null) {
-						metadataNode.get(METADATA).set(text);
+			if (includeMetadata) {
+				if (!model.getSourceMetadataType().isEmpty()) {
+					ModelNode metadataNodes = node.get(METADATAS);
+					for (int i = 0; i < model.getSourceMetadataType().size(); i++) {
+						ModelNode metadataNode = new ModelNode();
+						metadataNode.get(METADATA_TYPE).set(model.getSourceMetadataType().get(i));
+						String text = model.getSourceMetadataText().get(i);
+						if (text != null) {
+							metadataNode.get(METADATA).set(text);
+						}
+						metadataNodes.add(metadataNode);
 					}
-					metadataNodes.add(metadataNode);
 				}
 			}
 			node.get(METADATA_STATUS).set(model.getMetadataStatus().name());
