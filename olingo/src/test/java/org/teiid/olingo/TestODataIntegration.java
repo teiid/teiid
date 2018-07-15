@@ -19,16 +19,12 @@ package org.teiid.olingo;
 
 import static org.junit.Assert.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -72,8 +68,6 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManage
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.TeiidDriver;
-import org.teiid.json.simple.JSONParser;
-import org.teiid.json.simple.SimpleContentHandler;
 import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Update;
@@ -3027,93 +3021,5 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }
-    
-    @Test public void testPerformance() throws Exception {
-        ROW_COUNT = 10000;
-        Properties props = new Properties();
-        props.setProperty("batch-size", "256");
-        
-        try {
-        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
-        hc.addUpdate("INSERT INTO x (a, b) VALUES ('teiid', 'dv')", new int[] {1});
-        teiid.addTranslator("x10", hc);
-        
-        String ddl = "CREATE FOREIGN TABLE x (a string, b timestamp, c integer, a1 string, b1 timestamp, c1 integer, a2 string, b2 timestamp, c2 integer, primary key (a)) options (updatable true);";
-        
-        ModelMetaData mmd = new ModelMetaData();
-        mmd.setName("vw");
-        mmd.addSourceMetadata("ddl", ddl);
-        mmd.addSourceMapping("x10", "x10", null);
-        teiid.deployVDB("northwind", mmd);
-        
-        localClient = getClient(teiid.getDriver(), "northwind", props);
-        
-        for (int i = 0; i < 10; i++) {
-            invokeOData(baseURL + "/northwind/vw/x");
-        }
-        
-        //Thread.sleep(10000);
-        
-        long start = System.currentTimeMillis();
-        for (int i = 0; i < 100; i++) {
-            invokeOData(baseURL + "/northwind/vw/x");
-        }
-        long odataTime = System.currentTimeMillis() - start;
-        
-        Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:northwind@mm://localhost:31000;user=user;password=user", null);
-        
-        /*for (int i = 0; i < 10; i++) {
-            invokeJDBC(conn, "select * from x");
-        }
-        
-        start = System.currentTimeMillis();
-        for (int i = 0; i < 100; i++) {
-            invokeJDBC(conn, "select * from x");
-        }*/
-        System.out.println("JDBC " +(System.currentTimeMillis() - start));
-        System.out.println("OData " +odataTime);
-        System.out.println("JSON Read " +readTime/1000000);
-        System.out.println("Get " +getTime/1000000);
-        System.out.flush();
-        } finally {
-            ROW_COUNT = 1;
-        }
-    }
-
-    private int invokeJDBC(Connection conn, String sql) throws SQLException {
-        Statement s = conn.createStatement();
-        ResultSet rs = s.executeQuery(sql);
-        int rowCount = 0;
-        while (rs.next()) {
-            rowCount++;
-        }
-        rs.close();
-        s.close();
-        return rowCount;
-    }
-    
-    long readTime = 0;
-    long getTime = 0;
-    
-    private int invokeOData(String url) throws Exception {
-        JSONParser parser = new JSONParser();
-        int rowCount = 0;
-        while (url != null) {
-            long start = System.nanoTime();
-            ContentResponse response = http.GET(url);
-            getTime += (System.nanoTime() - start);
-            SimpleContentHandler handler = new SimpleContentHandler();
-            start = System.nanoTime();
-            parser.parse(new InputStreamReader(new ByteArrayInputStream(response.getContent())), handler);
-            Map responseObject = (Map)handler.getResult();
-            url = (String)responseObject.get("@odata.nextLink");
-            List value = (List)responseObject.get("value");
-            rowCount += value.size();
-            readTime += (System.nanoTime() - start);
-        }
-        assertEquals(ROW_COUNT, rowCount);
-        return rowCount;
-    }
-    
     
 }
