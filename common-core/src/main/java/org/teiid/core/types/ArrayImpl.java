@@ -134,7 +134,11 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 			return false;
 		}
 		ArrayImpl other = (ArrayImpl)obj;
-		return zeroBased == other.zeroBased && compareTo(other) == 0;
+		try {
+		    return zeroBased == other.zeroBased && compareTo(other) == 0;
+		} catch (ClassCastException e) {
+		    return false;
+		}
 	}
 	
 	public Object[] getValues() {

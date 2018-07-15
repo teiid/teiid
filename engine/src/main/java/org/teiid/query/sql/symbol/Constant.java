@@ -140,19 +140,7 @@ public class Constant implements Expression, Comparable<Constant> {
 		if (this.value == null) {
 			this.type = DataTypeManager.DefaultDataClasses.NULL;
 		} else { 
-			this.type = this.value.getClass();
-			Class<?> originalType = type;
-	        while (type.isArray() && !type.getComponentType().isPrimitive()) {
-	        	type = type.getComponentType();
-	        }
-			if (DataTypeManager.getAllDataTypeClasses().contains(type)) {
-				//array of a runtime-type
-				this.type = originalType;
-			} else if (originalType.isArray() && !originalType.getComponentType().isPrimitive()) {
-				this.type = DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
-			} else {
-				this.type = DataTypeManager.DefaultDataClasses.OBJECT;
-			}
+		    this.type = DataTypeManager.getRuntimeType(value.getClass());
 		}
 	}
 
@@ -228,11 +216,6 @@ public class Constant implements Expression, Comparable<Constant> {
 			return false;
 		}
 
-		// Check type - types are never null
-		if(! other.getType().equals(this.getType())) {
-			return false;
-		}
-		
 		if (this.value instanceof BigDecimal) {
 			if (this.value == other.value) {
 				return true;

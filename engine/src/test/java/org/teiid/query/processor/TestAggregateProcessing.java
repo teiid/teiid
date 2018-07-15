@@ -1105,10 +1105,10 @@ public class TestAggregateProcessing {
 
 		HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
 		dataManager.addData("SELECT g_0.e3 AS c_0 FROM g2 AS g_0 ORDER BY c_0", new List[] {
-				Arrays.asList(1.0),
+				Arrays.asList(Boolean.FALSE),
 		});
-		dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(v_0.c_2) FROM (SELECT g_0.e3 AS c_0, ifnull(g_0.e1, '') AS c_1, g_0.e2 AS c_2 FROM g1 AS g_0) AS v_0 WHERE v_0.c_0 = 1.0 GROUP BY v_0.c_0, v_0.c_1", new List[] {
-				Arrays.asList(1.0, "a", 1)
+		dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(v_0.c_2) FROM (SELECT g_0.e3 AS c_0, ifnull(g_0.e1, '') AS c_1, g_0.e2 AS c_2 FROM g1 AS g_0) AS v_0 WHERE v_0.c_0 = FALSE GROUP BY v_0.c_0, v_0.c_1", new List[] {
+				Arrays.asList(Boolean.FALSE, "a", 1)
 		});
 		BasicSourceCapabilities capabilities = TestAggregatePushdown.getAggregateCapabilities();
 		capabilities.setFunctionSupport("ifnull", true);
