@@ -49,6 +49,14 @@ public class TestArray {
 		UnitTestUtil.helpTestEquivalence(1, a1, a2);
 	}
 	
+	@Test public void testArrayValueEqualsDifferentTypes() {
+        ArrayImpl a1 = new ArrayImpl(new Object[] {1, 2, 3});
+        
+        ArrayImpl a2 = new ArrayImpl(new Object[] {"1", 2});
+        
+        assertFalse(a1.equals(a2));
+    }
+	
 	@Test public void testArrayValueToString() {
 		ArrayImpl a1 = new ArrayImpl(new Object[] {1, "x'2", 3});
 		

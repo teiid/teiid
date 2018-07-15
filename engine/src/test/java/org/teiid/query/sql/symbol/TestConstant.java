@@ -26,7 +26,9 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.util.UnitTestUtil;
 
 @SuppressWarnings("nls")
@@ -167,5 +169,21 @@ public class TestConstant {
 		
 		assertEquals(0, c.compare("a ", "a"));
 	}
+	
+	@Test public void testArrayImplType() {
+	    Constant c = new Constant(new ArrayImpl(new Integer[0]));
+	    assertEquals(DataTypeManager.getArrayType(DefaultDataClasses.OBJECT), c.getType());
+    }
+	
+	@Test public void testArrayCompare() {
+        Constant c = new Constant(new ArrayImpl(new Integer[0]));
+        assertEquals(DataTypeManager.getArrayType(DefaultDataClasses.OBJECT), c.getType());
+    }
+	
+	@Test public void testEqualsWithDifferentTypes() {
+        Constant c1 = new Constant("a");
+        Constant c2 = new Constant("a", DefaultDataClasses.OBJECT);
+        assertEquals(c1, c2);
+    }
 	
 }
