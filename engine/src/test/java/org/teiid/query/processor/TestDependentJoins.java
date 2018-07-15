@@ -50,6 +50,8 @@ import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.NullOrder;
@@ -609,7 +611,10 @@ public class TestDependentJoins {
     }
     
     @Test public void testUnlimitedIn() throws Exception {
-    	helpTestDependentJoin(true);
+        HardcodedDataManager dataManager = helpTestDependentJoin(true);
+        Command c = dataManager.getCommandHistory().get(dataManager.getCommandHistory().size()-1);
+        //it's expected that the pushed predicate will be marked as all constants
+        assertTrue(((SetCriteria)((Query)c).getCriteria()).isAllConstants());
     }
 
 	private HardcodedDataManager helpTestDependentJoin(boolean unlimitIn)
