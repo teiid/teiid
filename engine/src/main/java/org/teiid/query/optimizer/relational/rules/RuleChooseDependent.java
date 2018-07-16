@@ -363,8 +363,19 @@ public final class RuleChooseDependent implements OptimizerRule {
         }
         MakeDep makeDep = (MakeDep)sourceNode.getProperty(Info.MAKE_DEP);
     	if (fullPushOnly) {
-    	    fullyPush(sourceNode, joinNode, metadata, capabilitiesFinder, context, indNode, rules, makeDep, analysisRecord, independentExpressions);
-    		return false;
+    	    boolean result = fullyPush(sourceNode, joinNode, metadata, capabilitiesFinder, context, indNode, rules, makeDep, analysisRecord, independentExpressions);
+    	    //before partial aggreage pushdown carry over a hint
+    		if (!result && !indNode.hasBooleanProperty(Info.MAKE_IND) && dca != null 
+    		        && NodeEditor.findParent(joinNode, NodeConstants.Types.GROUP) != null) {
+    		    //hint to be picked up on the next run
+    		    MakeDep indHint = new MakeDep();
+    		    //TODO: may need to consider all ndvs
+    		    if (dca.maxNdv[0] != null) {
+    		        indHint.setMax((int)Math.min(dca.maxNdv[0], Integer.MAX_VALUE));
+    		    }
+                indNode.setProperty(Info.MAKE_IND, indHint);
+    		}
+    	    return false;
     	}
 
     	// Check that for a outer join the dependent side must be the inner 

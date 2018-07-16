@@ -553,7 +553,7 @@ public class TestRuleChooseDependent {
          atomicCrit2a, 
          atomicJoinCrits2,
          crits, 
-         expected, -1, 99798);        
+         expected, -1, 99598);        
     }
     
     /**
