@@ -419,8 +419,8 @@ public class NewCalculateCostUtil {
         	float leftNdv = getNDVEstimate(child1, metadata, childCost1, leftExpressions, false);
             float rightNdv = getNDVEstimate(child2, metadata, childCost2, rightExpressions, false);
             
-            float leftNdv1 = getNDVEstimate(child1, metadata, childCost1, leftExpressions, null);
-            float rightNdv1 = getNDVEstimate(child2, metadata, childCost2, rightExpressions, null);
+            float leftNdv1 = getNDVEstimate(child1, metadata, childCost1, leftExpressions, true);
+            float rightNdv1 = getNDVEstimate(child2, metadata, childCost2, rightExpressions, true);
             
             if (leftNdv == UNKNOWN_VALUE) {
                 leftNdv = leftNdv1;
@@ -431,11 +431,10 @@ public class NewCalculateCostUtil {
             
         	if (leftNdv != UNKNOWN_VALUE && rightNdv != UNKNOWN_VALUE) {
         	    //Compensate for estimates by assuming a 1-many relationship
-                if (leftNdv1 > 2*leftNdv && leftNdv > rightNdv) {
-                    leftNdv = (float) Math.sqrt(rightNdv*leftNdv);
-                } 
-                if (rightNdv1 > 2*rightNdv && rightNdv > leftNdv) {
-                    rightNdv = (float) Math.sqrt(rightNdv*leftNdv);
+                if (leftNdv1/leftNdv > 2*rightNdv1/rightNdv && leftNdv > rightNdv) {
+                    rightNdv = rightNdv1;
+                } else {
+                    leftNdv = leftNdv1;
                 }
         		baseCost = (childCost1 / leftNdv) * (childCost2 / rightNdv) * Math.min(leftNdv, rightNdv);
         		leftPercent = Math.min(leftNdv, rightNdv) / leftNdv;
@@ -582,7 +581,7 @@ public class NewCalculateCostUtil {
                             newStats[Stat.NDV_HIGH.ordinal()] = newStats[Stat.NDV.ordinal()];
         			    } else {
         			        newStats[Stat.NDV.ordinal()] = (float) Math.min(stats[Stat.NDV.ordinal()], Math.sqrt(cardinality));
-                            newStats[Stat.NDV_HIGH.ordinal()] = Math.min(stats[Stat.NDV_HIGH.ordinal()], cardinality/2);
+        			        newStats[Stat.NDV_HIGH.ordinal()] = Math.max(newStats[Stat.NDV.ordinal()], stats[Stat.NDV_HIGH.ordinal()]*Math.min(left?leftPercent:rightPercent, cardinality/origCardinality));
         			    }
     					newStats[Stat.NDV.ordinal()] = Math.max(1, newStats[Stat.NDV.ordinal()]);
     					newStats[Stat.NDV_HIGH.ordinal()] = Math.max(1, newStats[Stat.NDV_HIGH.ordinal()]);
