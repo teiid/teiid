@@ -245,7 +245,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         		this.processingSortRight = SortOption.NOT_SORTED; 
         	} else if (processingSortRight == SortOption.SORT && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER && ((!this.rightSource.hasBuffer() && processingSortLeft != SortOption.SORT) || shouldIndex(this.leftSource, this.rightSource))) {
     			this.processingSortRight = SortOption.NOT_SORTED;
-	    	} else if (processingSortLeft == SortOption.SORT && ((!joinNode.isDependent() && !this.leftSource.hasBuffer() && (!this.rightSource.hasBuffer() || processingSortRight == SortOption.ALREADY_SORTED)) || shouldIndex(this.rightSource, this.leftSource))) {
+        	} else if (processingSortLeft == SortOption.SORT && shouldIndex(this.rightSource, this.leftSource)) {
 	    		this.processingSortLeft = SortOption.NOT_SORTED;
 	    	} 
     	}
