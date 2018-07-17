@@ -126,7 +126,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				synchronized (this) {
 					impl.cleaning.set(false);
 					try {
-						this.wait(100);
+					    //wait for a while before cleanning more
+					    //we'll be woken up by a processing thread if needed
+					    this.wait(5000);
 					} catch (InterruptedException e) {
 						break;
 					}
@@ -1133,7 +1135,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		    long result = activeBatchBytes.addAndGet(-ce.getSizeEstimate());
             assert result >= 0 || !LrfuEvictionQueue.isSuspectSize(activeBatchBytes);
 		}
-		assert activeBatchBytes.get() >= 0;
+		assert !LrfuEvictionQueue.isSuspectSize(activeBatchBytes);
 		Serializer<?> s = ce.getSerializer();
 		if (s != null) {
 			removeFromCache(s.getId(), ce.getId());
