@@ -26,6 +26,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractQueryTest;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
@@ -80,5 +82,23 @@ public class TestMaterializationPerformance extends AbstractQueryTest {
 			assertEquals(String.valueOf(i), getRowCount(), 1);
 		}
 	}
+	
+	@Test public void testLargeWithoutKeys() throws Exception {
+        ModelMetaData mmm = new ModelMetaData();
+        mmm.setName("test");
+        mmm.addSourceMetadata("ddl", ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("large_mat.ddl")));
+        mmm.addSourceMapping("x", "hc", null);
+        AutoGenExecutionFactory agef = new AutoGenExecutionFactory();
+        agef.addRowCount("tbl_f", 84717);
+        agef.addRowCount("tbl_y", 85248);
+        agef.addRowCount("tbl_u", 327955);
+        es.addTranslator("hc", agef);
+        es.deployVDB("test", mmm);
+        setConnection(es.getDriver().connect("jdbc:teiid:test", null));
+        for (int i = 0; i < 15; i++) {
+            execute("SELECT y.iamak, u.penog, y.bibdd, SUM((y.odpdb * f.apcmd)) FROM /*+ PRESERVE */ ((v_y AS y LEFT OUTER JOIN v_f AS f ON f.lbjaa = y.bggnl) INNER JOIN (SELECT DISTINCT hjobj, penog FROM /*+ MAKENOTDEP */ v_u) AS u ON u.hjobj = y.jmafi) WHERE icfbj BETWEEN {ts'2017-01-01 00:00:00.0'} AND {ts'2018-01-01 00:00:00.0'} GROUP BY y.iamak, u.penog, y.bibdd ORDER BY y.iamak, u.penog, y.bibdd");
+            assertEquals(28416, getRowCount());
+        }
+    }
 	
 }
