@@ -927,7 +927,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 		if (map == null) {
 			return false;
 		}
-		map.put(oid, null);
+		if (map.put(oid, null) != null) {
+		    throw new AssertionError("already added"); //$NON-NLS-1$
+		}
 		return true;
 	}
 	
