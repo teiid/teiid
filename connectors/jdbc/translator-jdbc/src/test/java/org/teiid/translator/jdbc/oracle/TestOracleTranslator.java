@@ -1334,22 +1334,27 @@ public class TestOracleTranslator {
         helpTestVisitor(getTestVDB(),
                 "select timestampadd(sql_tsi_second, 1, now())", //$NON-NLS-1$
                 null,
-                "SELECT now() + (INTERVAL '1' SECOND) FROM DUAL"); //$NON-NLS-1$
+                "SELECT now() + (INTERVAL '1' SECOND(1)) FROM DUAL"); //$NON-NLS-1$
         
         helpTestVisitor(getTestVDB(),
-                "select timestampadd(sql_tsi_quarter, 1, now())", //$NON-NLS-1$
+                "select timestampadd(sql_tsi_quarter, -2, now())", //$NON-NLS-1$
                 null,
-                "SELECT now() + (INTERVAL '91' DAY) FROM DUAL"); //$NON-NLS-1$
+                "SELECT now() + (INTERVAL '-182' DAY(3)) FROM DUAL"); //$NON-NLS-1$
         
         helpTestVisitor(getTestVDB(),
-                "select timestampadd(sql_tsi_week, 1, now())", //$NON-NLS-1$
+                "select timestampadd(sql_tsi_week, 1000, now())", //$NON-NLS-1$
                 null,
-                "SELECT now() + (INTERVAL '7' DAY) FROM DUAL"); //$NON-NLS-1$
+                "SELECT now() + (INTERVAL '7000' DAY(4)) FROM DUAL"); //$NON-NLS-1$
         
         helpTestVisitor(getTestVDB(),
                 "select timestampadd(sql_tsi_frac_second, 1, now())", //$NON-NLS-1$
                 null,
-                "SELECT now() + (INTERVAL '0.000000001' SECOND) FROM DUAL"); //$NON-NLS-1$
+                "SELECT now() + (INTERVAL '0.000000001' SECOND(1)) FROM DUAL"); //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+                "select timestampadd(sql_tsi_frac_second, 123456789, now())", //$NON-NLS-1$
+                null,
+                "SELECT now() + (INTERVAL '0.123456789' SECOND(1)) FROM DUAL"); //$NON-NLS-1$
     }
     
 }
