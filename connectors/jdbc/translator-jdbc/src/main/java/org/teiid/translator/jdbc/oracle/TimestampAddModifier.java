@@ -52,22 +52,37 @@ public class TimestampAddModifier extends FunctionModifier {
 		String newInterval = INTERVAL_MAP.get(interval);
 		//by capabilities this must be a literal integer
 		int value = (Integer)((Literal)function.getParameters().get(1)).getValue();
+		long adjustedValue = value;
 		if (newInterval != null) {
 			result.add(value);
 		} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
 		    newInterval = ExtractFunctionModifier.DAY;
-		    result.add(value*91l);
+		    adjustedValue = value*91l;
+		    result.add(adjustedValue);
 		} else if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
 			newInterval = ExtractFunctionModifier.SECOND;
 		    result.add(String.format("0.%09d", value)); //$NON-NLS-1$
+		    adjustedValue = 1;
 		} else {
 			newInterval = ExtractFunctionModifier.DAY;
-			result.add(value*7l);
+			adjustedValue = value*7l;
+			result.add(adjustedValue);
 		}
 		result.add("' "); //$NON-NLS-1$
 		result.add(newInterval);
-		result.add(")"); //$NON-NLS-1$
+		result.add("("); //$NON-NLS-1$
+		result.add(precision(Math.abs(adjustedValue)));
+		result.add("))"); //$NON-NLS-1$
 		return result;
+	}
+	
+	static int precision(long value) {
+	    int precision = 1;
+	    while (value >= 10) {
+	        precision++;
+	        value /= 10;
+	    }
+	    return precision;
 	}
 	
 }
