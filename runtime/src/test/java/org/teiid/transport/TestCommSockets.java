@@ -85,7 +85,6 @@ public class TestCommSockets {
 
 	@Test public void testConnectWithoutPooling() throws Exception {
 		Properties p = new Properties();
-		p.setProperty("org.teiid.sockets.maxCachedInstances", String.valueOf(0)); //$NON-NLS-1$
 		SocketServerConnection conn = helpEstablishConnection(false, new SSLConfiguration(), p);
 		SocketListenerStats stats = listener.getStats();
 		assertEquals(2, stats.objectsRead); // handshake response, logon,
@@ -103,24 +102,6 @@ public class TestCommSockets {
 		assertEquals(0, stats.sockets);
 	}
 	
-	@Test public void testConnectWithPooling() throws Exception {
-		SocketServerConnection conn = helpEstablishConnection(false);
-		SocketListenerStats stats = listener.getStats();
-		assertEquals(2, stats.objectsRead); // handshake response, logon
-		assertEquals(1, stats.sockets);
-		conn.close();
-		stats = listener.getStats();
-		assertEquals(1, stats.maxSockets);
-		assertEquals(3, stats.objectsRead); // handshake response, logon, logoff
-		stats = listener.getStats();
-		assertEquals(1, stats.sockets);
-		conn = helpEstablishConnection(false);
-		conn.close();
-		stats = listener.getStats();
-		assertEquals(1, stats.sockets);
-		assertEquals(1, stats.maxSockets);
-	}
-
 	@Test public void testLobs() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		FakeService fs = conn.getService(FakeService.class);
