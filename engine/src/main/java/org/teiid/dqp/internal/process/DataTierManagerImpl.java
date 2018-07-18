@@ -985,9 +985,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	
         	@Override
         	protected Collection<AbstractMetadataRecord> getChildren(AbstractMetadataRecord parent, CommandContext cc) {
-        	    if (parent.getParent() != null && parent.getParent().getParent() instanceof Procedure) {
-        	        System.out.println(parent);
-        	    }
         		return parent.getIncomingObjects();
         	}
 		});
