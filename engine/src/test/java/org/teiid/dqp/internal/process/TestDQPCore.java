@@ -379,7 +379,7 @@ public class TestDQPCore {
         assertNull(rm.getException());
         assertEquals(rowsPerBatch, rm.getResultsList().size());
         //ensure that we are idle
-        for (int i = 0; i < 10 && item.getThreadState() != ThreadState.IDLE; i++) {
+        for (int i = 0; i < 50 && item.getThreadState() != ThreadState.IDLE; i++) {
         	Thread.sleep(100);
         }
         assertEquals(ThreadState.IDLE, item.getThreadState());

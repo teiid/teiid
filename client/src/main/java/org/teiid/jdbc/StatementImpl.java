@@ -471,9 +471,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		} else if (key.equalsIgnoreCase(TeiidURL.CONNECTION.PASSWORD)) {
         			this.getMMConnection().setPassword(value);
         		} else if (ExecutionProperties.NEWINSTANCE.equalsIgnoreCase(key)) {
-        			if (Boolean.valueOf(value)) {
-        				this.getMMConnection().getServerConnection().cleanUp();
-        			}
+        			//no op - url based load-balancing removed
         		} else {
         			this.driverConnection.setExecutionProperty(key, value);
         		}

@@ -42,6 +42,7 @@
 <h4>from 11.0</h4>
 <ul>
   <li><a href="https://issues.jboss.org/browse/TEIID-5411">TEIID-5411</a> Pluggable server discovery has been removed as a client feature.  The client will focus on better integration with existing load-balancing paradigms instead.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5415">TEIID-5415</a> The JDBC client load-balancing feature has been removed.  The client will no longer pool instances nor issue a ping.  If you use the client against a server older than 10.2, ping will need to be disabled on that server.</li>
 </ul>
 
 <h4>from 10.3</h4>

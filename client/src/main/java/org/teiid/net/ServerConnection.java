@@ -34,8 +34,6 @@ public interface ServerConnection {
 	
 	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
 	
-	void cleanUp();
-	
 	void authenticate() throws ConnectionException, CommunicationException;
 	
 	boolean supportsContinuous();
