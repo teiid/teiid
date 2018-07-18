@@ -112,8 +112,6 @@ public class TeiidDataSource extends BaseDataSource {
     
     private final TeiidDriver driver;
 
-	private boolean loadBalance = true;
-    
 	public TeiidDataSource() {
 		this.driver = new TeiidDriver();
     }
@@ -544,16 +542,19 @@ public class TeiidDataSource extends BaseDataSource {
 		return encryptRequests;
 	}
 	
+	@Deprecated
 	public boolean isLoadBalance() {
-		return loadBalance;
+		return false;
 	}
 	
+	@Deprecated
 	public boolean getLoadBalance() {
-		return loadBalance;
+		return false;
 	}
 	
+	@Deprecated
 	public void setLoadBalance(boolean loadBalance) {
-		this.loadBalance = loadBalance;
+		
 	}
 	
 	/**
@@ -566,7 +567,6 @@ public class TeiidDataSource extends BaseDataSource {
      */
     public XAConnection getXAConnection(final String userName, final String password) throws java.sql.SQLException {
     	XAConnectionImpl result = new XAConnectionImpl((ConnectionImpl) getConnection(userName, password));
-    	result.setLoadBalance(loadBalance);
     	return result;
     }
     

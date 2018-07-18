@@ -267,18 +267,6 @@ public class TestSocketRemoting {
 				return serverInstance;
 			}
 			
-			@Override
-			public void connected(SocketServerInstance instance,
-					SessionToken session) {
-				
-			}
-			
-			@Override
-			public void disconnected(SocketServerInstance instance,
-					SessionToken session) {
-				
-			}
-			
 		}, false, new UrlServerDiscovery(new TeiidURL("0.0.0.0", 1, false)), new Properties()); //$NON-NLS-1$
 		return connection;
 	}

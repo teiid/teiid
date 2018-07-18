@@ -49,6 +49,7 @@ public interface ILogon {
    ResultsFuture<?> ping()
        throws InvalidSessionException, TeiidComponentException, CommunicationException;
    
+   @Deprecated
    ResultsFuture<?> ping(Collection<String> sessions)
    		throws TeiidComponentException, CommunicationException;
    

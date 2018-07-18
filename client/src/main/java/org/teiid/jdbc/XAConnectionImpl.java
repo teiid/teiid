@@ -96,7 +96,7 @@ public class XAConnectionImpl implements XAConnection, XAResource {
         }
 
 		void close() {
-			this.proxiedConnection.recycleConnection(loadBalance);
+			this.proxiedConnection.recycleConnection();
 			XAConnectionImpl.this.notifyListener(null);
 		}
     }
@@ -108,16 +108,11 @@ public class XAConnectionImpl implements XAConnection, XAResource {
 	private ConnectionImpl connection;
 	private CloseInterceptor handler;
     private boolean isClosed;
-    private boolean loadBalance = true;
         
 	public XAConnectionImpl(ConnectionImpl conn){
 	    this.connection = conn;
 	}
 	
-	public void setLoadBalance(boolean loadBalance) {
-		this.loadBalance = loadBalance;
-	}
-		
 	public Connection getConnection() throws SQLException{
         ConnectionImpl conn = getConnectionImpl();
 		if (handler != null) {

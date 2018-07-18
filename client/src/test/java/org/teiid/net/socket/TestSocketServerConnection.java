@@ -230,17 +230,6 @@ public class TestSocketServerConnection {
 				return instance;
 			}
 			
-			@Override
-			public void connected(SocketServerInstance instance,
-					SessionToken session) {
-				
-			}
-			
-			@Override
-			public void disconnected(SocketServerInstance instance,
-					SessionToken session) {
-				
-			}
 		};
 		SocketServerConnection connection = new SocketServerConnection(instanceFactory, false, discovery, p);
 		return connection;
