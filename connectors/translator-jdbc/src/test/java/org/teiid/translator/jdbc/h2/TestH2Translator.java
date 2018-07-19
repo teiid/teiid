@@ -49,7 +49,7 @@ public class TestH2Translator {
 	
 	@Test public void testTimestampAddDiff() throws Exception {
 		String input = "SELECT timestampadd(sql_tsi_quarter, 1, timestampvalue), timestampadd(sql_tsi_frac_second, 1000, timestampvalue), timestampdiff(sql_tsi_frac_second, timestampvalue, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$       
-        String output = "SELECT dateadd('DAY', 1 * 91, SmallA.TimestampValue), dateadd('MILLISECOND', 1000 / 1000000, SmallA.TimestampValue), datediff('MILLISECOND', SmallA.TimestampValue, SmallA.TimestampValue) * 1000000 FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT dateadd('MONTH', 1 * 3, SmallA.TimestampValue), dateadd('MILLISECOND', 1000 / 1000000, SmallA.TimestampValue), datediff('MILLISECOND', SmallA.TimestampValue, SmallA.TimestampValue) * 1000000 FROM SmallA";  //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
