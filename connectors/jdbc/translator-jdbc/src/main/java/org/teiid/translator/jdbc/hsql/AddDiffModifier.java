@@ -88,8 +88,8 @@ public class AddDiffModifier extends FunctionModifier {
 				intervalType.setValue("MILLISECOND"); //$NON-NLS-1$
 				result.add(4, " / 1000000"); //$NON-NLS-1$
 			} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
-				intervalType.setValue(ExtractFunctionModifier.DAY);
-				result.add(4, " * 91"); //$NON-NLS-1$
+				intervalType.setValue(ExtractFunctionModifier.MONTH);
+				result.add(4, " * 3"); //$NON-NLS-1$
 			} else {
 				intervalType.setValue(ExtractFunctionModifier.DAY);
 				result.add(4, " * 7"); //$NON-NLS-1$
@@ -98,8 +98,8 @@ public class AddDiffModifier extends FunctionModifier {
 			intervalType.setValue("MILLISECOND"); //$NON-NLS-1$
 			result.add(" * 1000000"); //$NON-NLS-1$
 		} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
-			intervalType.setValue(ExtractFunctionModifier.DAY);
-			result.add(" / 91"); //$NON-NLS-1$  
+			intervalType.setValue(ExtractFunctionModifier.MONTH);
+			result.add(" / 3"); //$NON-NLS-1$  
 		} else {
     		intervalType.setValue(ExtractFunctionModifier.DAY);
     		result.add(" / 7"); //$NON-NLS-1$

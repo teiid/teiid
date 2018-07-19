@@ -1373,7 +1373,7 @@ public class TestOracleTranslator {
         helpTestVisitor(getTestVDB(),
                 "select timestampadd(sql_tsi_quarter, -2, now())", //$NON-NLS-1$
                 null,
-                "SELECT now() + (INTERVAL '-182' DAY(3)) FROM DUAL"); //$NON-NLS-1$
+                "SELECT now() + (INTERVAL '-6' MONTH(1)) FROM DUAL"); //$NON-NLS-1$
         
         helpTestVisitor(getTestVDB(),
                 "select timestampadd(sql_tsi_week, 1000, now())", //$NON-NLS-1$
