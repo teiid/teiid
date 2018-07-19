@@ -56,8 +56,8 @@ public class TimestampAddModifier extends FunctionModifier {
 		if (newInterval != null) {
 			result.add(value);
 		} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
-		    newInterval = ExtractFunctionModifier.DAY;
-		    adjustedValue = value*91l;
+		    newInterval = ExtractFunctionModifier.MONTH;
+		    adjustedValue = value*3l;
 		    result.add(adjustedValue);
 		} else if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
 			newInterval = ExtractFunctionModifier.SECOND;
