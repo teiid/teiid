@@ -70,6 +70,7 @@ public class ForEachRowPlan extends ProcessorPlan {
     private List<?> nextTuple;
     private boolean first = true;
     private boolean nextNull = false;
+    private BatchCollector batchCollector;
 
 	@Override
 	public ProcessorPlan clone() {
@@ -88,6 +89,9 @@ public class ForEachRowPlan extends ProcessorPlan {
 			if (this.rowProcessor != null) {
 				this.rowProcessor.closeProcessing();
 			}
+		}
+		if (this.tupleSource != null) {
+		    this.tupleSource.closeSource();
 		}
 		if (this.planContext != null) {
 			TransactionService ts = this.getContext().getTransactionServer();
@@ -132,9 +136,14 @@ public class ForEachRowPlan extends ProcessorPlan {
 				    if (nextTuple != null) {
 				        currentTuple = nextTuple;
 				    } else if (!nextNull) {
+				        if (tupleSource == null) {
+				            //buffer the changeset from the processor plan
+				            tupleSource = batchCollector.collectTuples().createIndexedTupleSource(true);
+				        }
 				        currentTuple = tupleSource.nextTuple();
 				    }
 					if (currentTuple == null) {
+					    this.tupleSource.closeSource();
 						if (this.planContext != null) {
 							TransactionService ts = this.getContext().getTransactionServer();
 							ts.commit(this.planContext);
@@ -253,7 +262,7 @@ public class ForEachRowPlan extends ProcessorPlan {
     	}
     	if (queryPlan != null) {
     		queryProcessor = new QueryProcessor(queryPlan, getContext().clone(), this.bufferMgr, this.dataMgr);
-    		tupleSource = new BatchCollector.BatchProducerTupleSource(queryProcessor);
+    		batchCollector = queryProcessor.createBatchCollector();
     	}
 	}
 	
@@ -281,7 +290,8 @@ public class ForEachRowPlan extends ProcessorPlan {
 		this.currentTuple = null;
 		this.rowProcessor = null;
 		this.queryProcessor = null;
-		this.tupleSource = null;
+	    this.tupleSource = null;
+	    this.batchCollector = null;
 		this.planContext = null;
 		this.first = true;
 		this.nextTuple = null;

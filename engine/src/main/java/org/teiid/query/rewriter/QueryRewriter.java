@@ -3401,7 +3401,16 @@ public class QueryRewriter {
 		ElementSymbol rowsUpdated = new ElementSymbol(ProcedureReservedWords.VARIABLES+Symbol.SEPARATOR+"ROWS_UPDATED"); //$NON-NLS-1$
 		DeclareStatement ds = new DeclareStatement(rowsUpdated, DataTypeManager.DefaultDataTypes.INTEGER, new Constant(0));
 		parent.addStatement(ds);
-		LoopStatement ls = new LoopStatement(b, query, varGroup.getName());
+		//create an intermediate temp
+		Insert insert = new Insert();
+		insert.setGroup(new GroupSymbol("#changes")); //$NON-NLS-1$
+		insert.setQueryExpression(query);
+		parent.addStatement(new CommandStatement(insert));
+		Query q = new Query();
+		q.setSelect(new Select());
+		q.getSelect().addSymbol(new MultipleElementSymbol());
+		q.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("#changes"))))); //$NON-NLS-1$
+		LoopStatement ls = new LoopStatement(b, q, varGroup.getName());
 		parent.addStatement(ls);
 		AssignmentStatement as = new AssignmentStatement();
 		rowsUpdated.setType(DataTypeManager.DefaultDataClasses.INTEGER);
