@@ -125,7 +125,22 @@ public class TestInherintlyUpdatableViews {
         dm.addData("SELECT convert(g_1.e2, string), g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e3 IS NULL)", new List[] {Arrays.asList("1", 1)});
         dm.addData("UPDATE pm1.g2 SET e1 = '1' WHERE pm1.g2.e2 = 1", new List[] {Arrays.asList(1)});
         
-		helpTest(userSql, viewSql, "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT convert(pm1.g2.e2, string) AS s_0, pm1.g2.e2 AS s_1 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e3 IS NULL) AS X\nBEGIN\nUPDATE pm1.g2 SET e1 = X.s_0 WHERE pm1.g2.e2 = X.s_1;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
+//<<<<<<< HEAD
+		helpTest(userSql, viewSql, "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nINSERT INTO #changes (s_0, s_1) SELECT convert(pm1.g2.e2, string) AS s_0, pm1.g2.e2 AS s_1 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e3 IS NULL;\nLOOP ON (SELECT #changes.s_0, #changes.s_1 FROM #changes) AS X\nBEGIN\nUPDATE pm1.g2 SET e1 = X.s_0 WHERE pm1.g2.e2 = X.s_1;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
+//||||||| parent of 444fa0ced9... TEIID-5426 switching to use an intermediate change set table
+//		helpTest(userSql, viewSql, "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT convert(g1.e2, string) AS s_0, pm1.g2.e2 AS s_1 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE g2.e3 IS NULL) AS X\nBEGIN\nUPDATE pm1.g2 SET e1 = X.s_0 WHERE pm1.g2.e2 = X.s_1;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
+/**
+		helpTest(userSql, viewSql, "BEGIN ATOMIC\n" + 
+		        "DECLARE integer VARIABLES.ROWS_UPDATED = 0;\n" + 
+		        "INSERT INTO #changes (s_0, s_1) SELECT convert(g1.e2, string) AS s_0, pm1.g2.e2 AS s_1 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE g2.e3 IS NULL;\n" + 
+		        "LOOP ON (SELECT #changes.s_0, #changes.s_1 FROM #changes) AS X\n" + 
+		        "BEGIN\n" + 
+		        "UPDATE pm1.g2 SET e1 = X.s_0 WHERE pm1.g2.e2 = X.s_1;\n" + 
+		        "VARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\n" + 
+		        "END\n" + 
+		        "SELECT VARIABLES.ROWS_UPDATED;\n" + 
+		        "END",
+//>>>>>>> 444fa0ced9... TEIID-5426 switching to use an intermediate change set table **/
 				dm);
 	}
 	
@@ -137,7 +152,22 @@ public class TestInherintlyUpdatableViews {
         dm.addData("SELECT g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e2 < 10)", new List[] {Arrays.asList(2)});
         dm.addData("DELETE FROM pm1.g2 WHERE pm1.g2.e2 = 2", new List[] {Arrays.asList(1)});
         
-		helpTest(userSql, viewSql, "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT pm1.g2.e2 AS s_0 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e2 < 10) AS X\nBEGIN\nDELETE FROM pm1.g2 WHERE pm1.g2.e2 = X.s_0;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
+//<<<<<<< HEAD
+		helpTest(userSql, viewSql, "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nINSERT INTO #changes (s_0) SELECT pm1.g2.e2 AS s_0 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e2 < 10;\nLOOP ON (SELECT #changes.s_0 FROM #changes) AS X\nBEGIN\nDELETE FROM pm1.g2 WHERE pm1.g2.e2 = X.s_0;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
+//||||||| parent of 444fa0ced9... TEIID-5426 switching to use an intermediate change set table
+//		helpTest(userSql, viewSql, "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT pm1.g2.e2 AS s_0 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE g1.e2 < 10) AS X\nBEGIN\nDELETE FROM pm1.g2 WHERE pm1.g2.e2 = X.s_0;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
+/**
+		helpTest(userSql, viewSql, "BEGIN ATOMIC\n" + 
+		        "DECLARE integer VARIABLES.ROWS_UPDATED = 0;\n" + 
+		        "INSERT INTO #changes (s_0) SELECT pm1.g2.e2 AS s_0 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE g1.e2 < 10;\n" + 
+		        "LOOP ON (SELECT #changes.s_0 FROM #changes) AS X\n" + 
+		        "BEGIN\n" + 
+		        "DELETE FROM pm1.g2 WHERE pm1.g2.e2 = X.s_0;\n" + 
+		        "VARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\n" + 
+		        "END\n" + 
+		        "SELECT VARIABLES.ROWS_UPDATED;\n" + 
+		        "END",
+//>>>>>>> 444fa0ced9... TEIID-5426 switching to use an intermediate change set table **/
 				dm);
 	}
 	

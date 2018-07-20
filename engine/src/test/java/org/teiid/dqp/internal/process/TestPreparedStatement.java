@@ -43,6 +43,8 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -249,6 +251,9 @@ public class TestPreparedStatement {
         	request.setRowLimit(1);
         }
        
+        if (!(metadata instanceof TempMetadataAdapter)) {
+            metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
+        }
         DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
         workContext.getSession().setSessionId(String.valueOf(conn)); 
         

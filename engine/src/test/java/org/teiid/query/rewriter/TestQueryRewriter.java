@@ -1759,7 +1759,22 @@ public class TestQueryRewriter {
 
 		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
 		
-    	helpTestRewriteCommand("merge into x (y) values (1)", "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT X.expr1 AS y FROM (SELECT '1' AS expr1) AS X) AS X1\nBEGIN\nIF(EXISTS (SELECT 1 FROM x WHERE y = X1.y LIMIT 1))\nBEGIN\nEND\nELSE\nBEGIN\nINSERT INTO x (y) VALUES (X1.y);\nEND\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND", metadata);
+    	helpTestRewriteCommand("merge into x (y) values (1)", "BEGIN ATOMIC\n" + 
+    	        "DECLARE integer VARIABLES.ROWS_UPDATED = 0;\n" + 
+    	        "INSERT INTO #changes (y) SELECT X.expr1 AS y FROM (SELECT '1' AS expr1) AS X;\n" + 
+    	        "LOOP ON (SELECT #changes.y FROM #changes) AS X1\n" + 
+    	        "BEGIN\n" + 
+    	        "IF(EXISTS (SELECT 1 FROM x WHERE y = X1.y LIMIT 1))\n" + 
+    	        "BEGIN\n" + 
+    	        "END\n" + 
+    	        "ELSE\n" + 
+    	        "BEGIN\n" + 
+    	        "INSERT INTO x (y) VALUES (X1.y);\n" + 
+    	        "END\n" + 
+    	        "VARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\n" + 
+    	        "END\n" + 
+    	        "SELECT VARIABLES.ROWS_UPDATED;\n" + 
+    	        "END", metadata);
     }
     
 	@Test public void testUnknownRewrite() throws Exception {
