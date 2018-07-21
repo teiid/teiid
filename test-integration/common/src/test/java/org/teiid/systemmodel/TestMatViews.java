@@ -320,7 +320,7 @@ public class TestMatViews {
 		assertEquals("base", rs.getString(1));
 	}
 	
-	@Test public void testSessionScoping() throws Exception {
+	@Test(expected=TeiidSQLException.class) public void testSessionScopingFails() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("alter view test.randomview as /*+ cache(scope:session) */ select rand() as x, rand() as y");
 		ResultSet rs = s.executeQuery("select * from MatViews where name = 'MatView'");
@@ -328,36 +328,7 @@ public class TestMatViews {
 		assertEquals("NEEDS_LOADING", rs.getString("loadstate"));
 		assertEquals(false, rs.getBoolean("valid"));
 		
-		//should be the same
-		rs = s.executeQuery("select * from randomview");
-		rs.next();
-		double d = rs.getDouble(1);
-		rs = s.executeQuery("select * from randomview");
-		rs.next();
-		assertEquals(d, rs.getDouble(1), 0);
-		
-		rs = s.executeQuery("select * from MatViews where name = 'RandomView'");
-		assertTrue(rs.next());
-		assertEquals("LOADED", rs.getString("loadstate"));
-		assertEquals(true, rs.getBoolean("valid"));
-		
-		//should be different in a new session
-		Connection c = server.getDriver().connect("jdbc:teiid:matviews", null);
-		rs = s.executeQuery("select * from MatViews where name = 'MatView'");
-		assertTrue(rs.next());
-		assertEquals("NEEDS_LOADING", rs.getString("loadstate"));
-		assertEquals(false, rs.getBoolean("valid"));
-		s = c.createStatement();
-		rs = s.executeQuery("select * from randomview");
-		rs.next();
-		assertFalse(d == rs.getDouble(1));
-		
-		//should be different after a refresh
-		s.execute("call refreshMatView('TEST.RANDOMVIEW', false)");
-		
-		rs = s.executeQuery("select * from randomview");
-		rs.next();
-		assertFalse(d == rs.getDouble(1));
+		s.executeQuery("select * from randomview");
 	}
 	
 	@Test public void testCompositeRowUpdate() throws Exception {

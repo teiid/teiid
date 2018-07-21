@@ -85,7 +85,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.GlobalTableStore;
-import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.translator.ReusableExecution;
 
@@ -1066,23 +1065,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		this.globalState.lookups.put(new LookupKey(matTableName, keyValue), ts);
 	}
 	
-	
-	public GlobalTableStoreImpl getSessionScopedStore(boolean create) {
-		GlobalTableStoreImpl impl = getSession().getAttachment(GlobalTableStoreImpl.class);
-		if (!create) {
-			return impl;
-		} 
-		impl = getSession().getAttachment(GlobalTableStoreImpl.class);
-		if (impl == null) {
-			impl = new GlobalTableStoreImpl(getBufferManager(), null, getMetadata());
-			getSession().addAttchment(GlobalTableStoreImpl.class, impl);
-		}
-		return impl;
-	}
-	
-	public static GlobalTableStoreImpl removeSessionScopedStore(SessionMetadata session) {
-		return session.removeAttachment(GlobalTableStoreImpl.class);
-	}
 	
 	@Override
 	public TeiidConnection getConnection() throws TeiidSQLException {

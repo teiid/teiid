@@ -678,7 +678,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		if (matTableId.getCacheHint() == null || matTableId.getCacheHint().getScope() == null || Scope.VDB.compareTo(matTableId.getCacheHint().getScope()) <= 0) {
 			return globalStore;
 		}
-		return context.getSessionScopedStore(true);
+		throw new AssertionError("session scoping not supported"); //$NON-NLS-1$
 	}
 
 	private void loadViaRefresh(final CommandContext context, final String tableName, VDBMetaData vdb, MatTableInfo info) throws TeiidProcessingException, TeiidComponentException {

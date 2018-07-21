@@ -658,6 +658,14 @@ public class MetadataValidator {
     			else {
     				addCacheHint = true;
     			}
+    			
+    			if (node != null && t.isMaterialized()) {
+                    CacheHint cacheHint = node.getCommand().getCacheHint();
+                    if (cacheHint != null && cacheHint.getScope() != null 
+                            && cacheHint.getScope() != org.teiid.translator.CacheDirective.Scope.VDB) {
+                        log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31116, t.getFullName()));                        
+                    }
+    			}
 
     			if (node != null && addCacheHint && t.isMaterialized()) {
         			CacheHint cacheHint = node.getCommand().getCacheHint();

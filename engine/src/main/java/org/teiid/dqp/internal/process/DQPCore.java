@@ -81,11 +81,9 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.QueryProcessor;
-import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
-import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Options;
 import org.teiid.query.util.TeiidTracingUtil;
 
@@ -503,24 +501,13 @@ public class DQPCore implements DQP {
 	                LogManager.logWarning(LogConstants.CTX_DQP, err, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30026,reqId));
 				}
 	        }
-	        SessionMetadata session = state.session;
-	        if (session != null) {
-	        	GlobalTableStoreImpl store = CommandContext.removeSessionScopedStore(session);
-	        	if (store != null) {
-	        		try {
-						store.getTempTableStore().removeTempTables();
-					} catch (TeiidComponentException e) {
-		                LogManager.logDetail(LogConstants.CTX_DQP, e, "Error removing session scoped temp tables"); //$NON-NLS-1$
-					}
-	        	}
-	        }
         }
         
         try {
             transactionService.cancelTransactions(sessionId, false);
         } catch (XATransactionException err) {
             LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30005,sessionId));
-        } 
+        }
     }
 
     public boolean cancelRequest(String sessionId, long executionId) throws TeiidComponentException {
