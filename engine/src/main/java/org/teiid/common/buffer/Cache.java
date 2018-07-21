@@ -92,5 +92,7 @@ public interface Cache<T> extends StorageManager {
 	void shutdown();
 	
 	long getMemoryBufferSpace();
+
+    int getCacheGroupCount();
 	
 }

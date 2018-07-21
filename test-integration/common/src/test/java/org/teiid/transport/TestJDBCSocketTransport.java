@@ -444,5 +444,23 @@ public class TestJDBCSocketTransport {
         server.getAdmin().terminateSession(session);
         s.execute("select 1");
     }
+    
+    /**
+     * Not strictly a jdbc test, but simple to test here
+     * @throws Exception
+     */
+    @Test public void testTempTableCleanup() throws Exception {
+        for (int i = 0; i < 50; i++) {
+            Statement s = conn.createStatement();
+            s.execute("insert into #temp select t.* from sys.tables t cross join sys.tables t1");
+            Properties p = new Properties();
+            p.setProperty("user", "testuser");
+            p.setProperty("password", "testpassword");
+            conn.close();
+            conn = TeiidDriver.getInstance().connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
+            //there are several managed internal materialization, make sure that we don't grow beyond that
+            assertTrue(((BufferManagerImpl)server.getDqp().getBufferManager()).getCache().getCacheGroupCount() < 5);
+        }
+    }
 	
 }

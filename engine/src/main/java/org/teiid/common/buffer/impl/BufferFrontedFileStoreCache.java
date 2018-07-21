@@ -764,6 +764,11 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	}
 	
 	@Override
+	public int getCacheGroupCount() {
+        return physicalMapping.size();
+    }
+	
+	@Override
 	public CacheEntry get(PhysicalInfo info, Long oid,
 			WeakReference<? extends Serializer<?>> ref)
 			throws TeiidComponentException {

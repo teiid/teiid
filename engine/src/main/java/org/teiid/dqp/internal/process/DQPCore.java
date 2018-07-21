@@ -508,6 +508,14 @@ public class DQPCore implements DQP {
         } catch (XATransactionException err) {
             LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30005,sessionId));
         }
+        
+        if (state != null && state.sessionTables != null) {
+            try {
+                state.sessionTables.removeTempTables();
+            } catch (TeiidComponentException e) {
+                LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31277,sessionId));
+            }
+        }
     }
 
     public boolean cancelRequest(String sessionId, long executionId) throws TeiidComponentException {

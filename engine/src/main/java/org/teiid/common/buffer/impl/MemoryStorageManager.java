@@ -191,5 +191,10 @@ public class MemoryStorageManager implements Cache<Long> {
 	public long getMemoryBufferSpace() {
 	    return 0;
 	}
+
+    @Override
+    public int getCacheGroupCount() {
+        return groups.size();
+    }
 	
 }
