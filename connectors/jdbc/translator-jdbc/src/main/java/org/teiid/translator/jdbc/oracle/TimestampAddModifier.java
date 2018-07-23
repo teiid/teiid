@@ -45,14 +45,30 @@ public class TimestampAddModifier extends FunctionModifier {
 	@Override
 	public List<?> translate(Function function) {
 	    ArrayList<Object> result = new ArrayList<Object>();
+	    Literal intervalType = (Literal)function.getParameters().get(0);
+        String interval = ((String)intervalType.getValue()).toUpperCase();
+        //by capabilities this must be a literal integer
+        int value = (Integer)((Literal)function.getParameters().get(1)).getValue();
+        long adjustedValue = value;
+        
+        //handle the year/month case
+	    if (interval.equals(NonReserved.SQL_TSI_YEAR)) {
+	        interval = NonReserved.SQL_TSI_MONTH;
+            adjustedValue = value*12l;
+        }
+	    if (interval.equals(NonReserved.SQL_TSI_MONTH)) {
+            interval = ExtractFunctionModifier.MONTH;
+            result.add("ADD_MONTHS("); //$NON-NLS-1$
+            result.add(function.getParameters().get(2));
+            result.add(", "); //$NON-NLS-1$
+            result.add(adjustedValue);
+            result.add(")"); //$NON-NLS-1$
+            return result;
+        }
+	    
 	    result.add(function.getParameters().get(2));
 	    result.add(" + (INTERVAL '"); //$NON-NLS-1$
-		Literal intervalType = (Literal)function.getParameters().get(0);
-		String interval = ((String)intervalType.getValue()).toUpperCase();
 		String newInterval = INTERVAL_MAP.get(interval);
-		//by capabilities this must be a literal integer
-		int value = (Integer)((Literal)function.getParameters().get(1)).getValue();
-		long adjustedValue = value;
 		if (newInterval != null) {
 			result.add(value);
 		} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {

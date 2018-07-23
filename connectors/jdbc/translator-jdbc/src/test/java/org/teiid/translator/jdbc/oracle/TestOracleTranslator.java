@@ -1355,6 +1355,16 @@ public class TestOracleTranslator {
                 "select timestampadd(sql_tsi_frac_second, 123456789, now())", //$NON-NLS-1$
                 null,
                 "SELECT now() + (INTERVAL '0.123456789' SECOND(1)) FROM DUAL"); //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+                "select timestampadd(sql_tsi_month, 123, now())", //$NON-NLS-1$
+                null,
+                "SELECT ADD_MONTHS(now(), 123) FROM DUAL"); //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+                "select timestampadd(sql_tsi_year, -10, now())", //$NON-NLS-1$
+                null,
+                "SELECT ADD_MONTHS(now(), -120) FROM DUAL"); //$NON-NLS-1$
     }
     
 }

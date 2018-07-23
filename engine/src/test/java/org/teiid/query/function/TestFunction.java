@@ -865,6 +865,10 @@ public class TestFunction {
     @Test public void testTimestampCreate1() throws Exception {
         helpTestTimestampCreate(TimestampUtil.createDate(103, 11, 1), TimestampUtil.createTime(23, 59, 59), "2003-12-01 23:59:59.0"); //$NON-NLS-1$
     }
+    
+    @Test public void testTimestampAddLeapYear() throws Exception {
+        assertEquals(TimestampUtil.createTimestamp(117, 1, 28, 15, 20, 30, 0), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_YEAR, 1, TimestampUtil.createTimestamp(116, 1, 29, 15, 20, 30, 0)));
+    }
 
     @Test public void testTimestampAdd2() throws Exception {
     	assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 18, 20, 30, 0), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
