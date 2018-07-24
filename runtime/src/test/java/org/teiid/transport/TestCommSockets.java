@@ -127,7 +127,7 @@ public class TestCommSockets {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.DISABLED);
 		SocketServerConnection conn = helpEstablishConnection(false, config, new Properties());
-		assertTrue(conn.selectServerInstance(false).getCryptor() instanceof NullCryptor);
+		assertTrue(conn.selectServerInstance().getCryptor() instanceof NullCryptor);
 		conn.close();
 	}
 
@@ -283,7 +283,7 @@ public class TestCommSockets {
 		assertEquals(1, this.service.getActiveSessionsCount());
 		ServerConnection conn2 = helpEstablishConnection(false, config, p);
 		assertEquals(2, this.service.getActiveSessionsCount());
-		conn.selectServerInstance(false);
+		conn.selectServerInstance();
 		assertEquals(2, this.service.getActiveSessionsCount());
 		assertTrue(conn.isOpen(10000));
 		stats = listener.getStats();

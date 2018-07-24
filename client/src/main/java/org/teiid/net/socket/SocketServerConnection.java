@@ -85,7 +85,7 @@ public class SocketServerConnection implements ServerConnection {
 		//ILogon that is allowed to failover
 		this.logon = this.getService(ILogon.class);
 		this.failOver = Boolean.valueOf(connProps.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER)).booleanValue();
-		this.serverVersion = selectServerInstance(false).getServerVersion();
+		this.serverVersion = selectServerInstance().getServerVersion();
 	}
 	
 	/**
@@ -94,7 +94,7 @@ public class SocketServerConnection implements ServerConnection {
 	 * TODO: put more information on hostinfo as to process response time, last successful connect, etc.
 	 * @throws ConnectionException 
 	 */
-	public synchronized SocketServerInstance selectServerInstance(boolean logoff)
+	public synchronized SocketServerInstance selectServerInstance()
 			throws CommunicationException, ConnectionException {
 		if (closed) {
 			 throw new CommunicationException(JDBCPlugin.Event.TEIID20016, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20016));
@@ -118,21 +118,9 @@ public class SocketServerConnection implements ServerConnection {
 						hostInfo = new HostInfo(hostInfo.getHostName(), new InetSocketAddress(inetAddress, hostInfo.getPortNumber()));
 					}
 				}
-				ILogon newLogon = connect(hostInfo);
-				if (this.logonResult == null) {
-			        try {
-			            logon(newLogon, logoff);
-			        } catch (LogonException e) {
-			            // Propagate the original message as it contains the message we want
-			            // to give to the user
-			             throw new ConnectionException(e);
-			        } catch (TeiidComponentException e) {
-			        	if (e.getCause() instanceof CommunicationException) {
-			        		throw (CommunicationException)e.getCause();
-			        	}
-			             throw new CommunicationException(JDBCPlugin.Event.TEIID20018, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20018));
-			        } 
-				}
+				hostInfo.setSsl(secure);
+		        this.serverInstance = connectionFactory.getServerInstance(hostInfo);
+				connectSession();
 				return this.serverInstance;
 			} catch (IOException e) {
 				ex = e;
@@ -150,7 +138,7 @@ public class SocketServerConnection implements ServerConnection {
 		 throw new CommunicationException(JDBCPlugin.Event.TEIID20021, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20021, hostCopy.toString()));
 	}
 
-	private void logon(ILogon newLogon, boolean logoff) throws LogonException, TeiidComponentException, CommunicationException {
+	private void logon(ILogon newLogon) throws LogonException, TeiidComponentException, CommunicationException {
 
 		SocketServerInstance instance = this.serverInstance;
 		
@@ -168,7 +156,7 @@ public class SocketServerConnection implements ServerConnection {
 		AuthenticationType type = (AuthenticationType) newResult.getProperty(ILogon.AUTH_TYPE);
 		
 		if (type != null) {
-			//server has issued an additional challange
+			//server has issued an additional challenge
 			if (type == AuthenticationType.GSS) {
 				newResult = MakeGSS.authenticate(newLogon, connProps);
 			} else {
@@ -176,9 +164,7 @@ public class SocketServerConnection implements ServerConnection {
 			}
 		}
 		
-		if (logoff) {
-			logoff();
-		}
+		logoff();
 		
 		this.logonResult = newResult;
 	}
@@ -215,10 +201,7 @@ public class SocketServerConnection implements ServerConnection {
 		}
 	}
 	
-	private ILogon connect(HostInfo hostInfo) throws CommunicationException,
-			IOException {
-		hostInfo.setSsl(secure);
-		this.serverInstance = connectionFactory.getServerInstance(hostInfo);
+	private ILogon connectSession() throws CommunicationException, ConnectionException {
 		ILogon newLogon = this.serverInstance.getService(ILogon.class);
 		if (this.logonResult != null) {
 			try {
@@ -228,6 +211,20 @@ public class SocketServerConnection implements ServerConnection {
 				disconnect();
 			}
 		}
+        if (this.logonResult == null) {
+            try {
+                logon(newLogon);
+            } catch (LogonException e) {
+                // Propagate the original message as it contains the message we want
+                // to give to the user
+                 throw new ConnectionException(e);
+            } catch (TeiidComponentException e) {
+                if (e.getCause() instanceof CommunicationException) {
+                    throw (CommunicationException)e.getCause();
+                }
+                 throw new CommunicationException(JDBCPlugin.Event.TEIID20018, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20018));
+            } 
+        }
 		return newLogon;
 	}
 	
@@ -237,7 +234,7 @@ public class SocketServerConnection implements ServerConnection {
 			protected SocketServerInstance getInstance() throws CommunicationException {
 				if (failOver && System.currentTimeMillis() - lastPing > pingFailOverInterval) {
 					try {
-						ResultsFuture<?> future = selectServerInstance(false).getService(ILogon.class).ping();
+						ResultsFuture<?> future = selectServerInstance().getService(ILogon.class).ping();
 						future.get();
 					} catch (SingleInstanceCommunicationException e) {
 						closeServerInstance();
@@ -252,7 +249,7 @@ public class SocketServerConnection implements ServerConnection {
 				}
 				lastPing = System.currentTimeMillis();
 				try {
-					return selectServerInstance(false);
+					return selectServerInstance();
 				} catch (ConnectionException e) {
 					 throw new CommunicationException(e);
 				}
@@ -281,14 +278,16 @@ public class SocketServerConnection implements ServerConnection {
 		
 		if (this.serverInstance != null) {
 			logoff();
+            closeServerInstance();
 		}
-		
-		logoff();
 		
 		this.closed = true;
 	}
 
 	private void logoff() {
+	    if (this.logonResult == null) {
+	        return;
+	    }
 		disconnect();
 		try {
 			//make a best effort to send the logoff
@@ -297,7 +296,6 @@ public class SocketServerConnection implements ServerConnection {
 		} catch (Exception e) {
 			//ignore
 		}
-		closeServerInstance();
 	}
 
 	private void disconnect() {
@@ -337,7 +335,7 @@ public class SocketServerConnection implements ServerConnection {
 			return false;
 		}
 		try {
-			return selectServerInstance(false).getHostInfo().equals(((SocketServerConnection)otherService).selectServerInstance(false).getHostInfo());
+			return selectServerInstance().getHostInfo().equals(((SocketServerConnection)otherService).selectServerInstance().getHostInfo());
 		} catch (ConnectionException e) {
 			 throw new CommunicationException(e);
 		}
@@ -355,11 +353,11 @@ public class SocketServerConnection implements ServerConnection {
 	public void authenticate() throws ConnectionException,
 			CommunicationException {
 		if (this.serverInstance == null) {
-			selectServerInstance(true); //this will trigger a logon with the new credentials
+			selectServerInstance(); //this will trigger a logon with the new credentials
 		} else {
 			ILogon logonInstance = this.serverInstance.getService(ILogon.class);
 			try {
-				this.logon(logonInstance, true);
+				this.logon(logonInstance);
 			} catch (LogonException e) {
 				 throw new ConnectionException(e);
 			} catch (TeiidComponentException e) {
