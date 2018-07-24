@@ -290,9 +290,11 @@ public class SocketServerConnection implements ServerConnection {
 	    }
 		disconnect();
 		try {
-			//make a best effort to send the logoff
+			//make a best effort to send the logoff, and wait a small amount for a response
+		    //this will ensure a "proper" session termination on the server side,
+		    //rather than implicit closure when the socket is closed
 			Future<?> writeFuture = this.serverInstance.getService(ILogon.class).logoff();
-			writeFuture.get(5000, TimeUnit.MILLISECONDS);
+			writeFuture.get(100, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			//ignore
 		}
