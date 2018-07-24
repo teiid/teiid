@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.JDBCPlugin;
@@ -43,10 +42,7 @@ import org.teiid.net.TeiidURL;
  */
 public class SocketServerConnectionFactory implements ServerConnectionFactory, SocketServerInstanceFactory {
 
-	private static final String V_10_2 = "10.02"; //$NON-NLS-1$
-
 	private static SocketServerConnectionFactory INSTANCE;
-	private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 
     private ObjectChannelFactory channelFactory;
 	

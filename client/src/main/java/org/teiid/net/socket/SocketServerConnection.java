@@ -27,11 +27,8 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -71,7 +68,6 @@ public class SocketServerConnection implements ServerConnection {
 	
 	private SocketServerInstance serverInstance;
     private LogonResult logonResult;
-    private Map<HostInfo, LogonResult> logonResults = new ConcurrentHashMap<HostInfo, LogonResult>();
     private ILogon logon;
     private boolean closed;
 	private boolean failOver;
@@ -106,8 +102,7 @@ public class SocketServerConnection implements ServerConnection {
 		if (this.serverInstance != null && (!failOver || this.serverInstance.isOpen())) {
 			return this.serverInstance;
 		}
-		List<HostInfo> hostKeys = new ArrayList<HostInfo>(this.serverDiscovery.getKnownHosts(logonResult, null));
-		boolean discoverHosts = true;
+		List<HostInfo> hostKeys = new ArrayList<HostInfo>(this.serverDiscovery.getKnownHosts());
 		closeServerInstance();
 		List<HostInfo> hostCopy = new ArrayList<HostInfo>(hostKeys);
 		int knownHosts = hostKeys.size();
@@ -127,15 +122,6 @@ public class SocketServerConnection implements ServerConnection {
 				if (this.logonResult == null) {
 			        try {
 			            logon(newLogon, logoff);
-			            if (discoverHosts) {
-				            List<HostInfo> updatedHosts = this.serverDiscovery.getKnownHosts(logonResult, this.serverInstance);
-				            if (updatedHosts.size() > 1 && new HashSet<HostInfo>(updatedHosts).size() > new HashSet<HostInfo>(hostCopy).size()) {
-				            	hostKeys = updatedHosts;
-				            	closeServerInstance();
-				            	discoverHosts = false;
-				            	continue;
-				            }
-			            }
 			        } catch (LogonException e) {
 			            // Propagate the original message as it contains the message we want
 			            // to give to the user
@@ -191,12 +177,10 @@ public class SocketServerConnection implements ServerConnection {
 		}
 		
 		if (logoff) {
-			LogonResult old = this.logonResults.remove(this.serverInstance.getHostInfo());
-			logoffAll();
+			logoff();
 		}
 		
 		this.logonResult = newResult;
-		this.logonResults.put(instance.getHostInfo(), this.logonResult);
 	}
 	
 	public static void updateConnectionProperties(Properties connectionProperties, InetAddress addr, boolean setMac) {
@@ -235,7 +219,6 @@ public class SocketServerConnection implements ServerConnection {
 			IOException {
 		hostInfo.setSsl(secure);
 		this.serverInstance = connectionFactory.getServerInstance(hostInfo);
-		this.logonResult = logonResults.get(hostInfo);
 		ILogon newLogon = this.serverInstance.getService(ILogon.class);
 		if (this.logonResult != null) {
 			try {
@@ -300,20 +283,9 @@ public class SocketServerConnection implements ServerConnection {
 			logoff();
 		}
 		
-		logoffAll();
+		logoff();
 		
 		this.closed = true;
-	}
-
-	private void logoffAll() {
-		for (Map.Entry<HostInfo, LogonResult> logonEntry : logonResults.entrySet()) {
-			try {
-				connect(logonEntry.getKey());
-				logoff();
-			} catch (Exception e) {
-				
-			}
-		}
 	}
 
 	private void logoff() {
@@ -329,7 +301,6 @@ public class SocketServerConnection implements ServerConnection {
 	}
 
 	private void disconnect() {
-		this.logonResults.remove(this.serverInstance.getHostInfo());
 		this.logonResult = null;
 	}
 	

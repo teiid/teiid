@@ -21,7 +21,6 @@ package org.teiid.net.socket;
 import java.util.List;
 import java.util.Properties;
 
-import org.teiid.client.security.LogonResult;
 import org.teiid.net.HostInfo;
 import org.teiid.net.TeiidURL;
 
@@ -41,8 +40,7 @@ public class UrlServerDiscovery {
 		this.url = url;
 	}
 	
-	public List<HostInfo> getKnownHosts(LogonResult result,
-			SocketServerInstance instance) {
+	public List<HostInfo> getKnownHosts() {
 		return url.getHostInfo();
 	}
 
