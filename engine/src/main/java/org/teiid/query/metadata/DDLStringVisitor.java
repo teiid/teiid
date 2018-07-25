@@ -643,7 +643,7 @@ public class DDLStringVisitor {
 			append(SPACE);
 			append(SERIAL);
 		} else {
-			appendColumn(column, true, true);
+			appendColumn(column, true, !table.isVirtual() || !Boolean.valueOf(column.getProperty(MetadataValidator.UNTYPED, false)));
 			
 			if (column.isAutoIncremented()) {
 				append(SPACE).append(AUTO_INCREMENT);
@@ -808,6 +808,9 @@ public class DDLStringVisitor {
 				if (record instanceof Database && entry.getKey().equals("full-ddl")) {
 					continue;
 				}
+				if (entry.getKey().equals(MetadataValidator.UNTYPED)) {
+                    continue;
+                }
 				addOption(options, entry.getKey(), entry.getValue());
 			}
 		}

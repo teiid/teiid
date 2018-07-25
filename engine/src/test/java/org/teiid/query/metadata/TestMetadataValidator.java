@@ -117,10 +117,19 @@ public class TestMetadataValidator {
 	
 	@Test
 	public void testMinimalDataNoColumns() throws Exception {
-		buildModel("pm1", true, this.vdb, this.store, "create foreign table g1;");
-		ValidatorReport report = new ValidatorReport();
-		new MetadataValidator.MinimalMetadata().execute(vdb, store, report, new MetadataValidator());
-		assertTrue(printError(report), report.hasItems());		
+	    ModelMetaData model = new ModelMetaData();
+        model.setName("x");  
+        vdb.addModel(model);
+        
+        MetadataFactory mf = new MetadataFactory("myVDB",1, "x", TestDDLParser.getDataTypes(), new Properties(), null);
+        
+        mf.addTable("y");
+        mf.mergeInto(store);    
+        
+        buildTransformationMetadata();
+        
+        ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
+        assertTrue(printError(report), report.hasItems());
 	}
 	
 	@Test
@@ -668,6 +677,51 @@ public class TestMetadataValidator {
     public void testViewWithoutColumns() throws Exception {
         String ddl = "CREATE FOREIGN TABLE G1(\n" +
                 "e1 integer primary key,\n" +
+                "e2 varchar(10) unique)\n" +
+                "OPTIONS (CARDINALITY 12, UUID 'uuid2',  UPDATABLE 'true'); "
+                + " create view v1 (x, y, z string) as select e1, e2, 'a' from G1;";
+        
+        buildModel("phy1", true, this.vdb, this.store, ddl);
+        
+        buildTransformationMetadata();
+        
+        ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
+        
+        assertFalse(printError(report), report.hasItems());
+        
+        Table table = store.getSchema("phy1").getTable("v1");
+        
+        assertTrue(table.isVirtual());
+        assertFalse(table.isSystem());
+        assertFalse(table.isMaterialized());
+        assertFalse(table.isDeletePlanEnabled());
+        assertFalse(table.supportsUpdate());
+        
+        assertEquals(3, table.getColumns().size());
+        
+        List<Column> columns = table.getColumns();
+        Column e1 = columns.get(0);
+        Column e2 = columns.get(1);
+        Column e3 = columns.get(2);
+        
+        assertEquals("x", e1.getName());
+        assertEquals("integer", e1.getDatatype().getName());
+        
+        assertEquals("y", e2.getName());
+        assertEquals("string", e2.getDatatype().getName());
+        assertEquals(NullType.Nullable, e2.getNullType());
+        assertEquals(10, e2.getLength());
+        assertEquals(0, e2.getPrecision());
+        
+        assertEquals("z", e3.getName());
+        assertEquals("string", e3.getDatatype().getName());
+        assertEquals(NullType.Nullable, e3.getNullType());      
+    }  
+    
+    @Test
+    public void testViewWithoutTypes() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(\n" +
+                "e1 integer primary key,\n" +
                 "e2 varchar(10) unique,\n" +
                 "e3 date not null unique,\n" +
                 "e4 decimal(12,3) default 12.2 options (searchable 'unsearchable'),\n" +
@@ -729,7 +783,7 @@ public class TestMetadataValidator {
         assertEquals("expr2", e7.getName());
         assertEquals("string", e7.getDatatype().getName());
         assertEquals(1, e7.getLength());
-    }  
+    }
     
 	private ValidatorReport helpTest(String ddl, boolean expectErrors) throws Exception {
 		buildModel("pm1", true, this.vdb, this.store, ddl);

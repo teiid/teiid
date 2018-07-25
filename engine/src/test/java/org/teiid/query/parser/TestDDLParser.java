@@ -440,6 +440,15 @@ public class TestDDLParser {
 		mf.mergeInto(mds);
 	}	
 	
+    @Test
+    public void testViewWithoutColumnTypes() throws Exception {
+        QueryParser parser = new QueryParser();
+        MetadataStore mds = new MetadataStore();            
+        MetadataFactory mf = new MetadataFactory("x", 1, "VM1", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf,"CREATE VIEW V1 (e11, e12, e13, e14) AS SELECT * FROM PM1.G1");           
+        mf.mergeInto(mds);
+    }
+	
 	@Test
 	public void testRenameView() throws Exception {
 		QueryParser parser = new QueryParser();

@@ -83,7 +83,8 @@ import org.teiid.translator.TranslatorException;
 
 public class MetadataValidator {
 	
-	private Map<String, Datatype> typeMap;
+	public static final String UNTYPED = "teiid_internal:untyped"; //$NON-NLS-1$
+    private Map<String, Datatype> typeMap;
 	private QueryParser parser;
 	
 	interface MetadataRule {
@@ -591,21 +592,31 @@ public class MetadataValidator {
     				validateNoReferences(command, report, model);
     				QueryResolver.resolveCommand(command, metadata);
     				resolverReport =  Validator.validate(command, metadata);
-    				if (!resolverReport.hasItems() && (t.getColumns() == null || t.getColumns().isEmpty())) {
-
+    				if (!resolverReport.hasItems()) {
     				    List<Expression> symbols = command.getProjectedSymbols();
-    					for (Expression column:symbols) {
-    						try {
-								addColumn(column, t, mf, metadata);
-							} catch (TranslatorException e) {
-								log(report, model, e.getMessage());
-							}
-    					}
-    					
-                        if (command instanceof SetQuery) {
-                            MetaDataProcessor.updateMetadataAcrossBranches((SetQuery) command, t.getColumns(), metadata);
-                        }
-    					
+    				    if ( (t.getColumns() == null || t.getColumns().isEmpty())) {
+        				    for (Expression column:symbols) {
+        						try {
+    								addColumn(column, t, mf, metadata);
+    							} catch (TranslatorException e) {
+    								log(report, model, e.getMessage());
+    							}
+        					}
+        					
+                            if (command instanceof SetQuery) {
+                                MetaDataProcessor.updateMetadataAcrossBranches((SetQuery) command, t.getColumns(), metadata);
+                            }
+    				    } else {
+    				       //infer the types if needed
+    				       for (int i = 0; i < t.getColumns().size(); i++) {
+    				           Column c = t.getColumns().get(i);
+    				           if (Boolean.valueOf(c.getProperty(UNTYPED, false)) && symbols.size() > i) {
+    				               Expression projected = symbols.get(i);
+    				               MetadataFactory.setDataType(DataTypeManager.getDataTypeName(projected.getType()), c, mf.getDataTypes(), false);
+    				               copyExpressionMetadata(projected, metadata, c);
+    				           }
+    				       }
+    				    }
 					}
     				
                     node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);
@@ -829,7 +840,14 @@ public class MetadataValidator {
 		}
 		Column column = mf.addColumn(name, DataTypeManager.getDataTypeName(type), table);
 		column.setUpdatable(table.supportsUpdate());
-		//determine the column metadata
+		copyExpressionMetadata(toCopy, metadata, column);
+		return column;		
+	}
+
+    private void copyExpressionMetadata(Expression toCopy,
+            QueryMetadataInterface metadata, Column column)
+            throws QueryMetadataException, TeiidComponentException {
+        //determine the column metadata
 		toCopy = SymbolMap.getExpression(toCopy);
 		boolean metadataSet = false;
 		if (toCopy instanceof ElementSymbol) {
@@ -853,8 +871,7 @@ public class MetadataValidator {
 		if (!metadataSet) {
 		    MetaDataProcessor.setColumnMetadata(column, toCopy, metadata);
 		}
-		return column;		
-	}
+    }
 
 	// this class resolves the artifacts that are dependent upon objects from other schemas
 	// materialization sources, fk and data types (coming soon..)

@@ -218,7 +218,19 @@ public class TestDDLStringVisitor {
 				"AS\n" + 
 				"SELECT e1, e2 FROM foo.bar;";
 		helpTest(ddl, expected);
-	}	
+	}
+	
+	@Test 
+    public void testViewWithUntyped() throws Exception {
+        String ddl = "CREATE View G1( e2, e3) OPTIONS (CARDINALITY 1234567890123) AS select e1, e2 from foo.bar";
+        String expected = "CREATE VIEW G1 (\n" + 
+                "\te2,\n" + 
+                "\te3\n" + 
+                ") OPTIONS (CARDINALITY 1234567954432)\n" + 
+                "AS\n" + 
+                "SELECT e1, e2 FROM foo.bar;";
+        helpTest(ddl, expected);
+    }
 	
 	@Test
 	public void testInsteadOfTrigger() throws Exception {

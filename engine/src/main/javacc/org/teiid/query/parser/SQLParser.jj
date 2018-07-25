@@ -5793,7 +5793,20 @@ example=[source,sql]\n----\nCREATE VIEW vw AS SELECT 1\n----\n
 */
 void createTable(DatabaseStore dbStore) :
 {
-	boolean view = false;
+
+}
+{
+    <CREATE> (createView(dbStore) 
+              | createForeignOrGloablTable(dbStore))
+}
+
+/*
+name=create foreign or global temporary table
+description=Defines a foreign or global temporary table.
+example=[source,sql]\n----\nFOREIGN TABLE ft (col integer)\n----\n
+*/
+void createForeignOrGloablTable(DatabaseStore dbStore) :
+{
 	boolean globalTemp = false;
 	String tableName = null;
 	Table table = null;
@@ -5802,36 +5815,58 @@ void createTable(DatabaseStore dbStore) :
 	MetadataFactory factory = null;
 }
 {
-	<CREATE> (
+	(
 		(<FOREIGN> <TABLE>) | 
-		([<VIRTUAL>] <VIEW> {view = true;}) |
-		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true; view = true;})
+		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true;})
 	) 
 	tableName = unqualifiedId()
 	{	    
 	    factory = DatabaseStore.createMF(dbStore);
 	    table = factory.addTable(tableName);
-	    table.setVirtual(view);
+	    table.setVirtual(globalTemp);
 	    if (globalTemp) {
 	    	table.setTableType(Table.Type.TemporaryTable);
 	    }
 	}
-	(createTableBody(table, factory) | [optionsClause(table, factory)
-	   {
-	      OptionsUtil.setOptions(table);
-	   }
-	])
-	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
-	  {
-		   if (!view || globalTemp) {
-     		   throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_def", table.getName()));
-		   }
-		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
-	  }
-	]
+	createTableBody(table, factory)
 	{
 	   dbStore.tableCreated(table);
 	}
+}
+
+/*
+name=create view
+description=Defines a view.
+example=[source,sql]\n----\nVIEW vw AS SELECT 1\n----\n
+*/
+void createView(DatabaseStore dbStore) :
+{
+    String tableName = null;
+    Table table = null;
+    Token comment = null;
+    Command query = null;
+    MetadataFactory factory = null;
+}
+{
+    [<VIRTUAL>] <VIEW>
+    tableName = unqualifiedId()
+    {       
+        factory = DatabaseStore.createMF(dbStore);
+        table = factory.addTable(tableName);
+        table.setVirtual(true);
+    }
+    (createViewBody(table, factory) | [optionsClause(table, factory)
+       {
+          OptionsUtil.setOptions(table);
+       }
+    ])
+    <AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
+      {
+           table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());    
+      }
+    {
+       dbStore.tableCreated(table);
+    }
 }
 
 /*
@@ -5896,23 +5931,13 @@ example=[source,sql]\n----\n(x string) OPTIONS (CARDINALITY 100)\n----\n
 */
 void createTableBody(Table table, MetadataFactory factory) :
 {
-	String name = null;
-	AbstractMetadataRecord constraint = null;
-	Server server = null;
-	String serverName = null;
 }
 {
 	<LPAREN>
     createColumn(factory, table)
-    (LOOKAHEAD(3) <COMMA>
-      createColumn(factory, table)
-    )*	
-    (<COMMA>{name=null;} [<CONSTRAINT> name = id(null)] (constraint = primaryKey(factory, table, name) | constraint = constraint(factory, table, name, ParseInfo.DEFAULT_INSTANCE) | constraint = foreignKey(factory, table, name))
-       [optionsClause(constraint, factory)
-	   {
-	      OptionsUtil.setCommonProperties(constraint, constraint.getProperties());
-	   }
-	]
+    (<COMMA>
+      (LOOKAHEAD(2) tableConstraint(factory, table)
+       | createColumn(factory, table))
     )*
     <RPAREN>
     [optionsClause(table, factory)
@@ -5928,6 +5953,58 @@ void createTableBody(Table table, MetadataFactory factory) :
 		}
 	}
 }
+
+/*
+name=create view body
+description=Defines a view.
+example=[source,sql]\n----\n(x) OPTIONS (CARDINALITY 100)\n----\n
+*/
+void createViewBody(Table table, MetadataFactory factory) :
+{
+}
+{
+    <LPAREN>
+    createViewColumn(factory, table)
+    (<COMMA>
+      (LOOKAHEAD(2) tableConstraint(factory, table)
+       | createViewColumn(factory, table))
+    )*
+    <RPAREN>
+    [optionsClause(table, factory)
+       {
+          OptionsUtil.setOptions(table);
+       }
+    ]
+    {
+        if (table.getColumns() != null && !table.supportsUpdate()) {
+            for (Column c : table.getColumns()) {
+                c.setUpdatable(false);
+            }
+        }
+    }
+}
+
+/*
+name=table constraint
+description=Defines a constraint on a table or view.
+example=[source,sql]\n----\nFOREIGN KEY (a, b) REFERENCES tbl (x, y)\n----\n
+*/
+void tableConstraint(MetadataFactory factory, Table table) :
+{
+    String name = null;
+    AbstractMetadataRecord constraint = null;
+}
+{
+  [<CONSTRAINT> name = id(null)] 
+  (constraint = primaryKey(factory, table, name) 
+   | constraint = constraint(factory, table, name, ParseInfo.DEFAULT_INSTANCE) 
+   | constraint = foreignKey(factory, table, name)
+  )
+  [optionsClause(constraint, factory) {
+      OptionsUtil.setCommonProperties(constraint, constraint.getProperties());
+   }]
+}
+
 
 /*
 name=foreign key
@@ -6060,10 +6137,6 @@ void createColumn(MetadataFactory factory, Table table) :
 	Expression defaultValue = null;
 	Column column = null;
 	List<String> columnName = new ArrayList<String>();
-	boolean index = false;
-	boolean unique = false;
-	boolean pk = false;
-	Token word = null;
 }
 {
 	 element = id(Boolean.TRUE)
@@ -6081,35 +6154,104 @@ void createColumn(MetadataFactory factory, Table table) :
         [<AUTO_INCREMENT> {  autoIncrement = true; }]
 	  )
 	 )
-	 {
+	      postCreateColumn(factory, table, element, type, autoIncrement, notNull)
+}
+
+/*
+name=view element
+description=Defines a view column with optional type.
+example=[source,sql]\n----\nx INTEGER NOT NULL\n----\n
+*/
+void createViewColumn(MetadataFactory factory, Table table) :
+{
+    String element = null;
+    ParsedDataType type = null;
+    boolean autoIncrement = false;
+    boolean notNull = false;
+}
+{
+     element = id(Boolean.TRUE)
+     [(
+      <SERIAL>
+      {
+        type = new ParsedDataType("INTEGER");
+        autoIncrement = true;
+        notNull = true;
+      }
+      |
+      (
+        type = parseDataType()
+        [<NOT> <NULL> { notNull = true; }]
+        [<AUTO_INCREMENT> {  autoIncrement = true; }]
+      )
+     )]
+     postCreateColumn(factory, table, element, type, autoIncrement, notNull)
+}
+
+/*
+name=post create column
+description=Common options trailing a column
+example=[source,sql]\n----\nPRIMARY KEY\n----\n
+*/
+void postCreateColumn(MetadataFactory factory, Table table, String element, ParsedDataType type, boolean autoIncrement, boolean notNull) :
+{
+    Column column = null;
+    List<String> columnName = new ArrayList<String>();
+    Expression defaultValue = null;
+}
+{
+{
+       boolean inferType = false;
+       if (type == null) {
+         type = new ParsedDataType("STRING");
+         inferType = true;
+       }
        column = factory.addColumn(element, type.type, table);
        column.setUpdatable(true);
        setTypeInfo(type, column);                
        columnName.add(element);
+       if (inferType) {
+         column.setProperty(MetadataValidator.UNTYPED, "true");
+       }
      }
-	 ((<PRIMARY> <KEY> { pk = true; }) | ([<UNIQUE> { unique = true;  }] [<INDEX> { index = true; }]))
-	 [<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(column, defaultValue);}]
-	 [optionsClause(column, factory)
-	   {
-	      OptionsUtil.setOptions(column);
-	   }
-	 ]
-	 {
-	    if (index){
-	 		factory.addIndex("INDEX"+table.getIndexes().size(), true, columnName, table);
-	 	} else if (unique){
-	 		factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnName, table);
-	 	} else if (pk) {
-	    	if (table.getPrimaryKey() != null) {
-	    		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
-	    	}
-	 		factory.addPrimaryKey("PK", columnName, table);
-	 	}
-	 	if (notNull) {
-	       column.setNullType(Column.NullType.No_Nulls);
-	    }
-	    column.setAutoIncremented(autoIncrement);
-	 }
+     [inlineConstraint(factory, table, columnName)]
+     [<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(column, defaultValue);}]
+     [optionsClause(column, factory)
+       {
+          OptionsUtil.setOptions(column);
+       }
+     ]
+     {
+        if (notNull) {
+           column.setNullType(Column.NullType.No_Nulls);
+        }
+        column.setAutoIncremented(autoIncrement);
+     }
+}
+
+/*
+name=inline constraint
+description=Defines a constraint on a single column
+example=[source,sql]\n----\nx INTEGER PRIMARY KEY\n----\n
+*/
+void inlineConstraint(MetadataFactory factory, Table table, List<String> columnName) :
+{
+}
+{
+    (<PRIMARY> <KEY> { 
+       if (table.getPrimaryKey() != null) {
+            throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
+       }
+       factory.addPrimaryKey("PK", columnName, table);
+    }) 
+    | 
+    (<UNIQUE> {
+       factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnName, table);    
+    })
+    |
+    (<INDEX> { 
+       factory.addIndex("INDEX"+table.getIndexes().size(), true, columnName, table); 
+    })
 }
 
 /*
