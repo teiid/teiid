@@ -81,14 +81,14 @@ public class TestSimpleDBExecution {
         ResultSetExecution exec = translator.createResultSetExecution((Select)cmd, context, Mockito.mock(RuntimeMetadata.class), connection);
         exec.execute();
         exec.next();
-        Mockito.verify(connection).performSelect("SELECT attribute, somedate, strarray FROM item WHERE attribute > 'name' LIMIT 10", null);
+        Mockito.verify(connection).performSelect("SELECT `attribute`, `somedate`, `strarray` FROM `item` WHERE `attribute` > 'name' LIMIT 10", null);
         
         //cap at 2500
         Mockito.stub(context.getBatchSize()).toReturn(4000);
         exec = translator.createResultSetExecution((Select)cmd, context, Mockito.mock(RuntimeMetadata.class), connection);
         exec.execute();
         exec.next();
-        Mockito.verify(connection).performSelect("SELECT attribute, somedate, strarray FROM item WHERE attribute > 'name' LIMIT 2500", null);
+        Mockito.verify(connection).performSelect("SELECT `attribute`, `somedate`, `strarray` FROM `item` WHERE `attribute` > 'name' LIMIT 2500", null);
     }
     
     @Test
@@ -104,7 +104,7 @@ public class TestSimpleDBExecution {
         Map<String, Object> attributes = new TreeMap<String, Object>();
         attributes.put("attribute", "value");
         attributes.put("somedate", "2014-04-04 10:50:45.0");
-        Mockito.verify(connection).performUpdate("item", attributes, "SELECT itemName() FROM item WHERE attribute > 'name'");
+        Mockito.verify(connection).performUpdate("item", attributes, "SELECT itemName() FROM `item` WHERE `attribute` > 'name'");
     }  
     
     @Test
@@ -125,7 +125,7 @@ public class TestSimpleDBExecution {
         
         assertEquals("1,2,", arrayToStr((String[])args.getAllValues().get(0).get("strarray")));
         assertEquals("item", item.getAllValues().get(0));
-        assertEquals("SELECT itemName() FROM item", select.getAllValues().get(0));
+        assertEquals("SELECT itemName() FROM `item`", select.getAllValues().get(0));
     }     
     
     @Test
@@ -138,7 +138,7 @@ public class TestSimpleDBExecution {
         UpdateExecution exec = translator.createUpdateExecution(cmd, context, Mockito.mock(RuntimeMetadata.class), connection);
         exec.execute();
         
-        Mockito.verify(connection).performDelete("item", "SELECT itemName() FROM item WHERE somedate = '2014-04-04 10:50:45.0'");
+        Mockito.verify(connection).performDelete("item", "SELECT itemName() FROM `item` WHERE `somedate` = '2014-04-04 10:50:45.0'");
     }     
     
     @Test

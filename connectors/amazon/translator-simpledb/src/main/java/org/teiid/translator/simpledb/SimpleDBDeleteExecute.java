@@ -52,7 +52,7 @@ public class SimpleDBDeleteExecute implements UpdateExecution {
     private String buildSelect() {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ").append(SimpleDBMetadataProcessor.ITEM_NAME); //$NON-NLS-1$
-        sb.append(" FROM ").append(SimpleDBMetadataProcessor.getName(this.visitor.getTable())); //$NON-NLS-1$
+        sb.append(" FROM ").append(SimpleDBMetadataProcessor.getQuotedName(this.visitor.getTable())); //$NON-NLS-1$
         sb.append(" WHERE ").append(this.visitor.getCriteria()); //$NON-NLS-1$
         return sb.toString();
     }

@@ -46,12 +46,12 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select \"itemname()\" from item");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT itemName() FROM item", visitor.toString());
+        assertEquals("SELECT itemName() FROM `item`", visitor.toString());
 
         c = tu.parseCommand("select \"itemname()\", attribute from item");
         visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT attribute FROM item", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item`", visitor.toString());
         assertEquals(2, visitor.getProjectedColumns().size());
     }
     
@@ -63,7 +63,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select count(*) from item");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT COUNT(*) FROM item", visitor.toString());
+        assertEquals("SELECT COUNT(*) FROM `item`", visitor.toString());
         assertEquals(Arrays.asList("Count"), visitor.getProjectedColumns());
     }
     
@@ -75,7 +75,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select \"itemname()\" from item where \"itemname()\" <> 'name'");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT itemName() FROM item WHERE itemName() != 'name'", visitor.toString());
+        assertEquals("SELECT itemName() FROM `item` WHERE itemName() != 'name'", visitor.toString());
     }    
     
     @Test 
@@ -86,7 +86,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select \"itemname()\" from item where \"itemname()\" > 'name' and attribute < 'name'");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT itemName() FROM item WHERE itemName() > 'name' AND attribute < 'name'", visitor.toString());
+        assertEquals("SELECT itemName() FROM `item` WHERE itemName() > 'name' AND `attribute` < 'name'", visitor.toString());
         
     }    
     
@@ -99,7 +99,7 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         visitor.checkExceptions();
-        assertEquals("SELECT attribute FROM item ORDER BY itemName()", visitor.toString());
+        assertEquals("SELECT attribute FROM `item` ORDER BY itemName()", visitor.toString());
     } 
     
     @Test
@@ -111,7 +111,7 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         visitor.checkExceptions();
-        assertEquals("SELECT attribute FROM item WHERE itemName() = 'name' ORDER BY itemName()", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item` WHERE itemName() = 'name' ORDER BY itemName()", visitor.toString());
     }     
     
     @Test 
@@ -122,7 +122,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select * from item where \"itemName()\" in (1, 2)");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT attribute FROM item WHERE itemName() IN ('1', '2')", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item` WHERE itemName() IN ('1', '2')", visitor.toString());
     }
     
     @Test 
@@ -137,7 +137,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select * from item where simpledb.every(attribute) = '1'");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT attribute FROM item WHERE SIMPLEDB.EVERY(attribute) = '1'", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item` WHERE SIMPLEDB.EVERY(`attribute`) = '1'", visitor.toString());
     } 
     
     @Test 
@@ -152,7 +152,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select * from item where simpledb.every(attribute) like '1%'");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT attribute FROM item WHERE SIMPLEDB.EVERY(attribute) LIKE '1%'", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item` WHERE SIMPLEDB.EVERY(`attribute`) LIKE '1%'", visitor.toString());
     }   
     
     @Test 
@@ -167,7 +167,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select * from item where simpledb.every(attribute) is not null");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT attribute FROM item WHERE SIMPLEDB.EVERY(attribute) IS NOT NULL", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item` WHERE SIMPLEDB.EVERY(`attribute`) IS NOT NULL", visitor.toString());
     }     
     
     @Test 
@@ -182,7 +182,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select * from item where simpledb.every(attribute) = '1' or  simpledb.every(attribute) = '2'");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT attribute FROM item WHERE SIMPLEDB.EVERY(attribute) IN ('2', '1')", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item` WHERE SIMPLEDB.EVERY(`attribute`) IN ('2', '1')", visitor.toString());
     }    
     
     @Test 
@@ -197,7 +197,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select * from item where simpledb.intersection(attribute,'1', '2')");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT attribute FROM item WHERE attribute = '1' INTERSECTION attribute = '2'", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item` WHERE `attribute` = '1' INTERSECTION `attribute` = '2'", visitor.toString());
     }    
     
     @Test 
@@ -212,7 +212,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select * from item where simpledb.intersection(attribute,'1', '2', '3') = true");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT attribute FROM item WHERE attribute = '1' INTERSECTION attribute = '2' INTERSECTION attribute = '3'", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item` WHERE `attribute` = '1' INTERSECTION `attribute` = '2' INTERSECTION `attribute` = '3'", visitor.toString());
     }    
     
     @Test 
@@ -227,7 +227,7 @@ public class TestSimpleDBSQLVisitor {
         Command c = tu.parseCommand("select * from item where attribute = ('1','2')");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT attribute FROM item WHERE attribute = '1' OR attribute = '2'", visitor.toString());
+        assertEquals("SELECT `attribute` FROM `item` WHERE `attribute` = '1' OR `attribute` = '2'", visitor.toString());
     }
     
     @Test 
@@ -235,13 +235,13 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
         
-        MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, \"or\" string options (nameinsource '`or`')) options (nameinsource '`item`');", "y");
+        MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, \"or\" string options (nameinsource 'or')) options (nameinsource 'item-one');", "y");
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
         TranslationUtility tu = new TranslationUtility(metadata);
 
         Command c = tu.parseCommand("select \"or\" from item");
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
-        assertEquals("SELECT `or` FROM `item`", visitor.toString());
+        assertEquals("SELECT `or` FROM `item-one`", visitor.toString());
     } 
 }

@@ -148,7 +148,7 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
         append(exprs.get(0));
         for (int i = 1; i < exprs.size(); i++) {
             buffer.append(Tokens.SPACE).append(AndOr.Operator.OR).append(Tokens.SPACE);
-            buffer.append(SQLStringVisitor.getRecordName(this.previousColumn));
+            buffer.append(SimpleDBMetadataProcessor.getQuotedName(this.previousColumn));
             buffer.append(Tokens.SPACE).append(Tokens.EQ).append(Tokens.SPACE);
             append(exprs.get(i));
         }        
@@ -177,7 +177,7 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
                 append(args.get(i));
                 if (i < args.size()-1) {
                     buffer.append(Tokens.SPACE).append(SimpleDBExecutionFactory.INTERSECTION).append(Tokens.SPACE);
-                    buffer.append(SQLStringVisitor.getRecordName(this.previousColumn));
+                    buffer.append(SimpleDBMetadataProcessor.getQuotedName(this.previousColumn));
                     buffer.append(Tokens.SPACE).append(Tokens.EQ).append(Tokens.SPACE);
                 }
             }
@@ -190,7 +190,7 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
     
     @Override
     public void visit(ColumnReference obj) {
-        buffer.append(SQLStringVisitor.getRecordName(obj.getMetadataObject()));
+        buffer.append(SimpleDBMetadataProcessor.getQuotedName(obj.getMetadataObject()));
         this.previousColumn = obj.getMetadataObject();
     }    
     
@@ -202,6 +202,11 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(obj);
         return visitor.toString();
+    }
+    
+    @Override
+    protected void appendBaseName(NamedTable obj) {
+        buffer.append(SimpleDBMetadataProcessor.getQuotedName(obj.getMetadataObject()));
     }
     
 }
