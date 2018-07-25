@@ -6365,8 +6365,9 @@ void alterTable(DatabaseStore dbStore, ParseInfo info) :
             dbStore.setViewDefinition(objectName, command.toString());        
         }
       ) |
+      LOOKAHEAD(2) alterAddColumn(objectName, Database.ResourceType.TABLE, dbStore) |
+      alterAddConstraint(objectName, Database.ResourceType.TABLE, dbStore) |
       alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) |         
-      alterAddColumn(objectName, Database.ResourceType.TABLE, dbStore) |
       alterDropColumn(objectName, Database.ResourceType.TABLE, dbStore) |
       (<ALTER> <COLUMN> alterColumn(objectName, Database.ResourceType.TABLE, Database.ResourceType.COLUMN, dbStore)) |
       (<RENAME> (alterRenameTable(objectName, Database.ResourceType.TABLE, dbStore) | 
@@ -6388,6 +6389,22 @@ void alterRenameTable(String objectName, Database.ResourceType type, DatabaseSto
 	{
 		dbStore.modifyTableName(objectName, type, id);
 	}
+}
+
+/*
+name=ADD constraint
+description=alters table and adds a constraint
+example=[source,sql]\n----\nADD PRIMARY KEY (ID)\n----\n
+*/
+void alterAddConstraint(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
+{
+    Database.ResourceType childType = Database.ResourceType.COLUMN;
+    MetadataFactory factory = DatabaseStore.createMF(dbStore);
+    Table table = dbStore.getTableForCreateColumn(objectName, type);
+    
+}
+{ 
+    <ADD> tableConstraint(factory, table)
 }
 
 /*

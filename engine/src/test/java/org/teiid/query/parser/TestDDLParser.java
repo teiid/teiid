@@ -245,6 +245,19 @@ public class TestDDLParser {
 		assertEquals(table.getColumns().subList(0, 2), table.getPrimaryKey().getColumns());
 	}
 	
+    @Test
+    public void testAlterAddPK() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date); ALTER TABLE G1 ADD PRIMARY KEY (e1, e2);";
+
+        Schema s = helpParse(ddl, "model").getSchema();
+        Map<String, Table> tableMap = s.getTables();    
+        
+        assertTrue("Table not found", tableMap.containsKey("G1"));
+        Table table = tableMap.get("G1");
+        
+        assertEquals(table.getColumns().subList(0, 2), table.getPrimaryKey().getColumns());
+    }
+	
 	@Test
 	public void testOptionsKey() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date, UNIQUE (e1) OPTIONS (CUSTOM_PROP 'VALUE'))";
