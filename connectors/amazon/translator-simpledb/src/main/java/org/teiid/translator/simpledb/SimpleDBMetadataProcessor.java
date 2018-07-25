@@ -52,7 +52,6 @@ public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConn
         List<String> domains = connection.getDomains();
         for (String domain : domains) {
             Table table = metadataFactory.addTable(domain);
-            table.setNameInSource(quote(domain));
             table.setSupportsUpdate(true);
             
             Column itemName = metadataFactory.addColumn(DISPLAY_ITEM_NAME, TypeFacility.RUNTIME_NAMES.STRING, table);
@@ -69,23 +68,31 @@ public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConn
                 else {
                     column = metadataFactory.addColumn(attribute.getName(), TypeFacility.RUNTIME_NAMES.STRING, table);
                 }
-                column.setNameInSource(quote(attribute.getName()));
                 column.setUpdatable(true);
                 column.setNullType(NullType.Nullable);
             }
         }        
     }
 
-    private String quote(String name) {
+    private static String quote(String name) {
         return '`' + StringUtil.replaceAll(name, "`", "``") + '`'; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public static String getName(AbstractMetadataRecord record) {
-        return SQLStringVisitor.getShortName(SQLStringVisitor.getRecordName(record));
+        return SQLStringVisitor.getRecordName(record);
+    }
+    
+    public static String getQuotedName(AbstractMetadataRecord record) {
+        //don't quote itemname()
+        String name = getName(record);
+        if (record instanceof Column && isItemName(name)) {
+            return name;
+        }
+        return quote(name);
     }
     
     public static boolean isItemName(Column column) {
-        return SimpleDBMetadataProcessor.getName(column).equalsIgnoreCase(SimpleDBMetadataProcessor.ITEM_NAME);        
+        return isItemName(SimpleDBMetadataProcessor.getName(column));        
     }
     public static boolean isItemName(String name) {
         return name.equalsIgnoreCase(SimpleDBMetadataProcessor.ITEM_NAME);        
