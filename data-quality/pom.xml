@@ -14,7 +14,6 @@
   <properties>
     <version.com.github.mpkorstanje>3.0.0</version.com.github.mpkorstanje>
     <version.com.itextpdf>5.4.0</version.com.itextpdf>
-    <version.com.opencsv>3.5</version.com.opencsv>
     <version.info.debatty>0.13</version.info.debatty>
     <version.net.sourceforge.jexcelapi>2.6.12</version.net.sourceforge.jexcelapi>
     <version.net.sourceforge.jeval>0.9.4</version.net.sourceforge.jeval>
@@ -55,12 +54,6 @@
 	    <version>${version.com.itextpdf}</version>
 	</dependency>
 
-	<dependency>
-	    <groupId>com.opencsv</groupId>
-	    <artifactId>opencsv</artifactId>
-	    <version>${version.com.opencsv}</version>
-	</dependency>
-            
 	<dependency>
 	    <groupId>info.debatty</groupId>
 	    <artifactId>java-string-similarity</artifactId>
