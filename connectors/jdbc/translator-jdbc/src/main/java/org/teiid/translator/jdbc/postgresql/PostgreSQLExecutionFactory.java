@@ -27,7 +27,6 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -314,14 +313,15 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	}
     	Statement s = null;
     	ResultSet rs = null;
-    	Savepoint savepoint = null;
     	try {
-    	    if (!connection.getAutoCommit()) {
-    	        //we need to use a savepoint as an exception will invalidate the connection
-    	        savepoint = connection.setSavepoint();
-    	    }
     	    s = connection.createStatement();
-	    	rs = s.executeQuery("SELECT PostGIS_Full_Version()"); //$NON-NLS-1$
+    	    rs = s.executeQuery("SELECT 1 FROM pg_catalog.pg_proc where lower(proname) = 'postgis_full_version'"); //$NON-NLS-1$
+	    	if (!rs.next()) {
+	    	    //no such function breakout
+	    	    return;
+	    	}
+	    	rs.close();
+    	    rs = s.executeQuery("SELECT PostGIS_Full_Version()"); //$NON-NLS-1$
 	    	rs.next();
 	    	String versionInfo = rs.getString(1);
 	    	if (versionInfo != null) {
@@ -337,12 +337,6 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	} catch (SQLException e) {
     		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not determine PostGIS version"); //$NON-NLS-1$
     	} finally {
-    	    if (savepoint != null) {
-    	        try {
-                    connection.rollback(savepoint);
-                } catch (SQLException e) {
-                }
-    	    }
     		try {
     			if (rs != null) {
     				rs.close();
