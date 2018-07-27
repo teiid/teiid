@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.teiid</groupId>
-        <version>10.3.3-SNAPSHOT</version>
+        <version>10.3.3</version>
 	</parent>
 	<licenses>
         <license>
