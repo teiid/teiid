@@ -62,6 +62,8 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     protected Map<VDBKey, SoftReference<OlingoBridge>> contextMap = Collections
             .synchronizedMap(new LRUCache<VDBKey, SoftReference<OlingoBridge>>());
     private volatile boolean listenerRegistered = false;
+    //default odata behavior requires explicit versioning
+    private String defaultVdbVersion = "1"; //$NON-NLS-1$ 
     
     @Override
     public void init(FilterConfig config) throws ServletException {
@@ -74,6 +76,11 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
         if (proxyURI != null) {
             this.proxyBaseURI = proxyURI;
+        }
+        
+        String value = config.getInitParameter("explicit-vdb-version");  //$NON-NLS-1$
+        if (value != null && !Boolean.valueOf(value)) {
+            defaultVdbVersion = null; 
         }
 
         Properties props = new Properties();
@@ -88,6 +95,10 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             props.setProperty(name, config.getInitParameter(name));
         }
         this.initProperties = props;
+    }
+    
+    public String getDefaultVdbVersion() {
+        return defaultVdbVersion;
     }
 
     @Override
@@ -200,7 +211,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         	if (key.getVersion() != null) {
         		throw new TeiidProcessingException(ODataPlugin.Event.TEIID16044, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
         	}
-        	key = new VDBKey(vdbName, "1"); //$NON-NLS-1$ //legacy behavior, default to version 1
+    	    key = new VDBKey(vdbName, defaultVdbVersion);
         }
         
         SoftReference<OlingoBridge> ref = this.contextMap.get(key);
