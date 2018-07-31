@@ -154,7 +154,7 @@ public class RulePlanSorts implements OptimizerRule {
 					break;
 				}
 			}
-			if (canOptimize && mergeSortWithDupRemovalAcrossSource(node)) {
+			if (canOptimize && mergeSortWithDupRemovalAcrossSource(node, false)) {
 				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
 				if (cardinalityDependent) {
 					PlanNode source = NodeEditor.findNodePreOrder(node, NodeConstants.Types.SOURCE);
@@ -183,14 +183,14 @@ public class RulePlanSorts implements OptimizerRule {
 			 */
 			parentBlocking = true;
 			PlanNode toTest = node.getFirstChild();
-			if (mergeSortWithDupRemovalAcrossSource(toTest)) {
+			if (mergeSortWithDupRemovalAcrossSource(toTest, true)) {
 				node.setProperty(NodeConstants.Info.SORT_LEFT, SortOption.SORT_DISTINCT);
 				if (node.getProperty(NodeConstants.Info.SORT_RIGHT) != SortOption.SORT) {
 					node.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
 				}
 			}
 			toTest = node.getLastChild();
-			if (mergeSortWithDupRemovalAcrossSource(toTest)) {
+			if (mergeSortWithDupRemovalAcrossSource(toTest, true)) {
 				node.setProperty(NodeConstants.Info.SORT_RIGHT, SortOption.SORT_DISTINCT);
 				if (node.getProperty(NodeConstants.Info.SORT_LEFT) != SortOption.SORT) {
 					node.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
@@ -338,9 +338,26 @@ public class RulePlanSorts implements OptimizerRule {
 		return root;
 	}
 
-	private boolean mergeSortWithDupRemovalAcrossSource(PlanNode toTest) {
+	private boolean mergeSortWithDupRemovalAcrossSource(PlanNode toTest, boolean join) {
 		PlanNode source = NodeEditor.findNodePreOrder(toTest, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS | NodeConstants.Types.JOIN);
-		return source != null && mergeSortWithDupRemoval(source);
+		boolean result = source != null && mergeSortWithDupRemoval(source);
+		if (result) {
+		    //since we pull up the operation, rather than tracking the interesting order
+		    //we need the output cols to match on the way up.  See TEIID-5434
+		    PlanNode rootNode = join?toTest:toTest.getFirstChild();
+            List<Expression> cols = (List<Expression>) rootNode.getProperty(Info.OUTPUT_COLS);
+		    List<Expression> sourceCols = (List<Expression>) source.getProperty(Info.OUTPUT_COLS);
+		    if (!cols.containsAll(sourceCols)) {
+		        while (rootNode != source) {
+		            //update output cols
+		            LinkedHashSet<Expression> allCols = new LinkedHashSet<Expression>((List<Expression>) rootNode.getProperty(Info.OUTPUT_COLS));
+		            allCols.addAll(sourceCols);
+		            rootNode.setProperty(Info.OUTPUT_COLS, new ArrayList<Expression>(allCols));
+		            rootNode = rootNode.getFirstChild();
+		        }
+		    }
+		}
+		return result;
 	}
 
 	private boolean mergeSortWithDupRemoval(PlanNode node) {
