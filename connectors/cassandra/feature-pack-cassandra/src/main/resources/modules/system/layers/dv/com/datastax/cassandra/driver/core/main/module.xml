@@ -14,7 +14,7 @@
         <module name="sun.jdk" />
         <module name="org.slf4j" />
         <module name="io.netty"/>
-        <module name="com.google.guava"/>
+        <module name="com.google.guava"  export="true"/>
     </dependencies>
 
 </module>
