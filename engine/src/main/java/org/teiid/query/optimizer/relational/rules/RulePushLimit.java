@@ -81,7 +81,6 @@ public class RulePushLimit implements OptimizerRule {
                             CommandContext context) throws QueryPlannerException,
                                                    QueryMetadataException,
                                                    TeiidComponentException {
-        
         List<PlanNode> limitNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.ACCESS);
         
         boolean pushRaiseNull = false;
@@ -396,8 +395,6 @@ public class RulePushLimit implements OptimizerRule {
 					distributeLimit(limitNode, branch, parentOrderBy, metadata, limitNodes, parentLimit, parentOffset, capFinder, context);
 					continue;
 				}
-				PlanNode newSort = NodeFactory.getNewNode(NodeConstants.Types.SORT);
-				
 				//push both the limit and order by
 				
 				List<OrderByItem> parentkeys = parentOrderBy.getOrderByItems();
@@ -413,7 +410,7 @@ public class RulePushLimit implements OptimizerRule {
 					item.setSymbol((Expression) ex.clone());
 					newOrderBy.getOrderByItems().add(item);
 				}
-				newSort.setProperty(Info.SORT_ORDER, newOrderBy);
+				PlanNode newSort = RelationalPlanner.createSortNode(newOrderBy);
 				PlanNode childLimit = NodeEditor.findNodePreOrder(branch, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.SET_OP | NodeConstants.Types.SOURCE);
 				if (childLimit != null) {
 					PlanNode parentAccess = NodeEditor.findParent(childLimit, NodeConstants.Types.ACCESS, NodeConstants.Types.SET_OP);

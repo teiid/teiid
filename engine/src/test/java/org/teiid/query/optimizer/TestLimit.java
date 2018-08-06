@@ -1320,5 +1320,27 @@ public class TestLimit {
 		hdm.addData("SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0", Arrays.asList("a", 1));
 		TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1l, 1l)});
 	}
+    
+    @Test public void testSortedLimitOverLOJ() throws Exception {
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_UNRELATED, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table test_ep_ds (str varchar, i integer);"
+                + "create foreign table test_ep_dwh (str varchar, i integer);", "x", "y");
+        String sql = "select * from (\n" + 
+                "    select b.i as col1, 'def' as col2 from test_ep_ds a\n" + 
+                "    left join  test_ep_dwh b on b.str=a.str    \n" + 
+                "    union all\n" + 
+                "    select 2 as col1, 'abc' as col2\n" + 
+                ")x order by col1 limit 100";
+        TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                tm,
+                new String[] {
+                    "SELECT y.test_ep_ds.str AS c_0 FROM y.test_ep_ds ORDER BY c_0", 
+                    "SELECT y.test_ep_dwh.str AS c_0, y.test_ep_dwh.i AS c_1 FROM y.test_ep_dwh ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
 
 }
