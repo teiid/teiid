@@ -857,13 +857,18 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_VERSION.getName()+MISSING)));
 		}
 
+		boolean includeSchema = true;
+		if (operation.hasDefined(OperationsConstants.INCLUDE_SCHEMA.getName())) {
+			includeSchema = operation.get(OperationsConstants.INCLUDE_SCHEMA.getName()).asBoolean();
+		}
+		
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asInt();
 
 		VDBMetaData vdb = repo.getVDB(vdbName, vdbVersion);
 		if (vdb != null) {
-			VDBMetadataMapper.INSTANCE.wrap(vdb, result);
+			VDBMetadataMapper.INSTANCE.wrap(vdb, result, includeSchema);
 		}
 		else {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion)));
@@ -871,20 +876,20 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 	}
 
 
-	@Override
+    @Override
     public OperationDefinition getOperationDefinition() {
-    	final AttributeDefinition[] parameters = new AttributeDefinition[] {OperationsConstants.VDB_NAME, OperationsConstants.VDB_VERSION};
-    	final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
+        final AttributeDefinition[] parameters = new AttributeDefinition[] {OperationsConstants.VDB_NAME, OperationsConstants.VDB_VERSION};
+        final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
         return new OperationDefinition(name(), OperationEntry.EntryType.PUBLIC, EnumSet.noneOf(OperationEntry.Flag.class), ModelType.OBJECT, null, true, null, null, parameters) {
-			@Override
-			public DescriptionProvider getDescriptionProvider() {
-				return new DefaultOperationDescriptionProvider(name(), resolver, resolver,  ModelType.OBJECT, ModelType.OBJECT, null, null, this.parameters) {
-					@Override
-				    protected ModelNode getReplyValueTypeDescription(ResourceDescriptionResolver descriptionResolver, Locale locale, ResourceBundle bundle) {
-						return VDBMetadataMapper.INSTANCE.describe( new ModelNode());
-				    }
-				};
-			}
+            @Override
+            public DescriptionProvider getDescriptionProvider() {
+                return new DefaultOperationDescriptionProvider(name(), resolver, resolver,  ModelType.OBJECT, ModelType.OBJECT, null, null, this.parameters) {
+                    @Override
+                    protected ModelNode getReplyValueTypeDescription(ResourceDescriptionResolver descriptionResolver, Locale locale, ResourceBundle bundle) {
+                        return VDBMetadataMapper.INSTANCE.describe( new ModelNode());
+                    }
+                };
+            }
         };
     }
 }
@@ -980,27 +985,32 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 
 	@Override
 	protected void executeOperation(OperationContext context, VDBRepository repo, ModelNode operation) throws OperationFailedException {
+		boolean includeSchema = true;
+		if (operation.hasDefined(OperationsConstants.INCLUDE_SCHEMA.getName())) {
+			includeSchema = operation.get(OperationsConstants.INCLUDE_SCHEMA.getName()).asBoolean();
+		}
+		
 		ModelNode result = context.getResult();
 		List<VDBMetaData> vdbs = repo.getVDBs();
 		for (VDBMetaData vdb:vdbs) {
-			VDBMetadataMapper.INSTANCE.wrap(vdb, result.add());
+			VDBMetadataMapper.INSTANCE.wrap(vdb, result.add(), includeSchema);
 		}
 	}
 
-	@Override
+    @Override
     public OperationDefinition getOperationDefinition() {
-    	final AttributeDefinition[] parameters = new AttributeDefinition[0];
-    	final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
+        final AttributeDefinition[] parameters = new AttributeDefinition[0];
+        final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
         return new OperationDefinition(name(), OperationEntry.EntryType.PUBLIC, EnumSet.noneOf(OperationEntry.Flag.class), ModelType.OBJECT, null, true, null, null, parameters) {
-			@Override
-			public DescriptionProvider getDescriptionProvider() {
-				return new DefaultOperationDescriptionProvider(name(), resolver, resolver,  ModelType.LIST, ModelType.OBJECT, null, null, this.parameters) {
-					@Override
-				    protected ModelNode getReplyValueTypeDescription(ResourceDescriptionResolver descriptionResolver, Locale locale, ResourceBundle bundle) {
-						return VDBMetadataMapper.INSTANCE.describe( new ModelNode());
-				    }
-				};
-			}
+            @Override
+            public DescriptionProvider getDescriptionProvider() {
+                return new DefaultOperationDescriptionProvider(name(), resolver, resolver,  ModelType.LIST, ModelType.OBJECT, null, null, this.parameters) {
+                    @Override
+                    protected ModelNode getReplyValueTypeDescription(ResourceDescriptionResolver descriptionResolver, Locale locale, ResourceBundle bundle) {
+                        return VDBMetadataMapper.INSTANCE.describe( new ModelNode());
+                    }
+                };
+            }
         };
     }
 }
