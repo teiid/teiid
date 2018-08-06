@@ -1966,17 +1966,22 @@ public class RelationalPlanner {
 	 * @return Updated plan
 	 */
 	private static PlanNode attachSorting(PlanNode plan, OrderBy orderBy) {
-		PlanNode sortNode = NodeFactory.getNewNode(NodeConstants.Types.SORT);
+		PlanNode sortNode = createSortNode(orderBy);
+
+		attachLast(sortNode, plan);
+		return sortNode;
+	}
+
+    public static PlanNode createSortNode(OrderBy orderBy) {
+        PlanNode sortNode = NodeFactory.getNewNode(NodeConstants.Types.SORT);
 		
 		sortNode.setProperty(NodeConstants.Info.SORT_ORDER, orderBy);
 		if (orderBy.hasUnrelated()) {
 			sortNode.setProperty(Info.UNRELATED_SORT, true);
 		}
 		sortNode.addGroups(GroupsUsedByElementsVisitor.getGroups(orderBy));
-
-		attachLast(sortNode, plan);
-		return sortNode;
-	}
+        return sortNode;
+    }
     
     private static PlanNode attachTupleLimit(PlanNode plan, Limit limit, PlanHints hints) {
         hints.hasLimit = true;
