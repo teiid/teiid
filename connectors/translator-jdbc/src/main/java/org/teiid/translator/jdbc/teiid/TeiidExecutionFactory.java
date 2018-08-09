@@ -263,6 +263,10 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
             supportedFunctions.add(SourceSystemFunctions.ST_MAKEENVELOPE);
             supportedFunctions.add(SourceSystemFunctions.ST_SNAPTOGRID);
             supportedFunctions.add(SourceSystemFunctions.ST_SIMPLIFYPRESERVETOPOLOGY);
+            supportedFunctions.add(SourceSystemFunctions.MD5);
+            supportedFunctions.add(SourceSystemFunctions.SHA1);
+            supportedFunctions.add(SourceSystemFunctions.SHA2_256);
+            supportedFunctions.add(SourceSystemFunctions.SHA2_512);
         }
         
         return supportedFunctions;

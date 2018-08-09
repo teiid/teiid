@@ -35,7 +35,8 @@ public interface DataPolicy {
 		DELETE,
 		FUNCTION,
 		ALTER,
-		STORED_PROCEDURE;
+		STORED_PROCEDURE, 
+		METADATA;
     }
 	
 	public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE, DROP, LANGUAGE};

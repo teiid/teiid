@@ -71,6 +71,7 @@ import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.net.ServerConnection;
 import org.teiid.query.QueryPlugin;
@@ -196,6 +197,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		
 		private Set<InputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<InputStreamFactory, Boolean>());
 
+		private LRUCache<AbstractMetadataRecord, Boolean> accessible;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -1155,6 +1157,20 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		synchronized (this.globalState) {
 			this.globalState.generatedKeys = null;
 		}
+	}
+
+	public Boolean isAccessible(AbstractMetadataRecord record) {
+		if (this.globalState.accessible == null) {
+			return null;
+		}
+		return this.globalState.accessible.get(record);
+	}
+
+	public void setAccessible(AbstractMetadataRecord record, Boolean result) {
+		if (this.globalState.accessible == null) {
+			this.globalState.accessible = new LRUCache<AbstractMetadataRecord, Boolean>(1000);
+		}
+		this.globalState.accessible.put(record, result);
 	}
 	
 }

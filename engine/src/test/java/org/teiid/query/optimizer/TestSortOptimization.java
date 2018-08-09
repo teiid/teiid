@@ -542,5 +542,27 @@ public class TestSortOptimization {
         
         TestProcessor.helpProcess(plan, dataManager, expectedResults);
     }
+    
+    @Test public void testSortOptimizationWithIntervieningSelect() throws Exception {
+        String sql = "select count(*) from pm2.g1, (select e1, e2, row_number() over (order by e1) as x from pm1.g1 union select e1, e2, 1 from pm1.g2) as v where pm2.g1.e1 = v.e1 and x = 1";
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+         
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
+                RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {
+                    "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", 
+                    "SELECT g_0.e1 FROM pm2.g1 AS g_0", 
+                    "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.e1 FROM pm2.g1 AS g_0", Arrays.asList("a"));
+        dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1));
+        dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", Arrays.asList("a", 2));
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList(2),
+        }; 
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
 
 }

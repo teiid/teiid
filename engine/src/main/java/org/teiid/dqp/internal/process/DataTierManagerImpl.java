@@ -293,6 +293,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(table.isSystem());
 				row.add(table.isMaterialized());
 				row.add(null);
+				row.add(table.getParent().getUUID());
 			}
 		});
         name = SystemAdminTables.MATVIEWS.name();
@@ -300,12 +301,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         systemAdminTables.put(SystemAdminTables.MATVIEWS, new RecordExtractionTable<Table>(new TableSystemTable(1, 2, columns) {
         	@Override
         	protected boolean isValid(Table s, VDBMetaData vdb,
-        			List<Object> rowBuffer, Criteria condition)
+        			List<Object> rowBuffer, Criteria condition, CommandContext cc)
         			throws TeiidProcessingException, TeiidComponentException {
         		if (s == null || !s.isMaterialized()) {
         			return false;
         		}
-        		return super.isValid(s, vdb, rowBuffer, condition);
+        		return super.isValid(s, vdb, rowBuffer, condition, cc);
         	}
         }, columns) {
 			
@@ -387,6 +388,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(proc.getUUID());
 				row.add(proc.getAnnotation());
 				row.add(null);
+				row.add(proc.getParent().getUUID());
 			}
 		});
         name = SystemTables.FUNCTIONS.name();
@@ -416,8 +418,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	
         	@Override
         	public SimpleIterator<Datatype> processQuery(VDBMetaData vdb,
-        			CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii, TransformationMetadata metadata) {
-        		return processQuery(vdb, metadataStore.getDatatypes(), ii);
+        			CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii, TransformationMetadata metadata, CommandContext commandContext) {
+        		return processQuery(vdb, metadataStore.getDatatypes(), ii, commandContext);
         	}
         }, columns) {
 			
@@ -501,7 +503,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<? extends BaseColumn> getChildren(final Procedure parent) {
+        	protected Collection<? extends BaseColumn> getChildren(final Procedure parent, CommandContext cc) {
         		Collection<ProcedureParameter> params = parent.getParameters();
         		if (parent.getResultSet() == null) {
         			return params;
@@ -546,7 +548,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<? extends FunctionParameter> getChildren(final FunctionMethod parent) {
+        	protected Collection<? extends FunctionParameter> getChildren(final FunctionMethod parent, CommandContext cc) {
         		ArrayList<FunctionParameter> result = new ArrayList<FunctionParameter>(parent.getInputParameters().size() + 1);
         		result.addAll(parent.getInputParameters());
         		result.add(parent.getOutputParameter());
@@ -567,8 +569,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			@Override
         			public SimpleIterator<AbstractMetadataRecord> processQuery(
         					VDBMetaData vdb, CompositeMetadataStore metadataStore,
-        					BaseIndexInfo<?> ii, TransformationMetadata metadata) {
-        				return processQuery(vdb, metadataStore.getOids(), ii);
+        					BaseIndexInfo<?> ii, TransformationMetadata metadata, CommandContext commandContext) {
+        				return processQuery(vdb, metadataStore.getOids(), ii, commandContext);
         			}
         			
         			@Override
@@ -595,7 +597,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<Map.Entry<String,String>> getChildren(AbstractMetadataRecord parent) {
+        	protected Collection<Map.Entry<String,String>> getChildren(AbstractMetadataRecord parent, CommandContext cc) {
         		return parent.getProperties().entrySet();
         	}
 		});
@@ -621,7 +623,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<Trigger> getChildren(Table table) {
+        	protected Collection<Trigger> getChildren(Table table, CommandContext cc) {
         		ArrayList<Trigger> cols = new ArrayList<Trigger>();
         		if (table .isVirtual()) {
         			if (table.getInsertPlan() != null) {
@@ -642,12 +644,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         systemAdminTables.put(SystemAdminTables.VIEWS, new RecordExtractionTable<Table>(new TableSystemTable(1, 2, columns) {
         	@Override
         	protected boolean isValid(Table s, VDBMetaData vdb,
-        			List<Object> rowBuffer, Criteria condition)
+        			List<Object> rowBuffer, Criteria condition, CommandContext cc)
         			throws TeiidProcessingException, TeiidComponentException {
         		if (s == null || !s.isVirtual()) {
         			return false;
         		}
-        		return super.isValid(s, vdb, rowBuffer, condition);
+        		return super.isValid(s, vdb, rowBuffer, condition, cc);
         	}
         }, columns) {
 			
@@ -666,12 +668,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         systemAdminTables.put(SystemAdminTables.STOREDPROCEDURES, new RecordExtractionTable<Procedure>(new ProcedureSystemTable(1, 2, columns) {
         	@Override
         	protected boolean isValid(Procedure s, VDBMetaData vdb,
-        			List<Object> rowBuffer, Criteria condition)
+        			List<Object> rowBuffer, Criteria condition, CommandContext cc)
         			throws TeiidProcessingException, TeiidComponentException {
         		if (s == null || !s.isVirtual()) {
         			return false;
         		}
-        		return super.isValid(s, vdb, rowBuffer, condition);
+        		return super.isValid(s, vdb, rowBuffer, condition, cc);
         	}
         }, columns) {
         	
@@ -725,10 +727,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(column.getUUID());
         		row.add(column.getAnnotation());
         		row.add(null);
+        		row.add(column.getParent().getUUID());
         	}
         	
         	@Override
-        	protected Collection<Column> getChildren(Table parent) {
+        	protected Collection<Column> getChildren(Table parent, CommandContext cc) {
         		return parent.getColumns();
         	}
         	
@@ -767,8 +770,16 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<KeyRecord> getChildren(Table parent) {
+        	protected Collection<KeyRecord> getChildren(Table parent, CommandContext cc) {
         		return parent.getAllKeys();
+        	}
+        	
+        	@Override
+        	protected boolean isValid(KeyRecord result, CommandContext cc) {
+        		if (!super.isValid(result, cc)) {
+        			return false;
+        		}
+        		return isKeyVisible(result, cc);
         	}
         	
         });
@@ -793,13 +804,17 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(key.getUUID());
         		row.add(pos);
         		row.add(null);
+        		row.add(key.getParent().getUUID());
         	}
         	
         	@Override
-        	protected Collection<List<?>> getChildren(Table parent) {
+        	protected Collection<List<?>> getChildren(Table parent, CommandContext cc) {
         		ArrayList<List<?>> cols = new ArrayList<List<?>>();
         		
         		for (KeyRecord record : parent.getAllKeys()) {
+        			if (!cc.getDQPWorkContext().isAdmin() && !isKeyVisible(record, cc)) {
+        				continue;
+        			}
         			int i = 1;
         			for (Column col : record.getColumns()) {
         				cols.add(Arrays.asList(record, col, i++));
@@ -839,10 +854,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<List<?>> getChildren(Table parent) {
+        	protected Collection<List<?>> getChildren(Table parent, CommandContext cc) {
         		ArrayList<List<?>> cols = new ArrayList<List<?>>();
         		
         		for (KeyRecord record : parent.getForeignKeys()) {
+        			if (!cc.getDQPWorkContext().isAdmin() && !isKeyVisible(record, cc)) {
+        				continue;
+        			}
         			short i = 1;
         			for (Column col : record.getColumns()) {
         				cols.add(Arrays.asList(record, col, i++));
@@ -864,8 +882,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			@Override
         			public SimpleIterator<AbstractMetadataRecord> processQuery(
         					VDBMetaData vdb, CompositeMetadataStore metadataStore,
-        					BaseIndexInfo<?> ii, TransformationMetadata metadata) {
-        				return processQuery(vdb, metadataStore.getOids(), ii);
+        					BaseIndexInfo<?> ii, TransformationMetadata metadata, CommandContext commandContext) {
+        				return processQuery(vdb, metadataStore.getOids(), ii, commandContext);
         			}
         			
         			@Override
@@ -928,11 +946,23 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<AbstractMetadataRecord> getChildren(AbstractMetadataRecord parent) {
+        	protected Collection<AbstractMetadataRecord> getChildren(AbstractMetadataRecord parent, CommandContext cc) {
         		return parent.getIncomingObjects();
         	}
 		});
-    }        
+    }   
+    
+    private boolean isKeyVisible(KeyRecord record, CommandContext cc) {
+    	if (record instanceof ForeignKey && !cc.getAuthorizationValidator().isAccessible(((ForeignKey)record).getReferenceKey(), cc)) {
+			return false;
+		}
+    	for (Column c : record.getColumns()) {
+    		if (!cc.getAuthorizationValidator().isAccessible(c, cc)) {
+    			return false;
+    		}
+		}
+    	return true;
+    }
 
 	private List<ElementSymbol> getColumns(TransformationMetadata tm,
 			String name) {

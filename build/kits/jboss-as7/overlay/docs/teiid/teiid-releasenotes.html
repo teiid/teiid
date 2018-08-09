@@ -226,6 +226,47 @@ You can use the system property org.teiid.pgVersion to control this further.</p>
 <ul>
 <li/>
 	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-2476'>TEIID-2476</a> - Exclude hidden tables/columns from metadata (filtering metadata based upon data roles,  improving the performance of pg system queries, allowing admin access to see everything, adding a test for properties, expanding the check of key records)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4512'>TEIID-4512</a> - Issue with older drivers and useStreamsForLobs (calling the old method if possible)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4520'>TEIID-4520</a> - Support for Exasol Connector (Support for Exasol translator, Fixed byte conversion and correlated subqueries, adding an exasol release note)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4532'>TEIID-4532</a> - Provide one-way or cryptographic hash functions (add and refining hash functions and removing the overlapping function)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4761'>TEIID-4761</a> - Support lpad/rpad pushdown to sql server (adding lpad/rpad)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-5390'>TEIID-5390</a> - Concurrent repeated add attempts create orphaned blocks (fixing the leak of inode/data blocks)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-5413'>TEIID-5413</a> - Make inclusion of DDL schema optional in list-vdbs CLI method (adding includeSchema in get-vdb as option)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-5417'>TEIID-5417</a> - Performance degradation with large in predicate against temp table (correcting array typing and producing a set of constants from the
+    dependent criteria processor for temp tables)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-5422'>TEIID-5422</a> - Buffer cleaner running too often in some cases (changing the cleaning interval to prevent thrashing)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-5424'>TEIID-5424</a> - timestampadd/diff with quarter should not use 91 days (correcting quarter calculations)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-5430'>TEIID-5430</a> - Closing Teiid JDBC connection is delayed 5 seconds (making the close wait much smaller)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-5434'>TEIID-5434</a> - count(*) returns different nr of rows compared to normal select (correcting the output columns with the distinct operation is moved)
+</ul>
+
+<h4 class="western">from  8.12.14.6_4</h4>  
+<ul>
+<li/>
+	<p style="margin-bottom: 0in">
 <a href='https://issues.jboss.org/browse/TEIID-3750'>TEIID-3750</a> - Allow the parsing of an expression (allowing the direct parsing of an expression as a default)
 <li/>
 	<p style="margin-bottom: 0in">

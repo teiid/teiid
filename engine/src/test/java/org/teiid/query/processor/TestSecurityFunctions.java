@@ -25,11 +25,11 @@ package org.teiid.query.processor;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.sql.lang.Command;
@@ -37,12 +37,12 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 
-public class TestSecurityFunctions extends TestCase {
+public class TestSecurityFunctions {
 
     /**
      *  hasRole should be true without a service
      */
-    public void testHasRoleWithoutService() throws Exception {
+    @Test public void testHasRoleWithoutService() throws Exception {
         
         String sql = "select pm1.g1.e2 from pm1.g1 where true = hasRole('data', pm1.g1.e1)";  //$NON-NLS-1$
         
@@ -65,7 +65,7 @@ public class TestSecurityFunctions extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testHasRoleWithService() throws Exception {
+    @Test public void testHasRoleWithService() throws Exception {
         
         String sql = "select pm1.g1.e2 from pm1.g1 where true = hasRole('data', pm1.g1.e1)";  //$NON-NLS-1$
         
@@ -94,13 +94,38 @@ public class TestSecurityFunctions extends TestCase {
 			public boolean hasRole(String roleName,
 					CommandContext commandContext) {
 				return false;
-			}});
+			}
+			
+			@Override
+			public boolean isAccessible(AbstractMetadataRecord record,
+					CommandContext commandContext) {
+				return true;
+			}
+			
+        });
         
         Command command = TestProcessor.helpParse(sql);   
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
         
         // Run query
         TestProcessor.helpProcess(plan, context, dataManager, expected);
+    }
+    
+    @Test public void testHashes() {
+        String sql = "select cast(to_chars(md5(pm1.g1.e1), 'hex') as string), cast(to_chars(sha1(X'61'), 'hex') as string) from pm1.g1";  //$NON-NLS-1$
+        
+        List<?>[] expected = new List[] { Arrays.asList("0CC175B9C0F1B6A831C399E269772661", "86F7E437FAA5A7FCE15D1DDCB9EAEAEA377667B8")}; //$NON-NLS-1$ //$NON-NLS-2$      
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        
+        dataManager.addData("SELECT pm1.g1.e1 FROM pm1.g1", new List[] { //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$  
+        }); 
+        
+        Command command = TestProcessor.helpParse(sql);   
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder());
+        
+        TestProcessor.helpProcess(plan, dataManager, expected);
     }
 
 }

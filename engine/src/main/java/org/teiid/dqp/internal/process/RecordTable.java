@@ -84,11 +84,15 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 				TeiidComponentException {
 			while (iter.hasNext()) {
 				T result = iter.next();
-				if (result != null) {
+				if (result != null && isValid(result)) {
 					return result;
 				}
 			}
 			return null;
+		}
+
+		protected boolean isValid(T result) {
+			return true;
 		}
 		
 	}
@@ -165,9 +169,9 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 		return !(ex instanceof ElementSymbol);
 	}
 	
-	public abstract SimpleIterator<T> processQuery(final VDBMetaData vdb, CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii, TransformationMetadata metadata);
+	public abstract SimpleIterator<T> processQuery(final VDBMetaData vdb, CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii, TransformationMetadata metadata, CommandContext commandContext);
 	
-	public SimpleIterator<T> processQuery(final VDBMetaData vdb, NavigableMap<String, ?> map, BaseIndexInfo<?> ii) {
+	public SimpleIterator<T> processQuery(final VDBMetaData vdb, NavigableMap<String, ?> map, BaseIndexInfo<?> ii, final CommandContext commandContext) {
 		final Criteria crit = ii.getCoveredCriteria();
 		final ArrayList<Object> rowBuffer = new ArrayList<Object>(1);
 		if (!ii.getValueSet().isEmpty()) {
@@ -185,7 +189,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 							continue;
 						}
 						T s = extractRecord(fMap.get(key));
-						if (isValid(s, vdb, rowBuffer, crit)) {
+						if (isValid(s, vdb, rowBuffer, crit, commandContext)) {
 							return s;
 						}
 					}
@@ -209,7 +213,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 				public T next() throws TeiidProcessingException, TeiidComponentException {
 					while (iter.hasNext()) {
 						T s = extractRecord(iter.next());
-						if (isValid(s, vdb, rowBuffer, crit)) {
+						if (isValid(s, vdb, rowBuffer, crit, commandContext)) {
 							return s;
 						}
 					}
@@ -240,12 +244,16 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 	 * @param vdb
 	 * @param rowBuffer
 	 * @param condition
+	 * @param commandContext
 	 * @return
 	 * @throws TeiidProcessingException
 	 * @throws TeiidComponentException
 	 */
-	protected boolean isValid(T s, VDBMetaData vdb, List<Object> rowBuffer, Criteria condition) throws TeiidProcessingException, TeiidComponentException {
+	protected boolean isValid(T s, VDBMetaData vdb, List<Object> rowBuffer, Criteria condition, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
 		if (s == null) {
+			return false;
+		}
+		if (!commandContext.getDQPWorkContext().isAdmin() && !commandContext.getAuthorizationValidator().isAccessible(s, commandContext)) {
 			return false;
 		}
 		if (condition != null) {
