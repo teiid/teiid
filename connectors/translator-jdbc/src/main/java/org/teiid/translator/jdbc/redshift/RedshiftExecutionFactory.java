@@ -31,6 +31,7 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.postgresql.PostgreSQLExecutionFactory;
 
 
@@ -47,6 +48,8 @@ public class RedshiftExecutionFactory extends PostgreSQLExecutionFactory {
 		getFunctionModifiers().remove(SourceSystemFunctions.SUBSTRING); //redshift doesn't use substr
 		//to_timestamp is not supported
 		this.parseModifier.setPrefix("TO_DATE("); //$NON-NLS-1$
+		//redshift needs explicit precision/scale
+		this.convertModifier.addTypeMapping("decimal(38, 19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
 	}
 	
 	@Override

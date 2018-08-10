@@ -55,6 +55,13 @@ public class TestRedshiftTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
+    @Test public void testBigDecimalCast() throws Exception {
+        String input = "SELECT cast(floatnum as bigdecimal) FROM bqt1.SmallA"; 
+        String output = "SELECT cast(SmallA.FloatNum AS decimal(38, 19)) FROM SmallA"; 
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
     @Test public void testTimezoneFormat() throws Exception {
     	assertFalse(TRANSLATOR.supportsFormatLiteral("hh:MM:ss Z", Format.DATE));
     }

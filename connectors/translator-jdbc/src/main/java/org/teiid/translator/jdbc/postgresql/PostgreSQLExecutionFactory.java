@@ -108,6 +108,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
 	private Version postGisVersion = Version.DEFAULT_VERSION;
 	private boolean projSupported = false;
+
+    protected ConvertModifier convertModifier;
     
 	public PostgreSQLExecutionFactory() {
 		setMaxDependentInPredicates(1);
@@ -224,8 +226,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 			}
 		});
                 
-        //add in type conversion
-        ConvertModifier convertModifier = new ConvertModifier();
+        convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
     	convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
     	convertModifier.addTypeMapping(INTEGER_TYPE, FunctionModifier.INTEGER); 
