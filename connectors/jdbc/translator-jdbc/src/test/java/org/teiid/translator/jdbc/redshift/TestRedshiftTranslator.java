@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.translator.ExecutionFactory.Format;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -48,6 +47,13 @@ public class TestRedshiftTranslator {
     @Test public void testParseDate() throws Exception {
         String input = "SELECT INTKEY FROM bqt1.SmallA WHERE parsedate(stringkey, 'yyyy-MM dd') = {d '1999-12-01'}"; 
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE cast(TO_DATE(SmallA.StringKey, 'YYYY-MM DD') AS date) = DATE '1999-12-01'"; 
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testBigDecimalCast() throws Exception {
+        String input = "SELECT cast(floatnum as bigdecimal) FROM bqt1.SmallA"; 
+        String output = "SELECT cast(SmallA.FloatNum AS decimal(38, 19)) FROM SmallA"; 
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
