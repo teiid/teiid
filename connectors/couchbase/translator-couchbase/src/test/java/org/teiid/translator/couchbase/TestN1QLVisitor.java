@@ -220,6 +220,9 @@ public class TestN1QLVisitor extends TestVisitor {
 
         sql = "SELECT * FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx = 1 AND Oder_Items_Quantity = 5 AND Oder_Items_ItemID = 92312"; //all columns
         helpTest(sql, "N1QL0816");
+        
+        sql = "SELECT Oder_Items_Quantity FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx = 1 AND Oder_Items_ItemID = 92312"; // unrelated nested object columns of array
+        helpTest(sql, "N1QL0817");
     }
     
     @Test
