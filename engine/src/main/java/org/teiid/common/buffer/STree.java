@@ -170,7 +170,7 @@ public class STree implements Cloneable {
 		}
 		SPage toFlush = incompleteInsert;
 		incompleteInsert = null;
-		if (toFlush.managedBatch != null) {
+		if (toFlush.managedBatch != null || toFlush.values == null) {
 			return;
 		}
 		toFlush.setValues(toFlush.getValues());
