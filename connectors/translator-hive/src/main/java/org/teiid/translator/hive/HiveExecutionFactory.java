@@ -146,6 +146,7 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CURTIME);
         supportedFunctions.add(SourceSystemFunctions.DEGREES);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
+        supportedFunctions.add(SourceSystemFunctions.FROM_UNIXTIME);
         supportedFunctions.add(SourceSystemFunctions.EXP);
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
         supportedFunctions.add(SourceSystemFunctions.HOUR);

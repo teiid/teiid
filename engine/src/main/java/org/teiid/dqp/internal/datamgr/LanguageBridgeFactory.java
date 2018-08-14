@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.datamgr;
 
+import java.sql.Timestamp;
 import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -37,6 +38,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.language.DerivedColumn;
@@ -49,6 +51,7 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
@@ -143,6 +146,7 @@ public class LanguageBridgeFactory {
     private Map<String, List<? extends List<?>>> dependentSets;
     private boolean convertIn;
     private boolean supportsConcat2;
+    private boolean supportFromUnixtime;
 	private int maxInCriteriaSize;
 	
 	//state to handle with name exclusion
@@ -167,6 +171,10 @@ public class LanguageBridgeFactory {
     public void setSupportsConcat2(boolean supportsConcat2) {
 		this.supportsConcat2 = supportsConcat2;
 	}
+    
+    public void setSupportFromUnixtime(boolean supportFromUnixtime) {
+        this.supportFromUnixtime = supportFromUnixtime ;
+    }
     
     public void setExcludeWithName(String excludeWithName) {
 		this.excludeWithName = excludeWithName;
@@ -785,6 +793,15 @@ public class LanguageBridgeFactory {
 				caseExpr.setElseExpression(concat);
 				caseExpr.setType(DataTypeManager.DefaultDataClasses.STRING);
 				return translate(caseExpr);
+        	} else if(!supportFromUnixtime && function.getFunctionDescriptor().getMethod().getParent() == null && name.equalsIgnoreCase(SourceSystemFunctions.FROM_UNIXTIME)) {
+        	    // from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0))
+        	    Function result = new Function(FunctionLibrary.TIMESTAMPADD, new Expression[] {new Constant(NonReserved.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
+        	    // resolve the function
+        	    FunctionDescriptor descriptor = 
+        	            metadataFactory.getMetadata().getFunctionLibrary().findFunction(FunctionLibrary.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
+        	    result.setFunctionDescriptor(descriptor);
+        	    result.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
+        	    return translate(result);
         	}
         	//check for translator pushdown functions, and use the name in source if possible
         	if (function.getFunctionDescriptor().getMethod().getNameInSource() != null && 

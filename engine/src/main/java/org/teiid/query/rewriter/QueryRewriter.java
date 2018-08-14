@@ -2556,17 +2556,8 @@ public class QueryRewriter {
 				function = result;
 				break;
 			}
-			case 1: {// from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0))
-				Function result = new Function(FunctionLibrary.TIMESTAMPADD, new Expression[] {
-						new Constant(NonReserved.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
-				// resolve the function
-				FunctionDescriptor descriptor = funcLibrary.findFunction(FunctionLibrary.TIMESTAMPADD,
-						new Class[] { DataTypeManager.DefaultDataClasses.STRING,
-								DataTypeManager.DefaultDataClasses.INTEGER,
-								DataTypeManager.DefaultDataClasses.TIMESTAMP });
-				result.setFunctionDescriptor(descriptor);
-				result.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
-				function = result;
+			case 1: {
+			    // TEIID-4455
 				break;
 			}
 			case 2: { // rewrite nullif(a, b) => case when (a = b) then null else a

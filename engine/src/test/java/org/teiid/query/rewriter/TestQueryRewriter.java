@@ -1437,11 +1437,34 @@ public class TestQueryRewriter {
     @Test public void testRewriteFromUnixTime() throws Exception {
     	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
     	try {
-    		helpTestRewriteCriteria("from_unixtime(pm1.g1.e2) = '1992-12-01 07:00:00'", "timestampadd(SQL_TSI_SECOND, pm1.g1.e2, {ts'1969-12-31 18:00:00.0'}) = {ts'1992-12-01 07:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
+    		helpTestRewriteCriteria("from_unixtime(pm1.g1.e2) = '1992-12-01 07:00:00'", "from_unixtime(pm1.g1.e2) = {ts'1992-12-01 07:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
     	} finally {
     		TimestampWithTimezone.resetCalendar(null);
     	}
     }
+    
+    @Test
+    public void testRewriteFromUnixTime_1() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+        try {
+            helpTestRewriteExpression("from_unixtime(pm1.g1.e2)", "from_unixtime(pm1.g1.e2)", metadata); //$NON-NLS-1$ //$NON-NLS-2$
+        } finally {
+            TimestampWithTimezone.resetCalendar(null);
+        }
+    }
+    
+    @Test
+    public void testRewriteFromUnixTime_2() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+        try {
+            helpTestRewriteExpression("from_unixtime(1500000000)", "{ts'2017-07-13 20:40:00.0'}", metadata); //$NON-NLS-1$ //$NON-NLS-2$
+        } finally {
+            TimestampWithTimezone.resetCalendar(null);
+        }
+    }
+    
     
     @Test public void testRewriteNullIf() throws Exception {
     	helpTestRewriteCriteria("nullif(pm1.g1.e2, pm1.g1.e4) = 1", "CASE WHEN pm1.g1.e2 = pm1.g1.e4 THEN convert(null, double) ELSE pm1.g1.e2 END = 1.0", true); //$NON-NLS-1$ //$NON-NLS-2$

@@ -38,7 +38,7 @@ import org.teiid.language.Literal;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.util.Version;
+import org.teiid.translator.jdbc.Version;
 
 
 /**
