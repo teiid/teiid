@@ -273,7 +273,11 @@ public class IckleConversionVisitor extends SQLStringVisitor {
                 this.exceptions.add(new TranslatorException(InfinispanPlugin.Util
                         .gs(InfinispanPlugin.Event.TEIID25001, column.getName())));
             }
-            column = normalizePseudoColumn(column);
+            try {
+				column = normalizePseudoColumn(column, this.metadata);
+			} catch (TranslatorException e1) {
+				this.exceptions.add(e1);
+			}
             if (!this.includePK || !isPartOfPrimaryKey(column.getName())) {
                 if (column.getParent().equals(this.parentTable.getMetadataObject())){
                     this.projectedExpressions.add(new ColumnReference(this.parentTable, column.getName(), column, column.getJavaType()));
@@ -311,17 +315,13 @@ public class IckleConversionVisitor extends SQLStringVisitor {
         }
     }
 
-    Column normalizePseudoColumn(Column column) {
+    static Column normalizePseudoColumn(Column column, RuntimeMetadata metadata) throws TranslatorException {
         String pseudo = ProtobufMetadataProcessor.getPseudo(column);
         if (pseudo != null) {
-            try {
-                Table columnParent = (Table)column.getParent();
-                Table pseudoColumnParent = this.metadata.getTable(
-                        ProtobufMetadataProcessor.getMerge(columnParent));
-                return pseudoColumnParent.getColumnByName(getName(column));
-            } catch (TranslatorException e) {
-                this.exceptions.add(e);
-            }
+            Table columnParent = (Table)column.getParent();
+            Table pseudoColumnParent = metadata.getTable(
+                    ProtobufMetadataProcessor.getMerge(columnParent));
+            return pseudoColumnParent.getColumnByName(getRecordName(column));
         }
         return column;
     }
