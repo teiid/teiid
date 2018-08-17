@@ -446,18 +446,18 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 return true;
             }
 	    }
-	    if ((dynamicCommand.getUpdatingModelCount() < 2 && transactionalReads)
-	            || dynamicCommand.getUpdatingModelCount() == 1) {
-	        return expressionRequires==null?true:null;
-	    }
-	    if (dynamicCommand.getUpdatingModelCount() > 1) {
+        if (dynamicCommand.getUpdatingModelCount() > 1) {
             return true;
         }
-	    CommandContext context = CommandContext.getThreadLocalContext();
-	    if (context != null && context.isAtomicBlock()) {
-	        //we can't be sure what is being executed yet, so assume we need a txn
-	        //when there is no atomic block (just auto commit) we expect the update clause to be used
-	        return true;
+        CommandContext context = CommandContext.getThreadLocalContext();
+        if (context != null && context.isAtomicBlock()) {
+            //we can't be sure what is being executed yet, so assume we need a txn
+            //must be checked before returning null
+            //when there is no atomic block (just auto commit) we expect the update clause to be used
+            return true;
+        }
+	    if (transactionalReads || dynamicCommand.getUpdatingModelCount() == 1) {
+	        return expressionRequires==null?true:null;
 	    }
 	    return expressionRequires;
 	}

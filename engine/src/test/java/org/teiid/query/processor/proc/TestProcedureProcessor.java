@@ -32,6 +32,7 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.client.xa.XATransactionException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
@@ -2522,6 +2523,19 @@ public class TestProcedureProcessor {
                 "execute immediate 'begin update pm1.g1 t set e2 = -1 where e1 = ''a''; error ''Test error''; end'; " + 
                 "end ";
         
+        helpTestDyanmicTxn(sql);
+    }
+    
+    @Test public void testAnonDynamicAtomicUpdateClause() throws Exception {
+        String sql = "begin atomic\n" + 
+                "execute immediate 'begin update pm1.g1 t set e2 = -1 where e1 = ''a''; error ''Test error''; end' update 1; " + 
+                "end ";
+        
+        helpTestDyanmicTxn(sql);
+    }
+
+    private void helpTestDyanmicTxn(String sql)
+            throws Exception, XATransactionException {
         TransformationMetadata tm = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, tm, TestOptimizer.getGenericFinder());
