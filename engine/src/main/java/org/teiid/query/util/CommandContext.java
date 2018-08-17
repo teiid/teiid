@@ -223,6 +223,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private AtomicBoolean parentCancelled;
     
     private Long currentTimestamp;
+    private boolean atomicBlock;
     
     /**
      * Construct a new context.
@@ -1231,6 +1232,19 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
     public void setCurrentTimestamp(long currentTimeMillis) {
         this.currentTimestamp = currentTimeMillis;
+    }
+
+    /**
+     * Used by transaction detection logic when starting an atomic block
+     * transaction
+     * @return
+     */
+    public boolean isAtomicBlock() {
+        return atomicBlock;
+    }
+    
+    public void setAtomicBlock(boolean atomicBlock) {
+        this.atomicBlock = atomicBlock;
     }
 	
 }

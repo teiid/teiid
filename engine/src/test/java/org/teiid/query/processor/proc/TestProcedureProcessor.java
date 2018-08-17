@@ -2517,6 +2517,39 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataManager, tm);
     }
     
+    @Test public void testAnonDynamicAtomic() throws Exception {
+        String sql = "begin atomic\n" + 
+                "execute immediate 'begin update pm1.g1 t set e2 = -1 where e1 = ''a''; error ''Test error''; end'; " + 
+                "end ";
+        
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, tm, TestOptimizer.getGenericFinder());
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("UPDATE g1 SET e2 = -1 WHERE g1.e1 = 'a'", Arrays.asList(1));
+        List[] expected = new List[] { }; //$NON-NLS-1$
+        CommandContext context = TestProcessor.createCommandContext();
+        TransactionContext tc = new TransactionContext();
+        TransactionService ts = Mockito.mock(TransactionService.class);
+        context.setTransactionService(ts);
+        context.setTransactionContext(tc);
+
+        try {
+            CommandContext.pushThreadLocalContext(context);
+            TestProcessor.helpProcess(plan, context, dataManager, expected);
+            fail();
+        } catch (TeiidProcessingException e) {
+            
+        } finally {
+            CommandContext.popThreadLocalContext();
+        }
+        
+        Mockito.verify(ts, Mockito.times(1)).begin(tc);
+        Mockito.verify(ts, Mockito.times(0)).commit(tc);
+        Mockito.verify(ts, Mockito.times(1)).rollback(tc);
+    }
+    
     private static final boolean DEBUG = false;
     
 }
