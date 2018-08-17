@@ -644,7 +644,17 @@ public class FunctionLibrary {
                 aa.setAnalytic(true);
                 returnType = DataTypeManager.DefaultDataTypes.OBJECT;
                 argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.OBJECT};
-                break; 
+                break;
+            case NTILE:
+                if (!includeAnalytic) {
+                    continue;
+                }
+                aa.setAllowsDistinct(false);
+                aa.setAnalytic(true);
+                returnType = DataTypeManager.DefaultDataTypes.INTEGER;
+                argTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER};
+                aa.setAllowsOrderBy(true);
+                break;
     		}
 			FunctionMethod fm = FunctionMethod.createFunctionMethod(type.name(), type.name(), FunctionCategoryConstants.AGGREGATE, returnType, argTypes);
 			fm.setAggregateAttributes(aa);

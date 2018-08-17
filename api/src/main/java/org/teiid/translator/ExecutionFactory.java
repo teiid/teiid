@@ -1035,6 +1035,15 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
+     * @return true if ntile is supported.
+     *   defaults to {@link #supportsElementaryOlapOperations()}
+     * @since 11.1
+     */
+    public boolean supportsWindowFunctionNtile() {
+        return supportsElementaryOlapOperations();
+    }
+    
+    /**
      * @return true if all aggregates can have window function order by clauses.
      * @since 7.5
      */

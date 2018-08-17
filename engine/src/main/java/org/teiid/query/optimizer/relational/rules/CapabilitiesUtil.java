@@ -199,6 +199,11 @@ public class CapabilitiesUtil {
         		return false;
         	}
         	break;
+        case NTILE:
+            if (!caps.supportsCapability(Capability.QUERY_WINDOW_FUNCTION_NTILE)) {
+                return false;
+            }
+            break;
         case USER_DEFINED:
         	if (!supportsScalarFunction(modelID, aggregate, metadata, capFinder)) {
         		return false;

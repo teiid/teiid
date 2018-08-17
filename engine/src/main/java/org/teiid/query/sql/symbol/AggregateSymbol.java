@@ -61,15 +61,22 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		STDDEV_SAMP,
 		VAR_POP,
 		VAR_SAMP,
-		RANK,
-		DENSE_RANK,
-		ROW_NUMBER,
-		FIRST_VALUE,
-		LAST_VALUE,
-        LEAD,
-        LAG,
+		RANK(true),
+		DENSE_RANK(true),
+		ROW_NUMBER(true),
+		FIRST_VALUE(true),
+		LAST_VALUE(true),
+        LEAD(true),
+        LAG(true),
 		STRING_AGG,
+		NTILE(true),
 		USER_DEFINED;
+	    
+	    boolean analytical;
+	    Type(){}
+	    Type(boolean analytical) {
+	        this.analytical = analytical;
+	    }
 	}
 	
 	private static final Map<String, Type> nameMap = new TreeMap<String, Type>(String.CASE_INSENSITIVE_ORDER);
@@ -172,6 +179,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	
 	public boolean isRowValueFunction() {
 	    switch (aggregate) {
+	    case NTILE:
 	    case ROW_NUMBER:
 	        return true;
         default:
@@ -251,15 +259,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	}
 	
     public boolean isAnalytical() {
-        switch (this.aggregate) {
-        case FIRST_VALUE:
-        case LAST_VALUE:
-        case LEAD:
-        case LAG:
-            return true;
-        default:
-            return false;
-        }
+        return this.aggregate.analytical;
     }
 
 	public boolean isBoolean() {

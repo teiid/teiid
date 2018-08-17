@@ -761,4 +761,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         return "{ts '" + formatDateValue(timestampValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Override
+    public boolean supportsWindowFunctionNtile() {
+        return getVersion().compareTo(TEN_0) >= 0;
+    }
+    
 }

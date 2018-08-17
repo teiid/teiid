@@ -938,6 +938,25 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.analytic_restriction", windowFunction), windowFunction); //$NON-NLS-1$
             }
             break;
+    	case NTILE:
+    	    if (windowFunction.getWindowSpecification().getOrderBy() == null) {
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.value_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$
+            }
+            if (windowFunction.getFunction().isDistinct() || windowFunction.getFunction().getCondition() != null) {
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.analytic_restriction", windowFunction), windowFunction); //$NON-NLS-1$
+            }
+            if (windowFunction.getFunction().getArgs().length > 0 
+                    && EvaluatableVisitor.isFullyEvaluatable(windowFunction.getFunction().getArgs()[0], true)) {
+                try {
+                    Object evaluatedValue = Evaluator.evaluate(windowFunction.getFunction().getArgs()[0]);
+                    if (((Integer)evaluatedValue) < 1) {
+                        handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31279), windowFunction);
+                    }
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+            break;
     	}
     	validateNoSubqueriesOrOuterReferences(windowFunction);
         if (windowFunction.getFunction().getOrderBy() != null || (windowFunction.getFunction().isDistinct() && windowFunction.getWindowSpecification().getOrderBy() != null)) {

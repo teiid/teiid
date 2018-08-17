@@ -1586,6 +1586,12 @@ public class TestValidator {
         helpValidate("SELECT LAG(e3) over (order by e2) FROM test.group", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Test public void testInvalidNtile() {        
+        helpValidate("SELECT ntile(2) over () FROM test.group", new String[] {"ntile(2) OVER ()"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT ntile(2 order by e2) over (order by e2) FROM test.group", new String[] {"ntile(2 ORDER BY e2) OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT ntile(-1) over (order by e2) FROM test.group", new String[] {"ntile(-1) OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     @Test public void testEnvAllowed() { 
         TransformationMetadata tm = RealMetadataFactory.example1(); 
         String sql = "select env('abc')"; //$NON-NLS-1$

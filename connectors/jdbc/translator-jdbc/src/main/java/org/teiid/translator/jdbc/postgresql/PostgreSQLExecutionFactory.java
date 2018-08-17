@@ -106,6 +106,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_3 = Version.getVersion("9.3"); //$NON-NLS-1$
+	public static final Version NINE_4 = Version.getVersion("9.4"); //$NON-NLS-1$
 	protected OracleFormatFunctionModifier parseModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
 	
 	//postgis versions
@@ -789,6 +790,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsElementaryOlapOperations() {
     	return getVersion().compareTo(EIGHT_4) >= 0;
+    }
+    
+    @Override
+    public boolean supportsAdvancedOlapOperations() {
+        return getVersion().compareTo(NINE_4) >= 0;
     }
     
     @Override

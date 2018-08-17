@@ -357,7 +357,8 @@ public interface SourceCapabilities {
         UPSERT, 
         QUERY_SELECT_EXPRESSION_ARRAY_TYPE, 
         QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE, 
-        ONLY_TIMESTAMPADD_LITERAL;
+        ONLY_TIMESTAMPADD_LITERAL, 
+        QUERY_WINDOW_FUNCTION_NTILE;
         
         private final String toString;
         

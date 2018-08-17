@@ -1507,4 +1507,18 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setCacheTtl(Long ttl) {
         this.cacheTtl = ttl;
     }
+    
+    Boolean supportsNtile;
+    @TranslatorProperty(display="Supports NTILE", advanced=true)
+    @Override
+    public boolean supportsWindowFunctionNtile() {
+        if (supportsNtile != null) {
+            return supportsNtile;
+        }
+        return delegate.supportsWindowFunctionNtile();
+    }
+    
+    public void setSupportsWindowFunctionNtile(boolean supportsNtile) {
+        this.supportsNtile = supportsNtile;
+    }
 }

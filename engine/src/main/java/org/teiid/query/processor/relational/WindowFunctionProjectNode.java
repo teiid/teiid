@@ -43,6 +43,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
@@ -53,6 +54,7 @@ import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -75,6 +77,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	private static class WindowFunctionInfo {
 		WindowFunction function;
 		int outputIndex;
+        public WindowFunction primaryFunction;
 	}
 	
 	private static class WindowSpecificationInfo {
@@ -159,49 +162,29 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	 */
 	public void init() {
 		expressionIndexes = new LinkedHashMap<Expression, Integer>();
-		for (int i = 0; i < getElements().size(); i++) {
-			Expression ex = SymbolMap.getExpression(getElements().get(i));
+		List<? extends Expression> elements = getElements();
+        for (int i = 0; i < elements.size(); i++) {
+			Expression ex = SymbolMap.getExpression(elements.get(i));
 			if (ex instanceof WindowFunction) {
 				WindowFunction wf = (WindowFunction)ex;
-				WindowSpecification ws = wf.getWindowSpecification();
-				WindowSpecificationInfo wsi = windows.get(ws);
-				if (wsi == null) {
-					wsi = new WindowSpecificationInfo();
-					windows.put(wf.getWindowSpecification(), wsi);
-					if (ws.getPartition() != null) {
-						for (Expression ex1 : ws.getPartition()) {
-							Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
-							wsi.groupIndexes.add(index);
-							wsi.orderType.add(OrderBy.ASC);
-							wsi.nullOrderings.add(null);
-						}
-					}
-					if (ws.getOrderBy() != null) {
-						for (OrderByItem item : ws.getOrderBy().getOrderByItems()) {
-							Expression ex1 = SymbolMap.getExpression(item.getSymbol());
-							Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
-							wsi.sortIndexes.add(index);
-							wsi.orderType.add(item.isAscending());
-							wsi.nullOrderings.add(item.getNullOrdering());
-						}
-					}
-				}
-				WindowFunctionInfo wfi = new WindowFunctionInfo();
-				wfi.function = wf;
-				//collect the agg expressions
-				for (Expression e : wf.getFunction().getArgs()) {
-					GroupingNode.getIndex(e, expressionIndexes);
-				}
-				if (wf.getFunction().getOrderBy() != null) {
-					for (OrderByItem item : wf.getFunction().getOrderBy().getOrderByItems()) {
-						GroupingNode.getIndex(item.getSymbol(), expressionIndexes);
-					}
-				}
-				if (wf.getFunction().getCondition() != null) {
-					GroupingNode.getIndex(wf.getFunction().getCondition(), expressionIndexes);
-				}
+				WindowSpecificationInfo wsi = getOrCreateWindowSpecInfo(wf);
+				WindowFunctionInfo wfi = createWindowFunctionInfo(wf);
 				wfi.outputIndex = i;
 				if (wf.getFunction().isRowValueFunction()) {
+				    if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.NTILE) {
+                        WindowFunction wf2 = new WindowFunction();
+                        Assertion.assertTrue(wf.getFunction().getCondition() == null);
+                        wf2.setFunction(new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null));
+                        //clone the partitioning if any
+                        WindowSpecification clone = wf.getWindowSpecification().clone();
+                        clone.setOrderBy(null);
+                        wf2.setWindowSpecification(clone);
+                        WindowSpecificationInfo wsi2 = getOrCreateWindowSpecInfo(wf2);
+                        WindowFunctionInfo wfi2 = createWindowFunctionInfo(wf2);
+                        wfi2.outputIndex = i;
+                        wfi2.primaryFunction = wf;
+                        wsi2.functions.add(wfi2);
+                    }
 					wsi.rowValuefunctions.add(wfi);
 				} else {
 					wsi.functions.add(wfi);
@@ -212,6 +195,52 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			}
 		}
 	}
+
+    private WindowFunctionInfo createWindowFunctionInfo(WindowFunction wf) {
+        WindowFunctionInfo wfi = new WindowFunctionInfo();
+        wfi.function = wf;
+        //collect the agg expressions
+        for (Expression e : wf.getFunction().getArgs()) {
+        	GroupingNode.getIndex(e, expressionIndexes);
+        }
+        if (wf.getFunction().getOrderBy() != null) {
+        	for (OrderByItem item : wf.getFunction().getOrderBy().getOrderByItems()) {
+        		GroupingNode.getIndex(item.getSymbol(), expressionIndexes);
+        	}
+        }
+        if (wf.getFunction().getCondition() != null) {
+        	GroupingNode.getIndex(wf.getFunction().getCondition(), expressionIndexes);
+        }
+        return wfi;
+    }
+
+    private WindowSpecificationInfo getOrCreateWindowSpecInfo(
+            WindowFunction wf) {
+        WindowSpecification ws = wf.getWindowSpecification();
+        WindowSpecificationInfo wsi = windows.get(ws);
+        if (wsi == null) {
+        	wsi = new WindowSpecificationInfo();
+        	windows.put(wf.getWindowSpecification(), wsi);
+        	if (ws.getPartition() != null) {
+        		for (Expression ex1 : ws.getPartition()) {
+        			Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
+        			wsi.groupIndexes.add(index);
+        			wsi.orderType.add(OrderBy.ASC);
+        			wsi.nullOrderings.add(null);
+        		}
+        	}
+        	if (ws.getOrderBy() != null) {
+        		for (OrderByItem item : ws.getOrderBy().getOrderByItems()) {
+        			Expression ex1 = SymbolMap.getExpression(item.getSymbol());
+        			Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
+        			wsi.sortIndexes.add(index);
+        			wsi.orderType.add(item.isAscending());
+        			wsi.nullOrderings.add(item.getNullOrdering());
+        		}
+        	}
+        }
+        return wsi;
+    }
 
 	@Override
 	protected TupleBatch nextBatchDirect() throws BlockedException,
@@ -273,8 +302,10 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 							//special handling for lead lag
                             //an array value encodes what we need to know about
                             //the offset, default, and partition
-                            if (wfi.function.getFunction().getAggregateFunction() == Type.LEAD
-                                    || wfi.function.getFunction().getAggregateFunction() == Type.LAG) {
+                            Type aggregateFunction = wfi.function.getFunction().getAggregateFunction();
+                            if (aggregateFunction == Type.LEAD
+                                    || aggregateFunction == Type.LAG) {
+                                //TODO: refactor to the aggregate function class
                                 ArrayImpl array = (ArrayImpl)value;
                                 Object[] args = array.getValues();
                                 int offset = 1;
@@ -285,7 +316,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                                         defaultValue = args[2];
                                     }
                                 }
-                                List<?> newIdRow = Arrays.asList((Integer)idRow.get(0)+(wfi.function.getFunction().getAggregateFunction() == Type.LAG?-offset:offset));
+                                List<?> newIdRow = Arrays.asList((Integer)idRow.get(0)+(aggregateFunction == Type.LAG?-offset:offset));
                                 List<?> newValueRow = valueMapping[specIndex].find(newIdRow);
                                 if (newValueRow == null) {
                                     value = defaultValue;
@@ -297,6 +328,23 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                                     } else {
                                         value = defaultValue;
                                     }
+                                }
+                            } else if (wfi.primaryFunction != null) {
+                                if (wfi.primaryFunction.getFunction().getAggregateFunction() == Type.NTILE) {
+                                    //this is the computation of the ntile function, used the saved state from the
+                                    //row function
+                                    ArrayImpl array = (ArrayImpl)outputRow.get(wfi.outputIndex);
+                                    Object[] args = array.getValues();
+                                    int rn = (Integer)args[0];
+                                    int ntile = (Integer)args[1];
+                                    int rc = (Integer)value;
+                                    int rowsPerTile = rc/ntile;
+                                    if (rn <= (rc%ntile) * (rowsPerTile + 1)) {
+                                        value = (rn - 1) / (rowsPerTile + 1) + 1;    
+                                    } else {
+                                        value = ntile - (rc - rn) / rowsPerTile;      
+                                    }
+                                    outputRow.set(wfi.outputIndex, value);
                                 }
                             }
 							outputRow.set(wfi.outputIndex, value);
@@ -444,6 +492,8 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			if (wfi.function.getFunction().getAggregateFunction() == Type.LEAD 
 			        || wfi.function.getFunction().getAggregateFunction() == Type.LAG) {
 			    outputType = DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
+			} else if (wfi.function.getFunction().getAggregateFunction() == Type.NTILE) {
+			    outputType = DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER);
 			}
 		    ElementSymbol value = new ElementSymbol("val"); //$NON-NLS-1$
 		    value.setType(outputType);

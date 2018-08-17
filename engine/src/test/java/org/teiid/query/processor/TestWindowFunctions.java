@@ -29,6 +29,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -171,6 +172,35 @@ public class TestWindowFunctions {
     	
     	FakeDataManager dataManager = new FakeDataManager();
     	sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+	
+    @Test public void testNtileExpandedFunction() throws Exception {
+        String sql = "select e1, "
+                + "case when row_number() over (order by e1) <= "
+                + "mod(count(*) over (), 10) * ((count(*) over () / 10) + 1) "
+                + "then "
+                + "(row_number() over (order by e1) -1)/"
+                + "((count(*) over () / 10) + 1) + 1 "
+                + "else "
+                + "10 - (count(*) over () - row_number() over (order by e1)) / "
+                + "(count(*) over () / 10) "
+                + "end "
+                + "from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 2),
+                Arrays.asList(null, 1),
+                Arrays.asList("a", 3),
+                Arrays.asList("c", 6),
+                Arrays.asList("b", 5),
+                Arrays.asList("a", 4),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
         
         helpProcess(plan, dataManager, expected);
@@ -626,8 +656,10 @@ public class TestWindowFunctions {
         
         String sql = "select stringkey, lead(stringkey) over (order by stringkey) l from bqt1.smalla order by l";
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached()), 
-                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
@@ -644,6 +676,112 @@ public class TestWindowFunctions {
         helpProcess(plan, dataMgr, expected);
     }
     
+    @Test public void testNtilePushdown() throws Exception {
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        caps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_NTILE, true);
+    
+        String sql = "select stringkey, ntile(3) over (order by stringkey) l from bqt1.smalla order by l";
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(caps), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+
+        checkNodeTypes(plan, FULL_PUSHDOWN);                           
+
+        HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+        dataMgr.addData("SELECT g_0.StringKey AS c_0, NTILE(3) OVER (ORDER BY g_0.StringKey) AS c_1 FROM SmallA AS g_0 ORDER BY c_1", Arrays.asList("a", 1));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("a", 1),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+    }
+    
+    @Test public void testNtile() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "select stringkey, ntile(3) over (order by stringkey) l from bqt1.smalla order by l";
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.StringKey FROM BQT1.SmallA AS g_0", 
+                Arrays.asList("b"), Arrays.asList("a"), Arrays.asList("c"), Arrays.asList("d"));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("b", 1),
+                Arrays.asList("a", 1),
+                Arrays.asList("c", 2),
+                Arrays.asList("d", 3),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testNtileException() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "select intkey, ntile(intkey) over (order by intkey) l from bqt1.smalla order by l";
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0", 
+                Arrays.asList(-1));
+        
+        helpProcess(plan, createCommandContext(), dataMgr, null);
+    }
+    
+    @Test public void testPartitionedNtile() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "select intkey, ntile(3) over (partition by intnum order by intkey) l, row_number() over (order by intkey) from bqt1.smalla order by l";
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.IntKey, g_0.IntNum FROM BQT1.SmallA AS g_0", 
+                Arrays.asList(1, 0), Arrays.asList(11, 1), 
+                Arrays.asList(-2, 0), Arrays.asList(15, 1),
+                Arrays.asList(3, 0), Arrays.asList(14, 1),
+                Arrays.asList(4, 0), Arrays.asList(13, 1),
+                Arrays.asList(-5, 0), Arrays.asList(16, 1),
+                Arrays.asList(6, 0), Arrays.asList(18, 1));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList(11, 1, 7),
+                Arrays.asList(-2, 1, 2),
+                Arrays.asList(13, 1, 8),
+                Arrays.asList(-5, 1, 1),
+                Arrays.asList(1, 2, 3),
+                Arrays.asList(15, 2, 10),
+                Arrays.asList(3, 2, 4),
+                Arrays.asList(14, 2, 9),
+                Arrays.asList(4, 3, 5),
+                Arrays.asList(16, 3, 11),
+                Arrays.asList(6, 3, 6),
+                Arrays.asList(18, 3, 12),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+    }
+    
     @Test public void testInsertWithView() throws Exception {
         String sql = "insert into bqt1.smalla (intkey)\n" + 
                 "select rang \n" + 
@@ -654,8 +792,10 @@ public class TestWindowFunctions {
         
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached()), 
-                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
@@ -677,8 +817,8 @@ public class TestWindowFunctions {
                 "    from bqt1.smallb csr\n" + 
                 ") v group by rang";
 
-        plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached()), 
-                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+        plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
         expected = new List<?>[] {
@@ -694,8 +834,8 @@ public class TestWindowFunctions {
                 "    from bqt1.smallb csr\n" + 
                 ") v"; 
         
-        plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.exampleBQTCached()), 
-                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+        plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
         helpProcess(plan, dataMgr, expected);

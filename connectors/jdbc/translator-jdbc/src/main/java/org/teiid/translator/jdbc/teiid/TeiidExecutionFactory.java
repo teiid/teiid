@@ -70,6 +70,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version NINE_1 = Version.getVersion("9.1"); //$NON-NLS-1$
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
+	public static final Version ELEVEN_1 = Version.getVersion("11.1"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -337,6 +338,11 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsElementaryOlapOperations() {
     	return getVersion().compareTo(SEVEN_5) >= 0;
+    }
+    
+    @Override
+    public boolean supportsWindowFunctionNtile() {
+        return getVersion().compareTo(ELEVEN_1) >= 0;
     }
     
     @Override

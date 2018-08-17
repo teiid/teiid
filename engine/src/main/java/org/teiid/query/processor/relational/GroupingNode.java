@@ -296,7 +296,12 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		case LAG:
 		    result = new LeadLagValue();
             break;
-		case USER_DEFINED:
+		case NTILE:
+		    //init with a row function that will also capture the tiles argument
+		    //the rest of the processing is handled in the window function project node
+		    result = new Ntile();
+		    break;
+        case USER_DEFINED:
 			try {
                 result = new UserDefined(aggSymbol.getFunctionDescriptor());
             } catch (FunctionExecutionException e) {

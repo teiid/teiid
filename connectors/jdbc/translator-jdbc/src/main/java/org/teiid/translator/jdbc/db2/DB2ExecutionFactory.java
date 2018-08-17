@@ -160,6 +160,11 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	}
 	
 	@Override
+	public boolean supportsWindowFunctionNtile() {
+	    return false;
+	}
+	
+	@Override
 	public void start() throws TranslatorException {
 		super.start();
 		registerFunctionModifier(SourceSystemFunctions.TRIM, new FunctionModifier() {

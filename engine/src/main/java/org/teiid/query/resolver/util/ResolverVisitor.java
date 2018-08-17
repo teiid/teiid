@@ -606,6 +606,17 @@ public class ResolverVisitor extends LanguageVisitor {
     	        }
     	    }
     	    break;
+    	case NTILE:
+    	    //arg must be an integer
+            try {
+                if (obj.getArgs().length != 1) {
+                    throw new QueryResolverException(QueryPlugin.Event.TEIID31278, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31278, obj));
+                }
+                obj.getArgs()[0] = ResolverUtil.convertExpression(obj.getArg(0), DataTypeManager.DefaultDataTypes.INTEGER, metadata);
+            } catch (QueryResolverException e) {
+                handleException(e);
+            }
+            break;
     	case STRING_AGG:
     		try {
 	    		if (obj.getArgs().length != 2) {
