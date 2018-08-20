@@ -19,8 +19,8 @@
 package org.teiid.translator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
@@ -156,34 +156,44 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	ArrayList<String> supportedFunctions;
 	@Override
 	public List<String> getSupportedFunctions() {
+	    if (supportedFunctions == null && 
+            (addSupportedFunctions != null || removeSupportedFunctions != null)) {
+            supportedFunctions = new ArrayList<String>();
+            List<String> baseSupportedFunctions = this.delegate.getSupportedFunctions();
+            if (baseSupportedFunctions != null) {
+                supportedFunctions.addAll(baseSupportedFunctions);
+            }
+            if (addSupportedFunctions != null) {
+                supportedFunctions.addAll(Arrays.asList(addSupportedFunctions.split(","))); //$NON-NLS-1$
+            }
+            if (removeSupportedFunctions != null) {
+                supportedFunctions.removeAll(Arrays.asList(removeSupportedFunctions.split(","))); //$NON-NLS-1$
+            }
+	    }
 		if (supportedFunctions != null) {
 			return supportedFunctions;
 		}
 		return delegate.getSupportedFunctions();
 	}
 	
+	String addSupportedFunctions;
 	@TranslatorProperty(display = "Add Supported Functions(CSV)", description = "Add comma seperated names to system functions", advanced = true)
+	public String getAddSupportedFunctions() {
+        return addSupportedFunctions;
+    }
+	
 	public void setAddSupportedFunctions(String functionNames) {
-		if (supportedFunctions == null) {
-			supportedFunctions = new ArrayList<String>();
-			supportedFunctions.addAll(this.delegate.getSupportedFunctions());
-		}
-		StringTokenizer st = new StringTokenizer(functionNames, ",");
-		while(st.hasMoreTokens()) {
-			supportedFunctions.add(st.nextToken().trim());
-		}
+	    this.addSupportedFunctions = functionNames;
 	}
 
+	String removeSupportedFunctions;
 	@TranslatorProperty(display = "Remove Supported Functions(CSV)", description = "Remove comma seperated names from system functions", advanced = true)
+	public String getRemoveSupportedFunctions() {
+        return removeSupportedFunctions;
+    }
+	
 	public void setRemoveSupportedFunctions(String functionNames) {
-		if (supportedFunctions == null) {
-			supportedFunctions = new ArrayList<String>();
-			supportedFunctions.addAll(this.delegate.getSupportedFunctions());
-		}
-		StringTokenizer st = new StringTokenizer(functionNames, ",");
-		while(st.hasMoreTokens()) {
-			supportedFunctions.remove(st.nextToken().trim());
-		}
+		this.removeSupportedFunctions = functionNames;
 	}
 	
 	@Override
@@ -1236,9 +1246,13 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		}
 		return delegate.supportsCompareCriteriaOrderedExclusive();
 	}
+	@Deprecated
 	public void supportsCompareCriteriaOrderedExclusive(boolean value) {
 		supportsCompareCriteriaOrderedExclusive = value;
 	}
+	public void setSupportsCompareCriteriaOrderedExclusive(boolean value) {
+        supportsCompareCriteriaOrderedExclusive = value;
+    }
 	
 	@Override
 	public boolean returnsSingleUpdateCount() {

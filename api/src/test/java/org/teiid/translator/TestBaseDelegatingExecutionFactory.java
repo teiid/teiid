@@ -34,7 +34,7 @@ public class TestBaseDelegatingExecutionFactory {
 		Method[] methods = ExecutionFactory.class.getDeclaredMethods();
 		Method[] proxyMethods = BaseDelegatingExecutionFactory.class.getDeclaredMethods();
 		//excluding the setter methods the counts should be equal
-		assertEquals(methods.length+84, proxyMethods.length);
+		assertEquals(methods.length+87, proxyMethods.length);
 	}
 	
 	@Test public void testExecution() throws TranslatorException {

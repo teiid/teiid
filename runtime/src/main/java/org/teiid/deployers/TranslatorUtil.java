@@ -484,9 +484,6 @@ public class TranslatorUtil {
                 if (delegateName != null) {
                     ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
                     if (delegate == null) {
-                        if (deployment != null) {
-                            throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), delegateName));
-                        }
                         throw new ConnectorManagerException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40136, delegateName));
                     }
                     ((DelegatingExecutionFactory<Object, Object>) ef).setDelegate(delegate);

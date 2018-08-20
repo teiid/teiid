@@ -18,6 +18,8 @@
 
 package org.teiid.jboss;
 
+import static org.junit.Assert.*;
+
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Properties;
@@ -50,5 +52,26 @@ public class TestVDBService {
 		TranslatorUtil.getExecutionFactory("x", repo, repo, 
 				new VDBMetaData(), new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>(), new HashSet<String>());
 	}
+	
+	@Test public void testAddSupportedFunctions() throws ConnectorManagerException {
+        TranslatorRepository repo = new TranslatorRepository();
+        VDBTranslatorMetaData tmd = new VDBTranslatorMetaData();
+        Properties props = new Properties();
+        props.put("delegateName", "y");
+        props.put("addSupportedFunctions", "a,b,c");
+        tmd.setProperties(props);
+        tmd.setExecutionFactoryClass(SampleExecutionFactory.class);
+        repo.addTranslatorMetadata("x", tmd);
+        
+        VDBTranslatorMetaData tmd1 = new VDBTranslatorMetaData();
+        repo.addTranslatorMetadata("y", tmd1);
+        IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
+        map.put(tmd1, new ExecutionFactory<Object, Object>());
+        
+        ExecutionFactory ef = TranslatorUtil.getExecutionFactory("x", repo, repo, 
+                new VDBMetaData(), map, new HashSet<String>());
+        
+        assertEquals(3, ef.getSupportedFunctions().size());
+    }
 	
 }
