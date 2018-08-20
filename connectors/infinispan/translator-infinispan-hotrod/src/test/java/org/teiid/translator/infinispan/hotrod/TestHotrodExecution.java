@@ -212,7 +212,19 @@ public class TestHotrodExecution {
         assertArrayEquals(new Object[] {new Integer(1), "one"}, exec.next().toArray());
         assertArrayEquals(new Object[] {new Integer(3), "two"}, exec.next().toArray());
         assertNull(exec.next());
+        
+        command = UTILITY.parseCommand("DELETE FROM G4 where e2 = 'two' AND G2_e1 = 2");
+        update = EF.createUpdateExecution(command, EC, METADATA, connection);
+        update.execute();
 
+        command = UTILITY.parseCommand("SELECT e1, e2 FROM G4");
+        exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
+        exec.execute();
+
+        assertArrayEquals(new Object[] {new Integer(1), "one"}, exec.next().toArray());
+        assertNull(exec.next());        
+
+        // cascade deletes G4
         command = UTILITY.parseCommand("DELETE FROM G2 where e1 = 1");
         update = EF.createUpdateExecution(command, EC, METADATA, connection);
         update.execute();
@@ -258,7 +270,6 @@ public class TestHotrodExecution {
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
         exec.execute();
 
-        assertArrayEquals(new Object[] {new Integer(3), "two"}, exec.next().toArray());
         assertArrayEquals(new Object[] {new Integer(5), "upsert"}, exec.next().toArray());
         assertNull(exec.next());
         

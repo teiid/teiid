@@ -350,11 +350,9 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			try {
 				int offset = 0;
 				while (true) {
-		
 					query.startOffset(offset);
 					query.maxResults(batchSize);
 		
-					int cnt = query.getResultSize();
 					List<Object> values = query.list();
 		
 					if (values == null || values.isEmpty()) {
@@ -363,7 +361,6 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 					for (Object doc : values) {
 						task.run(doc);
 					}		
-
 				}
 			} catch (Throwable e) {
 				e.printStackTrace();
