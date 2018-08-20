@@ -107,7 +107,7 @@ public class RuleApplySecurity implements OptimizerRule {
 		        	if (mapping == null) {
 		        		mapping = new HashMap<ElementSymbol, Expression>();
 		        	}
-		        	mapping.put(cols.get(i), maskedCol);
+		        	mapping.put(cols.get(i), SymbolMap.getExpression(maskedCol));
 		        }
         	    PlanNode parentJoin = NodeEditor.findParent(sourceNode.getParent(), NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
 		        if (mapping != null) {
@@ -135,7 +135,7 @@ public class RuleApplySecurity implements OptimizerRule {
 			            		root = sourceNode.getParent();
 			            	}
 	        				root.addAsParent(project);
-	        				addView(metadata, context, group, cols, masked, project);
+	        				addView(metadata, context, group, cols, project);
 	        				parentJoin = null;
 	        			}
 		        	}
@@ -168,7 +168,7 @@ public class RuleApplySecurity implements OptimizerRule {
         	    	PlanNode project = RelationalPlanner.createProjectNode(cols);
         	    	parent.addAsParent(project);
         	    	//a view is needed to keep the logical placement of the criteria
-    				addView(metadata, context, group, cols, cols, project);
+    				addView(metadata, context, group, cols, project);
         	    }
 			}
 		} catch (TeiidProcessingException e) {
@@ -179,13 +179,12 @@ public class RuleApplySecurity implements OptimizerRule {
 
 	private void addView(QueryMetadataInterface metadata,
 			CommandContext context, GroupSymbol group,
-			List<ElementSymbol> cols, List<? extends Expression> old,
-			PlanNode viewRoot) throws TeiidComponentException,
+			List<ElementSymbol> cols, PlanNode viewRoot) throws TeiidComponentException,
 			QueryMetadataException, QueryPlannerException {
 		GroupSymbol securityVeiw = new GroupSymbol("sec"); //$NON-NLS-1$
 		Set<String> groups = context.getGroups();
 		securityVeiw = RulePlaceAccess.recontextSymbol(securityVeiw, groups);
-		List<ElementSymbol> newCols = RulePushAggregates.defineNewGroup(securityVeiw, old, metadata);
+		List<ElementSymbol> newCols = RulePushAggregates.defineNewGroup(securityVeiw, cols, metadata);
 		PlanNode newSourceNode = RuleDecomposeJoin.createSource(securityVeiw, viewRoot, newCols);
 		Map<ElementSymbol, Expression> upperMapping = SymbolMap.createSymbolMap(cols, newCols).asMap();
 		FrameUtil.convertFrame(newSourceNode.getParent(), group, Collections.singleton(securityVeiw), upperMapping, metadata);

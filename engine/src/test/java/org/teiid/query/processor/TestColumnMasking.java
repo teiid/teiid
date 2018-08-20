@@ -63,7 +63,7 @@ public class TestColumnMasking {
 		pmd1.setResourceName("pm1.g1.e2");
 		pmd1.setMask("case when e1 = 'a' then null else e2 end");
 		
-		policy.addPermission(pmd, pmd1);
+        policy.addPermission(pmd, pmd1);
 		policy.setName("some-role");
 		policies.put("some-role", policy);
 
@@ -166,6 +166,23 @@ public class TestColumnMasking {
 		List<?>[] expectedResults = new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 1)};
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
+	
+	@Test public void testMultipleTableMaskWithPreservedProjection() throws Exception {
+	    DataPolicyMetadata policy1 = new DataPolicyMetadata();
+        PermissionMetaData pmd11 = new PermissionMetaData();
+        pmd11.setResourceName("pm1.g1.e3");
+        pmd11.setMask("rand() > .5");
+
+        policy1.addPermission(pmd11);
+        policy1.setName("other-role");
+        context.getAllowedDataPolicies().put("other-role", policy1);
+	    
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+        ProcessorPlan plan = helpGetPlan(helpParse("select e2 from pm1.g1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+        List<?>[] expectedResults = new List<?>[] {Collections.singletonList(null), Arrays.asList(2)};
+        helpProcess(plan, context, dataManager, expectedResults);
+    }
 	
 	@Test public void testColumnSubstitution() throws Exception {
 		DataPolicyMetadata policy1 = new DataPolicyMetadata();

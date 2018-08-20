@@ -50,6 +50,7 @@ import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
@@ -79,6 +80,9 @@ public class ColumnMaskingHelper {
 		}
 	}
 
+	/**
+	 * Create a masked version of the col.  Will return either the col if no masking or an {@link ExpressionSymbol} with the masked expression
+	 */
 	private static Expression maskColumn(ElementSymbol col, GroupSymbol unaliased, QueryMetadataInterface metadata, ExpressionMappingVisitor emv, Map<String, DataPolicy> policies, CommandContext cc) throws TeiidComponentException, TeiidProcessingException {
 		Object metadataID = col.getMetadataID();
 		String fullName = metadata.getFullName(metadataID);
@@ -156,7 +160,7 @@ public class ColumnMaskingHelper {
 		sce.setElseExpression(col);
 		sce.setType(expectedType);
 		Expression mask = QueryRewriter.rewriteExpression(sce, cc, metadata, true);
-		return mask;
+		return new ExpressionSymbol(col.getShortName(), mask);
 	}
 
 	public static List<? extends Expression> maskColumns(List<ElementSymbol> cols,
