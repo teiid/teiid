@@ -95,7 +95,7 @@ public class ODataUpdateQuery extends ODataQuery {
     
     
     public String getPayload(Entity parentEntity) throws TranslatorException {
-        JsonSerializer serializer = new JsonSerializer(false, ContentType.APPLICATION_JSON);
+        JsonSerializer serializer = new JsonSerializer(false, ContentType.JSON_FULL_METADATA);
         StringWriter writer = new StringWriter();
         
         try {

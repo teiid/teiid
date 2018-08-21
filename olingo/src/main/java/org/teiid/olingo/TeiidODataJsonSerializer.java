@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
+import org.apache.commons.codec.DecoderException;
 import org.apache.olingo.commons.api.Constants;
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.format.ContentType;
@@ -80,6 +81,8 @@ public class TeiidODataJsonSerializer extends ODataJsonSerializer {
             json.close();
         } catch (final IOException e) {
             throw new SerializerException("An I/O exception occurred.", e, SerializerException.MessageKeys.IO_EXCEPTION);
+        } catch (final DecoderException e) {
+        	throw new SerializerException("An I/O exception occurred.", e, SerializerException.MessageKeys.IO_EXCEPTION);
         }
         return SerializerResultImpl.with().content(buffer.getInputStream()).build();
     }    

@@ -297,7 +297,7 @@ public class TestODataIntegration {
     public void testEntitySet() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#G1\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}]}", 
+        assertEquals("{\"@odata.context\":\""+baseURL+"/loopy/vm1/$metadata#G1\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}]}", 
                 response.getContentAsString());
     }
     
@@ -305,7 +305,7 @@ public class TestODataIntegration {
     public void testEntitySetSkipOnly() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$skip=1");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#G1\",\"value\":[]}", 
+        assertEquals("{\"@odata.context\":\""+baseURL + "/loopy/vm1/$metadata#G1\",\"value\":[]}", 
                 response.getContentAsString());
     }
 
@@ -313,7 +313,7 @@ public class TestODataIntegration {
     public void testEntitySetWithKey() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1(0)");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#G1/$entity\",\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}", 
+        assertEquals("{\"@odata.context\":\""+baseURL+"/loopy/vm1/$metadata#G1/$entity\",\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}", 
                 response.getContentAsString());        
     }
 
@@ -321,7 +321,7 @@ public class TestODataIntegration {
     public void testIndividualProperty() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1(0)/e1");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#G1(0)/e1\",\"value\":\"ABCDEFGHIJ\"}", 
+        assertEquals("{\"@odata.context\":\""+baseURL+"/loopy/vm1/$metadata#G1(0)/e1\",\"value\":\"ABCDEFGHIJ\"}", 
                 response.getContentAsString());        
     }
     
@@ -329,7 +329,7 @@ public class TestODataIntegration {
     public void testEntity() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1(0)");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#G1/$entity\",\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}", 
+        assertEquals("{\"@odata.context\":\""+baseURL+"/loopy/vm1/$metadata#G1/$entity\",\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}", 
                 response.getContentAsString());        
     }    
     
@@ -344,7 +344,7 @@ public class TestODataIntegration {
     public void testNavigation_1_to_1() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/pm1/G2(0)/FK0");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#G1/$entity\",\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}", 
+        assertEquals("{\"@odata.context\":\""+baseURL+"/loopy/pm1/$metadata#G1/$entity\",\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}", 
                 response.getContentAsString());
     }
     
@@ -352,7 +352,7 @@ public class TestODataIntegration {
     public void testNavigation_1_to_many() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1(0)/G2_FK0");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#G2\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0}]}", 
+        assertEquals("{\"@odata.context\":\""+baseURL+"/loopy/vm1/$metadata#G2\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0}]}", 
                 response.getContentAsString());
     }     
     
@@ -495,7 +495,7 @@ public class TestODataIntegration {
                     .header("Prefer", "return=representation")
                     .send();
                 assertEquals(201, response.getStatus());
-                assertEquals("{\"@odata.context\":\"$metadata#PostTable\","
+                assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#PostTable\","
                         + "\"intkey\":4,"
                         + "\"intnum\":4,"
                         + "\"stringkey\":\"4\","
@@ -590,7 +590,7 @@ public class TestODataIntegration {
                     .header("Prefer", "return=representation")
                     .send();
             assertEquals(201, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"a\":\"teiid\",\"b\":\"dv\"}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x\",\"a\":\"teiid\",\"b\":\"dv\"}", 
                     response.getContentAsString());
 
             // update to collection based reference
@@ -626,7 +626,7 @@ public class TestODataIntegration {
                     .header("Prefer", "return=representation")
                     .send();
             assertEquals(201, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"a\":\"teiid\",\"b\":\"dv\"}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x\",\"a\":\"teiid\",\"b\":\"dv\"}", 
                     response.getContentAsString());
         } finally {
             localClient = null;
@@ -839,7 +839,7 @@ public class TestODataIntegration {
 
             response = http.GET(baseURL + "/northwind/vw/x");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+            assertEquals("{\"@odata.context\":\""+baseURL + "/northwind/vw/$metadata#x\",\"value\":["
                     + "{\"a\":\"ab\\u0000cd\\u0001\",\"b\":\"\\u0016\",\"c\":[\"a\\u00021\",\"b1\"],\"d\":1}]}", 
                     response.getContentAsString());
         } finally {
@@ -864,7 +864,7 @@ public class TestODataIntegration {
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json&$select=a,b");
             assertEquals(200, response.getStatus());
             assertEquals(
-                    "{\"@odata.context\":\"$metadata#x(a,b)\","
+                    "{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x(a,b)\","
                     + "\"value\":[{\"a\":\"x\",\"b\":[1,2,3]},{\"a\":\"y\",\"b\":[4,5,6]}]}",
                     response.getContentAsString());
 
@@ -901,18 +901,18 @@ public class TestODataIntegration {
 
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x('x')/c?$filter=endswith($it,'com')");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x('x')/c\",\"value\":[\"google.com\"]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\""+baseURL + "/northwind/vw/$metadata#x('x')/c\",\"value\":[\"google.com\"]}", response.getContentAsString());
 
             response = http.GET(baseURL + "/northwind/vw/x('y')/c?$filter=startswith($it,'example')");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x('y')/c\",\"value\":[\"example.net\",\"example.com\"]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x('y')/c\",\"value\":[\"example.net\",\"example.com\"]}", response.getContentAsString());
             
             response = http.GET(baseURL + "/northwind/vw/x('y')/c?$filter=startswith($it,'example')&$orderby=$it");
             assertEquals(501, response.getStatus());
             
             response = http.GET(baseURL + "/northwind/vw/x('x')/c?$filter=endswith($it,'com')%20or%20endswith($it,'net')");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x('x')/c\",\"value\":[\"google.net\",\"google.com\"]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x('x')/c\",\"value\":[\"google.net\",\"google.com\"]}", response.getContentAsString());
             
         } finally {
             localClient = null;
@@ -975,7 +975,6 @@ public class TestODataIntegration {
         }
     }    
     
-    
     @Test 
     public void testSkipToken() throws Exception {
         try {
@@ -992,7 +991,7 @@ public class TestODataIntegration {
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json");
             assertEquals(200, response.getStatus());
-            String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
+            String starts = "{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
                     + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
             String ends = ",1\"}";
             assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
@@ -1002,7 +1001,7 @@ public class TestODataIntegration {
             String nextLink = node.get("@odata.nextLink").asText();
             response = http.GET(nextLink);
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
                     response.getContentAsString());
             CacheStatistics stats = teiid.getAdmin().getCacheStats(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name()).iterator().next();
             //first query misses, second hits
@@ -1073,7 +1072,7 @@ public class TestODataIntegration {
                     + "/northwind/vw/x?$filter=" + Encoder.encode("a eq @a")
                     + "&" + Encoder.encode("@a")+"="+Encoder.encode("'xyz'"));
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
                     response.getContentAsString());
         } finally {
             localClient = null;
@@ -1138,7 +1137,7 @@ public class TestODataIntegration {
                 .send();
 
             assertEquals(200, response.getStatus());
-            String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
+            String starts = "{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
                     + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
             String ends = ",1\"}";
             assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
@@ -1149,7 +1148,7 @@ public class TestODataIntegration {
             String nextLink = node.get("@odata.nextLink").asText();
             response = http.GET(nextLink);
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
                     response.getContentAsString());
         } finally {
             teiid.undeployVDB("northwind");
@@ -1179,18 +1178,18 @@ public class TestODataIntegration {
 
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$top=1&$skip=1");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":4,\"value\":[{\"a\":\"b\",\"b\":456}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"@odata.count\":4,\"value\":[{\"a\":\"b\",\"b\":456}]}", 
                     response.getContentAsString());
             
             response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$filter="+Encoder.encode("a eq 'a'"));
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":1,\"value\":[{\"a\":\"a\",\"b\":123}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"@odata.count\":1,\"value\":[{\"a\":\"a\",\"b\":123}]}", 
                     response.getContentAsString());
             
             //effectively the same as above
             response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$skip=1");
             assertEquals(200, response.getStatus());
-            String r = "{\"@odata.context\":\"$metadata#x\",\"@odata.count\":4,"
+            String r = "{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"@odata.count\":4,"
                     + "\"value\":[{\"a\":\"b\",\"b\":456}],\"@odata.nextLink\":";
             assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(r));
             
@@ -1212,7 +1211,7 @@ public class TestODataIntegration {
                     .send();
             assertEquals(200, response.getStatus());
             responseStr = response.getContentAsString();
-            assertTrue(responseStr, responseStr.startsWith("{\"@odata.context\":\"$metadata#x\","
+            assertTrue(responseStr, responseStr.startsWith("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\","
                     + "\"@odata.count\":4,"
                     + "\"value\":[{\"a\":\"b\",\"b\":456}],"
                     + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$count=true&$skiptoken="));
@@ -1372,8 +1371,9 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();                        
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x(b)/$entity\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x(a,b)/$entity\","
                     + "\"@odata.id\":\""+baseURL+"/northwind/m/x('ABCDEFG')\","
+                    + "\"a\":\"ABCDEFG\","
                     + "\"b\":\"ABCDEFG\"}", response.getContentAsString());
             
         } finally {
@@ -1461,7 +1461,7 @@ public class TestODataIntegration {
                     .send();
             assertEquals(200, response.getStatus());
             String url = baseURL + "/northwind/m/";
-            assertEquals("{\"@odata.context\":\"$metadata#Collection($ref)\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Collection($ref)\","
                     + "\"value\":[{\"@odata.id\":\""+url+"y('ABCDEFG')\"}]}", 
                     response.getContentAsString());
             
@@ -1532,7 +1532,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#y\",\"value\":[]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#y\",\"value\":[]}", response.getContentAsString());
 
             response = http.newRequest(baseURL + "/northwind/m/z('xa3')/FKX")
                     .method("GET")
@@ -1580,7 +1580,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"ABCDEFG\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x(y_FKX())\",\"value\":[{\"a\":\"ABCDEFG\","
                     + "\"b\":\"ABCDEFG\",\"y_FKX\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}]}]}", 
                     response.getContentAsString());
 
@@ -1588,7 +1588,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#z(a)\",\"value\":[{\"a\":\"ABCDEFG\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#z(a,FKX())\",\"value\":[{\"a\":\"ABCDEFG\","
                     + "\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", 
                     response.getContentAsString());
             
@@ -1597,21 +1597,21 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#z(a)\",\"value\":[{\"a\":\"ABCDEFG\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#z(a,FKX())\",\"value\":[{\"a\":\"ABCDEFG\","
                     + "\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
 
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX($select=a)")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#z(FKX(a))\",\"value\":[{\"a\":\"ABCDEFG\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#z(FKX(a))\",\"value\":[{\"a\":\"ABCDEFG\","
                     + "\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\"}}]}", response.getContentAsString());
 
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#z\",\"value\":[{\"a\":\"ABCDEFG\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#z(FKX())\",\"value\":[{\"a\":\"ABCDEFG\","
                     + "\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
 
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX($top=1)")
@@ -1670,7 +1670,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x(y_FKX())\","
                     + "\"value\":["
                     + "{\"a\":\"xa1\",\"b\":\"xb\","
                     + "\"y_FKX\":[{\"a\":\"ya1\",\"b\":\"xa1\"},"
@@ -1716,7 +1716,7 @@ public class TestODataIntegration {
             
             assertEquals(response.getContentAsString(), 200, response.getStatus());
             
-            assertEquals("{\"@odata.context\":\"$metadata#tree\",\"value\":["
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#tree(tree_parent())\",\"value\":["
                     + "{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\",\"tree_parent\":[{\"a\":\"2\",\"b\":\"1\",\"c\":\"y\"},{\"a\":\"3\",\"b\":\"1\",\"c\":\"z\"}]},"
                     + "{\"a\":\"2\",\"b\":\"1\",\"c\":\"y\",\"tree_parent\":[]},"
                     + "{\"a\":\"3\",\"b\":\"1\",\"c\":\"z\",\"tree_parent\":[]}]}", 
@@ -1728,7 +1728,7 @@ public class TestODataIntegration {
             
             assertEquals(response.getContentAsString(), 200, response.getStatus());
             
-            assertEquals("{\"@odata.context\":\"$metadata#tree\",\"value\":[{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\",\"parent\":null},"
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#tree(parent())\",\"value\":[{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\",\"parent\":null},"
                     + "{\"a\":\"2\",\"b\":\"1\",\"c\":\"y\",\"parent\":null},"
                     + "{\"a\":\"3\",\"b\":\"1\",\"c\":\"z\",\"parent\":null}]}", 
                     response.getContentAsString());
@@ -1739,7 +1739,7 @@ public class TestODataIntegration {
             
             assertEquals(response.getContentAsString(), 200, response.getStatus());
             
-            assertEquals("{\"@odata.context\":\"$metadata#tree\",\"value\":[{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\",\"parent\":null},"
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#tree(parent())\",\"value\":[{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\",\"parent\":null},"
                     + "{\"a\":\"2\",\"b\":\"1\",\"c\":\"y\",\"parent\":{\"a\":\"1\",\"b\":\"null\",\"c\":\"x\"}},"
                     + "{\"a\":\"3\",\"b\":\"1\",\"c\":\"z\",\"parent\":null}]}", 
                     response.getContentAsString());
@@ -1792,7 +1792,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x(y_FKX(z_FKY()))\",\"value\":["
             		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
             			+ "[{\"a\":\"y\",\"b\":\"a\",\"z_FKY\":[{\"a\":\"a\",\"b\":\"y\"}]},{\"a\":\"y1\",\"b\":\"a\",\"z_FKY\":[]}]}"
             		+ "]}", 
@@ -1802,7 +1802,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x(y_FKX(),z_FKX())\",\"value\":["
             		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
             			+ "[{\"a\":\"y\",\"b\":\"a\"},{\"a\":\"y1\",\"b\":\"a\"}],"
             			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
@@ -1813,7 +1813,7 @@ public class TestODataIntegration {
                 .method("GET")
                 .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x\",\"value\":["
             		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
             			+ "[{\"a\":\"y\",\"b\":\"a\"},{\"a\":\"y1\",\"b\":\"a\"}],"
             			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
@@ -1824,7 +1824,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
                 assertEquals(200, response.getStatus());
-                assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+                assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x\",\"value\":["
                 		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
                 			+ "[{\"a\":\"y1\",\"b\":\"a\"}],"
                 			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
@@ -1841,7 +1841,7 @@ public class TestODataIntegration {
                     .send();
                 assertEquals(200, response.getStatus());
                 String expected = "{" + 
-                		"\"@odata.context\":\"$metadata#x\"," + 
+                		"\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x\"," + 
                 		"\"value\":[" + 
                 		    "{" + 
                 		    "\"a\":\"a\"," + 
@@ -1920,7 +1920,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
                 assertEquals(200, response.getStatus());
-                assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+                assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x(y_FKX())\",\"value\":["
                         + "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
                             + "[]}"
                         + "]}", 
@@ -2313,7 +2313,7 @@ public class TestODataIntegration {
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter="+Encoder.encode("b eq null"));
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":null}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":null}]}", 
                     response.getContentAsString());
         } finally {
             localClient = null;
@@ -2390,7 +2390,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers(Orders_FK0())\","
                     + "\"@odata.count\":4,\""
                     + "value\":["
                     + "{\"id\":1,\"name\":\"customer1\","
@@ -2419,7 +2419,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers(Orders_FK0())\","
                     + "\"@odata.count\":4,\"value\":["
                     + "{\"id\":4,\"name\":\"customer4\","
                     + "\"Orders_FK0\":[]"
@@ -2430,7 +2430,7 @@ public class TestODataIntegration {
                     .header("Prefer", "odata.maxpagesize=1")
                     .send();
             assertEquals(200, response.getStatus());
-            assertTrue(response.getContentAsString().startsWith("{\"@odata.context\":\"$metadata#Customers\","
+            assertTrue(response.getContentAsString().startsWith("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers(Orders_FK0())\","
                     + "\"value\":[{\"id\":3,\"name\":\"customer3\","
                     + "\"Orders_FK0\":["
                     + "{\"id\":7,\"customerid\":3,\"place\":\"town\"},"
@@ -2449,7 +2449,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers(Orders_FK0())\","
                     + "\"value\":["
                     + "{\"id\":4,\"name\":\"customer4\","
                     + "\"Orders_FK0\":[]"
@@ -2460,7 +2460,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers(Orders_FK0())\","
                     + "\"@odata.count\":4,\""
                     + "value\":["
                     + "{\"id\":1,\"name\":\"customer1\","
@@ -2483,7 +2483,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers(Orders_FK0())\","
                     + "\"@odata.count\":4,\""
                     + "value\":["
                         + "{\"id\":1,\"name\":\"customer1\","
@@ -2514,20 +2514,20 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers(Orders_FK0(place))\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers(Orders_FK0(id,place))\","
                     + "\"@odata.count\":4,\""
                     + "value\":["
                     + "{\"id\":1,\"name\":\"customer1\","
                         + "\"Orders_FK0\":["
-                        + "{\"@odata.id\":\""+baseURL+"/northwind/m/Orders(1)\",\"place\":\"town\"}"
+                        + "{\"@odata.id\":\""+baseURL+"/northwind/m/Orders(1)\",\"id\":1,\"place\":\"town\"}"
                     + "]},"
                     + "{\"id\":2,\"name\":\"customer2\","
                         + "\"Orders_FK0\":["
-                        + "{\"@odata.id\":\""+baseURL+"/northwind/m/Orders(5)\",\"place\":\"state\"}"
+                        + "{\"@odata.id\":\""+baseURL+"/northwind/m/Orders(5)\",\"id\":5,\"place\":\"state\"}"
                     + "]},"
                     + "{\"id\":3,\"name\":\"customer3\","
                         + "\"Orders_FK0\":["
-                        + "{\"@odata.id\":\""+baseURL+"/northwind/m/Orders(7)\",\"place\":\"town\"}"
+                        + "{\"@odata.id\":\""+baseURL+"/northwind/m/Orders(7)\",\"id\":7,\"place\":\"town\"}"
                     + "]},"
                     + "{\"id\":4,\"name\":\"customer4\","
                         + "\"Orders_FK0\":["
@@ -2538,7 +2538,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers(Orders_FK0())\","
                     + "\"value\":[{\"id\":1,\"name\":\"customer1\","
                     +   "\"Orders_FK0\":[{\"id\":1,\"customerid\":1,\"place\":\"town\"}]},"
                     + "{\"id\":2,\"name\":\"customer2\",\"Orders_FK0\":[]},"
@@ -2552,7 +2552,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers(Orders_FK0())\","
                     + "\"@odata.count\":4,\""
                     + "value\":["
                         + "{\"id\":1,\"name\":\"customer1\","
@@ -2591,31 +2591,31 @@ public class TestODataIntegration {
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter="
                     +Encoder.encode("indexof(a,'y') eq 1"));
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
                     response.getContentAsString());
             
             response = http.GET(baseURL + "/northwind/vw/x?$filter="
                     +Encoder.encode("indexof(a,'y') eq 2"));
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[]}", 
                     response.getContentAsString());
 
             response = http.GET(baseURL + "/northwind/vw/x?$filter="
                     +Encoder.encode("substring(a,1) eq 'yz'"));
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
                     response.getContentAsString());
             
             response = http.GET(baseURL + "/northwind/vw/x?$filter="
                     +Encoder.encode("substring(a,1,2) eq 'yz'"));
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
                     response.getContentAsString());
             
             response = http.GET(baseURL + "/northwind/vw/x?$filter="
                     +Encoder.encode("substring(a,0,1) eq 'a'"));
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}]}", 
                     response.getContentAsString());            
         } finally {
             localClient = null;
@@ -2649,7 +2649,7 @@ public class TestODataIntegration {
             ContentResponse response = http.GET(baseURL + "/northwind/vw/SimpleTable?$filter="
                     +Encoder.encode("month(2001-01-01T00:01:01.01Z) eq intkey")+"&$select=intkey");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#SimpleTable(intkey)\",\"value\":[{\"intkey\":1}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#SimpleTable(intkey)\",\"value\":[{\"intkey\":1}]}", 
                     response.getContentAsString());
             
         } finally {
@@ -2712,7 +2712,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers/$entity\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers/$entity\","
                     + "\"id\":1,\"name\":\"customer1\"}", 
                     response.getContentAsString());
             
@@ -2720,7 +2720,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Orders/$entity\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Orders(Customer())/$entity\","
                     + "\"id\":1,\"customerid\":1,\"place\":\"town\","
                     + "\"Customer\":{\"id\":1,\"name\":\"customer1\"}}", 
                     response.getContentAsString());
@@ -2728,7 +2728,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers\","
             		+ "\"value\":[{\"id\":1,\"customerid\":1,\"place\":\"town\"},"
             		+ "{\"id\":2,\"customerid\":1,\"place\":\"state\"},"
             		+ "{\"id\":3,\"customerid\":1,\"place\":\"country\"},"
@@ -2794,7 +2794,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers/$entity\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers/$entity\","
                     + "\"id\":1,\"name\":\"customer1\"}", 
                     response.getContentAsString());
             
@@ -2802,7 +2802,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Orders/$entity\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Orders(Customer())/$entity\","
                     + "\"id\":1,\"customerid\":1,\"place\":\"town\","
                     + "\"Customer\":{\"id\":1,\"name\":\"customer1\"}}", 
                     response.getContentAsString());
@@ -2810,7 +2810,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#Customers\","
             		+ "\"value\":[{\"id\":1,\"customerid\":1,\"place\":\"town\"},"
             		+ "{\"id\":2,\"customerid\":1,\"place\":\"state\"},"
             		+ "{\"id\":3,\"customerid\":1,\"place\":\"country\"},"
@@ -2855,7 +2855,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#OrganizationalUnitEntity/$entity\",\"OrganizationaUnitID\":10000001,\"UnitManager\":1}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#OrganizationalUnitEntity/$entity\",\"OrganizationaUnitID\":10000001,\"UnitManager\":1}", 
                     response.getContentAsString());
         } finally {
             localClient = null;
@@ -2879,7 +2879,7 @@ public class TestODataIntegration {
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/SimpleTable");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#SimpleTable\",\"value\":[{\"intkey\":1,\"decimalval\":12.3},{\"intkey\":2,\"decimalval\":1.0},{\"intkey\":3,\"decimalval\":123}]}", 
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#SimpleTable\",\"value\":[{\"intkey\":1,\"decimalval\":12.3},{\"intkey\":2,\"decimalval\":1.0},{\"intkey\":3,\"decimalval\":123}]}", 
                     response.getContentAsString());
             
         } finally {
