@@ -68,7 +68,7 @@ public class TestSchemaToProtobufProcessor {
                 "    optional G3 g3 = 5;\n" +
                 "    /* @IndexedField(index=false) */\n" +
                 "    optional bytes e5 = 7;\n" +
-                "    /* @Teiid(type=long) */\n" +
+                "    /* @Field(index=Index.NO) */\n" +
                 "    optional fixed64 e6 = 8;\n" +
                 "    repeated G4 g4 = 6;\n" +
                 "}\n" +

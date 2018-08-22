@@ -384,9 +384,15 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         		c.setAnnotation(annotation);
         	}
 
-            if(annotation.contains("@IndexedField(index=false")) {
-                c.setSearchType(SearchType.Unsearchable);
-            }
+        	String index = findFromAnnotation(AT_INDEXEDFIELD, annotation, "index");
+        	if (index != null && (index.equalsIgnoreCase("false") || index.equalsIgnoreCase("no"))) {
+        		c.setSearchType(SearchType.Unsearchable);
+        	}
+
+        	index = findFromAnnotation(AT_FIELD, annotation, "index");
+        	if (index != null && (index.equalsIgnoreCase("Index.NO") || index.equalsIgnoreCase("no"))) {
+        		c.setSearchType(SearchType.Unsearchable);
+        	}
 
             if(annotation.contains("@Id")) {
                 List<String> pkNames = new ArrayList<String>();
@@ -404,6 +410,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 
     private static final String AT_TEIID = "@Teiid("; //$NON-NLS-1$
     private static final String AT_CACHE = "@Cache("; //$NON-NLS-1$
+    private static final String AT_INDEXEDFIELD = "@IndexedField("; //$NON-NLS-1$
+    private static final String AT_FIELD = "@Field("; //$NON-NLS-1$
     
     private String findFromAnnotation(String rootProperty, String annotation, String verb) {
         if ( annotation != null && !annotation.isEmpty()) {
