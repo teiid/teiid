@@ -29,6 +29,7 @@ message G2 {
    repeated G4 g4 = 6;
    /*@IndexedField(index=false) */
    optional bytes e5 = 7;
+   /*@Field(index=Index.NO) */
    optional fixed64 e6 = 8;
 }
 
