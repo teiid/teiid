@@ -79,6 +79,7 @@ import org.teiid.metadata.Table;
 import org.teiid.odata.api.Client;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.odata.api.UpdateResponse;
+import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.olingo.service.LocalClient;
 import org.teiid.olingo.web.ODataFilter;
 import org.teiid.olingo.web.ODataServlet;
@@ -168,13 +169,9 @@ public class TestODataIntegration {
 
 		@Override
 		public Connection open() throws SQLException {
-		    try {
-		        conn = LocalClient.buildConnection(driver, vdb, "1", properties);
-		        return conn;
-		    } catch (SQLException e) {
-		        e.printStackTrace();
-		    }
-		    return null;
+	        conn = LocalClient.buildConnection(driver, vdb, "1", properties);
+	        ODBCServerRemoteImpl.setConnectionProperties(conn, this.properties);
+	        return conn;
 		}
 
 		@Override
@@ -1025,6 +1022,50 @@ public class TestODataIntegration {
         }
     }    
     
+    @Test 
+    public void testResultsetCaching() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
+                    + "as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+            
+            Properties props = new Properties();
+            props.setProperty("batch-size", "1");
+            props.setProperty("connection.resultSetCacheMode", "true");
+            localClient = getClient(teiid.getDriver(), "northwind", props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json");
+            assertEquals(200, response.getStatus());
+            String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
+                    + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
+            String ends = ",1\"}";
+            assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
+            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith(ends));
+            
+            JsonNode node = getJSONNode(response);
+            String nextLink = node.get("@odata.nextLink").asText();
+            response = http.GET(nextLink);
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+                    response.getContentAsString());
+            CacheStatistics stats = teiid.getAdmin().getCacheStats(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name()).iterator().next();
+            //first query misses, second hits
+            assertEquals(50, stats.getHitRatio(), 0);
+            
+            localClient = getClient(teiid.getDriver(), "northwind", props);
+            response = http.GET(baseURL + "/northwind/vw/x?$format=json");
+            assertEquals(200, response.getStatus());
+            stats = teiid.getAdmin().getCacheStats(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name()).iterator().next();
+            //third should reuse as well
+            assertEquals(66, stats.getHitRatio(), 1);
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
     
     @Test 
     public void testSkipToken() throws Exception {
@@ -1057,6 +1098,13 @@ public class TestODataIntegration {
             CacheStatistics stats = teiid.getAdmin().getCacheStats(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name()).iterator().next();
             //first query misses, second hits
             assertEquals(50, stats.getHitRatio(), 0);
+            
+            localClient = getClient(teiid.getDriver(), "northwind", props);
+            response = http.GET(baseURL + "/northwind/vw/x?$format=json");
+            assertEquals(200, response.getStatus());
+            stats = teiid.getAdmin().getCacheStats(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name()).iterator().next();
+            //third should miss as it's a new session
+            assertEquals(33, stats.getHitRatio(), 1);
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

@@ -36,6 +36,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.ExecutionProperties;
 import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
@@ -210,7 +211,8 @@ public class LocalClient implements Client {
             skipAndTopApplied=true;
         }
 
-        String sessionId = getConnection().getServerConnection().getLogonResult().getSessionID();
+        ConnectionImpl conn = getConnection();
+        String sessionId = conn.getServerConnection().getLogonResult().getSessionID();
         
         String nextToken = null;
         Integer savedEntityCount = null;
@@ -227,12 +229,12 @@ public class LocalClient implements Client {
             getCount = false; // the URL might have $count=true, but ignore it.
         }
         String sql = query.toString();
-        if (cache) {
+        if (cache && !Boolean.valueOf(conn.getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE))) {
             sql += " /* "+ sessionId +" */"; //$NON-NLS-1$ //$NON-NLS-2$
         }
         LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
         
-        final PreparedStatement stmt = getConnection().prepareStatement(sql, 
+        final PreparedStatement stmt = conn.prepareStatement(sql, 
                 cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, 
                 ResultSet.CONCUR_READ_ONLY);
         if (parameters!= null && !parameters.isEmpty()) {
