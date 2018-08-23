@@ -15,7 +15,7 @@ CREATE FOREIGN TABLE G2 (
 	g3_e1 integer NOT NULL OPTIONS (NAMEINSOURCE 'e1', SEARCHABLE 'Searchable', NATIVE_TYPE 'int32', "teiid_ispn:MESSAGE_NAME" 'pm1.G3', "teiid_ispn:PARENT_COLUMN_NAME" 'g3', "teiid_ispn:PARENT_TAG" '5', "teiid_ispn:TAG" '1'),
 	g3_e2 string NOT NULL OPTIONS (NAMEINSOURCE 'e2', SEARCHABLE 'Searchable', NATIVE_TYPE 'string', "teiid_ispn:MESSAGE_NAME" 'pm1.G3', "teiid_ispn:PARENT_COLUMN_NAME" 'g3', "teiid_ispn:PARENT_TAG" '5', "teiid_ispn:TAG" '2'),
 	e5 varbinary OPTIONS (ANNOTATION '@IndexedField(index=false)', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'bytes', "teiid_ispn:TAG" '7'),
-	e6 long OPTIONS (SEARCHABLE 'Searchable', NATIVE_TYPE 'fixed64', "teiid_ispn:TAG" '8'),
+	e6 long OPTIONS (ANNOTATION '@Field(index=Index.NO)', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'fixed64', "teiid_ispn:TAG" '8'),
 	CONSTRAINT PK_E1 PRIMARY KEY(e1)
 ) OPTIONS (ANNOTATION '@Indexed @Cache(name=default)', NAMEINSOURCE 'pm1.G2', UPDATABLE TRUE, "teiid_ispn:CACHE" 'default');
 
