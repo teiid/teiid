@@ -583,7 +583,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	@Override
 	public boolean isForkable() {
 		return this.connector.isForkable() 
-				&& (!this.requestMsg.isTransactional() || this.connector.getTransactionSupport() != TransactionSupport.XA);
+				&& (!this.requestMsg.isTransactional() || this.connector.getTransactionSupport() == TransactionSupport.NONE);
 	}
 	
 	@Override
