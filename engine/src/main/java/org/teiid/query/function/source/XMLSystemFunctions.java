@@ -75,7 +75,6 @@ import org.teiid.json.simple.JSONParser;
 import org.teiid.json.simple.ParseException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.function.CharsetUtils;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
@@ -83,6 +82,7 @@ import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.translator.WSConnection.Util;
+import org.teiid.util.CharsetUtils;
 import org.teiid.util.StAXSQLXML;
 import org.teiid.util.StAXSQLXML.StAXSourceProvider;
 

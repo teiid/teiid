@@ -101,6 +101,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.util.CharsetUtils;
 
 /**
  * Static method hooks for most of the function library.
@@ -1605,7 +1606,7 @@ public final class FunctionMethods {
     
     @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_chars")
     public static ClobType toChars(BlobType value, String encoding, boolean wellFormed) throws SQLException, IOException {
-    	Charset cs = getCharset(encoding);
+    	Charset cs = CharsetUtils.getCharset(encoding);
 		BlobInputStreamFactory bisf = new BlobInputStreamFactory(value.getReference());
     	ClobImpl clob = new ClobImpl(bisf, -1);
     	clob.setCharset(cs);
@@ -1637,7 +1638,7 @@ public final class FunctionMethods {
     
     @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_bytes")
     public static BlobType toBytes(ClobType value, String encoding, boolean wellFormed) throws IOException, SQLException {
-    	Charset cs = getCharset(encoding);
+    	Charset cs = CharsetUtils.getCharset(encoding);
     	ClobInputStreamFactory cisf = new ClobInputStreamFactory(value.getReference());
     	cisf.setCharset(cs);
     	if (!wellFormed || CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding) || CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
@@ -1663,16 +1664,6 @@ public final class FunctionMethods {
     	return new BlobType(new BlobImpl(cisf));
 	}
     
-    public static Charset getCharset(String encoding) {
-    	if (CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding)) {
-    		return CharsetUtils.BASE64;
-    	}
-    	if (CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
-    		return CharsetUtils.HEX;
-    	}
-    	return Charset.forName(encoding);
-	}
-
     public static String unescape(String string) {
     	return StringUtil.unescape(string, -1, true, new StringBuilder());
     }

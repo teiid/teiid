@@ -652,5 +652,22 @@ public class TestTextTable {
         
         helpProcess(plan, TestProcessor.createCommandContext(), new HardcodedDataManager(), null);    	
     }
+    
+    @Test public void testUTF8Bom() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("\u00EF\u00BB\u00BFx"),
+                Arrays.asList("y"),
+        };  
+        
+        String sql = "select x.* from texttable(to_chars(to_bytes('\u00EF\u00BB\u00BFx, y', 'UTF_8_BOM'), 'utf-8-bom') COLUMNS x string ROW DELIMITER ',' DELIMITER '-') x"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, metadata,  null, capFinder, //$NON-NLS-1$
+            new String[] { }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        helpProcess(plan, TestProcessor.createCommandContext(), new HardcodedDataManager(), expected);      
+    }
 	
 }

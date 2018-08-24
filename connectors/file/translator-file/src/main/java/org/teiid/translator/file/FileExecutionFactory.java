@@ -69,6 +69,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
+import org.teiid.util.CharsetUtils;
 
 @Translator(name="file", description="File Translator, reads contents of files or writes to them")
 public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Connection> {
@@ -284,7 +285,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
 	}
 	
 	public void setEncoding(String encoding) {
-		this.encoding = Charset.forName(encoding);
+		this.encoding = CharsetUtils.getCharset(encoding);
 	}
 	
 	@TranslatorProperty(display="Exception if file not found",advanced=true)

@@ -48,7 +48,6 @@ import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
@@ -82,6 +81,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.util.CharsetUtils;
 
 public class ValidationVisitor extends AbstractValidationVisitor {
 
@@ -318,7 +318,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	        }
         } else if(obj.getName().equalsIgnoreCase(SourceSystemFunctions.TO_BYTES) || obj.getName().equalsIgnoreCase(SourceSystemFunctions.TO_CHARS)) {
         	try {
-        		FunctionMethods.getCharset((String)((Constant)obj.getArg(1)).getValue());
+        		CharsetUtils.getCharset((String)((Constant)obj.getArg(1)).getValue());
         	} catch (IllegalArgumentException e) {
         		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_encoding", obj.getArg(1)), obj); //$NON-NLS-1$
         	}

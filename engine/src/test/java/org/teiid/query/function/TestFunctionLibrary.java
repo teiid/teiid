@@ -25,6 +25,7 @@ import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -1389,6 +1390,24 @@ public class TestFunctionLibrary {
 		String string = result.getSubString(1, (int)result.length());
 		assertEquals("68656C6C6F20776F726C64", string);
 	}
+
+	//no bom
+	@Test(expected=SQLException.class) public void testToChars3() throws Exception {
+        Clob result = (Clob)helpInvokeMethod("to_chars", new Class<?>[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "UTF-8-BOM" }, null); //$NON-NLS-1$
+        result.getSubString(1, (int)result.length());
+    }
+	
+	@Test public void testToChars4() throws Exception {
+        byte[] stringBytes = "hello world".getBytes("UTF-8");
+        byte[] bytes = new byte[stringBytes.length+3];
+        bytes[0] = (byte)0xef;
+        bytes[1] = (byte)0xbb;
+        bytes[2] = (byte)0xbf;
+        System.arraycopy(stringBytes, 0, bytes, 3, stringBytes.length);
+        Clob result = (Clob)helpInvokeMethod("to_chars", new Class<?>[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob(bytes)), "UTF-8-BOM" }, null); //$NON-NLS-1$
+        String string = result.getSubString(1, (int)result.length());
+        assertEquals("hello world", string); //bom is stripped
+    }
 	
 	@Test public void testToBytes2() throws Exception {
 		Blob result = (Blob)helpInvokeMethod("to_bytes", new Class<?>[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("68656C6C6F20776F726C64".toCharArray())), "HEX" }, null); //$NON-NLS-1$
@@ -1398,6 +1417,15 @@ public class TestFunctionLibrary {
 	@Test(expected=FunctionExecutionException.class) public void testToBytes3() throws Exception {
 		helpInvokeMethod("to_bytes", new Class<?>[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("a".toCharArray())), "BASE64" }, null); //$NON-NLS-1$
 	}
+	
+    @Test public void testToBytes4() throws Exception {
+        Blob result = (Blob)helpInvokeMethod("to_bytes", new Class<?>[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("hello world 平仮名".toCharArray())), "utf_8_BOM" }, null); //$NON-NLS-1$
+        byte[] bytes = ObjectConverterUtil.convertToByteArray(result.getBinaryStream());
+        assertEquals(bytes[0], (byte)0xef);
+        assertEquals(bytes[1], (byte)0xbb);
+        assertEquals(bytes[2], (byte)0xbf);
+        assertEquals("﻿hello world 平仮名", new String(bytes, "UTF-8"));
+    }
 	
 	@Test() public void testUnescape() throws Exception {
 		assertEquals("\r\t", helpInvokeMethod("unescape", new Class<?>[] {DefaultDataClasses.STRING}, new Object[] { "\r\\\t" }, null)); //$NON-NLS-1$
