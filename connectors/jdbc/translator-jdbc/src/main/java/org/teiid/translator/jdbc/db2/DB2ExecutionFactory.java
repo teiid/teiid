@@ -169,6 +169,11 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
         return false;
     }
 	
+    @Override
+    public boolean supportsWindowFunctionCumeDist() {
+        return false;
+    }
+	
 	@Override
 	public void start() throws TranslatorException {
 		super.start();

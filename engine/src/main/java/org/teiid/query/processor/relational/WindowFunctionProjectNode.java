@@ -176,7 +176,8 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					wsi.rowValuefunctions.add(wfi);
 				} else {
 					wsi.functions.add(wfi);
-					if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.PERCENT_RANK) {
+					if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.PERCENT_RANK
+					        || wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.CUME_DIST) {
                         addPartitionCount(i, wf);
                     }
 				}
@@ -358,6 +359,13 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                                     int rn = (Integer)outputRow.get(wfi.outputIndex);
                                     int rc = (Integer)value;
                                     value = ((double)rn -1)/(rc -1);
+                                    break;
+                                }
+                                case CUME_DIST:
+                                {
+                                    int np = (Integer)outputRow.get(wfi.outputIndex);
+                                    int rc = (Integer)value;
+                                    value = (double)np/rc;
                                     break;
                                 }
                                 }

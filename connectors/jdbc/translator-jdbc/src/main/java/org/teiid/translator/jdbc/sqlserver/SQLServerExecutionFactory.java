@@ -771,4 +771,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         return getVersion().compareTo(ELEVEN_0) >= 0;
     }
     
+    @Override
+    public boolean supportsWindowFunctionCumeDist() {
+        return getVersion().compareTo(ELEVEN_0) >= 0;
+    }
+    
 }

@@ -209,6 +209,11 @@ public class CapabilitiesUtil {
                 return false;
             }
             break;
+        case CUME_DIST:
+            if (!caps.supportsCapability(Capability.QUERY_WINDOW_FUNCTION_CUME_DIST)) {
+                return false;
+            }
+            break;
         case USER_DEFINED:
         	if (!supportsScalarFunction(modelID, aggregate, metadata, capFinder)) {
         		return false;

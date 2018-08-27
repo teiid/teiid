@@ -351,6 +351,11 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    public boolean supportsWindowFunctionCumeDist() {
+        return getVersion().compareTo(ELEVEN_1) >= 0;
+    }
+    
+    @Override
     public boolean supportsArrayAgg() {
     	return getVersion().compareTo(SEVEN_5) >= 0;
     }

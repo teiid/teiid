@@ -1550,4 +1550,18 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         this.supportsPercentRank = supportsPercentRank;
     }
     
+    Boolean supportsCumeDist;
+    @TranslatorProperty(display="Supports CUME_DIST", advanced=true)
+    @Override
+    public boolean supportsWindowFunctionCumeDist() {
+        if (supportsCumeDist != null) {
+            return supportsCumeDist;
+        }
+        return delegate.supportsWindowFunctionPercentRank();
+    }
+    
+    public void setSupportsWindowFunctionCumeDist(boolean supportsCumeDist) {
+        this.supportsCumeDist = supportsCumeDist;
+    }
+    
 }

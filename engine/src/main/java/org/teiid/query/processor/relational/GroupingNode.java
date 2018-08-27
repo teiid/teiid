@@ -256,6 +256,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 			result = new RankingFunction(function);
 			break;
 		case ROW_NUMBER: //same as count(*)
+		case CUME_DIST:
 		case COUNT:
 			result = new Count();
 			break;
@@ -302,7 +303,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		    result = new Ntile();
 		    break;
 		case PERCENT_RANK:
-            //init with a row function that will also capture the tiles argument
+            //init with a ranking function
             //the rest of the processing is handled in the window function project node
             result = new RankingFunction(Type.RANK);
             break;

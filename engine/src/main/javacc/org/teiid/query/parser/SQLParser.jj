@@ -429,6 +429,8 @@ TOKEN : /* NonReserved words */
 |   <ROW_NUMBER: "row_number">
 |   <RANK: "rank">
 |   <DENSE_RANK: "dense_rank">
+|   <PERCENT_RANK: "percent_rank">
+|   <CUME_DIST: "cume_dist">
 |   <SUM: "sum">
 |   <AVG: "avg">
 |   <MIN: "min">
@@ -2314,7 +2316,7 @@ AggregateSymbol analyticAggregateSymbol(ParseInfo info) :
 	Token func = null;
 }
 {
-	(<ROW_NUMBER> | <RANK> | <DENSE_RANK>) {func = getToken(0);}
+	(<ROW_NUMBER> | <RANK> | <DENSE_RANK> | <PERCENT_RANK> | <CUME_DIST>) {func = getToken(0);}
 	<LPAREN> <RPAREN>
 	{
 		return new AggregateSymbol(func.image.toUpperCase(), false, null);	

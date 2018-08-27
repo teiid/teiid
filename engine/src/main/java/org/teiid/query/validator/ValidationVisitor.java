@@ -904,6 +904,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	case RANK:
     	case DENSE_RANK:
     	case ROW_NUMBER:
+    	case CUME_DIST:
     	case PERCENT_RANK:
     		if (windowFunction.getWindowSpecification().getOrderBy() == null) {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.ranking_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$

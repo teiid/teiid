@@ -165,6 +165,11 @@ public class SQLConstants {
         public static final String RENAME = "RENAME"; //$NON-NLS-1$
         public static final String DOMAIN = "DOMAIN"; //$NON-NLS-1$
         public static final String USAGE = "USAGE"; //$NON-NLS-1$
+        public static final String ROW_NUMBER = "ROW_NUMBER"; //$NON-NLS-1$
+        public static final String RANK = "RANK"; //$NON-NLS-1$
+        public static final String DENSE_RANK = "DENSE_RANK"; //$NON-NLS-1$
+        public static final String PERCENT_RANK = "PERCENT_RANK"; //$NON-NLS-1$
+        public static final String CUME_DIST = "CUME_DIST"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

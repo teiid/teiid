@@ -1431,11 +1431,20 @@ public class ExecutionFactory<F, C> {
 	}
 
     /**
-     * @return true if percent rank is supported.
+     * @return true if percent_rank is supported.
      *   defaults to {@link #supportsElementaryOlapOperations()}
      * @since 11.1
      */
     public boolean supportsWindowFunctionPercentRank() {
+        return supportsElementaryOlapOperations();
+    }
+    
+    /**
+     * @return true if cume_dist is supported.
+     *   defaults to {@link #supportsElementaryOlapOperations()}
+     * @since 11.1
+     */
+    public boolean supportsWindowFunctionCumeDist() {
         return supportsElementaryOlapOperations();
     }
 }

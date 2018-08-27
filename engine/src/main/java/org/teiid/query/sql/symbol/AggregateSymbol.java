@@ -64,6 +64,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		RANK(true),
 		DENSE_RANK(true),
 		PERCENT_RANK(true),
+		CUME_DIST(true),
 		ROW_NUMBER(true),
 		FIRST_VALUE(true),
 		LAST_VALUE(true),
@@ -236,6 +237,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		case STRING_AGG:
 			return super.getType();
 		case PERCENT_RANK:
+		case CUME_DIST:
 		    return DataTypeManager.DefaultDataClasses.DOUBLE;
 		}
 		if (isBoolean()) {

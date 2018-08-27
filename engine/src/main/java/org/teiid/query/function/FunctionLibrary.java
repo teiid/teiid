@@ -565,6 +565,8 @@ public class FunctionLibrary {
 	                continue;
 	            }
 	            aa.setAnalytic(true);
+	            aa.setAllowsDistinct(false);
+	            aa.setAllowsOrderBy(false);
 			}
     		String returnType = null;
     		String[] argTypes = null;
@@ -629,27 +631,25 @@ public class FunctionLibrary {
 				break;
 			case FIRST_VALUE:
 			case LAST_VALUE:
-                aa.setAllowsDistinct(false);
                 returnType = DataTypeManager.DefaultDataTypes.OBJECT;
                 argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
                 break;
 			case LEAD:
             case LAG:
-                aa.setAllowsDistinct(false);
                 returnType = DataTypeManager.DefaultDataTypes.OBJECT;
                 argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.OBJECT};
                 break;
             case NTILE:
-                aa.setAllowsDistinct(false);
                 returnType = DataTypeManager.DefaultDataTypes.INTEGER;
                 argTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER};
-                aa.setAllowsOrderBy(true);
                 break;
             case PERCENT_RANK:
-                aa.setAllowsDistinct(false);
                 returnType = DataTypeManager.DefaultDataTypes.DOUBLE;
                 argTypes = new String[] {};
-                aa.setAllowsOrderBy(true);
+                break;
+            case CUME_DIST:
+                returnType = DataTypeManager.DefaultDataTypes.DOUBLE;
+                argTypes = new String[] {};
                 break;
     		}
 			FunctionMethod fm = FunctionMethod.createFunctionMethod(type.name(), type.name(), FunctionCategoryConstants.AGGREGATE, returnType, argTypes);
