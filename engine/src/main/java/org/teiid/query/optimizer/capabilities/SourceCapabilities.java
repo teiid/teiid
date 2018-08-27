@@ -358,7 +358,8 @@ public interface SourceCapabilities {
         QUERY_SELECT_EXPRESSION_ARRAY_TYPE, 
         QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE, 
         ONLY_TIMESTAMPADD_LITERAL, 
-        QUERY_WINDOW_FUNCTION_NTILE;
+        QUERY_WINDOW_FUNCTION_NTILE, 
+        QUERY_WINDOW_FUNCTION_PERCENT_RANK;
         
         private final String toString;
         

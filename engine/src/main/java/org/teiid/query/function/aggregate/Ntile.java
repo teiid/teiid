@@ -23,7 +23,9 @@ import java.util.List;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -58,6 +60,11 @@ public class Ntile extends SingleArgumentAggregateFunction {
         if (tiles < 1) {
             throw new TeiidProcessingException(QueryPlugin.Event.TEIID31279, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31279));
         }
+    }
+    
+    @Override
+    public Class<?> getOutputType(AggregateSymbol function) {
+        return DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER);
     }
     
 }

@@ -1429,4 +1429,13 @@ public class ExecutionFactory<F, C> {
 	public boolean supportsOnlyTimestampAddLiteral() {
 	    return false;
 	}
+
+    /**
+     * @return true if percent rank is supported.
+     *   defaults to {@link #supportsElementaryOlapOperations()}
+     * @since 11.1
+     */
+    public boolean supportsWindowFunctionPercentRank() {
+        return supportsElementaryOlapOperations();
+    }
 }

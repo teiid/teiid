@@ -606,6 +606,11 @@ public class ResolverVisitor extends LanguageVisitor {
     	        }
     	    }
     	    break;
+    	case PERCENT_RANK:
+    	    if (obj.getArgs().length != 0) {
+    	        handleException(new QueryResolverException(QueryPlugin.Event.TEIID31280, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31280, obj)));
+    	    }
+    	    break;
     	case NTILE:
     	    //arg must be an integer
             try {

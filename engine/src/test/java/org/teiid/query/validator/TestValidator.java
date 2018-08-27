@@ -1458,6 +1458,10 @@ public class TestValidator {
 		helpValidate("SELECT e1 from pm1.g1 where row_number() over (order by e2) = 1", new String[] {"ROW_NUMBER() OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());		
 	}
 	
+    @Test public void testWindowFunctionFilter() {
+        helpValidate("SELECT row_number() FILTER (WHERE e2 is not null) over (order by e2) = 1 from pm1.g1", new String[] {"ROW_NUMBER() FILTER(WHERE e2 IS NOT NULL) OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());        
+    }
+	
 	@Test public void testWindowFunction1() {
 		helpValidate("SELECT 1 from pm1.g1 having row_number() over (order by e2) = 1", new String[] {"e2", "ROW_NUMBER() OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());		
 	}

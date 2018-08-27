@@ -25,6 +25,8 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -61,6 +63,11 @@ public class LeadLagValue extends AggregateFunction {
     @Override
     public boolean respectsNull() {
         return true;
+    }
+    
+    @Override
+    public Class<?> getOutputType(AggregateSymbol function) {
+        return DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
     }
 
 }

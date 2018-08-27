@@ -204,6 +204,11 @@ public class CapabilitiesUtil {
                 return false;
             }
             break;
+        case PERCENT_RANK:
+            if (!caps.supportsCapability(Capability.QUERY_WINDOW_FUNCTION_PERCENT_RANK)) {
+                return false;
+            }
+            break;
         case USER_DEFINED:
         	if (!supportsScalarFunction(modelID, aggregate, metadata, capFinder)) {
         		return false;

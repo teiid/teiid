@@ -337,7 +337,7 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsConvert(int fromType, int toType) {
-    	if (!super.supportsConvert(fromType, toType)) {
+    	if (fromType != TypeFacility.RUNTIME_CODES.OBJECT && !super.supportsConvert(fromType, toType)) {
     		return false;
     	}
     	if (convert.hasTypeMapping(toType)) {

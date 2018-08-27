@@ -43,7 +43,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.Assertion;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
@@ -172,22 +171,14 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				wfi.outputIndex = i;
 				if (wf.getFunction().isRowValueFunction()) {
 				    if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.NTILE) {
-                        WindowFunction wf2 = new WindowFunction();
-                        Assertion.assertTrue(wf.getFunction().getCondition() == null);
-                        wf2.setFunction(new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null));
-                        //clone the partitioning if any
-                        WindowSpecification clone = wf.getWindowSpecification().clone();
-                        clone.setOrderBy(null);
-                        wf2.setWindowSpecification(clone);
-                        WindowSpecificationInfo wsi2 = getOrCreateWindowSpecInfo(wf2);
-                        WindowFunctionInfo wfi2 = createWindowFunctionInfo(wf2);
-                        wfi2.outputIndex = i;
-                        wfi2.primaryFunction = wf;
-                        wsi2.functions.add(wfi2);
+                        addPartitionCount(i, wf);
                     }
 					wsi.rowValuefunctions.add(wfi);
 				} else {
 					wsi.functions.add(wfi);
+					if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.PERCENT_RANK) {
+                        addPartitionCount(i, wf);
+                    }
 				}
 			} else {
 				int index = GroupingNode.getIndex(ex, expressionIndexes);
@@ -195,6 +186,20 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			}
 		}
 	}
+
+    private void addPartitionCount(int i, WindowFunction wf) {
+        WindowFunction wf2 = new WindowFunction();
+        wf2.setFunction(new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null));
+        //clone the partitioning if any
+        WindowSpecification clone = wf.getWindowSpecification().clone();
+        clone.setOrderBy(null);
+        wf2.setWindowSpecification(clone);
+        WindowSpecificationInfo wsi2 = getOrCreateWindowSpecInfo(wf2);
+        WindowFunctionInfo wfi2 = createWindowFunctionInfo(wf2);
+        wfi2.outputIndex = i;
+        wfi2.primaryFunction = wf;
+        wsi2.functions.add(wfi2);
+    }
 
     private WindowFunctionInfo createWindowFunctionInfo(WindowFunction wf) {
         WindowFunctionInfo wfi = new WindowFunctionInfo();
@@ -330,7 +335,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                                     }
                                 }
                             } else if (wfi.primaryFunction != null) {
-                                if (wfi.primaryFunction.getFunction().getAggregateFunction() == Type.NTILE) {
+                                switch (wfi.primaryFunction.getFunction().getAggregateFunction()) {
+                                case NTILE:
+                                {
                                     //this is the computation of the ntile function, used the saved state from the
                                     //row function
                                     ArrayImpl array = (ArrayImpl)outputRow.get(wfi.outputIndex);
@@ -344,7 +351,15 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                                     } else {
                                         value = ntile - (rc - rn) / rowsPerTile;      
                                     }
-                                    outputRow.set(wfi.outputIndex, value);
+                                    break;
+                                }
+                                case PERCENT_RANK:
+                                {
+                                    int rn = (Integer)outputRow.get(wfi.outputIndex);
+                                    int rc = (Integer)value;
+                                    value = ((double)rn -1)/(rc -1);
+                                    break;
+                                }
                                 }
                             }
 							outputRow.set(wfi.outputIndex, value);
@@ -487,14 +502,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	    key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 	    elements.add(key);
 		for (WindowFunctionInfo wfi : functions) {
-			aggs.add(GroupingNode.initAccumulator(wfi.function.getFunction(), this, expressionIndexes));
-			Class<?> outputType = wfi.function.getType();
-			if (wfi.function.getFunction().getAggregateFunction() == Type.LEAD 
-			        || wfi.function.getFunction().getAggregateFunction() == Type.LAG) {
-			    outputType = DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
-			} else if (wfi.function.getFunction().getAggregateFunction() == Type.NTILE) {
-			    outputType = DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER);
-			}
+			AggregateFunction aggregateFunction = GroupingNode.initAccumulator(wfi.function.getFunction(), this, expressionIndexes);
+            aggs.add(aggregateFunction);
+            Class<?> outputType = aggregateFunction.getOutputType(wfi.function.getFunction());
 		    ElementSymbol value = new ElementSymbol("val"); //$NON-NLS-1$
 		    value.setType(outputType);
 		    elements.add(value);

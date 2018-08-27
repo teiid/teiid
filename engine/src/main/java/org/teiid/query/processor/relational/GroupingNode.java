@@ -301,6 +301,11 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		    //the rest of the processing is handled in the window function project node
 		    result = new Ntile();
 		    break;
+		case PERCENT_RANK:
+            //init with a row function that will also capture the tiles argument
+            //the rest of the processing is handled in the window function project node
+            result = new RankingFunction(Type.RANK);
+            break;
         case USER_DEFINED:
 			try {
                 result = new UserDefined(aggSymbol.getFunctionDescriptor());

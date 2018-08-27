@@ -1535,4 +1535,19 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsWindowFunctionNtile(boolean supportsNtile) {
         this.supportsNtile = supportsNtile;
     }
+    
+    Boolean supportsPercentRank;
+    @TranslatorProperty(display="Supports PERCENT_RANK", advanced=true)
+    @Override
+    public boolean supportsWindowFunctionPercentRank() {
+        if (supportsPercentRank != null) {
+            return supportsPercentRank;
+        }
+        return delegate.supportsWindowFunctionPercentRank();
+    }
+    
+    public void setSupportsWindowFunctionPercentRank(boolean supportsPercentRank) {
+        this.supportsPercentRank = supportsPercentRank;
+    }
+    
 }

@@ -24,6 +24,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -115,6 +116,10 @@ public abstract class AggregateFunction {
     
     public int setState(List<?> state, int index) {
     	return 0;
+    }
+
+    public Class<?> getOutputType(AggregateSymbol function) {
+        return function.getType();
     }
 
 }

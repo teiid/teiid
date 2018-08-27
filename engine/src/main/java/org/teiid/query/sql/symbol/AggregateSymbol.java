@@ -63,6 +63,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		VAR_SAMP,
 		RANK(true),
 		DENSE_RANK(true),
+		PERCENT_RANK(true),
 		ROW_NUMBER(true),
 		FIRST_VALUE(true),
 		LAST_VALUE(true),
@@ -77,6 +78,9 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	    Type(boolean analytical) {
 	        this.analytical = analytical;
 	    }
+	    public boolean isAnalytical() {
+            return analytical;
+        }
 	}
 	
 	private static final Map<String, Type> nameMap = new TreeMap<String, Type>(String.CASE_INSENSITIVE_ORDER);
@@ -231,6 +235,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 			return DataTypeManager.DefaultDataClasses.CLOB;
 		case STRING_AGG:
 			return super.getType();
+		case PERCENT_RANK:
+		    return DataTypeManager.DefaultDataClasses.DOUBLE;
 		}
 		if (isBoolean()) {
 			return DataTypeManager.DefaultDataClasses.BOOLEAN;

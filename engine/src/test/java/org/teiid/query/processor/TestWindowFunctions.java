@@ -371,10 +371,10 @@ public class TestWindowFunctions {
     }
 
 	@Test public void testXMLAggDelimitedConcatFiltered() throws Exception {
-		String sql = "SELECT XMLAGG(XMLPARSE(CONTENT (case when rn = 1 then '' else ',' end) || e1 WELLFORMED) ORDER BY rn) FROM (SELECT e1, e2, row_number() FILTER (WHERE e1 IS NOT NULL) over (order by e1) as rn FROM pm1.g1) X"; //$NON-NLS-1$
+		String sql = "SELECT XMLAGG(XMLPARSE(CONTENT (case when rn = 1 then '' else ',' end) || e1 WELLFORMED) ORDER BY rn) FROM (SELECT e1, e2, row_number() over (order by e1) as rn FROM pm1.g1) X"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("a,a,a,b,c"),
+        		Arrays.asList(",a,a,a,b,c"),
         };    
     
         FakeDataManager dataManager = new FakeDataManager();
@@ -697,6 +697,93 @@ public class TestWindowFunctions {
         List<?>[] expected = new List<?>[] {
                 Arrays.asList("a", 1),
         }; 
+        
+        helpProcess(plan, dataMgr, expected);
+    }
+    
+    @Test public void testPercentRankPushdown() throws Exception {
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        caps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_PERCENT_RANK, true);
+    
+        String sql = "select stringkey, percent_rank() over (order by stringkey) l from bqt1.smalla";
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(caps), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+
+        checkNodeTypes(plan, FULL_PUSHDOWN);                           
+
+        HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+        dataMgr.addData("SELECT g_0.StringKey, PERCENT_RANK() OVER (ORDER BY g_0.StringKey) FROM SmallA AS g_0", Arrays.asList("a", 0d));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("a", 0d),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        caps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_PERCENT_RANK, false);
+        
+        plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(caps), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });
+    }
+    
+    @Test public void testPercentRank() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "select stringkey, percent_rank() over (order by stringkey) l from bqt1.smalla";
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.StringKey FROM BQT1.SmallA AS g_0", 
+                Arrays.asList("b"), Arrays.asList("a"), Arrays.asList("c"), Arrays.asList("d"));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("b", 1/3d),
+                Arrays.asList("a", 0d),
+                Arrays.asList("c", 2/3d),
+                Arrays.asList("d", 1.0),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        dataMgr.addData("SELECT g_0.StringKey FROM BQT1.SmallA AS g_0", 
+                Arrays.asList("a"), Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("b"));
+        
+        expected = new List<?>[] {
+                Arrays.asList("a", 0d),
+                Arrays.asList("a", 0d),
+                Arrays.asList("b", 2/3d),
+                Arrays.asList("b", 2/3d),
+        }; 
+        
+        plan.reset();
         
         helpProcess(plan, dataMgr, expected);
     }

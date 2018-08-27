@@ -560,6 +560,12 @@ public class FunctionLibrary {
     	}
     	for (Type type : AggregateSymbol.Type.values()) {
 			AggregateAttributes aa = new AggregateAttributes();
+			if (type.isAnalytical()) {
+	            if (!includeAnalytic) {
+	                continue;
+	            }
+	            aa.setAnalytic(true);
+			}
     		String returnType = null;
     		String[] argTypes = null;
     		aa.setAllowsDistinct(true);
@@ -570,11 +576,7 @@ public class FunctionLibrary {
 			case DENSE_RANK:
 			case RANK:
 			case ROW_NUMBER:
-				if (!includeAnalytic) {
-					continue;
-				}
 				aa.setAllowsDistinct(false);
-				aa.setAnalytic(true);
 				returnType = DataTypeManager.DefaultDataTypes.INTEGER;
 				argTypes = new String[] {};
 				break;
@@ -627,32 +629,26 @@ public class FunctionLibrary {
 				break;
 			case FIRST_VALUE:
 			case LAST_VALUE:
-			    if (!includeAnalytic) {
-                    continue;
-                }
                 aa.setAllowsDistinct(false);
-                aa.setAnalytic(true);
                 returnType = DataTypeManager.DefaultDataTypes.OBJECT;
                 argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
                 break;
 			case LEAD:
             case LAG:
-                if (!includeAnalytic) {
-                    continue;
-                }
                 aa.setAllowsDistinct(false);
-                aa.setAnalytic(true);
                 returnType = DataTypeManager.DefaultDataTypes.OBJECT;
                 argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.OBJECT};
                 break;
             case NTILE:
-                if (!includeAnalytic) {
-                    continue;
-                }
                 aa.setAllowsDistinct(false);
-                aa.setAnalytic(true);
                 returnType = DataTypeManager.DefaultDataTypes.INTEGER;
                 argTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER};
+                aa.setAllowsOrderBy(true);
+                break;
+            case PERCENT_RANK:
+                aa.setAllowsDistinct(false);
+                returnType = DataTypeManager.DefaultDataTypes.DOUBLE;
+                argTypes = new String[] {};
                 aa.setAllowsOrderBy(true);
                 break;
     		}

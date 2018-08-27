@@ -766,4 +766,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         return getVersion().compareTo(TEN_0) >= 0;
     }
     
+    @Override
+    public boolean supportsWindowFunctionPercentRank() {
+        return getVersion().compareTo(ELEVEN_0) >= 0;
+    }
+    
 }
