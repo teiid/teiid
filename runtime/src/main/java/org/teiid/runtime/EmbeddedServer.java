@@ -909,7 +909,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
     }
 	
 
-	EmbeddedConfiguration getConfiguration() {
+	protected EmbeddedConfiguration getConfiguration() {
 	    return this.config;
 	}
 	
@@ -1022,11 +1022,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		return this.transports.get(transport).getPort();
 	}
 	
-	TranslatorRepository getTranslatorRepository() {
+	protected TranslatorRepository getTranslatorRepository() {
 	    return translatorRepository;
 	}
 	
-	ConcurrentHashMap<String, ConnectionFactoryProvider<?>> getConnectionFactoryProviders() {
+	protected ConcurrentHashMap<String, ConnectionFactoryProvider<?>> getConnectionFactoryProviders() {
 	    return connectionFactoryProviders;
 	}
 	
