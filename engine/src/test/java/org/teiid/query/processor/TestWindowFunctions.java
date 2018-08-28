@@ -612,7 +612,7 @@ public class TestWindowFunctions {
         bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
         bsc.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_NTH_VALUE, true);
         
-        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT LEAD(g_0.e1) OVER (ORDER BY g_0.e2), LEAD(g_0.e1, 2, 'x') OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, Nth_Value(g_0.e1, 3) OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
     @Test public void testLead() throws Exception {
