@@ -72,6 +72,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
         LAG(true),
 		STRING_AGG,
 		NTILE(true),
+		NTH_VALUE(true),
 		USER_DEFINED;
 	    
 	    boolean analytical;

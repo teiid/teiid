@@ -1447,4 +1447,13 @@ public class ExecutionFactory<F, C> {
     public boolean supportsWindowFunctionCumeDist() {
         return supportsElementaryOlapOperations();
     }
+
+    /**
+     * @return true if nth_value is supported.
+     *   defaults to {@link #supportsElementaryOlapOperations()}
+     * @since 11.1
+     */
+    public boolean supportsWindowFunctionNthValue() {
+        return supportsElementaryOlapOperations();
+    }
 }

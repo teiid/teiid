@@ -1557,11 +1557,25 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         if (supportsCumeDist != null) {
             return supportsCumeDist;
         }
-        return delegate.supportsWindowFunctionPercentRank();
+        return delegate.supportsWindowFunctionCumeDist();
     }
     
     public void setSupportsWindowFunctionCumeDist(boolean supportsCumeDist) {
         this.supportsCumeDist = supportsCumeDist;
+    }
+    
+    Boolean supportsNthValue;
+    @TranslatorProperty(display="Supports NTH_VALUE", advanced=true)
+    @Override
+    public boolean supportsWindowFunctionNthValue() {
+        if (supportsNthValue != null) {
+            return supportsNthValue;
+        }
+        return delegate.supportsWindowFunctionNthValue();
+    }
+    
+    public void setSupportsWindowFunctionNthValue(boolean supportsNthValue) {
+        this.supportsNthValue = supportsNthValue;
     }
     
 }

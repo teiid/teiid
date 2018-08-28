@@ -953,6 +953,27 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 }
             }
             break;
+    	case NTH_VALUE:
+    	    if (windowFunction.getWindowSpecification().getOrderBy() == null) {
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.value_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$
+            }
+    	    if (windowFunction.getFunction().getArgs().length != 2) {
+    	        handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31280, windowFunction), windowFunction);
+    	    } else {
+                if (windowFunction.getFunction().getArgs().length > 0 
+                        && EvaluatableVisitor.isFullyEvaluatable(windowFunction.getFunction().getArgs()[0], true)) {
+                    try {
+                        Object evaluatedValue = Evaluator.evaluate(windowFunction.getFunction().getArgs()[0]);
+                        if (((Integer)evaluatedValue) < 1) {
+                            handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31281), windowFunction);
+                        }
+                    } catch (Exception e) {
+                        //ignore
+                    }
+                }
+    	    }
+    	    
+	        break;
     	}
     	validateNoSubqueriesOrOuterReferences(windowFunction);
         if (windowFunction.getFunction().getOrderBy() != null || (windowFunction.getFunction().isDistinct() && windowFunction.getWindowSpecification().getOrderBy() != null)) {

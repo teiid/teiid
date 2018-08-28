@@ -776,4 +776,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         return getVersion().compareTo(ELEVEN_0) >= 0;
     }
     
+    @Override
+    public boolean supportsWindowFunctionNthValue() {
+        return false;
+    }
+    
 }

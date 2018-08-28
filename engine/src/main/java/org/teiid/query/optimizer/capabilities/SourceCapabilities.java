@@ -360,7 +360,8 @@ public interface SourceCapabilities {
         ONLY_TIMESTAMPADD_LITERAL, 
         QUERY_WINDOW_FUNCTION_NTILE, 
         QUERY_WINDOW_FUNCTION_PERCENT_RANK,
-        QUERY_WINDOW_FUNCTION_CUME_DIST;
+        QUERY_WINDOW_FUNCTION_CUME_DIST,
+        QUERY_WINDOW_FUNCTION_NTH_VALUE;
         
         private final String toString;
         

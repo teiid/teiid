@@ -173,6 +173,11 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
     public boolean supportsWindowFunctionCumeDist() {
         return false;
     }
+    
+    @Override
+    public boolean supportsWindowFunctionNthValue() {
+        return false;
+    }
 	
 	@Override
 	public void start() throws TranslatorException {

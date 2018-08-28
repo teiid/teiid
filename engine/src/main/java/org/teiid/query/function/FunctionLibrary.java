@@ -651,6 +651,10 @@ public class FunctionLibrary {
                 returnType = DataTypeManager.DefaultDataTypes.DOUBLE;
                 argTypes = new String[] {};
                 break;
+            case NTH_VALUE:
+                returnType = DataTypeManager.DefaultDataTypes.OBJECT;
+                argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.DefaultDataTypes.INTEGER};
+                break;
     		}
 			FunctionMethod fm = FunctionMethod.createFunctionMethod(type.name(), type.name(), FunctionCategoryConstants.AGGREGATE, returnType, argTypes);
 			fm.setAggregateAttributes(aa);

@@ -307,6 +307,9 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
             //the rest of the processing is handled in the window function project node
             result = new RankingFunction(Type.RANK);
             break;
+		case NTH_VALUE:
+		    result = new NthValue();
+            break;
         case USER_DEFINED:
 			try {
                 result = new UserDefined(aggSymbol.getFunctionDescriptor());

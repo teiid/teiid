@@ -2904,6 +2904,18 @@ public class TestResolver {
         helpResolveException(sql);
     }
     
+    @Test public void testNthValueArg() {
+        //needs two args
+        String sql = "SELECT Nth_Value('a') over (order by e2) FROM pm1.g1";
+        helpResolveException(sql);
+    }
+    
+    @Test public void testNthValueArgType() {
+        //needs integer
+        String sql = "SELECT Nth_Value('a','a') over (order by e2) FROM pm1.g1";
+        helpResolveException(sql);
+    }
+    
     @Test public void testIsDistinctArray() {
         String sql = "('a', null) is distinct from ('b', null)";
         IsDistinctCriteria c = (IsDistinctCriteria)helpResolveCriteria(sql);

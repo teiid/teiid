@@ -1256,4 +1256,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsOnlyTimestampAddLiteral() {
         return true;
     }
+    
+    @Override
+    public boolean supportsWindowFunctionNthValue() {
+        return getVersion().compareTo(ELEVEN_2) >= 0;
+    }
 }

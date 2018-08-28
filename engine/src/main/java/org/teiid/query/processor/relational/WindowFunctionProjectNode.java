@@ -335,6 +335,29 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                                         value = defaultValue;
                                     }
                                 }
+                            } else if (aggregateFunction == Type.NTH_VALUE) {
+                                ArrayImpl array = (ArrayImpl)value;
+                                Object[] args = array.getValues();
+                                int index = (Integer)args[1] - 1;
+                                if (index > rowId) {
+                                    //only operate over the rolling window
+                                    //this will change when we allow the windowing clause
+                                    value = null;
+                                } else {
+                                    List<?> newIdRow = Arrays.asList(index);
+                                    List<?> newValueRow = valueMapping[specIndex].find(newIdRow);
+                                    if (newValueRow == null) {
+                                        value = null;
+                                    } else {
+                                        Object[] newArgs = ((ArrayImpl)newValueRow.get(i+1)).getValues();
+                                        //make sure it's the same partition
+                                        if (args[args.length-1].equals(newArgs[newArgs.length-1])) {
+                                            value = newArgs[0];
+                                        } else {
+                                            value = null;
+                                        }
+                                    }
+                                }
                             } else if (wfi.primaryFunction != null) {
                                 switch (wfi.primaryFunction.getFunction().getAggregateFunction()) {
                                 case NTILE:

@@ -214,6 +214,11 @@ public class CapabilitiesUtil {
                 return false;
             }
             break;
+        case NTH_VALUE:
+            if (!caps.supportsCapability(Capability.QUERY_WINDOW_FUNCTION_NTH_VALUE)) {
+                return false;
+            }
+            break;
         case USER_DEFINED:
         	if (!supportsScalarFunction(modelID, aggregate, metadata, capFinder)) {
         		return false;

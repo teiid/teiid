@@ -575,21 +575,62 @@ public class TestWindowFunctions {
         helpProcess(plan, dataMgr, expected);
     }
     
-    @Test public void testLead() throws Exception {
+    @Test public void testNthValueValue() throws Exception {
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         
-        String sql = "SELECT LEAD(e1) over (order by e2), LEAD(e1, 2, 'c') over (order by e2) from pm1.g1";
+        String sql = "SELECT e1, Nth_Value(e1, 1) over (order by e2) from pm1.g1";
         
         ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
-        dataMgr.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("b", 2));
+        dataMgr.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList(null, 1), Arrays.asList("b", 2), Arrays.asList("c", 3));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList(null, null),
+                Arrays.asList("b", null),
+                Arrays.asList("c", null)
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        sql = "SELECT e1, Nth_Value(e1, 3) over (order by e2) from pm1.g1";
+        
+        plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        expected = new List<?>[] {
+            Arrays.asList(null, null),
+            Arrays.asList("b", null),
+            Arrays.asList("c", "c")
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        bsc.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_NTH_VALUE, true);
+        
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT LEAD(g_0.e1) OVER (ORDER BY g_0.e2), LEAD(g_0.e1, 2, 'x') OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testLead() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "SELECT LEAD(e1) over (order by e2), LEAD(e1, 2, 'x') over (order by e2) from pm1.g1";
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList(null, 1), Arrays.asList("b", 2), Arrays.asList("c", 3));
         
         List<?>[] expected = new List<?>[] {
                 Arrays.asList("b", "c"),
-                Arrays.asList(null, "c"),
+                Arrays.asList("c", "x"),
+                Arrays.asList(null, "x"),
         }; 
         
         helpProcess(plan, dataMgr, expected);
@@ -597,7 +638,7 @@ public class TestWindowFunctions {
         bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
         bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
 
-        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT LEAD(g_0.e1) OVER (ORDER BY g_0.e2), LEAD(g_0.e1, 2, 'c') OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT LEAD(g_0.e1) OVER (ORDER BY g_0.e2), LEAD(g_0.e1, 2, 'x') OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
     @Test public void testLeadNullValues() throws Exception {
