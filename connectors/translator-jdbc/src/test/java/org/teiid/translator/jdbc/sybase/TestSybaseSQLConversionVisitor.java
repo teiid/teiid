@@ -306,7 +306,7 @@ public class TestSybaseSQLConversionVisitor {
     @Test
     public void testPadFunctions() {
         String input = "SELECT lpad(PART_NAME,2), lpad(part_name,2,'x'), rpad(PART_NAME,2), rpad(part_name,2,'x') FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT RIGHT(REPLICATE(' ', 2) + PARTS.PART_NAME, 2), RIGHT(REPLICATE('x', 2) + PARTS.PART_NAME, 2), LEFT(PARTS.PART_NAME + REPLICATE(' ', 2), 2), LEFT(PARTS.PART_NAME + REPLICATE('x', 2), 2) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN PARTS.PART_NAME IS NULL THEN NULL ELSE RIGHT(REPLICATE(' ', 2) + LEFT(PARTS.PART_NAME, 2), 2) END, CASE WHEN PARTS.PART_NAME IS NULL OR 'x' IS NULL THEN NULL ELSE RIGHT(REPLICATE('x', 2) + LEFT(PARTS.PART_NAME, 2), 2) END, CASE WHEN PARTS.PART_NAME IS NULL THEN NULL ELSE LEFT(PARTS.PART_NAME + REPLICATE(' ', 2), 2) END, CASE WHEN PARTS.PART_NAME IS NULL OR 'x' IS NULL THEN NULL ELSE LEFT(PARTS.PART_NAME + REPLICATE('x', 2), 2) END FROM PARTS"; //$NON-NLS-1$
         helpTestVisitor(getTestVDB(),
             input, 
             output);

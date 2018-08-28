@@ -159,18 +159,56 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
             @Override
             public List<?> translate(Function function) {
                 List<Expression> params = function.getParameters();
-                return Arrays.asList("RIGHT(REPLICATE(", //$NON-NLS-1$
+                List<Object> result = new ArrayList<Object>();
+                if (!nullPlusNonNullIsNull()) {
+                    result.add("CASE WHEN "); //$NON-NLS-1$
+                    result.add(params.get(0));
+                    result.add(" IS NULL"); //$NON-NLS-1$
+                    if (params.size()>2) {
+                        result.add(" OR "); //$NON-NLS-1$
+                        result.add(params.get(2));
+                        result.add(" IS NULL"); //$NON-NLS-1$
+                    }
+                    result.add(" THEN NULL ELSE "); //$NON-NLS-1$
+                }
+                
+                result.addAll(Arrays.asList("RIGHT(REPLICATE(", //$NON-NLS-1$
                         params.size()>2?params.get(2):new Literal(" ", TypeFacility.RUNTIME_TYPES.STRING), ", ", //$NON-NLS-1$ //$NON-NLS-2$
-                                params.get(1), ") + ", params.get(0), ", ", params.get(1), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                                params.get(1), ") + LEFT(", params.get(0), ", ", params.get(1), "), ", params.get(1), ")")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                
+                if (!nullPlusNonNullIsNull()) {
+                    result.add(" END"); //$NON-NLS-1$
+                }
+                
+                return result;
             }
         }); 
         registerFunctionModifier(SourceSystemFunctions.RPAD, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
                 List<Expression> params = function.getParameters();
-                return Arrays.asList("LEFT(", params.get(0), " + REPLICATE(", //$NON-NLS-1$ //$NON-NLS-2$ 
+                List<Object> result = new ArrayList<Object>();
+                if (!nullPlusNonNullIsNull()) {
+                    result.add("CASE WHEN "); //$NON-NLS-1$
+                    result.add(params.get(0));
+                    result.add(" IS NULL"); //$NON-NLS-1$
+                    if (params.size()>2) {
+                        result.add(" OR "); //$NON-NLS-1$
+                        result.add(params.get(2));
+                        result.add(" IS NULL"); //$NON-NLS-1$
+                    }
+                    result.add(" THEN NULL ELSE "); //$NON-NLS-1$
+                }
+                
+                result.addAll(Arrays.asList("LEFT(", params.get(0), " + REPLICATE(", //$NON-NLS-1$ //$NON-NLS-2$ 
                         params.size()>2?params.get(2):new Literal(" ", TypeFacility.RUNTIME_TYPES.STRING), ", ", //$NON-NLS-1$ //$NON-NLS-2$ 
-                                params.get(1), "), ", params.get(1), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+                                params.get(1), "), ", params.get(1), ")")); //$NON-NLS-1$ //$NON-NLS-2$
+                
+                if (!nullPlusNonNullIsNull()) {
+                    result.add(" END"); //$NON-NLS-1$
+                }
+                
+                return result;
             }
         });
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
