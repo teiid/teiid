@@ -491,5 +491,14 @@ public class TestSqlServerConversionVisitor {
     public void testVariantCast() throws Exception {
         assertTrue(trans.supportsConvert(FunctionModifier.OBJECT, FunctionModifier.STRING));
     }
+    
+    @Test
+    public void testPadFunctions() throws TranslatorException {
+        String input = "SELECT lpad(PART_NAME,2), lpad(part_name,2,'x'), rpad(PART_NAME,2), rpad(part_name,2,'x') FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT RIGHT(REPLICATE(' ', 2) + LEFT(PARTS.PART_NAME, 2), 2), RIGHT(REPLICATE('x', 2) + LEFT(PARTS.PART_NAME, 2), 2), LEFT(PARTS.PART_NAME + REPLICATE(' ', 2), 2), LEFT(PARTS.PART_NAME + REPLICATE('x', 2), 2) FROM PARTS"; //$NON-NLS-1$
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
        
 }
