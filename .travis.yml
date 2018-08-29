@@ -5,6 +5,11 @@ before_install:
 cache:
   directories:
   - $HOME/.m2
+deploy:
+  provider: script
+  script: "mvn deploy -q -DskipTests=true"
+  on:
+    condition: $TRAVIS_EVENT_TYPE = cron
 notifications:
   webhooks:
     urls:
