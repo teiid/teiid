@@ -27,6 +27,13 @@ Enter the following:
 	
 you can find the deployment artifacts in the "teiid/build/target" directory once the build is completed.
 
+## Travis Builds
+
+Teiid includes a travis build config.  By default it performs only an "install" on every commit.  It allows for a
+cron based build to be configured as well for deploying snapshots.  The snapshot build requires add the environment
+variables SONATYPE_USERNAME and SONATYPE_PASSWORD that should set to the user access token values of an
+authorized sonatype account.
+
 ## To start Teiid
 
 Once built you can start up the Wildfly server with Teiid by extracting "build/target/teiid-<version>-wildfly-server.zip" and running:

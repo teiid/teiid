@@ -8,6 +8,7 @@ cache:
 deploy:
   provider: script
   script: "mvn deploy -q -DskipTests=true"
+  skip_cleanup: true
   on:
     condition: $TRAVIS_EVENT_TYPE = cron
 notifications:
