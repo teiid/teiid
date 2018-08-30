@@ -104,13 +104,6 @@ public class TestExternalMatViews {
         logger.setLevel(Level.DEBUG);
     }
     
-    @BeforeClass public static void oneTimeSetup() {
-        if (DEBUG) {
-            UnitTestUtil.enableTraceLogging("org.teiid");
-        }
-        System.setProperty("jgroups.bind_addr", "127.0.0.1");
-    }
-    
 	private Connection conn;
 	private FakeServer server;
 	private static DataSource h2DataSource;
@@ -153,6 +146,11 @@ public class TestExternalMatViews {
 		c.createStatement().execute("CREATE table G1 (e1 int primary key, e2 varchar(50), LoadNumber long)");
 		c.createStatement().execute(matView1a);
 		c.close();
+		
+		if (DEBUG) {
+            UnitTestUtil.enableTraceLogging("org.teiid");
+        }
+        System.setProperty("jgroups.bind_addr", "127.0.0.1");
 	}
 	
 	@AfterClass
@@ -915,29 +913,46 @@ public class TestExternalMatViews {
         ResultsFuture<?> f = ed.dataModification("comp", "1", "source", "physicalTbl", new Object[] { 1, "town" },
                 new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
         f.get();
-        
-        f = ed.dataModification("comp", "1", "source", "physicalTbl", new Object[] { 1, "town" },
-                new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
-        f.get();
-        
-        // check the stale count incremented
-        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
-        rs.next();
-        if (rs.getString(1).equalsIgnoreCase("NEEDS_LOADING")) {
-            assertEquals(1, rs.getInt(2));
-            assertEquals(1, rs.getLong(3));
-        } else {
-            assertEquals(2, rs.getLong(3));
+
+        long start = System.currentTimeMillis();
+        while (true) {
+            // check the stale count incremented
+            rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
+            rs.next();
+            if (rs.getString(1).equalsIgnoreCase("NEEDS_LOADING")) {
+                assertEquals(1, rs.getInt(2));
+                assertEquals(1, rs.getLong(3));
+                break;
+            } 
+            if (rs.getLong(3) == 1) {
+                if (System.currentTimeMillis() - start  > 2000) {
+                    fail("never updated the load state");
+                }
+                Thread.sleep(100);
+                continue;
+            }
+            if (rs.getLong(3) == 2) {
+                break;
+            }
         }
         
         //wait for the polling a load to happen
-        Thread.sleep(2000);
-        
-        // check the stale count to zero and that we are reloaded
-        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
-        rs.next();
-        assertEquals("LOADED", rs.getString(1));
-        assertEquals(0, rs.getInt(2));
+        start = System.currentTimeMillis();
+        while (true) {
+            // check the stale count to zero and that we are reloaded
+            rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
+            rs.next();
+            if (!rs.getString(1).equalsIgnoreCase("LOADED")) {
+                if (System.currentTimeMillis() - start  > 3000) {
+                    fail("never updated the load state");
+                }
+                Thread.sleep(100);
+                continue;
+            }
+            assertEquals(0, rs.getInt(2));
+            assertEquals(2, rs.getLong(3));
+            break;
+        }
         
         String ddl = server.getAdmin().getSchema("comp", "1", "source", null, null);
         assertFalse(ddl.contains("AFTER INSERT"));
@@ -946,28 +961,46 @@ public class TestExternalMatViews {
                 new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
         f.get();
         
-        f = ed.dataModification("comp", "1", "source", "physicalTbl", new Object[] { 1, "town" },
-                new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
-        f.get();
-        
-        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
-        rs.next();
-        if (rs.getString(1).equalsIgnoreCase("NEEDS_LOADING")) {
-            assertEquals(1, rs.getInt(2));
-            assertEquals(2, rs.getLong(3));
-        } else {
-            assertEquals(3, rs.getLong(3));
+        start = System.currentTimeMillis();
+        while (true) {
+            // check the stale count incremented
+            rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
+            rs.next();
+            if (rs.getString(1).equalsIgnoreCase("NEEDS_LOADING")) {
+                assertEquals(1, rs.getInt(2));
+                assertEquals(2, rs.getLong(3));
+                break;
+            } 
+            if (rs.getLong(3) == 2) {
+                if (System.currentTimeMillis() - start  > 3000) {
+                    fail("never updated the load state");
+                }
+                Thread.sleep(100);
+                continue;
+            }
+            if (rs.getLong(3) == 3) {
+                break;
+            }
         }      
         
         //wait for the polling a load to happen
-        Thread.sleep(2000);
+        start = System.currentTimeMillis();
+        while (true) {
+            // check the stale count to zero and that we are reloaded
+            rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
+            rs.next();
+            if (!rs.getString(1).equalsIgnoreCase("LOADED")) {
+                if (System.currentTimeMillis() - start  > 3000) {
+                    fail("never updated the load state");
+                }
+                Thread.sleep(100);
+                continue;
+            }
+            assertEquals(0, rs.getInt(2));
+            assertEquals(3, rs.getLong(3));
+            break;
+        }
         
-        // check the stale count to zero and that we are reloaded
-        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
-        rs.next();
-        assertEquals("LOADED", rs.getString(1));
-        assertEquals(0, rs.getInt(2));
-        long loadNumber = rs.getLong(3);
         
         Thread.sleep(2000);
         
@@ -976,7 +1009,7 @@ public class TestExternalMatViews {
         rs.next();
         assertEquals("LOADED", rs.getString(1));
         assertEquals(0, rs.getInt(2));
-        assertEquals(rs.getLong(3), loadNumber);
+        assertEquals(rs.getLong(3), 3);
     }    
     
     

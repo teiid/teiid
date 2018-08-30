@@ -469,10 +469,10 @@ public class TestLocalConnections {
 			//no connection factory
 		}
 		try {
-			future.get(5000, TimeUnit.SECONDS);
+			future.get(5, TimeUnit.SECONDS);
 			fail();
 		} catch (ExecutionException e) {
-			assertTrue(e.getMessage().contains("TEIID40097"));
+			assertTrue(e.getMessage(), e.getMessage().contains("TEIID40097"));
 		} finally {
 			server.undeployVDB("not_there");
 		}
