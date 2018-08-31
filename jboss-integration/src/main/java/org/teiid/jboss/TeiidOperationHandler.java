@@ -878,7 +878,7 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 
     @Override
     public OperationDefinition getOperationDefinition() {
-        final AttributeDefinition[] parameters = new AttributeDefinition[] {OperationsConstants.VDB_NAME, OperationsConstants.VDB_VERSION};
+        final AttributeDefinition[] parameters = new AttributeDefinition[] {OperationsConstants.VDB_NAME, OperationsConstants.VDB_VERSION, OperationsConstants.INCLUDE_SCHEMA};
         final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
         return new OperationDefinition(name(), OperationEntry.EntryType.PUBLIC, EnumSet.noneOf(OperationEntry.Flag.class), ModelType.OBJECT, null, true, null, null, parameters) {
             @Override
@@ -999,7 +999,7 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 
     @Override
     public OperationDefinition getOperationDefinition() {
-        final AttributeDefinition[] parameters = new AttributeDefinition[0];
+        final AttributeDefinition[] parameters = new AttributeDefinition[] {OperationsConstants.INCLUDE_SCHEMA};
         final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
         return new OperationDefinition(name(), OperationEntry.EntryType.PUBLIC, EnumSet.noneOf(OperationEntry.Flag.class), ModelType.OBJECT, null, true, null, null, parameters) {
             @Override
