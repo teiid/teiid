@@ -336,4 +336,9 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     public boolean rewriteBooleanFunctions() {
         return false;
     }
+    
+    @Override
+    public boolean supportsWindowFunctionNthValue() {
+        return false;
+    }
 }
