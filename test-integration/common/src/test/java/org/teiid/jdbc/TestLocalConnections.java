@@ -472,7 +472,7 @@ public class TestLocalConnections {
 			future.get(5, TimeUnit.SECONDS);
 			fail();
 		} catch (ExecutionException e) {
-			assertTrue(e.getMessage(), e.getMessage().contains("TEIID40097"));
+			assertTrue(e.getMessage(), e.getMessage().contains("TEIID40097") || e.getMessage().contains("TEIID40096"));
 		} finally {
 			server.undeployVDB("not_there");
 		}
