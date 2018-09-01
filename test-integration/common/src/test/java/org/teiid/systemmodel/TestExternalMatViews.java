@@ -202,6 +202,7 @@ public class TestExternalMatViews {
     	c.createStatement().execute("delete from mat_v1");
     	c.createStatement().execute("delete from mat_v1_stage");
     	c.createStatement().execute("delete from mat_v2");
+    	c.close();
     }
 	
 	@After 
@@ -1007,9 +1008,17 @@ public class TestExternalMatViews {
         //make sure that nothing has changed
         rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
         rs.next();
-        assertEquals("LOADED", rs.getString(1));
-        assertEquals(0, rs.getInt(2));
-        assertEquals(rs.getLong(3), 3);
+        String loadState = rs.getString(1);
+        int staleCount = rs.getInt(2);
+        long loadNumber = rs.getLong(3);
+        if (rs.next()) {
+            rs = c.createStatement().executeQuery("select * from status");
+            ResultSetUtil.printResultSet(rs);
+            fail("multiple status entries");
+        }
+        assertEquals("LOADED", loadState);
+        assertEquals(0, staleCount);
+        assertEquals(3, loadNumber);
     }    
     
     
