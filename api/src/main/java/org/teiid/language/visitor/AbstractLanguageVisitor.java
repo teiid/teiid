@@ -123,5 +123,7 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     public void visit(NamedProcedureCall namedProcedureCall) {}
     @Override
     public void visit(IsDistinct isDistinct) {}
+    @Override
+    public void visit(WindowFrame windowFrame) {}
     
 }

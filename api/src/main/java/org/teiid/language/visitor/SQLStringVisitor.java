@@ -33,9 +33,12 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.SortSpecification.Ordering;
+import org.teiid.language.WindowFrame.BoundMode;
+import org.teiid.language.WindowFrame.FrameBound;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Table;
 
@@ -1056,8 +1059,48 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     			buffer.append(Tokens.SPACE);
     		}
     		append(windowSpecification.getOrderBy());
+    		needsSpace = true;
     	}
+    	if (windowSpecification.getWindowFrame() != null) {
+            if (needsSpace) {
+                buffer.append(Tokens.SPACE);
+            }
+            append(windowSpecification.getWindowFrame());
+        }
     	buffer.append(Tokens.RPAREN);    	
+    }
+    
+    @Override
+    public void visit(WindowFrame windowFrame) {
+        buffer.append(windowFrame.getMode().name());
+        buffer.append(Tokens.SPACE);
+        if (windowFrame.getEnd() != null) {
+            buffer.append(Reserved.BETWEEN);
+            buffer.append(Tokens.SPACE);
+        }
+        appendFrameBound(windowFrame.getStart());
+        if (windowFrame.getEnd() != null) {
+            buffer.append(Tokens.SPACE);
+            buffer.append(Reserved.AND);
+            buffer.append(Tokens.SPACE);
+            appendFrameBound(windowFrame.getEnd());
+        }
+    }
+    
+    private void appendFrameBound(FrameBound bound) {
+        if (bound.getBoundMode() == BoundMode.CURRENT_ROW) {
+            buffer.append(NonReserved.CURRENT);
+            buffer.append(Tokens.SPACE);
+            buffer.append(ROW);
+        } else {
+            if (bound.getBound() != null) {
+                buffer.append(bound.getBound());
+            } else {
+                buffer.append(NonReserved.UNBOUNDED);
+            }
+            buffer.append(Tokens.SPACE);
+            buffer.append(bound.getBoundMode().name());
+        }
     }
     
     @Override

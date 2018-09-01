@@ -258,6 +258,9 @@ public class PlanToProcessConverter {
 	            			pnode.addChild(wfpn);
 	            			for (WindowFunction wf : windowFunctions) {
 	            			    validateAggregateFunctionEvaluation(wf.getFunction());
+	            			    if (wf.getWindowSpecification().getWindowFrame() != null) {
+	            			        throw new QueryPlannerException(QueryPlugin.Event.TEIID31282, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31282, wf));
+	            			    }
 	            			}
             			}
             		}

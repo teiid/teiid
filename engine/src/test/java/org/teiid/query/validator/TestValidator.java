@@ -1458,6 +1458,34 @@ public class TestValidator {
 		helpValidate("SELECT e1 from pm1.g1 where row_number() over (order by e2) = 1", new String[] {"ROW_NUMBER() OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());		
 	}
 	
+    @Test public void testWindowFunctionFrameOtherAnalytical() {
+        helpValidate("SELECT row_number() over (order by e2 RANGE 1 FOLLOWING) from pm1.g1", new String[] {"ROW_NUMBER() OVER (ORDER BY e2 RANGE 1 FOLLOWING)"}, RealMetadataFactory.example1Cached());        
+    }
+    
+    @Test public void testWindowFunctionFrameWithoutOrderBy() {
+        helpValidate("SELECT FIRST_VALUE(e1) over (ROWS 1 FOLLOWING) from pm1.g1", new String[] {"FIRST_VALUE(e1) OVER (ROWS 1 FOLLOWING)"}, RealMetadataFactory.example1Cached());        
+    }
+	
+    @Test public void testWindowFunctionFrameStart() {
+        helpValidate("SELECT FIRST_VALUE(e1) over (order by e2 RANGE 1 FOLLOWING) from pm1.g1", new String[] {"FIRST_VALUE(e1) OVER (ORDER BY e2 RANGE 1 FOLLOWING)"}, RealMetadataFactory.example1Cached());        
+    }
+    
+    @Test public void testWindowFunctionFrameEnd() {
+        helpValidate("SELECT FIRST_VALUE(e1) over (order by e2 ROWS BETWEEN CURRENT ROW AND UNBOUNDED PRECEDING) from pm1.g1", new String[] {"FIRST_VALUE(e1) OVER (ORDER BY e2 ROWS BETWEEN CURRENT ROW AND UNBOUNDED PRECEDING)"}, RealMetadataFactory.example1Cached());        
+    }
+    
+    @Test public void testWindowFunctionFrameEnd1() {
+        helpValidate("SELECT FIRST_VALUE(e1) over (order by e2 ROWS BETWEEN CURRENT ROW AND 1 PRECEDING) from pm1.g1", new String[] {"FIRST_VALUE(e1) OVER (ORDER BY e2 ROWS BETWEEN CURRENT ROW AND 1 PRECEDING)"}, RealMetadataFactory.example1Cached());        
+    }
+    
+    @Test public void testWindowFunctionFrameEnd2() {
+        helpValidate("SELECT FIRST_VALUE(e1) over (order by e2 ROWS BETWEEN 1 FOLLOWING AND CURRENT ROW) from pm1.g1", new String[] {"FIRST_VALUE(e1) OVER (ORDER BY e2 ROWS BETWEEN 1 FOLLOWING AND CURRENT ROW)"}, RealMetadataFactory.example1Cached());        
+    }
+    
+    @Test public void testWindowFunctionFrameValid() {
+        helpValidate("SELECT FIRST_VALUE(e1) over (order by e2 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) from pm1.g1", new String[] {}, RealMetadataFactory.example1Cached());        
+    }
+	
     @Test public void testWindowFunctionFilter() {
         helpValidate("SELECT row_number() FILTER (WHERE e2 is not null) over (order by e2) = 1 from pm1.g1", new String[] {"ROW_NUMBER() FILTER(WHERE e2 IS NOT NULL) OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());        
     }

@@ -269,7 +269,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     @Override
     public boolean supportsHaving() {
         /*
-         * From Coludera DOC, different from Hive
+         * From Cloudera DOC, different from Hive
          * Performs a filter operation on a SELECT query, by examining the results of 
          * aggregation functions rather than testing each individual table row. Thus 
          * always used in conjunction with a function such as COUNT(), SUM(), AVG(), 
@@ -440,4 +440,5 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public boolean rewriteBooleanFunctions() {
         return true;
     }
+    
 }

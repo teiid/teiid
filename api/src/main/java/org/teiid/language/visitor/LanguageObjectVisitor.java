@@ -65,4 +65,5 @@ public interface LanguageObjectVisitor {
 	public void visit(Array array);
 	public void visit(NamedProcedureCall namedProcedureCall);
 	public void visit(IsDistinct isDistinct);
+    public void visit(WindowFrame windowFrame);
 }

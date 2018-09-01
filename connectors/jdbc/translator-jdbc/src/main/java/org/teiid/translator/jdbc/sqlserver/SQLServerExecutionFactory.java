@@ -781,4 +781,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         return false;
     }
     
+    @Override
+    public boolean supportsWindowFrameClause() {
+        return getVersion().compareTo(TEN_0) >= 0;
+    }
+    
 }

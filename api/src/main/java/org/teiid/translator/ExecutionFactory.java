@@ -1035,6 +1035,15 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
+     * 
+     * @param function
+     * @return true if the window frame clause is supported
+     */
+    public boolean supportsWindowFrameClause() {
+        return supportsElementaryOlapOperations();
+    }
+    
+    /**
      * @return true if ntile is supported.
      *   defaults to {@link #supportsElementaryOlapOperations()}
      * @since 11.1

@@ -230,6 +230,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     		markInvalid(windowFunction, "Window function distinct aggregate not supported by source"); //$NON-NLS-1$
             return;
     	}
+    	if (windowFunction.getWindowSpecification().getWindowFrame() != null) {
+    	    if (!this.caps.supportsCapability(Capability.WINDOW_FUNCTION_FRAME_CLAUSE)) {
+    	        markInvalid(windowFunction, "Window function frame clause not supported by source"); //$NON-NLS-1$
+    	        return;
+    	    }
+    	}
     	/* Some sources do not like this case. While we don't allow it to be entered directly,
     	 * it can occur when raising a null node.
     	 * TODO: support rewrites of the ordering/entire window function expression

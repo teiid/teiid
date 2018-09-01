@@ -170,6 +170,10 @@ public class SQLConstants {
         public static final String DENSE_RANK = "DENSE_RANK"; //$NON-NLS-1$
         public static final String PERCENT_RANK = "PERCENT_RANK"; //$NON-NLS-1$
         public static final String CUME_DIST = "CUME_DIST"; //$NON-NLS-1$
+        public static final String CURRENT = "CURRENT"; //$NON-NLS-1$
+        public static final String UNBOUNDED = "UNBOUNDED"; //$NON-NLS-1$
+        public static final String PRECEDING = "PRECEDING"; //$NON-NLS-1$
+        public static final String FOLLOWING = "FOLLOWING"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

@@ -341,4 +341,5 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsWindowFunctionNthValue() {
         return false;
     }
+    
 }

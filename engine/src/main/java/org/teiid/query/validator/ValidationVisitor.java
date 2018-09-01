@@ -43,6 +43,7 @@ import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.language.SQLConstants;
+import org.teiid.language.WindowFrame.BoundMode;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
@@ -71,6 +72,7 @@ import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.Reference.Constraint;
+import org.teiid.query.sql.symbol.WindowFrame.FrameBound;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor.AggregateStopNavigator;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -975,6 +977,33 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	    
 	        break;
     	}
+    	WindowFrame frame = windowFunction.getWindowSpecification().getWindowFrame();
+    	if (frame != null) {
+    	    if (windowFunction.getWindowSpecification().getOrderBy() == null) {
+    	        handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31286, new Object[] {windowFunction}), windowFunction);
+    	    }
+    	    if (windowFunction.getFunction().isAnalytical() 
+    	            && !(windowFunction.getFunction().getAggregateFunction() == Type.FIRST_VALUE 
+    	            || windowFunction.getFunction().getAggregateFunction() == Type.LAST_VALUE)) {
+    	        handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31287, new Object[] {windowFunction}), windowFunction);
+    	    }
+    	
+    	    FrameBound start = frame.getStart();
+            FrameBound end = frame.getEnd();
+    	    if (start.getBoundMode() == BoundMode.FOLLOWING && (start.getBound() == null || end == null)) {
+    	        handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31283, new Object[] {windowFunction}), windowFunction);
+    	    }
+    	    if (end != null) {
+                if (end.getBoundMode() == BoundMode.PRECEDING && end.getBound() == null) {
+                    handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31284, new Object[] {windowFunction}), windowFunction);
+                }
+    	        if ((start.getBoundMode() == BoundMode.CURRENT_ROW && end.getBoundMode() == BoundMode.PRECEDING) || 
+    	                (start.getBoundMode() == BoundMode.FOLLOWING && end.getBoundMode() != BoundMode.FOLLOWING)) {
+    	            handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31285, new Object[] {windowFunction}), windowFunction);
+    	        }
+    	    }
+    	}
+    	
     	validateNoSubqueriesOrOuterReferences(windowFunction);
         if (windowFunction.getFunction().getOrderBy() != null || (windowFunction.getFunction().isDistinct() && windowFunction.getWindowSpecification().getOrderBy() != null)) {
         	handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0042", new Object[] {windowFunction.getFunction(), windowFunction}), windowFunction); //$NON-NLS-1$

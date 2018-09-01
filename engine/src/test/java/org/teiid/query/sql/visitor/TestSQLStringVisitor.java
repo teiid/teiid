@@ -1830,4 +1830,13 @@ public class TestSQLStringVisitor {
         helpTest(command, "SELECT current_timestamp, current_timestamp(1)"); //$NON-NLS-1$
     }
     
+    @Test public void testWindowFunctionOver() throws Exception {
+        String input = "select nth_value(e1, 2) over (partition by e2 order by e1 range between unbounded preceding and 1 following) FROM pm1.g1"; //$NON-NLS-1$
+        String output = "SELECT nth_value(e1, 2) OVER (PARTITION BY e2 ORDER BY e1 RANGE BETWEEN UNBOUNDED PRECEDING AND 1 FOLLOWING) FROM pm1.g1"; //$NON-NLS-1$
+          
+        Command command = QueryParser.getQueryParser().parseCommand(input); 
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        helpTest(command, output);
+    }
+    
 }

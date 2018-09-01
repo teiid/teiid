@@ -18,6 +18,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
@@ -27,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -1054,6 +1056,42 @@ public class TestWindowFunctions {
                 null, true, new CommandContext()); //$NON-NLS-1$
         
         helpProcess(plan, dataMgr, expected);
+    }
+    
+    @Test public void testWindowFramePushdown() throws Exception {
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_FRAME_CLAUSE, true);
+    
+        String sql = "select first_value(doublenum) over (partition by intnum order by stringnum rows unbounded preceding) l from bqt1.smalla order by l";
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(caps), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+
+        checkNodeTypes(plan, FULL_PUSHDOWN);                           
+
+        HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+        dataMgr.addData("SELECT FIRST_VALUE(g_0.DoubleNum) OVER (PARTITION BY g_0.IntNum ORDER BY g_0.StringNum ROWS UNBOUNDED PRECEDING) AS c_0 FROM SmallA AS g_0 ORDER BY c_0", Arrays.asList(1.0));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList(1.0),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_FRAME_CLAUSE, false);
+        
+        try {
+            //we'll proactively fail
+            TestProcessor.helpGetPlan(helpGetCommand(sql, metadata), 
+                metadata, new DefaultCapabilitiesFinder(caps), new CommandContext()); //$NON-NLS-1$
+            fail();
+        } catch (QueryPlannerException e) {
+            
+        }
     }
     
 }

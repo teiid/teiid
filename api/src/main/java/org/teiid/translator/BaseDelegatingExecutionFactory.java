@@ -827,6 +827,19 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		supportsElementaryOlapOperations = value;
 	}
 	
+	Boolean supportsWindowFrameClause;
+    @TranslatorProperty(display="Supports Window Frame Clause on a Window Function", advanced=true)
+    @Override
+    public boolean supportsWindowFrameClause() {
+        if (supportsWindowFrameClause != null) {
+            return supportsWindowFrameClause;
+        }
+        return delegate.supportsWindowFrameClause();
+    }
+    public void setSupportsWindowFrameClause(boolean value) {
+        supportsWindowFrameClause = value;
+    }
+    
 	@Override
 	public boolean supportsFormatLiteral(String literal,
 			org.teiid.translator.ExecutionFactory.Format format) {

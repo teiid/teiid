@@ -138,6 +138,7 @@ public abstract class LanguageVisitor {
 
 	public void visit(WindowFunction windowFunction) {}
 	public void visit(WindowSpecification windowSpecification) {}
+	public void visit(WindowFrame windowFrame) {}
 
 	public void visit(Array array) {}
 	public void visit(ObjectTable objectTable) {}

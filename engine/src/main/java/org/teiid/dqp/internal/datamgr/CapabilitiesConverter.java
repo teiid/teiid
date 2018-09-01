@@ -106,6 +106,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_PERCENT_RANK, srcCaps.supportsWindowFunctionPercentRank());
         tgtCaps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_CUME_DIST, srcCaps.supportsWindowFunctionCumeDist());
         tgtCaps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_NTH_VALUE, srcCaps.supportsWindowFunctionNthValue());
+        tgtCaps.setCapabilitySupport(Capability.WINDOW_FUNCTION_FRAME_CLAUSE, srcCaps.supportsWindowFrameClause());
         setSupports(connectorID, tgtCaps, Capability.ADVANCED_OLAP, srcCaps.supportsAdvancedOlapOperations(), Capability.ELEMENTARY_OLAP);
         setSupports(connectorID, tgtCaps, Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, srcCaps.supportsWindowOrderByWithAggregates(), Capability.ELEMENTARY_OLAP);
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_ARRAY, srcCaps.supportsArrayAgg());

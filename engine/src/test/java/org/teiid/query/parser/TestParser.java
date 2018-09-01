@@ -39,6 +39,7 @@ import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.language.WindowFrame.FrameMode;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
@@ -5182,6 +5183,23 @@ public class TestParser {
     	query.setSelect(new Select(Arrays.asList(wf)));
     	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
         helpTest(sql, "SELECT ROW_NUMBER() OVER (PARTITION BY x ORDER BY y) FROM g", query);
+    }
+    
+    @Test public void testWindowFunctionWithFrame() throws Exception {
+        String sql = "select sum(x) over (order by y ROWS BETWEEN CURRENT ROW AND 3 FOLLOWING) from g";
+        Query query = new Query();
+        WindowFunction wf = new WindowFunction();
+        wf.setFunction(new AggregateSymbol("SUM", false, new ElementSymbol("x")));
+        WindowSpecification ws = new WindowSpecification();
+        ws.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("y"))));
+        WindowFrame frame = new WindowFrame(FrameMode.ROWS);
+        frame.setStart(new WindowFrame.FrameBound(org.teiid.language.WindowFrame.BoundMode.CURRENT_ROW));
+        frame.setEnd(new WindowFrame.FrameBound(org.teiid.language.WindowFrame.BoundMode.FOLLOWING).bound(3));
+        ws.setWindowFrame(frame);
+        wf.setWindowSpecification(ws);
+        query.setSelect(new Select(Arrays.asList(wf)));
+        query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
+        helpTest(sql, "SELECT SUM(x) OVER (ORDER BY y ROWS BETWEEN CURRENT ROW AND 3 FOLLOWING) FROM g", query);
     }
     
     @Test public void testTrim1() {

@@ -72,6 +72,8 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.symbol.WindowFrame;
+import org.teiid.query.sql.symbol.WindowFrame.FrameBound;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -703,8 +705,24 @@ public class LanguageBridgeFactory {
 	    	ArrayList<org.teiid.language.Expression> partitionList = translateExpressionList(partition);
 	    	ws.setPartition(partitionList);
     	}
+    	WindowFrame frame = windowFunction.getWindowSpecification().getWindowFrame();
+    	if (frame != null) {
+    	    org.teiid.language.WindowFrame resultFrame = new org.teiid.language.WindowFrame(frame.getMode());
+    	    resultFrame.setStart(translate(frame.getStart()));
+    	    resultFrame.setEnd(translate(frame.getEnd()));
+    	    ws.setWindowFrame(resultFrame);
+    	}
     	result.setWindowSpecification(ws);
     	return result;
+    }
+    
+    org.teiid.language.WindowFrame.FrameBound translate(FrameBound frameBound) {
+        if (frameBound == null) {
+            return null;
+        }
+        org.teiid.language.WindowFrame.FrameBound result = new org.teiid.language.WindowFrame.FrameBound(frameBound.getBoundMode());
+        result.setBound(frameBound.getBound());
+        return result;
     }
 
 	private ArrayList<org.teiid.language.Expression> translateExpressionList(

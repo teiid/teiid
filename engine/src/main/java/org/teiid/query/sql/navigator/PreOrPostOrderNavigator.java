@@ -646,6 +646,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     	preVisitVisitor(obj);
     	visitNodes(obj.getPartition());
         visitNode(obj.getOrderBy());
+        visitNode(obj.getWindowFrame());
         postVisitVisitor(obj);
     }
     

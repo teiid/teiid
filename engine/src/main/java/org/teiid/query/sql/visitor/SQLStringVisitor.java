@@ -56,6 +56,7 @@ import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.symbol.WindowFrame.FrameBound;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -2582,10 +2583,50 @@ public class SQLStringVisitor extends LanguageVisitor {
     			append(SPACE);
     		}
     		append(windowSpecification.getOrderBy());
+    		needsSpace = true;
+    	}
+    	if (windowSpecification.getWindowFrame() != null) {
+    	    if (needsSpace) {
+                append(SPACE);
+            }
+            append(windowSpecification.getWindowFrame());
     	}
     	append(Tokens.RPAREN);	
     }
     
+    @Override
+    public void visit(WindowFrame windowFrame) {
+        append(windowFrame.getMode().name());
+        append(SPACE);
+        if (windowFrame.getEnd() != null) {
+            append(Reserved.BETWEEN);
+            append(SPACE);
+        }
+        appendFrameBound(windowFrame.getStart());
+        if (windowFrame.getEnd() != null) {
+            append(SPACE);
+            append(Reserved.AND);
+            append(SPACE);
+            appendFrameBound(windowFrame.getEnd());
+        }
+    }
+    
+    private void appendFrameBound(FrameBound bound) {
+        if (bound.getBoundMode() == org.teiid.language.WindowFrame.BoundMode.CURRENT_ROW) {
+            append(NonReserved.CURRENT);
+            append(SPACE);
+            append(ROW);
+        } else {
+            if (bound.getBound() != null) {
+                append(bound.getBound());
+            } else {
+                append(NonReserved.UNBOUNDED);
+            }
+            append(SPACE);
+            append(bound.getBoundMode().name());
+        }
+    }
+
     @Override
     public void visit(Array array) {
     	if (!array.isImplicit()) {

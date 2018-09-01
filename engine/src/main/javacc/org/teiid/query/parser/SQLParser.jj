@@ -431,6 +431,10 @@ TOKEN : /* NonReserved words */
 |   <DENSE_RANK: "dense_rank">
 |   <PERCENT_RANK: "percent_rank">
 |   <CUME_DIST: "cume_dist">
+|   <CURRENT: "current">
+|   <UNBOUNDED: "unbounded">
+|   <PRECEDING: "preceding">
+|   <FOLLOWING: "following">
 |   <SUM: "sum">
 |   <AVG: "avg">
 |   <MIN: "min">
@@ -631,7 +635,7 @@ Token nonReserved() :
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
-     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>)
+     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>)
     {
     	return getToken(0);
     }	
@@ -4222,6 +4226,7 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
 {
 	List<Expression> partitionList = null;
 	OrderBy orderBy = null;
+	WindowFrame frame = null;
 }
 {
 	<OVER> { 
@@ -4236,6 +4241,7 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     <LPAREN> 
     [<PARTITION> <BY> partitionList = expressionList(info)]
     [orderBy = orderby(info)]
+    [frame = windowFrame(info)]
     <RPAREN>
     {
     	WindowFunction result = new WindowFunction();
@@ -4243,9 +4249,60 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     	result.setFunction((AggregateSymbol)agg);
     	ws.setPartition(partitionList);
     	ws.setOrderBy(orderBy);
+    	ws.setWindowFrame(frame);
     	result.setWindowSpecification(ws);
     	return result;
     }
+}
+
+/*
+name=window frame
+description=Defines the mode, start, and optionally end of the window frame
+example=[source,sql]\n----\nRANGE UNBOUNDED PRECEDING\n----\n
+*/
+WindowFrame windowFrame(ParseInfo info) :
+{
+    WindowFrame.FrameBound start = null;
+    WindowFrame.FrameBound end = null;
+    org.teiid.language.WindowFrame.FrameMode mode = org.teiid.language.WindowFrame.FrameMode.RANGE;
+}
+{
+   (<RANGE>|<ROWS> {mode = org.teiid.language.WindowFrame.FrameMode.ROWS;})
+   (
+    (<BETWEEN> start = windowFrameBound(info) 
+     <AND> end = windowFrameBound(info))
+   | start = windowFrameBound(info)
+   )
+   {
+     WindowFrame result = new WindowFrame(mode);
+     result.setStart(start);
+     result.setEnd(end);
+     return result;
+   }
+}
+
+/*
+name=window frame bound
+description=Defines the start or end of a window frame
+example=[source,sql]\n----\nCURRENT ROW\n----\n
+*/
+WindowFrame.FrameBound  windowFrameBound(ParseInfo info) :
+{
+   Integer val = null;
+   org.teiid.language.WindowFrame.BoundMode boundMode = null;
+}
+{
+   (
+    ((<UNBOUNDED>|val = intVal()) (<FOLLOWING> {boundMode=org.teiid.language.WindowFrame.BoundMode.FOLLOWING;}|
+                                   <PRECEDING> {boundMode=org.teiid.language.WindowFrame.BoundMode.PRECEDING;}))
+    |
+    (<CURRENT> <ROW> {boundMode=org.teiid.language.WindowFrame.BoundMode.CURRENT_ROW;})
+   )
+   {
+     WindowFrame.FrameBound result = new WindowFrame.FrameBound(boundMode);
+     result.setBound(val);
+     return result;
+   }
 }
 
 /*
