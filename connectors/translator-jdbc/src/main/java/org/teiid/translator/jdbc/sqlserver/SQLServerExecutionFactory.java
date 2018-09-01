@@ -553,4 +553,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return super.translateCommand(command, context);
     }
     
+    @Override
+    public boolean supportsWindowFrameClause() {
+        return getVersion().compareTo(TEN_0) >= 0;
+    }
+    
 }

@@ -29,6 +29,8 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.Join.JoinType;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.WindowFrame.BoundMode;
+import org.teiid.language.WindowFrame.FrameBound;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
@@ -279,4 +281,13 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     		super.translateSQLType(type, obj, valuesbuffer);
     	}
     }
+    
+    @Override
+    public void visit(WindowFrame windowFrame) {
+        if (windowFrame.getEnd() == null) {
+            windowFrame.setEnd(new FrameBound(BoundMode.CURRENT_ROW));
+        }
+        super.visit(windowFrame);
+    }
+    
 }

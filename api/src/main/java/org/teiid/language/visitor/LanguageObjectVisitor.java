@@ -68,4 +68,5 @@ public interface LanguageObjectVisitor {
 	public void visit(Parameter obj);
 	public void visit(Array array);
 	public void visit(NamedProcedureCall namedProcedureCall);
+    public void visit(WindowFrame windowFrame);
 }

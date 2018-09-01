@@ -334,6 +334,12 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
+    
+    @Override
+    public boolean supportsWindowFrameClause() {
+        return false;
+    }
+    
     @Override
     public boolean supportsArrayAgg() {
     	return getVersion().compareTo(SEVEN_5) >= 0;

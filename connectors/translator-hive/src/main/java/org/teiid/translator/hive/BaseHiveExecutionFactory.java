@@ -329,4 +329,11 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsOrderByUnrelated() {
     	return false;
     }
+
+ // needs: TEIID-5447 adding nth_value window function
+//    @Override
+//    public boolean supportsWindowFunctionNthValue() {
+//        return false;
+//    }
+    
 }

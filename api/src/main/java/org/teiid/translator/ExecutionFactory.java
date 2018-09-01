@@ -1012,6 +1012,15 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
+     * 
+     * @param function
+     * @return true if the window frame clause is supported
+     */
+    public boolean supportsWindowFrameClause() {
+        return supportsElementaryOlapOperations();
+    }
+    
+    /**
      * @return true if all aggregates can have window function order by clauses.
      * @since 7.5
      */

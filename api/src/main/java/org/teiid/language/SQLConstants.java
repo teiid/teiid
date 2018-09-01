@@ -143,6 +143,10 @@ public class SQLConstants {
 		public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 		
 		public static final String GEOMETRY = "GEOMETRY"; //$NON-NLS-1$
+        public static final String CURRENT = "CURRENT"; //$NON-NLS-1$
+        public static final String UNBOUNDED = "UNBOUNDED"; //$NON-NLS-1$
+        public static final String PRECEDING = "PRECEDING"; //$NON-NLS-1$
+        public static final String FOLLOWING = "FOLLOWING"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

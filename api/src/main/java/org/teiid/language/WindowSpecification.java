@@ -32,6 +32,7 @@ public class WindowSpecification extends BaseLanguageObject {
 	
 	private List<Expression> partition;
 	private OrderBy orderBy;
+	private WindowFrame windowFrame;
 	
 	public WindowSpecification() {
 		
@@ -52,6 +53,14 @@ public class WindowSpecification extends BaseLanguageObject {
 	public void setOrderBy(OrderBy orderBy) {
 		this.orderBy = orderBy;
 	}
+	
+	public WindowFrame getWindowFrame() {
+        return windowFrame;
+    }
+	
+	public void setWindowFrame(WindowFrame windowFrame) {
+        this.windowFrame = windowFrame;
+    }
 
 	@Override
 	public void acceptVisitor(LanguageObjectVisitor visitor) {
@@ -60,7 +69,7 @@ public class WindowSpecification extends BaseLanguageObject {
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.hashCode(partition.hashCode(), orderBy);
+		return HashCodeUtil.hashCode(partition.hashCode(), orderBy, windowFrame);
 	}
 	
 	public boolean equals(Object obj) {
@@ -72,7 +81,8 @@ public class WindowSpecification extends BaseLanguageObject {
 		}
 		WindowSpecification other = (WindowSpecification)obj;
 		return EquivalenceUtil.areEqual(this.partition, other.partition) &&
-		EquivalenceUtil.areEqual(this.orderBy, other.orderBy);
+		EquivalenceUtil.areEqual(this.orderBy, other.orderBy) &&
+		EquivalenceUtil.areEqual(this.windowFrame, other.windowFrame);
 	}
 	
 }

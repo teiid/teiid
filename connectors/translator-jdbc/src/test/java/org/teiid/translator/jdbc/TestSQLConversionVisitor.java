@@ -553,5 +553,15 @@ public class TestSQLConversionVisitor {
                         "SELECT smallb.intkey, x.other, x.intkey FROM smallb LEFT OUTER JOIN LATERAL (EXEC spTest5(smallb.intkey)) AS x ON 1 = 1", //$NON-NLS-1$
                         true);
     }
+   
+// needs: TEIID-5447 adding nth_value window function
+//    @Test public void testWindowFunctionOver() throws Exception {
+//        String input = "select nth_value(PARTS.PART_NAME, 2) over (partition by part_id order by part_name range between unbounded preceding and 1 following) FROM parts"; //$NON-NLS-1$
+//        String output = "SELECT NTH_VALUE(PARTS.PART_NAME, 2) OVER (PARTITION BY rtrim(PARTS.PART_ID) ORDER BY PARTS.PART_NAME RANGE BETWEEN UNBOUNDED PRECEDING AND 1 FOLLOWING) FROM PARTS"; //$NON-NLS-1$
+//          
+//        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+//            input, 
+//            output, TRANSLATOR);
+//    }
     
 }

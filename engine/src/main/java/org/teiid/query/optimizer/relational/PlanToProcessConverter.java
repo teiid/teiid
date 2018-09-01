@@ -36,6 +36,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.util.Assertion;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -65,6 +66,7 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -229,6 +231,7 @@ public class PlanToProcessConverter {
             		
             		if (node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
             			WindowFunctionProjectNode wfpn = new WindowFunctionProjectNode(getID());
+/**<<<<<<< HEAD
             			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(symbols);
             			//TODO: check for selecting all window functions
             			List<Expression> outputElements = new ArrayList<Expression>(windowFunctions);
@@ -239,6 +242,64 @@ public class PlanToProcessConverter {
             			wfpn.setElements(outputElements);
             			wfpn.init();
             			pnode.addChild(wfpn);
+||||||| parent of 72813ad59b... TEIID-5461 adding parsing/pushdown support for the window frame clause
+            			
+            			//with partial projection the window function may already be pushed, we'll check for that here
+            			ArrayList<Expression> filtered = new ArrayList<Expression>();
+            			List<Expression> childSymbols = (List) node.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
+            			for (Expression ex : symbols) {
+            				ex = SymbolMap.getExpression(ex);
+            				if (childSymbols.contains(ex)) {
+            					continue;
+            				}
+            				filtered.add(ex);
+            			}
+            			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(filtered);
+            			if (!windowFunctions.isEmpty()) {
+	            			//TODO: check for selecting all window functions
+	            			List<Expression> outputElements = new ArrayList<Expression>(windowFunctions);
+	            			//collect the other projected expressions
+	            			for (Expression singleElementSymbol : (List<Expression>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
+								outputElements.add(singleElementSymbol);
+							}
+	            			wfpn.setElements(outputElements);
+	            			wfpn.init();
+	            			pnode.addChild(wfpn);
+	            			for (WindowFunction wf : windowFunctions) {
+	            			    validateAggregateFunctionEvaluation(wf.getFunction());
+	            			}
+            			}
+======= **/
+            			
+            			//with partial projection the window function may already be pushed, we'll check for that here
+            			ArrayList<Expression> filtered = new ArrayList<Expression>();
+            			List<Expression> childSymbols = (List) node.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
+            			for (Expression ex : symbols) {
+            				ex = SymbolMap.getExpression(ex);
+            				if (childSymbols.contains(ex)) {
+            					continue;
+            				}
+            				filtered.add(ex);
+            			}
+            			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(filtered);
+            			if (!windowFunctions.isEmpty()) {
+	            			//TODO: check for selecting all window functions
+	            			List<Expression> outputElements = new ArrayList<Expression>(windowFunctions);
+	            			//collect the other projected expressions
+	            			for (Expression singleElementSymbol : (List<Expression>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
+								outputElements.add(singleElementSymbol);
+							}
+	            			wfpn.setElements(outputElements);
+	            			wfpn.init();
+	            			pnode.addChild(wfpn);
+	            			for (WindowFunction wf : windowFunctions) {
+	            			    validateAggregateFunctionEvaluation(wf.getFunction());
+	            			    if (wf.getWindowSpecification().getWindowFrame() != null) {
+	            			        throw new QueryPlannerException(QueryPlugin.Event.TEIID31282, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31282, wf));
+	            			    }
+	            			}
+            			}
+//>>>>>>> 72813ad59b... TEIID-5461 adding parsing/pushdown support for the window frame clause
             		}
                 }
                 break;
@@ -694,6 +755,12 @@ public class PlanToProcessConverter {
 
 		return processNode;
 	}
+	
+    private void validateAggregateFunctionEvaluation(AggregateSymbol as) throws QueryPlannerException {
+        if (as.getFunctionDescriptor() != null && as.getFunctionDescriptor().getPushdown() == PushDown.MUST_PUSHDOWN) {
+            throw new QueryPlannerException(QueryPlugin.Event.TEIID31211, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31211, as.getFunctionDescriptor().getFullName()));
+        }
+    }
 
 	private Command aliasCommand(AccessNode aNode, Command command,
 			Object modelID) throws TeiidComponentException,

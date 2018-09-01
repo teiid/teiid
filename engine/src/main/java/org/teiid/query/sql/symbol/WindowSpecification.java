@@ -36,6 +36,7 @@ public class WindowSpecification implements LanguageObject {
 	private List<Expression> partition;
 	private OrderBy orderBy;
     private boolean rowMode;
+	private WindowFrame windowFrame;
 	
 	public WindowSpecification() {
 		
@@ -56,6 +57,14 @@ public class WindowSpecification implements LanguageObject {
 	public void setOrderBy(OrderBy orderBy) {
 		this.orderBy = orderBy;
 	}
+	
+	public WindowFrame getWindowFrame() {
+        return windowFrame;
+    }
+	
+	public void setWindowFrame(WindowFrame frame) {
+        this.windowFrame = frame;
+    }
 
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
@@ -64,7 +73,7 @@ public class WindowSpecification implements LanguageObject {
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.hashCode(0, partition, orderBy);
+		return HashCodeUtil.hashCode(0, partition, orderBy, windowFrame);
 	}
 	
 	@Override
@@ -78,7 +87,7 @@ public class WindowSpecification implements LanguageObject {
 		WindowSpecification other = (WindowSpecification)obj;
 		return EquivalenceUtil.areEqual(this.partition, other.partition) &&
 		EquivalenceUtil.areEqual(this.orderBy, other.orderBy) &&
-		this.rowMode == other.rowMode;
+		EquivalenceUtil.areEqual(this.windowFrame, other.windowFrame);
 	}
 	
 	@Override
@@ -91,6 +100,9 @@ public class WindowSpecification implements LanguageObject {
 			clone.setOrderBy(this.orderBy.clone());
 		}
 		clone.rowMode = rowMode;
+		if (this.windowFrame != null) {
+		    clone.setWindowFrame(this.windowFrame.clone());
+		}
 		return clone;
 	}
 	

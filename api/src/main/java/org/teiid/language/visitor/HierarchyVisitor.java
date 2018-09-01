@@ -242,6 +242,7 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     public void visit(WindowSpecification windowSpecification) {
     	visitNodes(windowSpecification.getPartition());
     	visitNode(windowSpecification.getOrderBy());
+    	visitNode(windowSpecification.getWindowFrame());
     }
     
 }

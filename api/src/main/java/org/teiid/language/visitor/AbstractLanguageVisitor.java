@@ -125,4 +125,7 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     public void visit(Array array) {}
     @Override
     public void visit(NamedProcedureCall namedProcedureCall) {}
+    @Override
+    public void visit(WindowFrame windowFrame) {}
+  
 }

@@ -105,6 +105,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, srcCaps.supportsCommonTableExpressions());
         tgtCaps.setCapabilitySupport(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, srcCaps.supportsRecursiveCommonTableExpressions());
         tgtCaps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, srcCaps.supportsElementaryOlapOperations());
+        tgtCaps.setCapabilitySupport(Capability.WINDOW_FUNCTION_FRAME_CLAUSE, srcCaps.supportsWindowFrameClause());
         setSupports(connectorID, tgtCaps, Capability.ADVANCED_OLAP, srcCaps.supportsAdvancedOlapOperations(), Capability.ELEMENTARY_OLAP);
         setSupports(connectorID, tgtCaps, Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, srcCaps.supportsWindowOrderByWithAggregates(), Capability.ELEMENTARY_OLAP);
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_ARRAY, srcCaps.supportsArrayAgg());

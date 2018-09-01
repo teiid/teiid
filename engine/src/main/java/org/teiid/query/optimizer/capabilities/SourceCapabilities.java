@@ -357,7 +357,8 @@ public interface SourceCapabilities {
         QUERY_FROM_PROCEDURE_TABLE, 
         QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, 
         QUERY_SELECT_EXPRESSION_ARRAY_TYPE, 
-        QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE;
+        QUERY_ONLY_FROM_JOIN_LATERAL_PROCEDURE,
+        WINDOW_FUNCTION_FRAME_CLAUSE;
         
         private final String toString;
         
