@@ -148,15 +148,15 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 					
 					long ttl = 0;
 					String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
-					if (ttlStr == null) {
-					    ttlStr = String.valueOf(Long.MAX_VALUE);
-					}
 					if (ttlStr != null) {
 						ttl = Long.parseLong(ttlStr);
-						if (ttl > 0) {
-							scheduleSnapshotJob(cvdb, table, ttl, 0L, JobType.TTL);
-						}
 					}
+					
+					if (ttl > 0) {
+                        scheduleSnapshotJob(cvdb, table, ttl, 0L, JobType.TTL);
+                    } else {
+                        scheduleSnapshotJob(cvdb, table, 0l, 0L, JobType.ONCE);
+                    }
 					
 					String stalenessString = table.getProperty(MaterializationMetadataRepository.MATVIEW_MAX_STALENESS_PCT, false);
 					String pollingExpression = table.getProperty(MaterializationMetadataRepository.MATVIEW_POLLING_QUERY, false);
@@ -165,10 +165,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 					if (pollingExpression != null || stalenessString != null) {
 	                    // schedule a check every minute 
 					    long interval = WAITTIME;
-					    if (ttl <= 0 && pollingExpression == null) {
-					        // run first time like, SNAPSHOT
-	                        scheduleSnapshotJob(cvdb, table, 0L, 0L, JobType.ONCE);
-					    } else {
+					    if (ttl > 0) {
 					        interval = Math.min(interval, Math.max(1, ttl>>1));
 					    }
 					    
@@ -208,7 +205,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
                     	}
                     }
                     
-                    if (ttl <= 0 && pollingQuery == null) {
+                    if (ttl <= 0) {
                     	//just a one time load
                     	try {
                     		//we use a count so that the load can cascade
