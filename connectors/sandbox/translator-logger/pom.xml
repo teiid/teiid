@@ -10,7 +10,6 @@
     <groupId>org.teiid.connectors.sandbox</groupId>
     <name>Logging Translator</name>
     <description>Test translator showing logging all results.</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>
