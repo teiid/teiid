@@ -204,7 +204,7 @@ public class ExasolExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(EXASOL, YEARS_BETWEEN, DOUBLE, DATE, DATE);
         addPushDownFunction(EXASOL, YEARS_BETWEEN, DOUBLE, TIMESTAMP, TIMESTAMP);
 
-        registerFunctionModifier(SourceSystemFunctions.FROM_UNIXTIME, new AliasModifier(FROM_POSIX_TIME));
+        //registerFunctionModifier(SourceSystemFunctions.FROM_UNIXTIME, new AliasModifier(FROM_POSIX_TIME));
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier(DAY));
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new AliasModifier(TO_CHAR));
         registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new AliasModifier(TO_TIMESTAMP));
@@ -294,7 +294,7 @@ public class ExasolExecutionFactory extends JDBCExecutionFactory {
 
         //Date
         supportedFunctions.add(SourceSystemFunctions.CURDATE);
-        supportedFunctions.add(SourceSystemFunctions.FROM_UNIXTIME);
+        //supportedFunctions.add(SourceSystemFunctions.FROM_UNIXTIME);
         supportedFunctions.add(SourceSystemFunctions.MONTH);
         supportedFunctions.add(SourceSystemFunctions.NOW);
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);

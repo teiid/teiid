@@ -252,18 +252,11 @@ public class CapabilitiesUtil {
             // Find capabilities
         	
             if (!caps.supportsFunction(fullName)) {
-                if(SourceSystemFunctions.CONCAT2.equalsIgnoreCase(fullName)) {
-                    //special handling for delayed rewrite of concat2
-                    return (schema == null 
-                            && caps.supportsFunction(SourceSystemFunctions.CONCAT)
-                            && caps.supportsFunction(SourceSystemFunctions.IFNULL)
-                            && caps.supportsCapability(Capability.QUERY_SEARCHED_CASE));
-                } else if(SourceSystemFunctions.FROM_UNIXTIME.equalsIgnoreCase(fullName)) {
-                    return (schema == null 
-                            && caps.supportsFunction(SourceSystemFunctions.TIMESTAMPADD));
-                } else {
-                    return false ;
-                }
+            	//special handling for delayed rewrite of concat2
+            	return (schema == null && SourceSystemFunctions.CONCAT2.equalsIgnoreCase(fullName)
+                		&& caps.supportsFunction(SourceSystemFunctions.CONCAT) 
+                		&& caps.supportsFunction(SourceSystemFunctions.IFNULL)
+                		&& caps.supportsCapability(Capability.QUERY_SEARCHED_CASE));
             }
             if (FunctionLibrary.isConvert(function)) {
                 Class<?> fromType = function.getArg(0).getType();

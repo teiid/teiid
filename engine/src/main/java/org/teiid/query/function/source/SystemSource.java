@@ -1117,10 +1117,11 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     }
     
     private void addUnixTimeFunctions() {
-        functions.add(new FunctionMethod(SourceSystemFunctions.FROM_UNIXTIME, QueryPlugin.Util.getString("SystemSource.from_unixtime_description"), DATETIME, FUNCTION_CLASS, "from_unixtime", //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter[]{
-                    new FunctionParameter("unix_timestamp", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.from_unixtime_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.from_unixtime_result")))); //$NON-NLS-1$ //$NON-NLS-2$
+    	functions.add(new FunctionMethod(FunctionLibrary.FROM_UNIXTIME, QueryPlugin.Util.getString("SystemSource.from_unixtime_description"), DATETIME, PushDown.SYNTHETIC, null, null, //$NON-NLS-1$ 
+    			Arrays.asList(
+    				new FunctionParameter("unix_timestamp", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.from_unixtime_param1")) //$NON-NLS-1$ //$NON-NLS-2$
+    			),
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.from_unixtime_result")), true, Determinism.DETERMINISTIC )); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addTypedNullIfFunction(String type) {

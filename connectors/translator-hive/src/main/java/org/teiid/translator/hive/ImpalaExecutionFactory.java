@@ -146,7 +146,6 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.DAYNAME);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
-        supportedFunctions.add(SourceSystemFunctions.FROM_UNIXTIME);
         supportedFunctions.add(SourceSystemFunctions.EXP);
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
         supportedFunctions.add(SourceSystemFunctions.HOUR);
