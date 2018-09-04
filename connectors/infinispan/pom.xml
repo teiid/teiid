@@ -4,7 +4,7 @@
   <parent>
       <groupId>org.teiid</groupId>
       <artifactId>connectors</artifactId>
-      <version>11.0.2-SNAPSHOT</version>
+      <version>11.0.2</version>
   </parent>
 	<groupId>org.teiid.connectors</groupId>
 	<artifactId>infinispan</artifactId>
