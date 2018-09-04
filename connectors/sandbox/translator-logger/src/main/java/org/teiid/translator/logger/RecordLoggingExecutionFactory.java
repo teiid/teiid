@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.translator;
+package org.teiid.translator.logger;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -33,6 +33,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.*;
 
 /**
  * Demonstrates the delegating translator pattern to add low level logging.
