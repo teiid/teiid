@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>infinispan</artifactId>
-		<version>11.0.2</version>
+		<version>11.0.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>connector-infinispan-hotrod</artifactId>
 	<name>Infinispan Hotrod Protocol Based Resource Adapter</name>
