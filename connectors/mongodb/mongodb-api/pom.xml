@@ -3,7 +3,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>mongodb</artifactId>
-      <version>11.1.0-SNAPSHOT</version>
+      <version>11.2.0-SNAPSHOT</version>
     </parent>
     <groupId>org.teiid.connectors</groupId> 
     <artifactId>mongodb-api</artifactId>
