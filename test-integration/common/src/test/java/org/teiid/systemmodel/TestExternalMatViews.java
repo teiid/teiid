@@ -915,6 +915,8 @@ public class TestExternalMatViews {
                 new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
         f.get();
 
+        int waitTime = 5000;
+        
         long start = System.currentTimeMillis();
         while (true) {
             // check the stale count incremented
@@ -926,7 +928,7 @@ public class TestExternalMatViews {
                 break;
             } 
             if (rs.getLong(3) == 1) {
-                if (System.currentTimeMillis() - start  > 2000) {
+                if (System.currentTimeMillis() - start  > waitTime) {
                     fail("never updated the load state");
                 }
                 Thread.sleep(100);
@@ -944,7 +946,7 @@ public class TestExternalMatViews {
             rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
             rs.next();
             if (!rs.getString(1).equalsIgnoreCase("LOADED")) {
-                if (System.currentTimeMillis() - start  > 3000) {
+                if (System.currentTimeMillis() - start  > waitTime) {
                     fail("never updated the load state");
                 }
                 Thread.sleep(100);
@@ -973,7 +975,7 @@ public class TestExternalMatViews {
                 break;
             } 
             if (rs.getLong(3) == 2) {
-                if (System.currentTimeMillis() - start  > 3000) {
+                if (System.currentTimeMillis() - start  > waitTime) {
                     fail("never updated the load state");
                 }
                 Thread.sleep(100);
@@ -991,7 +993,7 @@ public class TestExternalMatViews {
             rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount, LoadNumber FROM Status WHERE VDBName = 'comp'");
             rs.next();
             if (!rs.getString(1).equalsIgnoreCase("LOADED")) {
-                if (System.currentTimeMillis() - start  > 3000) {
+                if (System.currentTimeMillis() - start  > waitTime) {
                     fail("never updated the load state");
                 }
                 Thread.sleep(100);
