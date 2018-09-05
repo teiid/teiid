@@ -10,7 +10,6 @@
     <artifactId>connector-ftp</artifactId>
     <name>FTP/FTPS Resource Adapter</name>
     <description>This Resource Adapter reads data from ftp/ftps server</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

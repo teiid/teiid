@@ -9,7 +9,6 @@
 	<artifactId>translator-ldap</artifactId>
 	<name>LDAP Translator</name>
 	<description>LDAP Translator</description>
-	<packaging>bundle</packaging>
 
 	<dependencies>
 		<dependency>

@@ -10,7 +10,6 @@
     <groupId>org.teiid.connectors</groupId>
     <name>Apache SOLR Resource Adapter</name>
     <description>This Resource Adapter reads data from files.</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

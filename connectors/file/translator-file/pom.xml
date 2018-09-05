@@ -10,7 +10,6 @@
     <artifactId>translator-file</artifactId>
     <name>File Translator</name>
     <description>This translator provides access to the file system.</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

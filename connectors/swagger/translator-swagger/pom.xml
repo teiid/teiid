@@ -10,7 +10,6 @@
 	<groupId>org.teiid.connectors</groupId>
 	<name>Swagger Translator</name>
 	<description>This translator provides access Swagger based data sources.</description>
-	<packaging>bundle</packaging>
 	<dependencies>
 		<dependency>
 			<groupId>org.teiid</groupId>

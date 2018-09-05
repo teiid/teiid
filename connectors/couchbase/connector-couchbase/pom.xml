@@ -10,7 +10,6 @@
     <artifactId>connector-couchbase</artifactId>
     <name>Couchbase Resource Adapter</name>
     <description>This resource adapter reads data from Couchbase</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

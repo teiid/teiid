@@ -10,7 +10,6 @@
     <artifactId>connector-file</artifactId>
     <name>File Resource Adapter</name>
     <description>This Resource Adapter reads data from files.</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

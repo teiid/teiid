@@ -10,7 +10,6 @@
     <artifactId>connector-cassandra</artifactId>
     <name>Cassandra Resource Adapter</name>
     <description>Cassandra Resource Adapter</description>
-    <packaging>bundle</packaging>
     
 	<dependencies>
 		<dependency>

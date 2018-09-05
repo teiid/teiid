@@ -9,7 +9,6 @@
   <artifactId>teiid-data-quality</artifactId>
   <name>Teiid Data Quality</name>
   <description>Data Quality library for Teiid based on OSDQ</description>
-  <packaging>bundle</packaging>
 
   <properties>
     <version.com.github.mpkorstanje>3.0.0</version.com.github.mpkorstanje>

@@ -8,7 +8,6 @@
 	<artifactId>teiid-eclipselink-platform</artifactId>
 	<name>Eclipselink DatabasePlatform</name>
 	<description>Teiid Eclipselink DatabasePlatform</description>
-	<packaging>bundle</packaging>
 
 	<dependencies>
 	

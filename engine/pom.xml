@@ -15,7 +15,6 @@
 	<artifactId>teiid-engine</artifactId>
 	<name>Engine</name>
 	<description>Relational, procedural, and xml core engine.</description>
-    <packaging>bundle</packaging>
     <build>
         <plugins>
 	        <plugin>
@@ -48,15 +47,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <configuration>
-               <instructions>
-                <Import-Package>!org.jboss.*,*</Import-Package>
-               </instructions>
-              </configuration>
-            </plugin>            
         </plugins>
     </build>
 

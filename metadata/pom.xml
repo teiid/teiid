@@ -16,21 +16,6 @@
   <artifactId>teiid-metadata</artifactId>
   <name>Metadata</name>
   <description>Provides vdb metadata from index files.</description>
-  <packaging>bundle</packaging>
-  
-    <build>
-        <plugins>
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <configuration>
-               <instructions>
-                <Import-Package>!org.jboss.*,*</Import-Package>
-               </instructions>
-              </configuration>
-            </plugin>            
-        </plugins>   
-    </build>    
   
   <dependencies>
 

@@ -9,7 +9,6 @@
 	<artifactId>infinispan-api</artifactId>
 	<name>Infinispan API</name>
 	<description>This defines the common API for Infinispan</description>
-	<packaging>bundle</packaging>
 
 	<dependencies>
 		<dependency>

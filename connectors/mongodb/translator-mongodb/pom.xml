@@ -10,7 +10,6 @@
     <artifactId>translator-mongodb</artifactId>
     <name>MongoDB Translator</name>
     <description>This translator provides access to MongoDB</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

@@ -10,7 +10,6 @@
     <groupId>org.teiid.connectors</groupId>
     <name>Apache SOLR Translator</name>
     <description>This translator provides access to Apache SOLR</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

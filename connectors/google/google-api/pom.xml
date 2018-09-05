@@ -9,7 +9,6 @@
 	<artifactId>google-api</artifactId>
 	<name>Gogole API</name>
 	<description>The java API for connecting Google services</description>
-	<packaging>bundle</packaging>
 
 	<dependencies>
 		<dependency>

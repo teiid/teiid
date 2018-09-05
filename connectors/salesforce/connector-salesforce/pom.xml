@@ -10,7 +10,6 @@
 	<artifactId>connector-salesforce</artifactId>
 	<name>Salesforce Resource Adapter</name>
 	<description>Integrates the query engine with Salesforce.com.</description>
-	<packaging>bundle</packaging>
 
 	<dependencies>
 		<dependency>

@@ -9,7 +9,6 @@
     <artifactId>mongodb-api</artifactId>
     <name>MongoDB API</name>
     <description>The java API for the MongoDB</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.jboss.spec.javax.resource</groupId>

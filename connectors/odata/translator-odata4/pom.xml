@@ -10,7 +10,6 @@
     <groupId>org.teiid.connectors</groupId>
     <name>OData4 Translator</name>
     <description>This translator provides access to OData V4 based data sources</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

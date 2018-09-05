@@ -9,7 +9,6 @@
 	<artifactId>connector-infinispan-hotrod</artifactId>
 	<name>Infinispan Hotrod Protocol Based Resource Adapter</name>
 	<description>This resource adapter uses Hotrod protocol to create a connection to the Infinispan Cache</description>
-	<packaging>bundle</packaging>
 
 	<dependencies>
 		<dependency>

@@ -10,7 +10,6 @@
     <artifactId>connector-google</artifactId>
     <name>Google API Resource Adapter</name>
     <description>Google API Resource Adapter</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

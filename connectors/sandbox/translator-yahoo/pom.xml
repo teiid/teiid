@@ -10,7 +10,6 @@
     <groupId>org.teiid.connectors.sandbox</groupId>
     <name>Yahoo Translator</name>
     <description>Test translator used to query ticker symbols from Yahoo website</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

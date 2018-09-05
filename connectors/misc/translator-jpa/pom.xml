@@ -10,7 +10,6 @@
     <groupId>org.teiid.connectors</groupId>
     <name>JPA2 Translator</name>
     <description>This translator provides access to any JPA based entities</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

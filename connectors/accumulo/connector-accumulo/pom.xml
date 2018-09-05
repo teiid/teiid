@@ -9,7 +9,6 @@
 	<artifactId>connector-accumulo</artifactId>
 	<name>Accumulo Resource Adapter</name>
 	<description>Accumulo Resource Adapter</description>
-	<packaging>bundle</packaging>
 
 	<dependencies>
 		<dependency>

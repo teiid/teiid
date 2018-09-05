@@ -10,7 +10,6 @@
     <artifactId>translator-couchbase</artifactId>
     <name>Couchbase Translator</name>
     <description>This translator provides access to Couchbase</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

@@ -10,7 +10,6 @@
     <groupId>org.teiid.connectors</groupId>
     <name>OLAP Translator</name>
     <description>This translator provides access to Query Analysis Cubes</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

@@ -10,7 +10,6 @@
     <artifactId>connector-mongodb</artifactId>
     <name>MongoDB Resource Adapter</name>
     <description>This resource adapter reads data from MongoDB</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

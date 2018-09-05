@@ -9,7 +9,6 @@
     <artifactId>translator-amazon-s3</artifactId>
     <name>S3 Translator</name>
     <description>This translator provides access to the S3 file system.</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

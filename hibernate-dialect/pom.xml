@@ -8,7 +8,6 @@
 	<artifactId>teiid-hibernate-dialect</artifactId>
 	<name>Hibernate Dialect</name>
 	<description>Teiid Hibernate Dialect</description>
-    <packaging>bundle</packaging>
 	<dependencies>
 		<dependency>
 			<groupId>org.hibernate</groupId>

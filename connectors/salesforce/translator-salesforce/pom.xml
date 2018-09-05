@@ -10,7 +10,6 @@
 	<artifactId>translator-salesforce</artifactId>
 	<name>Salesforce Translator</name>
 	<description>Integrates the query engine with Salesforce.com.</description>
-	<packaging>bundle</packaging>
 
 	<dependencyManagement>
 		<dependencies>

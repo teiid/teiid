@@ -9,7 +9,6 @@
     <artifactId>connector-ldap</artifactId>
     <name>LDAP Resource Adapter</name>
     <description>LDAP Resource Adapter</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

@@ -9,7 +9,6 @@
 	<artifactId>infinispan-tasks</artifactId>
 	<name>Infinispan Server Tasks</name>
 	<description>This defines Server Side tasks for Infinispan</description>
-	<packaging>bundle</packaging>
 
 	<dependencies>
 		<dependency>

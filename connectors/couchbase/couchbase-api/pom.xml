@@ -9,7 +9,6 @@
     <artifactId>couchbase-api</artifactId>
     <name>Couchbase API</name>
     <description>The java API for the Couchbase</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.jboss.spec.javax.resource</groupId>

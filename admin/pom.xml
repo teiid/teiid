@@ -9,21 +9,6 @@
 	<artifactId>teiid-admin</artifactId>
 	<name>admin</name>
 	<description>Admin API for Teiid</description>
-    <packaging>bundle</packaging>
-    
-    <build>
-        <plugins>
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <configuration>
-               <instructions>
-                <Import-Package>!org.jboss.*,*</Import-Package>
-               </instructions>
-              </configuration>
-            </plugin>            
-        </plugins>   
-    </build>    
     
 	<dependencies>
 		<dependency>

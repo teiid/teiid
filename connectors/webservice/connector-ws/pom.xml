@@ -10,7 +10,6 @@
     <groupId>org.teiid.connectors</groupId>
     <name>Web Service Adapter</name>
     <description>This resource adapter reads data from Web Services</description>
-    <packaging>bundle</packaging>
     
     <dependencies>
         <dependency>

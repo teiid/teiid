@@ -21,7 +21,6 @@
 	<name>Client</name>
 	<description>Contains the packages related to communication, administrative api,
     sessioning and transport level messaging.</description>
-    <packaging>bundle</packaging>
     
     <build>
         <plugins>
@@ -41,15 +40,6 @@
                     </compilerArguments>
                 </configuration>
             </plugin>
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <configuration>
-               <instructions>
-                <Import-Package>!org.jboss.modules.*,*</Import-Package>
-               </instructions>
-              </configuration>
-            </plugin>            
         </plugins>   
     </build>
      

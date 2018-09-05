@@ -9,7 +9,6 @@
 	<groupId>org.teiid.connectors</groupId>
 	<artifactId>translator-jdbc</artifactId>
 	<name>JDBC Translator</name>
-	<packaging>bundle</packaging>
 	<description>This project contains translators for a JDBC source. Currently this is an aggregator for all the JDBC translators relational databases.</description>
 	<dependencies>
 		<dependency>

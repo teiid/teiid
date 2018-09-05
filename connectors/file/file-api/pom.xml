@@ -9,7 +9,6 @@
     <artifactId>file-api</artifactId>
     <name>File API</name>
     <description>The java API for the File</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.jboss.spec.javax.resource</groupId>

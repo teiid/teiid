@@ -9,7 +9,6 @@
 	<artifactId>rest-service</artifactId>
 	<name>Teiid VDB REST Servce</name>
 	<description>Open API based service over Teiid VDB</description>
-	<packaging>bundle</packaging>
 	<dependencies>
 		<dependency>
 			<groupId>org.teiid</groupId>

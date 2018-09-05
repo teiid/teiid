@@ -9,19 +9,9 @@
     <artifactId>teiid-olingo</artifactId>
     <name>teiid-olingo</name>
     <description>Teiid OData4 Server module</description>
-    <packaging>bundle</packaging>
     
     <build>
         <plugins>
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <configuration>
-               <instructions>
-                <Import-Package>!org.jboss.*,*</Import-Package>
-               </instructions>
-              </configuration>
-            </plugin>      
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>

@@ -10,7 +10,6 @@
     <groupId>org.teiid.connectors</groupId>
     <name>Hive Translator</name>
     <description>This translator provides access HDFS system using Hive.</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

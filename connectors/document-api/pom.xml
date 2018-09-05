@@ -9,7 +9,6 @@
 	<groupId>org.teiid.connectors</groupId>
 	<name>Document API</name>
 	<description>The java API for dealing with object types</description>
-	<packaging>bundle</packaging>
 
 	<dependencies>
 		<dependency>

@@ -17,22 +17,7 @@
     <artifactId>teiid-olingo-common</artifactId>
     <name>teiid-olingo-common</name>
     <description>Teiid OData4 Common module</description>
-    <packaging>bundle</packaging>
     
-    <build>
-        <plugins>
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <configuration>
-               <instructions>
-                <Import-Package>!org.jboss.*,*</Import-Package>
-               </instructions>
-              </configuration>
-            </plugin>      
-        </plugins>
-    </build>
-
     <dependencies>
 
         <dependency>

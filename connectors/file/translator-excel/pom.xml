@@ -7,7 +7,6 @@
     </parent>
     <groupId>org.teiid.connectors</groupId>
     <artifactId>translator-excel</artifactId>
-    <packaging>bundle</packaging>
     
     <name>Excel Translator</name>
     <description>This translator provides access to the Excel data.</description>
