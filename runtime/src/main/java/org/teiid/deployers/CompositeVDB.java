@@ -80,6 +80,7 @@ public class CompositeVDB {
 		this.originalVDB = vdb;
 		this.vdbKey = new VDBKey(originalVDB.getName(), originalVDB.getVersion());
 		buildCompositeState(vdbRepository);
+		this.mergedVDB.addAttchment(VDBKey.class, this.vdbKey);
 	}
 	
     private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb,

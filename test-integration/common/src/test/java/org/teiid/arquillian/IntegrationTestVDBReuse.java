@@ -44,11 +44,13 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 	@Before
 	public void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", 9990,	"admin", "admin".toCharArray());
+		assertEquals(0, admin.getSessions().size());
 	}
 	
 	@After
 	public void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
+		assertEquals(0, admin.getSessions().size());
 		admin.close();
 	}
 	
