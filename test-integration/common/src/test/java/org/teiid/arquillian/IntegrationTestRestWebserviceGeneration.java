@@ -130,8 +130,18 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		
 		Thread.sleep(2000); //wait for the war to come up
 		
-		String response1 = httpCall("http://localhost:8080/sample2_1/swagger.yaml", "GET", null);
-		assertNotEquals(response, response1);
+		int retries = 10;
+		for (int i = 1; i <= retries; i++) {
+		    try {
+        		String response1 = httpCall("http://localhost:8080/sample2_1/swagger.yaml", "GET", null);
+        		assertNotEquals(response, response1);
+		    } catch (TeiidRuntimeException e) {
+		        if (i == retries) {
+		            throw e;
+		        }
+		        Thread.sleep(1000); //wait for the war to come up
+		    }
+		}
 		
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);

@@ -305,8 +305,8 @@ public class IntegrationTestDeployment {
 	public void testSessions() throws Exception {
 		deployVdb();
 
-		Collection<? extends Session> sessions = admin.getSessions();
-		assertEquals (0, sessions.size());
+		//wait for sessions created for proactive materialization to finish
+		Collection<? extends Session> sessions = waitForNumberOfSessions(0);
 		
 		Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user;ApplicationName=test", null);
 		sessions = admin.getSessions();
@@ -322,16 +322,27 @@ public class IntegrationTestDeployment {
 		conn.close();
 		
 		conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user;ApplicationName=test", null);
-		sessions = admin.getSessions();
-		assertEquals (1, sessions.size());
+		sessions = waitForNumberOfSessions(1);
 		s = sessions.iterator().next();
 
 		admin.terminateSession(s.getSessionId());
-		Thread.sleep(2000);
-		sessions = admin.getSessions();
-		assertEquals (0, sessions.size());			
+		waitForNumberOfSessions(0);
 		conn.close();
 	}
+
+    private Collection<? extends Session> waitForNumberOfSessions(int count)
+            throws AdminException, InterruptedException {
+        Collection<? extends Session> sessions = admin.getSessions();
+		long start = System.currentTimeMillis();
+		while (sessions.size() != count) {
+		    if (System.currentTimeMillis() - start > 5000) {
+		        fail("should be " + count + " session(s), but was " + sessions);
+		    }
+		    Thread.sleep(100);
+    		sessions = admin.getSessions();
+		}
+		return sessions;
+    }
 
 	private boolean deployVdb() throws AdminException, FileNotFoundException {
 		boolean vdbOneDeployed;

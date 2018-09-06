@@ -2,12 +2,14 @@ language: java
 sudo: false
 before_install:
 - cp settings.xml $HOME/.m2/settings.xml
+install: mvn -P release install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+script: mvn -P arquillian-tests test -B
 cache:
   directories:
   - $HOME/.m2
 deploy:
   provider: script
-  script: "mvn deploy -q -DskipTests=true"
+  script: "mvn -P dev deploy -q"
   skip_cleanup: true
   on:
     condition: $TRAVIS_EVENT_TYPE = cron
