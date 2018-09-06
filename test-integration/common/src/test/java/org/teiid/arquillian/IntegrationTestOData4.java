@@ -300,7 +300,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         assertNull("Content-Encoding response header is not expected.", response.getHeaderString("Content-Encoding"));
         InputStream is = (InputStream)response.getEntity();
         byte[] buff = new byte[1000];
-        assertEquals("Expected entity.", "{\"@odata.context\":\"$metadata#t\",\"value\":[{\"e\":0}]}", new String(buff, 0, is.read(buff)));
+        assertEquals("Expected entity.", "{\"@odata.context\":\"http://localhost:8080/odata4/loopy/gzip/$metadata#t\",\"value\":[{\"e\":0}]}", new String(buff, 0, is.read(buff)));
 
         client.header("Accept-Encoding", "gzip");
         response = client.invoke("GET", null);
@@ -314,7 +314,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         assertEquals("The request should succeed.", 200, response.getStatus());
         assertNotNull("Content-Encoding response header is expected.", response.getHeaderString("Content-Encoding"));
         assertEquals("Content-Encoding response header.", "gzip", response.getHeaderString("Content-Encoding").toLowerCase());
-        assertEquals("Expected entity.", "{\"@odata.context\":\"$metadata#t\",\"value\":[{\"e\":0}]}", new String(bos.toByteArray()));
+        assertEquals("Expected entity.", "{\"@odata.context\":\"http://localhost:8080/odata4/loopy/gzip/$metadata#t\",\"value\":[{\"e\":0}]}", new String(bos.toByteArray()));
     }
 
     @Test
