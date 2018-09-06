@@ -135,7 +135,6 @@ public class VDBRepository implements Serializable{
                         RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
 			}
 			vdb.setVersion(vdbKey.getVersion()); //canonicalize the version
-			vdb.addAttchment(VDBKey.class, vdbKey); //save the key for comparisons
 			vdb.setStatus(Status.LOADING);
 			this.vdbRepo.put(vdbKey, cvdb);
 			this.pendingDeployments.remove(vdbKey);
@@ -286,12 +285,12 @@ public class VDBRepository implements Serializable{
     }
 
 	private VDBMetaData removeVDB(VDBKey key) {
-		notifyBeforeRemove(key.getName(), key.getVersion(), this.vdbRepo.get(key));
+	    CompositeVDB removed = this.vdbRepo.remove(key);
 		this.pendingDeployments.remove(key);
-		CompositeVDB removed = this.vdbRepo.remove(key);
 		if (removed == null) {
-			return null;
+		    return null;
 		}
+        notifyBeforeRemove(key.getName(), key.getVersion(), removed);
 		removed.getVDB().setStatus(Status.REMOVED);
         // stop object replication
         if (this.objectReplictor != null) {
