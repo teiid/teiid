@@ -1465,4 +1465,13 @@ public class ExecutionFactory<F, C> {
     public boolean supportsWindowFunctionNthValue() {
         return supportsElementaryOlapOperations();
     }
+
+    /**
+     * 
+     * @since 11.2
+     * @return true if multiple executions may be open against a single connection at a time
+     */
+    public boolean supportsMultipleOpenExecutions() {
+        return true;
+    }
 }

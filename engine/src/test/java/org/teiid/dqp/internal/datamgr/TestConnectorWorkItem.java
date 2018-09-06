@@ -59,6 +59,7 @@ import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.language.Call;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
@@ -546,5 +547,33 @@ public class TestConnectorWorkItem {
 		ConnectorManager cm = TestConnectorManager.getConnectorManager();
 		cm.registerRequest(arm);
 	}
+	
+	@Test public void testIsThreadBound() throws Exception {
+        Command command = helpGetCommand("SELECT intkey FROM bqt1.smalla", EXAMPLE_BQT); //$NON-NLS-1$
+        AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
+        TransactionContext tc = new TransactionContext();
+        tc.setTransactionType(Scope.LOCAL);
+        arm.setTransactionContext(tc);
+        arm.setCommand(command);
+        final FakeConnector c = new FakeConnector() {
+            public boolean supportsMultipleOpenExecutions() {
+                return false;
+            }
+        };
+        ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector") { //$NON-NLS-1$ //$NON-NLS-2$
+            public ExecutionFactory getExecutionFactory() {
+                return c;
+            }
+            public Object getConnectionFactory(){
+                return c;
+            }
+        };
+        cm.start();
+        ConnectorWorkItem cwi = new ConnectorWorkItem(arm, cm);
+        assertTrue(cwi.isThreadBound());
+        
+        cwi = new ConnectorWorkItem(arm, TestConnectorManager.getConnectorManager());
+        assertFalse(cwi.isThreadBound());
+    }
 
 }

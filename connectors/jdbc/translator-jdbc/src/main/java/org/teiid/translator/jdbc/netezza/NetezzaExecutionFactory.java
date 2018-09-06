@@ -465,4 +465,10 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 	    return true;
 	}
 	
+	@Override
+	public boolean supportsMultipleOpenExecutions() {
+	    //See TEIID-5462
+	    return false;
+	}
+	
 }

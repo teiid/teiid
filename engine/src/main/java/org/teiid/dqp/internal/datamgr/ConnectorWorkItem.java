@@ -588,7 +588,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	
 	@Override
 	public boolean isThreadBound() {
-		return this.connector.isThreadBound();
+		return this.connector.isThreadBound() || (this.requestMsg.isTransactional() && !this.connector.supportsMultipleOpenExecutions());
 	}
 	
 	private List<?> correctTypes(List row) throws TeiidException {

@@ -1591,4 +1591,17 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         this.supportsNthValue = supportsNthValue;
     }
     
+    Boolean supportsMultipleOpenStatements;
+    @Override
+    public boolean supportsMultipleOpenExecutions() {
+        if (supportsMultipleOpenStatements != null) {
+            return supportsMultipleOpenStatements;
+        }
+        return delegate.supportsMultipleOpenExecutions();
+    }
+    
+    public void setSupportsMultipleOpenStatements(
+            boolean supportsMultipleOpenStatements) {
+        this.supportsMultipleOpenStatements = supportsMultipleOpenStatements;
+    }
 }
