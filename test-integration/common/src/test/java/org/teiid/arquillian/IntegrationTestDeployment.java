@@ -190,7 +190,7 @@ public class IntegrationTestDeployment {
 	}
 
 	@Test
-	public void testTraslators() throws Exception {
+	public void testTranslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
 		assertEquals(translators.toString(), 62, translators.size());
 
@@ -212,7 +212,7 @@ public class IntegrationTestDeployment {
 	}
 	
     @Test
-    public void testTraslatorProperties() throws Exception {
+    public void testTranslatorProperties() throws Exception {
         Collection<? extends PropertyDefinition> props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.OVERRIDE);
         assertEquals(20, props.size());
         
