@@ -44,6 +44,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.WindowFrame.BoundMode;
+import org.teiid.language.WindowFrame.FrameMode;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
@@ -1001,6 +1002,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	                (start.getBoundMode() == BoundMode.FOLLOWING && end.getBoundMode() != BoundMode.FOLLOWING)) {
     	            handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31285, new Object[] {windowFunction}), windowFunction);
     	        }
+    	    }
+    	    if (frame.getMode() == FrameMode.RANGE 
+    	            && (start.getBound() != null || (end != null && end.getBound() != null))) {
+    	        handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31288, new Object[] {windowFunction}), windowFunction);
     	    }
     	}
     	

@@ -1485,6 +1485,10 @@ public class TestValidator {
     @Test public void testWindowFunctionFrameValid() {
         helpValidate("SELECT FIRST_VALUE(e1) over (order by e2 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) from pm1.g1", new String[] {}, RealMetadataFactory.example1Cached());        
     }
+    
+    @Test public void testWindowFunctionFrameRange() {
+        helpValidate("SELECT FIRST_VALUE(e1) over (order by e2 RANGE 1 PRECEDING) from pm1.g1", new String[] {"FIRST_VALUE(e1) OVER (ORDER BY e2 RANGE 1 PRECEDING)"}, RealMetadataFactory.example1Cached());        
+    }
 	
     @Test public void testWindowFunctionFilter() {
         helpValidate("SELECT row_number() FILTER (WHERE e2 is not null) over (order by e2) = 1 from pm1.g1", new String[] {"ROW_NUMBER() FILTER(WHERE e2 IS NOT NULL) OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());        
