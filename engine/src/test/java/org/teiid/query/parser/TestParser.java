@@ -5343,5 +5343,12 @@ public class TestParser {
         //ensures a stable parsing
         assertEquals("SELECT * FROM \"t.\".able", QueryParser.getQueryParser().parseCommand("SELECT * FROM \"t.\".able", ParseInfo.DEFAULT_INSTANCE).toString());
     }
+    
+    /**
+     * Should only work for string literals, not with the keyword
+     */
+    @Test public void testIncompleteTimestampDateLiteral() {
+        helpException("DATE '2000-01-01 00:00'");
+    }
 
 }

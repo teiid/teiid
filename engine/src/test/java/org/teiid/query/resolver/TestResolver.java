@@ -1178,69 +1178,17 @@ public class TestResolver {
 	}	
     
     @Test public void testStringConversion1() {
-		// Expected left expression
-        ElementSymbol e1 = new ElementSymbol("pm3.g1.e2"); //$NON-NLS-1$
-        e1.setType(DataTypeManager.DefaultDataClasses.DATE);
-      
-        // Expected right expression
-        Class srcType = DataTypeManager.DefaultDataClasses.STRING;
-        String tgtTypeName = DataTypeManager.DefaultDataTypes.DATE;
-        Expression expression = new Constant("2003-02-27"); //$NON-NLS-1$
-        
-		FunctionLibrary library = RealMetadataFactory.SFM.getSystemFunctionLibrary();                         
-		FunctionDescriptor fd = library.findFunction(FunctionLibrary.CONVERT, new Class[] { srcType, DataTypeManager.DefaultDataClasses.STRING });
-
-		Function conversion = new Function(fd.getName(), new Expression[] { expression, new Constant(tgtTypeName) });
-		conversion.setType(DataTypeManager.getDataTypeClass(tgtTypeName));
-		conversion.setFunctionDescriptor(fd);
-		conversion.makeImplicit();
-		
-		// Expected criteria
-		CompareCriteria expected = new CompareCriteria();
-		expected.setLeftExpression(e1);
-		expected.setOperator(CompareCriteria.EQ);
-		expected.setRightExpression(conversion);
-         
-		// Resolve the query and check against expected objects
-		CompareCriteria actual = (CompareCriteria) helpResolveCriteria("pm3.g1.e2='2003-02-27'");	 //$NON-NLS-1$
-	
-		assertEquals("Did not match expected criteria", expected, actual); //$NON-NLS-1$
+        metadata = RealMetadataFactory.exampleBQTCached();
+        Criteria crit = helpResolveCriteria("bqt1.smalla.datevalue = '2003-02-27'");
+        assertTrue(((CompareCriteria)crit).getRightExpression().getType() == DataTypeManager.DefaultDataClasses.DATE); 
+        assertEquals("bqt1.smalla.datevalue = {d'2003-02-27'}", crit.toString());
     }
 		
 	@Test public void testStringConversion2() {
-		// Expected left expression
-		ElementSymbol e1 = new ElementSymbol("pm3.g1.e2"); //$NON-NLS-1$
-		e1.setType(DataTypeManager.DefaultDataClasses.DATE);
-      
-		// Expected right expression
-		Class srcType = DataTypeManager.DefaultDataClasses.STRING;
-		String tgtTypeName = DataTypeManager.DefaultDataTypes.DATE;
-		Expression expression = new Constant("2003-02-27"); //$NON-NLS-1$
-        
-		FunctionLibrary library = RealMetadataFactory.SFM.getSystemFunctionLibrary();                        
-		FunctionDescriptor fd = library.findFunction(FunctionLibrary.CONVERT, new Class[] { srcType, DataTypeManager.DefaultDataClasses.STRING });
-
-		Function conversion = new Function(fd.getName(), new Expression[] { expression, new Constant(tgtTypeName) });
-		conversion.setType(DataTypeManager.getDataTypeClass(tgtTypeName));
-		conversion.setFunctionDescriptor(fd);
-		conversion.makeImplicit();
-		
-		// Expected criteria
-		CompareCriteria expected = new CompareCriteria();
-		expected.setLeftExpression(conversion);
-		expected.setOperator(CompareCriteria.EQ);
-		expected.setRightExpression(e1);
-         
-		// Resolve the query and check against expected objects
-		CompareCriteria actual = (CompareCriteria) helpResolveCriteria("'2003-02-27'=pm3.g1.e2");	 //$NON-NLS-1$
-	
-		//if (! actual.getLeftExpression().equals(expected.getLeftExpression())) {
-		//	fail("Left expressions not equal");
-		//} else if (!actual.getRightExpression().equals(expected.getRightExpression())) {
-		//	fail("Right expressions not equal");
-		//}
-		
-		assertEquals("Did not match expected criteria", expected, actual); //$NON-NLS-1$
+	    metadata = RealMetadataFactory.exampleBQTCached();
+        Criteria crit = helpResolveCriteria("'2003-02-27' = bqt1.smalla.datevalue");
+        assertTrue(((CompareCriteria)crit).getRightExpression().getType() == DataTypeManager.DefaultDataClasses.DATE); 
+        assertEquals("{d'2003-02-27'} = bqt1.smalla.datevalue", crit.toString());
 	}		
     
     // special test for both sides are String
@@ -2836,6 +2784,20 @@ public class TestResolver {
     	Criteria crit = helpResolveCriteria("bqt1.smalla.timestampvalue = '2000-01-01'");
     	assertTrue(((CompareCriteria)crit).getRightExpression().getType() == DataTypeManager.DefaultDataClasses.TIMESTAMP); 
     	assertEquals("bqt1.smalla.timestampvalue = {ts'2000-01-01 00:00:00.0'}", crit.toString());
+    }
+    
+    @Test public void testIncompleteTimestampDateLiteral() {
+        metadata = RealMetadataFactory.exampleBQTCached();
+        Criteria crit = helpResolveCriteria("bqt1.smalla.timestampvalue = '2000-01-01 01:02'");
+        assertTrue(((CompareCriteria)crit).getRightExpression().getType() == DataTypeManager.DefaultDataClasses.TIMESTAMP); 
+        assertEquals("bqt1.smalla.timestampvalue = {ts'2000-01-01 01:02:00.0'}", crit.toString());
+    }
+    
+    @Test public void testIncompleteTimestampDateLiteral2() {
+        metadata = RealMetadataFactory.exampleBQTCached();
+        Criteria crit = helpResolveCriteria("bqt1.smalla.datevalue = '2000-01-01 00:00'");
+        assertTrue(((CompareCriteria)crit).getRightExpression().getType() == DataTypeManager.DefaultDataClasses.DATE); 
+        assertEquals("bqt1.smalla.datevalue = {d'2000-01-01'}", crit.toString());
     }
     
     @Test public void testCharInString() {

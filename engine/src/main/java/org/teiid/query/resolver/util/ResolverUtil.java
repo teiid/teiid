@@ -30,6 +30,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.StringUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -217,8 +218,9 @@ public class ResolverUtil {
         if (sourceExpression instanceof Constant) {
         	Expression result = convertConstant(sourceTypeName, targetTypeName, (Constant)sourceExpression);
         	if (result != null) {
-        		if (result.getType() == DataTypeManager.DefaultDataClasses.TIMESTAMP) {
-        			return result;
+        		if (result.getType() == DataTypeManager.DefaultDataClasses.TIMESTAMP || result.getType() == DataTypeManager.DefaultDataClasses.DATE) {
+        		    //return the expression as it may be a custom conversion and not something that the implicit convert captures
+        		    return result;
         		}
             	return getConversion(sourceExpression, sourceTypeName, targetTypeName, true, metadata.getFunctionLibrary());
         	}
@@ -559,6 +561,19 @@ public class ResolverUtil {
 					return new Constant(new Timestamp(((Date)newValue).getTime()), parameterType);
 				} catch (TransformationException e1) {
 				}
+        	}
+        	if (parameterType == DataTypeManager.DefaultDataClasses.TIMESTAMP 
+        	        || (parameterType == DataTypeManager.DefaultDataClasses.DATE && defaultValue.toString().endsWith("00:00"))) { //$NON-NLS-1$
+        	    //see if the seconds were omitted
+        	    String val = defaultValue.toString() + ":00"; //$NON-NLS-1$
+        	    try {
+                    Object newValue = DataTypeManager.transformValue(val, DataTypeManager.DefaultDataClasses.TIMESTAMP);
+                    if (parameterType == DataTypeManager.DefaultDataClasses.DATE) {
+                        return new Constant(TimestampWithTimezone.createDate((Timestamp)newValue), DataTypeManager.DefaultDataClasses.DATE);
+                    }
+                    return new Constant(new Timestamp(((Date)newValue).getTime()), DataTypeManager.DefaultDataClasses.TIMESTAMP);
+                } catch (TransformationException e1) {
+                }
         	}
              throw new QueryResolverException(QueryPlugin.Event.TEIID30090, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30090, defaultValue, defaultValue.getClass(), parameterType));
         }
