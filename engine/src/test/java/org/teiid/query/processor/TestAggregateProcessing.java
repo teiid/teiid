@@ -966,6 +966,22 @@ public class TestAggregateProcessing {
 		helpProcess(plan, dataManager, expected);
 	}
 	
+	@Test public void testStringAggNoRows() throws Exception {
+        // Create query
+        String sql = "SELECT string_agg(e1, ',') from pm1.g1 where e2 > 10"; //$NON-NLS-1$
+
+        // Create expected results
+        List[] expected = new List[] {
+                Collections.singletonList(null),
+        };
+
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
+        helpProcess(plan, dataManager, expected);
+    }
+	
 	@Test public void testStringAggBinary() throws Exception {
 		// Create query
 		String sql = "SELECT cast(string_agg(to_bytes(e1, 'UTF-8'), X'AB') as varbinary) from pm1.g1 group by e3"; //$NON-NLS-1$

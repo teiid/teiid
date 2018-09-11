@@ -1257,7 +1257,7 @@ public class TestWindowFunctions {
         
         List<?>[] expected = new List[] {
                 Arrays.asList("a,a,a"),
-                Arrays.asList(""),
+                Collections.singletonList(null),
                 Arrays.asList("a,a,a"),
                 Arrays.asList("a,a,a,b,c"),
                 Arrays.asList("a,a,a,b"),

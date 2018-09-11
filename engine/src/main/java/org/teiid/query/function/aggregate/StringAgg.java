@@ -121,7 +121,7 @@ public class StringAgg extends AggregateFunction {
      */
     public Object getResult(CommandContext commandContext) throws TeiidProcessingException{
     	if (this.result == null) {
-    		this.result = buildResult(commandContext);
+    		return null;
     	}
     	
     	try {
