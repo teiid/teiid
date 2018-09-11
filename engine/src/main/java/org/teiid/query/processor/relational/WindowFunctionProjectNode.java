@@ -426,7 +426,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			boolean multiGroup = false;
 			int[] partitionIndexes = null;
 			int[] orderIndexes = null;
-
+			TupleBuffer sorted = null;
 			//if there is partitioning or ordering, then sort
 			if (!info.orderType.isEmpty()) {
 				multiGroup = true;
@@ -455,42 +455,57 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				SortUtility su = new SortUtility(null, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
 				su.setWorkingBuffer(tb);
 				su.setNonBlocking(true);
-				TupleBuffer sorted = su.sort();
+				boolean success = false;
+				try {
+				    sorted = su.sort();
+				    success = true;
+				} finally {
+				    if (!success) {
+				        su.remove();
+				    }
+				}
 				specificationTs = sorted.createIndexedTupleSource(true);
 			}
-			List<AggregateFunction> aggs = initializeAccumulators(info.functions, specIndex, false);
-			List<AggregateFunction> rowValueAggs = initializeAccumulators(info.rowValuefunctions, specIndex, true);
-
-			int groupId = 0;
-			List<?> lastRow = null;
-			while (specificationTs.hasNext()) {
-				List<?> tuple = specificationTs.nextTuple();
-				if (multiGroup) {
-				    if (lastRow != null) {
-				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
-				    	if (!aggs.isEmpty() && (!samePartition || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1)) {
-			        		saveValues(specIndex, aggs, groupId, samePartition, false);
-		        			groupId++;
-				    	}
-		        		saveValues(specIndex, rowValueAggs, lastRow.get(lastRow.size() - 1), samePartition, true);
-		        	}
-				    if (!aggs.isEmpty()) {
-			        	List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
-						partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
-				    }
-		        }
-		        for (AggregateFunction function : aggs) {
-		        	function.addInput(tuple, getContext());
-		        }
-		        for (AggregateFunction function : rowValueAggs) {
-		        	function.addInput(tuple, getContext());
-		        }
-		        lastRow = tuple;
+			
+			try {
+    			List<AggregateFunction> aggs = initializeAccumulators(info.functions, specIndex, false);
+    			List<AggregateFunction> rowValueAggs = initializeAccumulators(info.rowValuefunctions, specIndex, true);
+    
+    			int groupId = 0;
+    			List<?> lastRow = null;
+    			while (specificationTs.hasNext()) {
+    				List<?> tuple = specificationTs.nextTuple();
+    				if (multiGroup) {
+    				    if (lastRow != null) {
+    				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
+    				    	if (!aggs.isEmpty() && (!samePartition || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1)) {
+    			        		saveValues(specIndex, aggs, groupId, samePartition, false);
+    		        			groupId++;
+    				    	}
+    		        		saveValues(specIndex, rowValueAggs, lastRow.get(lastRow.size() - 1), samePartition, true);
+    		        	}
+    				    if (!aggs.isEmpty()) {
+    			        	List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
+    						partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
+    				    }
+    		        }
+    		        for (AggregateFunction function : aggs) {
+    		        	function.addInput(tuple, getContext());
+    		        }
+    		        for (AggregateFunction function : rowValueAggs) {
+    		        	function.addInput(tuple, getContext());
+    		        }
+    		        lastRow = tuple;
+    			}
+    		    if(lastRow != null) {
+    		    	saveValues(specIndex, aggs, groupId, true, false);
+    		    	saveValues(specIndex, rowValueAggs, lastRow.get(lastRow.size() - 1), true, true);
+    		    }
+			} finally {
+			    if (sorted != null) {
+			        sorted.remove();
+			    }
 			}
-		    if(lastRow != null) {
-		    	saveValues(specIndex, aggs, groupId, true, false);
-		    	saveValues(specIndex, rowValueAggs, lastRow.get(lastRow.size() - 1), true, true);
-		    }
 		}
 	}
 
