@@ -45,6 +45,8 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants;
+import org.teiid.language.WindowFrame.BoundMode;
+import org.teiid.language.WindowFrame.FrameMode;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
@@ -81,6 +83,7 @@ import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.symbol.WindowFrame.FrameBound;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
@@ -2288,6 +2291,24 @@ public class QueryRewriter {
                 }
             }
         } else {
+            if (expression instanceof WindowFunction) {
+                WindowFunction wf = (WindowFunction)expression;
+                WindowFrame windowFrame = wf.getWindowSpecification().getWindowFrame();
+                if (windowFrame != null) {
+                    if (Integer.valueOf(0).equals(windowFrame.getStart().getBound())) {
+                        windowFrame.setStart(new FrameBound(BoundMode.CURRENT_ROW));
+                    }
+                    if (windowFrame.getEnd() != null && Integer.valueOf(0).equals(windowFrame.getEnd().getBound())) {
+                        windowFrame.setEnd(new FrameBound(BoundMode.CURRENT_ROW));
+                    }
+                    if (windowFrame.getMode() == FrameMode.RANGE 
+                            && (windowFrame.getEnd() == null || windowFrame.getEnd().getBoundMode() == BoundMode.CURRENT_ROW)
+                            && windowFrame.getStart().getBound() == null && windowFrame.getStart().getBoundMode() == BoundMode.PRECEDING) {
+                        //default window frame, just remove
+                        wf.getWindowSpecification().setWindowFrame(null);
+                    }
+                }
+            }
         	rewriteExpressions(expression);
         } 
     	

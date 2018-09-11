@@ -324,6 +324,10 @@ public class MergeJoinStrategy extends JoinStrategy {
      * 0 if the values match
      * positive if right is greater than left
      * negative if left is greater than right
+     * 
+     * In column diff mode, return -1 if the they are the same
+     * else return the index where they differ
+     * 
      * @param leftProbe
      * @param rightProbe
      * @param leftExpressionIndecies

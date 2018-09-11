@@ -43,7 +43,10 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.language.WindowFrame.BoundMode;
+import org.teiid.language.WindowFrame.FrameMode;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.AggregateFunction;
@@ -57,6 +60,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.WindowFrame;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.util.SymbolMap;
@@ -86,6 +90,37 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		List<Boolean> orderType = new ArrayList<Boolean>();
 		List<WindowFunctionInfo> functions = new ArrayList<WindowFunctionInfo>();
 		List<WindowFunctionInfo> rowValuefunctions = new ArrayList<WindowFunctionInfo>();
+        WindowFrame windowFrame;
+        
+        boolean isUnboundedFollowing() {
+            return windowFrame != null && windowFrame.getEnd() != null && windowFrame.getEnd().getBound() == null && windowFrame.getEnd().getBoundMode() == BoundMode.FOLLOWING;
+        }
+        
+        Integer getWindowStartOffset() {
+            if (windowFrame.getStart().getBoundMode() == BoundMode.CURRENT_ROW) {
+                return 0;
+            }
+            if (windowFrame.getStart().getBound() == null) {
+                return null;
+            }
+            return (windowFrame.getStart().getBoundMode() == BoundMode.PRECEDING?-1:1)*windowFrame.getStart().getBound();
+        }        
+        
+        Integer getWindowEndOffset() {
+            if (windowFrame.getEnd() == null || windowFrame.getEnd().getBoundMode() == BoundMode.CURRENT_ROW) {
+                return 0;
+            }
+            if (windowFrame.getEnd().getBound() == null) {
+                return null;
+            }
+            return (windowFrame.getEnd().getBoundMode() == BoundMode.PRECEDING?-1:1)*windowFrame.getEnd().getBound();
+        }
+        
+        boolean processEachFrame() {
+            return windowFrame != null &&
+                    (windowFrame.getStart().getBound() != null || windowFrame.getStart().getBoundMode() == BoundMode.CURRENT_ROW
+                    || (windowFrame.getEnd() != null && windowFrame.getEnd().getBound() != null));
+        }
 	}
 	
 	private LinkedHashMap<WindowSpecification, WindowSpecificationInfo> windows = new LinkedHashMap<WindowSpecification, WindowSpecificationInfo>();
@@ -243,6 +278,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
         			wsi.orderType.add(item.isAscending());
         			wsi.nullOrderings.add(item.getNullOrdering());
         		}
+                wsi.windowFrame = ws.getWindowFrame();
         	}
         }
         return wsi;
@@ -426,7 +462,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			boolean multiGroup = false;
 			int[] partitionIndexes = null;
 			int[] orderIndexes = null;
-
+			TupleBuffer sorted = null;
 			//if there is partitioning or ordering, then sort
 			if (!info.orderType.isEmpty()) {
 				multiGroup = true;
@@ -455,20 +491,29 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				SortUtility su = new SortUtility(null, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
 				su.setWorkingBuffer(tb);
 				su.setNonBlocking(true);
-				TupleBuffer sorted = su.sort();
-				specificationTs = sorted.createIndexedTupleSource(true);
+				sorted = su.sort();
+				specificationTs = sorted.createIndexedTupleSource(!info.processEachFrame());
 			}
 			List<AggregateFunction> aggs = initializeAccumulators(info.functions, specIndex, false);
 			List<AggregateFunction> rowValueAggs = initializeAccumulators(info.rowValuefunctions, specIndex, true);
-
+			
+			if (info.processEachFrame()) {
+			    processEachFrame(specIndex, info, specificationTs, partitionIndexes, orderIndexes, sorted, aggs, rowValueAggs);
+                return;
+            }
+			
 			int groupId = 0;
-			List<?> lastRow = null;
+            List<?> lastRow = null;
+			//rolling creation of the output
 			while (specificationTs.hasNext()) {
 				List<?> tuple = specificationTs.nextTuple();
 				if (multiGroup) {
 				    if (lastRow != null) {
 				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
-				    	if (!aggs.isEmpty() && (!samePartition || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1)) {
+				    	if (!aggs.isEmpty() && !(samePartition && info.isUnboundedFollowing()) 
+				    	        && (!samePartition 
+				    	                || (info.windowFrame != null && info.windowFrame.getMode() == FrameMode.ROWS) 
+				    	                || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1)) {
 			        		saveValues(specIndex, aggs, groupId, samePartition, false);
 		        			groupId++;
 				    	}
@@ -493,6 +538,123 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		    }
 		}
 	}
+
+	/**
+	 * The frame clause requires us to recompute over reach frame, rather than using
+	 * the rolling strategy.
+	 * 
+	 * 
+	 */
+    private void processEachFrame(int specIndex, WindowSpecificationInfo info,
+            IndexedTupleSource specificationTs, int[] partitionIndexes, int[] orderIndexes,
+            TupleBuffer sorted, List<AggregateFunction> aggs,
+            List<AggregateFunction> rowValueAggs)
+            throws TeiidComponentException, TeiidProcessingException,
+            AssertionError, FunctionExecutionException,
+            ExpressionEvaluationException {
+        Assertion.assertTrue(rowValueAggs.isEmpty());
+        Assertion.assertTrue(!aggs.isEmpty());
+        
+        Integer frameStartOffset = info.getWindowStartOffset();
+        Integer frameEndOffset = info.getWindowEndOffset();
+        
+        int groupId = 0;
+        List<?> lastRow = null;
+        Long startPartition = null;
+        Long endPartition = null;
+
+        while (specificationTs.hasNext()) {
+            long currentIndex = specificationTs.getCurrentIndex();
+            List<?> tuple = specificationTs.nextTuple();
+            
+            boolean peer = false;
+            if (lastRow != null) {
+                if (endPartition != null && currentIndex > endPartition) {
+                    startPartition = null;
+                    endPartition = null;
+                    lastRow = null;
+                    groupId++;
+                } else if (info.windowFrame.getMode() == FrameMode.ROWS 
+                        || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1) {
+                    groupId++;        
+                } else {
+                    peer = true;
+                }
+            }
+            lastRow = tuple;
+            List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
+            partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
+            
+            if (peer) {
+                //it's been accounted for since we computed the aggregate 
+                //off of the first peer
+                continue;
+            }
+            
+            if (startPartition == null) {
+                startPartition = currentIndex;
+                //binary search for the end
+                if (!info.groupIndexes.isEmpty()) {
+                    long l = startPartition;
+                    long r = sorted.getRowCount() + 1;
+                    while (l < r) {
+                        long m = (l + r)/2;
+                        if (m == startPartition) {
+                            l = m + 1;
+                            break;
+                        }
+                        List<?> possibleEnd = sorted.getBatch(m).getTuple(m);
+                        if (GroupingNode.sameGroup(partitionIndexes, tuple, possibleEnd) == -1) {
+                            l = m + 1;
+                        } else {
+                            r = m;
+                        }
+                    }
+                    endPartition = l - 1;
+                } else {
+                    //single partition
+                    endPartition = sorted.getRowCount();
+                }
+            }
+            
+            //determine the indexes of the frame bounds
+            
+            long start = startPartition;
+            if (frameStartOffset != null) {
+                start = Math.max(currentIndex + frameStartOffset, startPartition);
+            }
+            
+            long end = endPartition;
+            if (frameEndOffset != null) {
+                end = currentIndex + frameEndOffset;
+                //check for end current row in range mode
+                if (info.windowFrame.getMode() == FrameMode.RANGE) {
+                    Assertion.assertTrue(frameEndOffset.intValue() == 0);
+                    for (long i = end + 1; i <= endPartition; i++) {
+                        List<?> possiblePeer = sorted.getBatch(i).getTuple(i);
+                        if (GroupingNode.sameGroup(orderIndexes, tuple, possiblePeer) != -1) {
+                            break;
+                        }
+                        List<Object> peerPartitionTuple = Arrays.asList(possiblePeer.get(possiblePeer.size() - 1), groupId);
+                        partitionMapping[specIndex].insert(peerPartitionTuple, InsertMode.NEW, -1);
+                        specificationTs.nextTuple();
+                        end++;
+                    }
+                }
+            }
+            
+            //compute the aggregates
+            
+            for (long i = start; i <= end && i <= endPartition; i++) {
+                List<?> frameTuple = sorted.getBatch(i).getTuple(i);
+                for (AggregateFunction function : aggs) {
+                    function.addInput(frameTuple, getContext());
+                }
+            }
+            
+            saveValues(specIndex, aggs, groupId, false, false);
+        }
+    }
 
 	private void saveValues(int specIndex,
 			List<AggregateFunction> aggs, Object id,

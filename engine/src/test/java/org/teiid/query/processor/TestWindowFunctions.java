@@ -18,7 +18,6 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
@@ -28,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -381,6 +379,25 @@ public class TestWindowFunctions {
     
         FakeDataManager dataManager = new FakeDataManager();
     	sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+	
+	@Test public void testAggFiltered() throws Exception {
+        String sql = "SELECT e1, e2, max(e1) filter (where e2 > 1) over (order by e2) from pm1.g1"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("a", 0, null),
+                Arrays.asList(null, 1, null),
+                Arrays.asList("a", 3, "b"),
+                Arrays.asList("c", 1, null),
+                Arrays.asList("b", 2, "b"),
+                Arrays.asList("a", 0, null),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
@@ -1081,17 +1098,158 @@ public class TestWindowFunctions {
         }; 
         
         helpProcess(plan, dataMgr, expected);
+    }
+    
+    @Test public void testCountRangeRows() throws Exception {
+        String sql = "select e1, row_number() over (order by e1), count(*) over (order by e1 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) c from pm1.g1";
         
-        caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_FRAME_CLAUSE, false);
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 2, 2),
+                Arrays.asList(null, 1, 1),
+                Arrays.asList("a", 3, 3),
+                Arrays.asList("c", 6, 6),
+                Arrays.asList("b", 5, 5),
+                Arrays.asList("a", 4, 4),
+        };
         
-        try {
-            //we'll proactively fail
-            TestProcessor.helpGetPlan(helpGetCommand(sql, metadata), 
-                metadata, new DefaultCapabilitiesFinder(caps), new CommandContext()); //$NON-NLS-1$
-            fail();
-        } catch (QueryPlannerException e) {
-            
-        }
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testUnboundedFollowing() throws Exception {
+        String sql = "select e1, count(*) over (order by e1 RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 6),
+                Arrays.asList(null, 6),
+                Arrays.asList("a", 6),
+                Arrays.asList("c", 6),
+                Arrays.asList("b", 6),
+                Arrays.asList("a", 6),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testEndPreceding() throws Exception {
+        String sql = "select e1, count(*) over (order by e1 ROWS BETWEEN UNBOUNDED PRECEDING AND 2 PRECEDING) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 0),
+                Arrays.asList(null, 0),
+                Arrays.asList("a", 1),
+                Arrays.asList("c", 4),
+                Arrays.asList("b", 3),
+                Arrays.asList("a", 2),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testRangeCurrentRowUnbounded() throws Exception {
+        String sql = "select e1, count(*) over (order by e1 RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 5),
+                Arrays.asList(null, 6),
+                Arrays.asList("a", 5),
+                Arrays.asList("c", 1),
+                Arrays.asList("b", 2),
+                Arrays.asList("a", 5),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testRangePrecedingFollowing() throws Exception {
+        String sql = "select e1, count(*) over (order by e1 ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 3),
+                Arrays.asList(null, 2),
+                Arrays.asList("a", 3),
+                Arrays.asList("c", 2),
+                Arrays.asList("b", 3),
+                Arrays.asList("a", 3),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testRowsFollowingFollowing() throws Exception {
+        String sql = "select e1, min(e1) over (order by e1 ROWS BETWEEN 3 FOLLOWING AND 6 FOLLOWING) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", "b"),
+                Arrays.asList(null, "a"),
+                Arrays.asList("a", "c"),
+                Arrays.asList("c", null),
+                Arrays.asList("b", null),
+                Arrays.asList("a", null),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testPartitionedRows() throws Exception {
+        String sql = "select e1, e2, count(e2) over (partition by e1 order by e2 ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 0, 3),
+                Arrays.asList(null, 1, 1),
+                Arrays.asList("a", 3, 1),
+                Arrays.asList("c", 1, 1),
+                Arrays.asList("b", 2, 1),
+                Arrays.asList("a", 0, 2),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testPartitionedCurrentCurrent() throws Exception {
+        String sql = "select e1, count(e1) over (partition by e1 order by 1 RANGE CURRENT ROW) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 3),
+                Arrays.asList(null, 0),
+                Arrays.asList("a", 3),
+                Arrays.asList("c", 1),
+                Arrays.asList("b", 1),
+                Arrays.asList("a", 3),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
     }
     
 }

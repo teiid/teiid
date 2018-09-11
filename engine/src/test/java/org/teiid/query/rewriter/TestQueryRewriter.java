@@ -1844,5 +1844,15 @@ public class TestQueryRewriter {
         helpTestRewriteCommand("SELECT char_length(e1), character_length(e1) FROM pm1.g1", //$NON-NLS-1$
                                 "SELECT length(e1), length(e1) FROM pm1.g1"); //$NON-NLS-1$
     }
+    
+    @Test public void testWindowFuntionFrame() {
+        helpTestRewriteCommand("SELECT max(e1) over (order by e2 RANGE UNBOUNDED PRECEDING) from pm1.g1", //$NON-NLS-1$
+                                "SELECT MAX(e1) OVER (ORDER BY e2) FROM pm1.g1"); //$NON-NLS-1$
+    }
+    
+    @Test public void testWindowFuntionFrame1() {
+        helpTestRewriteCommand("SELECT max(e1) over (order by e2 ROWS 0 PRECEDING) from pm1.g1", //$NON-NLS-1$
+                                "SELECT MAX(e1) OVER (ORDER BY e2 ROWS CURRENT ROW) FROM pm1.g1"); //$NON-NLS-1$
+    }
 
 }
