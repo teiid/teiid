@@ -1252,4 +1252,23 @@ public class TestWindowFunctions {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testStringAggOverOrderBy() throws Exception {
+        String sql = "select string_agg(e1, ',') over (order by e1) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a,a,a"),
+                Arrays.asList(""),
+                Arrays.asList("a,a,a"),
+                Arrays.asList("a,a,a,b,c"),
+                Arrays.asList("a,a,a,b"),
+                Arrays.asList("a,a,a"),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
 }

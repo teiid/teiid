@@ -61,6 +61,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.WindowFrame;
+import org.teiid.query.sql.symbol.WindowFrame.FrameBound;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.util.SymbolMap;
@@ -117,6 +118,23 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
         }
         
         boolean processEachFrame() {
+            for (WindowFunctionInfo info : functions) {
+                //because getting the output is destructive, we need
+                //to process these for each frame
+                //TODO: udfs
+                switch (info.function.getFunction().getAggregateFunction()) {
+                case XMLAGG:
+                case STRING_AGG:
+                case JSONARRAY_AGG:
+                case TEXTAGG:
+                    if (windowFrame == null) {
+                        //use the default frame range unbounded preceding
+                        this.windowFrame = new WindowFrame(FrameMode.RANGE);
+                        this.windowFrame.setStart(new FrameBound(BoundMode.PRECEDING));
+                    }
+                    return true;
+                }
+            }
             return windowFrame != null &&
                     (windowFrame.getStart().getBound() != null || windowFrame.getStart().getBoundMode() == BoundMode.CURRENT_ROW
                     || (windowFrame.getEnd() != null && windowFrame.getEnd().getBound() != null));

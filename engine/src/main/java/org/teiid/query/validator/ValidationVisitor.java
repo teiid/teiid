@@ -913,15 +913,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.ranking_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$
     		}
     		break;
-    	case TEXTAGG:
-    	case ARRAY_AGG:
-    	case JSONARRAY_AGG:
-    	case XMLAGG:
-    	case STRING_AGG:
-    		if (windowFunction.getWindowSpecification().getOrderBy() != null) {
-    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.window_order_by", windowFunction), windowFunction); //$NON-NLS-1$
-            }
-    		break;
     	case LAST_VALUE:
     	case FIRST_VALUE:
             if (windowFunction.getWindowSpecification().getOrderBy() == null) {
