@@ -84,14 +84,14 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		p.setProperty("RequestTimeout", "20000");
 		AdminUtil.createDataSource(admin, "sample-ws", "webservice", p);
 		deployVDB();
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1));
 		
 		admin.deploy("sample-ws-vdb.xml",new ReaderInputStream(new StringReader(
 				//simple ws vdb
 				"<vdb name=\"sample-ws\" version=\"1\">"
 				+ "<model name=\"ws\"><source name=\"ws\" translator-name=\"ws\" connection-jndi-name=\"java:/sample-ws\"/></model>"
 				+"</vdb>"), Charset.forName("UTF-8")));
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample-ws", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample-ws", 1));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
 		
@@ -123,7 +123,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		assertEquals("<e1>ABCDEFGHIJ</e1>", this.internalResultSet.getString(1));
 		
 		admin.deploy("sample2-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample2-vdb.xml")));
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample2", 1, 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample2", 1));
 		
 		//test swagger
 		response = httpCall("http://localhost:8080/sample_1/swagger.yaml", "GET", null);
@@ -186,13 +186,13 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 			
 		}
         admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1));
 	}
     
 	@Test
     public void testMultipartPostOperation() throws Exception {
 		deployVDB();
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
 		
@@ -260,7 +260,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		String vdb = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sample-vdb.xml"));
 		vdb = StringUtil.replace(vdb, "name=\"sample\" version=\"1\"", "name=\"sample\" version=\"2.1.1\"");
 		admin.deploy("sample-vdb.xml", new ByteArrayInputStream(vdb.getBytes("UTF-8")));
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", "2.1.1", 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", "2.1.1"));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
 		

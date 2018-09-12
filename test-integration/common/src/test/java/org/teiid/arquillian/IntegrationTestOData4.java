@@ -82,7 +82,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 		
 		admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
 		
 		WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
@@ -127,7 +127,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
         
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
         
         String vdb2 = "<?xml version='1.0' encoding='UTF-8'?>\n" + 
                 "<vdb name=\"TestOData\" version=\"1\">\n" + 
@@ -147,7 +147,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         admin.createDataSource("TestOData4", "webservice", p); 
         
         admin.deploy("test-vdb.xml", new ReaderInputStream(new StringReader(vdb2), Charset.forName("UTF-8")));
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "TestOData", 1, 30000));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "TestOData", 1));
         
         this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:TestOData@mm://localhost:31000;user=user;password=user", null);
         
@@ -174,7 +174,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
                 "</vdb>";
         
         admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
         
         WebClient client = WebClient.create("http://localhost:8080/odata4/Loopy/m/x(a='a',b=2011-09-11T00:00:00Z)");
         client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
@@ -205,7 +205,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 		
 		admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
 		
 		WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
@@ -230,7 +230,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
         
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
         
         WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
         Response response = client.invoke("OPTIONS", null);
@@ -289,7 +289,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 
         admin.deploy("loopy-vdb.xml", new ByteArrayInputStream(vdb.getBytes()));
         
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
 
         WebClient client = WebClient.create("http://localhost:8080/odata4/loopy/gzip/t");
         client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes()));
@@ -331,7 +331,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 
         admin.deploy("loopy-vdb.xml", new ByteArrayInputStream(vdb.getBytes()));
 
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
         
         String data = "{\"e\":1}";
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

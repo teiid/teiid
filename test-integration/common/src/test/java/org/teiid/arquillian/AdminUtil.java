@@ -53,12 +53,10 @@ public class AdminUtil {
 		return true;
 	}
 
-	static boolean waitForVDBLoad(Admin admin, String vdbName, Object vdbVersion,
-			int timeoutInSecs) throws AdminException {
-		long waitUntil = System.currentTimeMillis() + timeoutInSecs*1000;
-		if (timeoutInSecs < 0) {
-			waitUntil = Long.MAX_VALUE;
-		}
+	public static final int DEFAULT_VDB_LOAD_TIMEOUT = 7;
+	
+	static boolean waitForVDBLoad(Admin admin, String vdbName, Object vdbVersion) throws AdminException {
+		long waitUntil = System.currentTimeMillis() + DEFAULT_VDB_LOAD_TIMEOUT*1000;
 		boolean first = true;
 		do {
 			if (!first) {

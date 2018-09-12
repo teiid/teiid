@@ -65,7 +65,7 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 		
 		AdminUtil.createDataSource(admin, "marketdata-file", "file", props);
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
 		execute("SELECT * FROM Stock"); //$NON-NLS-1$
@@ -76,7 +76,7 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 		
 		admin.deploy("reuse-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("reuse-vdb.xml")));
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "reuse", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "reuse", 1));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:reuse@mm://localhost:31000;user=user;password=user", null);
 		
@@ -86,14 +86,14 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 		
 		
 		admin.deploy("reuse1-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("reuse1-vdb.xml")));
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "reuse1", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "reuse1", 1));
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:reuse1@mm://localhost:31000;user=user;password=user", null);
 		
 		execute("SELECT * FROM Stock2"); //$NON-NLS-1$
 		
 		//redeploy
 		admin.deploy("dynamicview-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1));
 		
 		//ensure we are up
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);

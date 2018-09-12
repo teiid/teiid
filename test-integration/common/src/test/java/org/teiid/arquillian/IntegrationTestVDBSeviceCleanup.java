@@ -58,7 +58,7 @@ public class IntegrationTestVDBSeviceCleanup extends AbstractMMQueryTestCase {
 		
 		createDS("ServiceDS");
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1));
 		
 		assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
 		

@@ -68,7 +68,7 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		
 		AdminUtil.createDataSource(admin, "marketdata-file", "file", props);
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
 		
@@ -83,7 +83,7 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		
 		admin.deploy("dynamicfunc-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicfunc-vdb.xml")));
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-func", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-func", 1));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic-func@mm://localhost:31000;user=user;password=user", null);
 		
@@ -99,7 +99,7 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 			      .addAsResource(new ArchiveAsset(udfJar, ZipExporter.class), "lib/udf.jar");
 		admin.deploy("dynamic-ddl.vdb", jar.as(ZipExporter.class).exportAsInputStream());
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-ddl", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-ddl", 1));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic-ddl@mm://localhost:31000;user=user;password=user", null);
 		

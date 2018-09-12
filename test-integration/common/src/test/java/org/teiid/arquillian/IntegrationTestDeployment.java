@@ -110,7 +110,7 @@ public class IntegrationTestDeployment {
 
 		VDB vdb = admin.getVDB("bqt", 1);
 		assertFalse(vdb.isValid());
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "bqt", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "bqt", 1));
 		assertFalse(vdb.isValid());
 
 		Properties props = new Properties();
@@ -247,7 +247,7 @@ public class IntegrationTestDeployment {
 	public void testVDBConnectionType() throws Exception {
 		admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));	
 		
-		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);	
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1);	
 		
 		VDB vdb = admin.getVDB("bqt", 1);
 		Model model = vdb.getModels().get(0);
@@ -276,7 +276,7 @@ public class IntegrationTestDeployment {
 		}
 
 		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));
-		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);	
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1);	
 
 		admin.updateSource("bqt", 2, "Source", "h2", "java:jboss/datasources/ExampleDS");
 		
@@ -347,7 +347,7 @@ public class IntegrationTestDeployment {
 	private boolean deployVdb() throws AdminException, FileNotFoundException {
 		boolean vdbOneDeployed;
 		admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
-		AdminUtil.waitForVDBLoad(admin, "bqt", 1, 3);
+		AdminUtil.waitForVDBLoad(admin, "bqt", 1);
 		vdbOneDeployed = true;
 		
 		VDB vdb = admin.getVDB("bqt", 1);
@@ -508,7 +508,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testDataRoleMapping() throws Exception{
 		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
-		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1);
 
 		VDB vdb = admin.getVDB("bqt", 2);
 		Model model = vdb.getModels().get(0);
@@ -592,7 +592,7 @@ public class IntegrationTestDeployment {
                 "    </model>\n" + 
                 "</vdb>";
         admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
-        AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+        AdminUtil.waitForVDBLoad(admin, vdbName, 1);
         
         assertTrue(admin.getDataSourceTemplateNames().contains("teiid-xa"));
         
@@ -649,17 +649,17 @@ public class IntegrationTestDeployment {
 		
 		// normal load
 		admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
-		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1);
 		int count = assertMetadataLoadCount(false, 1);
 
 		// 1st restart
 		admin.restartVDB(vdbName, 1);
-		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1);
 		count = assertMetadataLoadCount(true, count+1);
 
 		// 2nd restart
 		admin.restartVDB(vdbName, 1);
-		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1);
 		count = assertMetadataLoadCount(true, count+1);
 		
 		admin.undeploy("loopy.jar");
@@ -700,7 +700,7 @@ public class IntegrationTestDeployment {
 		
 		// normal load
 		admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
-		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1);
 		
 		String ddl = admin.getSchema(vdbName, 1, "loopy", null, null);
 
@@ -718,7 +718,7 @@ public class IntegrationTestDeployment {
 		
 		admin.deploy("error-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("error-vdb.xml")));
 		
-		AdminUtil.waitForVDBLoad(admin, "error", 1, 3);
+		AdminUtil.waitForVDBLoad(admin, "error", 1);
 		VDB vdb = admin.getVDB("error", 1);
 		assertEquals(Status.FAILED, vdb.getStatus());
 	}
@@ -767,7 +767,7 @@ public class IntegrationTestDeployment {
 		
 		// normal load
 		admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
-		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1);
 		
 		VDB vdb = admin.getVDB(vdbName, 1);
 		String value = vdb.getPropertyValue("cache-metadata");
@@ -783,7 +783,7 @@ public class IntegrationTestDeployment {
 	public void testGeometry() throws Exception {
 		admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));	
 		
-		AdminUtil.waitForVDBLoad(admin, "bqt", 1, 3);	
+		AdminUtil.waitForVDBLoad(admin, "bqt", 1);	
 		
 		Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
 		
@@ -797,20 +797,20 @@ public class IntegrationTestDeployment {
 	
 	@Test(expected=AdminProcessingException.class) public void testAmbigiousDeployment() throws Exception {
 		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
-		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1);
 		admin.deploy("bqt2-1.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
 	}
 	
     @Test
     public void testInsensitiveDeployment() throws Exception { 
         admin.deploy("dynamicview-VDB.xml", new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
-        AdminUtil.waitForVDBLoad(admin, "dynamic", 1, 3);
+        AdminUtil.waitForVDBLoad(admin, "dynamic", 1);
         VDB vdb = admin.getVDB("dynamic", "1");
         assertTrue(vdb.getStatus() == Status.ACTIVE);
         admin.undeploy("dynamicview-VDB.xml");
         
         admin.deploy("bqt.VDB", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));  
-        AdminUtil.waitForVDBLoad(admin, "bqt", 1, 3);   
+        AdminUtil.waitForVDBLoad(admin, "bqt", 1);   
         vdb = admin.getVDB("bqt", "1");
         assertTrue(vdb.getStatus() == Status.ACTIVE);
         admin.undeploy("bqt.VDB");        
@@ -833,7 +833,7 @@ public class IntegrationTestDeployment {
         
         admin.deploy("some.vdb", new FileInputStream(f));
         
-        AdminUtil.waitForVDBLoad(admin, "test2", "1", 3);
+        AdminUtil.waitForVDBLoad(admin, "test2", "1");
         Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:test2@mm://localhost:31000;user=user;password=user", null);
         ResultSet rs = conn.createStatement().executeQuery("select * from helloworld");
         rs.next();

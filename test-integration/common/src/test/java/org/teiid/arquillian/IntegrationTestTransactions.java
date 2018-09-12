@@ -56,7 +56,7 @@ public class IntegrationTestTransactions extends AbstractMMQueryTestCase {
 				
 		admin.deploy("txn-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("txn-vdb.xml")));
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "txn", 1, 30));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "txn", 1));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:txn@mm://localhost:31000;user=user;password=user", null);
 		

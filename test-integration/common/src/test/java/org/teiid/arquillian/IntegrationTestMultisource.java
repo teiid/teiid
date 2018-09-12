@@ -64,7 +64,7 @@ public class IntegrationTestMultisource extends AbstractMMQueryTestCase {
 		
 		AdminUtil.createDataSource(admin, "test-file", "file", props);
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "multisource", 1, 3));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "multisource", 1));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:multisource@mm://localhost:31000;user=user;password=user", null);
 		
@@ -94,7 +94,7 @@ public class IntegrationTestMultisource extends AbstractMMQueryTestCase {
         
         AdminUtil.createDataSource(admin, "test-file", "file", props);
         
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "multisource", 1, 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "multisource", 1));
         
         this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:multisource@mm://localhost:31000;user=user;password=user", null);
         

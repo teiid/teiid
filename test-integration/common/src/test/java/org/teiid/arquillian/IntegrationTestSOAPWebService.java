@@ -84,7 +84,7 @@ public class IntegrationTestSOAPWebService {
 		assertFalse(vdbs.isEmpty());
 
 		VDB vdb = admin.getVDB("WSMSG", "1");
-		AdminUtil.waitForVDBLoad(admin, "WSMSG", 1, 3);
+		AdminUtil.waitForVDBLoad(admin, "WSMSG", 1);
 
 		vdb = admin.getVDB("WSMSG", "1");
 		assertTrue(vdb.isValid());
