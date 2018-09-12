@@ -90,7 +90,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		List<NullOrdering> nullOrderings = new ArrayList<NullOrdering>();
 		List<Boolean> orderType = new ArrayList<Boolean>();
 		List<WindowFunctionInfo> functions = new ArrayList<WindowFunctionInfo>();
-		List<WindowFunctionInfo> rowValuefunctions = new ArrayList<WindowFunctionInfo>();
         WindowFrame windowFrame;
         
         boolean isUnboundedFollowing() {
@@ -153,7 +152,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	private TupleSource inputTs;
 	private STree[] partitionMapping;
 	private STree[] valueMapping;
-	private STree[] rowValueMapping;
 	private IndexedTupleSource outputTs;
 	
 	public WindowFunctionProjectNode(int nodeId) {
@@ -171,7 +169,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		this.phase = Phase.COLLECT;
 		this.partitionMapping = null;
 		this.valueMapping = null;
-		this.rowValueMapping = null;
 		this.outputTs = null;
 	}
 	
@@ -185,8 +182,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		partitionMapping = null;
 		removeMappings(valueMapping);
 		valueMapping = null;
-		removeMappings(rowValueMapping);
-		rowValueMapping = null;
 	}
 
 	private void removeMappings(STree[] mappings) {
@@ -219,21 +214,24 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			Expression ex = SymbolMap.getExpression(elements.get(i));
 			if (ex instanceof WindowFunction) {
 				WindowFunction wf = (WindowFunction)ex;
-				WindowSpecificationInfo wsi = getOrCreateWindowSpecInfo(wf);
+				WindowSpecification ws = wf.getWindowSpecification();
+				if (wf.getFunction().isRowValueFunction()) {
+				    //something like row_number is actually computed over rows unbounded preceding
+				    Assertion.assertTrue(ws.getWindowFrame() == null);
+				    ws = ws.clone();
+				    WindowFrame frame = new WindowFrame(FrameMode.ROWS);
+				    frame.setStart(new FrameBound(BoundMode.PRECEDING));
+				    ws.setWindowFrame(frame);
+				}
+				WindowSpecificationInfo wsi = getOrCreateWindowSpecInfo(ws);
 				WindowFunctionInfo wfi = createWindowFunctionInfo(wf);
 				wfi.outputIndex = i;
-				if (wf.getFunction().isRowValueFunction()) {
-				    if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.NTILE) {
-                        addPartitionCount(i, wf);
-                    }
-					wsi.rowValuefunctions.add(wfi);
-				} else {
-					wsi.functions.add(wfi);
-					if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.PERCENT_RANK
-					        || wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.CUME_DIST) {
-                        addPartitionCount(i, wf);
-                    }
-				}
+				wsi.functions.add(wfi);
+				if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.PERCENT_RANK
+				        || wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.CUME_DIST
+				        || wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.NTILE) {
+                    addPartitionCount(i, wf);
+                }
 			} else {
 				int index = GroupingNode.getIndex(ex, expressionIndexes);
 				passThrough.add(new int[] {i, index});
@@ -248,7 +246,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
         WindowSpecification clone = wf.getWindowSpecification().clone();
         clone.setOrderBy(null);
         wf2.setWindowSpecification(clone);
-        WindowSpecificationInfo wsi2 = getOrCreateWindowSpecInfo(wf2);
+        WindowSpecificationInfo wsi2 = getOrCreateWindowSpecInfo(clone);
         WindowFunctionInfo wfi2 = createWindowFunctionInfo(wf2);
         wfi2.outputIndex = i;
         wfi2.primaryFunction = wf;
@@ -274,12 +272,11 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
     }
 
     private WindowSpecificationInfo getOrCreateWindowSpecInfo(
-            WindowFunction wf) {
-        WindowSpecification ws = wf.getWindowSpecification();
+            WindowSpecification ws) {
         WindowSpecificationInfo wsi = windows.get(ws);
         if (wsi == null) {
         	wsi = new WindowSpecificationInfo();
-        	windows.put(wf.getWindowSpecification(), wsi);
+        	windows.put(ws, wsi);
         	if (ws.getPartition() != null) {
         		for (Expression ex1 : ws.getPartition()) {
         			Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
@@ -311,7 +308,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			phase = Phase.PROCESS;
 			partitionMapping = new STree[this.windows.size()];
 			valueMapping = new STree[this.windows.size()];
-			rowValueMapping = new STree[this.windows.size()];
 		}
 		
 		if (phase == Phase.PROCESS) {
@@ -338,117 +334,106 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				for (int specIndex = 0; specIndex < specs.size(); specIndex++) {
 					Map.Entry<WindowSpecification, WindowSpecificationInfo> entry = specs.get(specIndex);
 					List<?> idRow = Arrays.asList(rowId);
-					List<WindowFunctionInfo> functions = entry.getValue().rowValuefunctions;
-					if (!functions.isEmpty()) {
-						List<?> valueRow = rowValueMapping[specIndex].find(idRow);
-						for (int i = 0; i < functions.size(); i++) {
-							WindowFunctionInfo wfi = functions.get(i);
-							Object value = valueRow.get(i+1);
-                            outputRow.set(wfi.outputIndex, value);
-						}
+					List<WindowFunctionInfo> functions = entry.getValue().functions;
+					if (partitionMapping[specIndex] != null) {
+						idRow = partitionMapping[specIndex].find(idRow);
+						idRow = idRow.subList(1, 2);
+					} else {
+						idRow = SINGLE_VALUE_ID;
 					}
-					functions = entry.getValue().functions;
-					if (!functions.isEmpty()) {
-						if (partitionMapping[specIndex] != null) {
-							idRow = partitionMapping[specIndex].find(idRow);
-							idRow = idRow.subList(1, 2);
-						} else {
-							idRow = SINGLE_VALUE_ID;
-						}
-						List<?> valueRow = valueMapping[specIndex].find(idRow);
-						for (int i = 0; i < functions.size(); i++) {
-							WindowFunctionInfo wfi = functions.get(i);
-							Object value = valueRow.get(i+1);
-							//special handling for lead lag
-                            //an array value encodes what we need to know about
-                            //the offset, default, and partition
-                            Type aggregateFunction = wfi.function.getFunction().getAggregateFunction();
-                            if (aggregateFunction == Type.LEAD
-                                    || aggregateFunction == Type.LAG) {
-                                //TODO: refactor to the aggregate function class
-                                ArrayImpl array = (ArrayImpl)value;
-                                Object[] args = array.getValues();
-                                int offset = 1;
-                                Object defaultValue = null;
-                                if (args.length > 2) {
-                                    offset = (int) args[1];
-                                    if (args.length > 3) {
-                                        defaultValue = args[2];
-                                    }
+					List<?> valueRow = valueMapping[specIndex].find(idRow);
+					for (int i = 0; i < functions.size(); i++) {
+						WindowFunctionInfo wfi = functions.get(i);
+						Object value = valueRow.get(i+1);
+						//special handling for lead lag
+                        //an array value encodes what we need to know about
+                        //the offset, default, and partition
+                        Type aggregateFunction = wfi.function.getFunction().getAggregateFunction();
+                        if (aggregateFunction == Type.LEAD
+                                || aggregateFunction == Type.LAG) {
+                            //TODO: refactor to the aggregate function class
+                            ArrayImpl array = (ArrayImpl)value;
+                            Object[] args = array.getValues();
+                            int offset = 1;
+                            Object defaultValue = null;
+                            if (args.length > 2) {
+                                offset = (int) args[1];
+                                if (args.length > 3) {
+                                    defaultValue = args[2];
                                 }
-                                List<?> newIdRow = Arrays.asList((Integer)idRow.get(0)+(aggregateFunction == Type.LAG?-offset:offset));
+                            }
+                            List<?> newIdRow = Arrays.asList((Integer)idRow.get(0)+(aggregateFunction == Type.LAG?-offset:offset));
+                            List<?> newValueRow = valueMapping[specIndex].find(newIdRow);
+                            if (newValueRow == null) {
+                                value = defaultValue;
+                            } else {
+                                Object[] newArgs = ((ArrayImpl)newValueRow.get(i+1)).getValues();
+                                //make sure it's the same partition
+                                if (args[args.length-1].equals(newArgs[newArgs.length-1])) {
+                                    value = newArgs[0];
+                                } else {
+                                    value = defaultValue;
+                                }
+                            }
+                        } else if (aggregateFunction == Type.NTH_VALUE) {
+                            ArrayImpl array = (ArrayImpl)value;
+                            Object[] args = array.getValues();
+                            int index = (Integer)args[1] - 1;
+                            if (index > rowId) {
+                                //only operate over the rolling window
+                                //this will change when we allow the windowing clause
+                                value = null;
+                            } else {
+                                List<?> newIdRow = Arrays.asList(index);
                                 List<?> newValueRow = valueMapping[specIndex].find(newIdRow);
                                 if (newValueRow == null) {
-                                    value = defaultValue;
+                                    value = null;
                                 } else {
                                     Object[] newArgs = ((ArrayImpl)newValueRow.get(i+1)).getValues();
                                     //make sure it's the same partition
                                     if (args[args.length-1].equals(newArgs[newArgs.length-1])) {
                                         value = newArgs[0];
                                     } else {
-                                        value = defaultValue;
-                                    }
-                                }
-                            } else if (aggregateFunction == Type.NTH_VALUE) {
-                                ArrayImpl array = (ArrayImpl)value;
-                                Object[] args = array.getValues();
-                                int index = (Integer)args[1] - 1;
-                                if (index > rowId) {
-                                    //only operate over the rolling window
-                                    //this will change when we allow the windowing clause
-                                    value = null;
-                                } else {
-                                    List<?> newIdRow = Arrays.asList(index);
-                                    List<?> newValueRow = valueMapping[specIndex].find(newIdRow);
-                                    if (newValueRow == null) {
                                         value = null;
-                                    } else {
-                                        Object[] newArgs = ((ArrayImpl)newValueRow.get(i+1)).getValues();
-                                        //make sure it's the same partition
-                                        if (args[args.length-1].equals(newArgs[newArgs.length-1])) {
-                                            value = newArgs[0];
-                                        } else {
-                                            value = null;
-                                        }
                                     }
-                                }
-                            } else if (wfi.primaryFunction != null) {
-                                switch (wfi.primaryFunction.getFunction().getAggregateFunction()) {
-                                case NTILE:
-                                {
-                                    //this is the computation of the ntile function, used the saved state from the
-                                    //row function
-                                    ArrayImpl array = (ArrayImpl)outputRow.get(wfi.outputIndex);
-                                    Object[] args = array.getValues();
-                                    int rn = (Integer)args[0];
-                                    int ntile = (Integer)args[1];
-                                    int rc = (Integer)value;
-                                    int rowsPerTile = rc/ntile;
-                                    if (rn <= (rc%ntile) * (rowsPerTile + 1)) {
-                                        value = (rn - 1) / (rowsPerTile + 1) + 1;    
-                                    } else {
-                                        value = ntile - (rc - rn) / rowsPerTile;      
-                                    }
-                                    break;
-                                }
-                                case PERCENT_RANK:
-                                {
-                                    int rn = (Integer)outputRow.get(wfi.outputIndex);
-                                    int rc = (Integer)value;
-                                    value = ((double)rn -1)/(rc -1);
-                                    break;
-                                }
-                                case CUME_DIST:
-                                {
-                                    int np = (Integer)outputRow.get(wfi.outputIndex);
-                                    int rc = (Integer)value;
-                                    value = (double)np/rc;
-                                    break;
-                                }
                                 }
                             }
-							outputRow.set(wfi.outputIndex, value);
-						}
+                        } else if (wfi.primaryFunction != null) {
+                            switch (wfi.primaryFunction.getFunction().getAggregateFunction()) {
+                            case NTILE:
+                            {
+                                //this is the computation of the ntile function, used the saved state from the
+                                //row function
+                                ArrayImpl array = (ArrayImpl)outputRow.get(wfi.outputIndex);
+                                Object[] args = array.getValues();
+                                int rn = (Integer)args[0];
+                                int ntile = (Integer)args[1];
+                                int rc = (Integer)value;
+                                int rowsPerTile = rc/ntile;
+                                if (rn <= (rc%ntile) * (rowsPerTile + 1)) {
+                                    value = (rn - 1) / (rowsPerTile + 1) + 1;    
+                                } else {
+                                    value = ntile - (rc - rn) / rowsPerTile;      
+                                }
+                                break;
+                            }
+                            case PERCENT_RANK:
+                            {
+                                int rn = (Integer)outputRow.get(wfi.outputIndex);
+                                int rc = (Integer)value;
+                                value = ((double)rn -1)/(rc -1);
+                                break;
+                            }
+                            case CUME_DIST:
+                            {
+                                int np = (Integer)outputRow.get(wfi.outputIndex);
+                                int rc = (Integer)value;
+                                value = (double)np/rc;
+                                break;
+                            }
+                            }
+                        }
+						outputRow.set(wfi.outputIndex, value);
 					}
 				}
 				this.addBatchRow(outputRow);
@@ -522,11 +507,10 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			}
 			
 			try {
-    			List<AggregateFunction> aggs = initializeAccumulators(info.functions, specIndex, false);
-    			List<AggregateFunction> rowValueAggs = initializeAccumulators(info.rowValuefunctions, specIndex, true);
+    			List<AggregateFunction> aggs = initializeAccumulators(info.functions, specIndex);
     			
     			if (info.processEachFrame()) {
-    			    processEachFrame(specIndex, info, specificationTs, partitionIndexes, orderIndexes, sorted, aggs, rowValueAggs);
+    			    processEachFrame(specIndex, info, specificationTs, partitionIndexes, orderIndexes, sorted, aggs);
                     return;
                 }
     			
@@ -542,10 +526,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
     				    	        && (!samePartition 
     				    	                || (info.windowFrame != null && info.windowFrame.getMode() == FrameMode.ROWS) 
     				    	                || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1)) {
-    			        		saveValues(specIndex, aggs, groupId, samePartition, false);
+    			        		saveValues(specIndex, aggs, groupId, samePartition);
     		        			groupId++;
     				    	}
-    		        		saveValues(specIndex, rowValueAggs, lastRow.get(lastRow.size() - 1), samePartition, true);
     		        	}
     				    if (!aggs.isEmpty()) {
     			        	List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
@@ -555,14 +538,10 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
     		        for (AggregateFunction function : aggs) {
     		        	function.addInput(tuple, getContext());
     		        }
-    		        for (AggregateFunction function : rowValueAggs) {
-    		        	function.addInput(tuple, getContext());
-    		        }
     		        lastRow = tuple;
     			}
     		    if(lastRow != null) {
-    		    	saveValues(specIndex, aggs, groupId, true, false);
-    		    	saveValues(specIndex, rowValueAggs, lastRow.get(lastRow.size() - 1), true, true);
+    		    	saveValues(specIndex, aggs, groupId, true);
     		    }
 			} finally {
 			    if (sorted != null) {
@@ -576,18 +555,11 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	 * The frame clause requires us to recompute over reach frame, rather than using
 	 * the rolling strategy.
 	 * 
-	 * 
 	 */
     private void processEachFrame(int specIndex, WindowSpecificationInfo info,
             IndexedTupleSource specificationTs, int[] partitionIndexes, int[] orderIndexes,
-            TupleBuffer sorted, List<AggregateFunction> aggs,
-            List<AggregateFunction> rowValueAggs)
-            throws TeiidComponentException, TeiidProcessingException,
-            AssertionError, FunctionExecutionException,
-            ExpressionEvaluationException {
-        Assertion.assertTrue(rowValueAggs.isEmpty());
-        Assertion.assertTrue(!aggs.isEmpty());
-        
+            TupleBuffer sorted, List<AggregateFunction> aggs)
+            throws TeiidComponentException, TeiidProcessingException {
         Integer frameStartOffset = info.getWindowStartOffset();
         Integer frameEndOffset = info.getWindowEndOffset();
         
@@ -685,13 +657,13 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                 }
             }
             
-            saveValues(specIndex, aggs, groupId, false, false);
+            saveValues(specIndex, aggs, groupId, false);
         }
     }
 
 	private void saveValues(int specIndex,
 			List<AggregateFunction> aggs, Object id,
-			boolean samePartition, boolean rowValue) throws FunctionExecutionException,
+			boolean samePartition) throws FunctionExecutionException,
 			ExpressionEvaluationException, TeiidComponentException,
 			TeiidProcessingException {
 		if (aggs.isEmpty()) {
@@ -705,11 +677,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				function.reset();
 			}
 		}
-		if (rowValue) {
-			rowValueMapping[specIndex].insert(row, InsertMode.NEW, -1);
-		} else {
-			valueMapping[specIndex].insert(row, InsertMode.ORDERED, -1);	
-		}
+		valueMapping[specIndex].insert(row, InsertMode.ORDERED, -1);	
 	}
 
 	/**
@@ -718,7 +686,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	 * @param rowValues
 	 * @return
 	 */
-	private List<AggregateFunction> initializeAccumulators(List<WindowFunctionInfo> functions, int specIndex, boolean rowValues) {
+	private List<AggregateFunction> initializeAccumulators(List<WindowFunctionInfo> functions, int specIndex) {
 		List<AggregateFunction> aggs = new ArrayList<AggregateFunction>(functions.size());
 		if (functions.isEmpty()) {
 			return aggs;
@@ -735,11 +703,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		    value.setType(outputType);
 		    elements.add(value);
 		}
-		if (!rowValues) {
-			valueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
-		} else {
-			rowValueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
-		}
+		valueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
 		return aggs;
 	}
 

@@ -2307,6 +2307,10 @@ public class QueryRewriter {
                         //default window frame, just remove
                         wf.getWindowSpecification().setWindowFrame(null);
                     }
+                    if (windowFrame.getEnd() == null || windowFrame.getEnd().getBoundMode() == BoundMode.CURRENT_ROW) {
+                        //default window frame end, just remove
+                        windowFrame.setEnd(null);
+                    }
                 }
             }
         	rewriteExpressions(expression);
