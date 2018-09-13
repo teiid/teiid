@@ -46,6 +46,9 @@ public class OrderBy implements LanguageObject {
     public static final boolean DESC = false;
 
     private List<OrderByItem> orderByItems = new ArrayList<OrderByItem>();
+
+    /** if the ordering can affect user results */
+    private boolean userOrdering = true;
     
     /**
      * Constructs a default instance of this class.
@@ -138,6 +141,7 @@ public class OrderBy implements LanguageObject {
     public OrderBy clone() {
     	OrderBy clone = new OrderBy();
     	clone.orderByItems = LanguageObject.Util.deepClone(this.orderByItems, OrderByItem.class);
+    	clone.userOrdering = userOrdering;
         return clone;
 	}
 
@@ -218,6 +222,14 @@ public class OrderBy implements LanguageObject {
 			result.add(item.isAscending());
 		}
     	return result;
+    }
+
+    public void setUserOrdering(boolean userOrdering) {
+        this.userOrdering = userOrdering;;
+    }
+    
+    public boolean isUserOrdering() {
+        return userOrdering;
     }
     
 }
