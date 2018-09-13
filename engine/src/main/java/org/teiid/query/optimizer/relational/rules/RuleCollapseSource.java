@@ -35,7 +35,6 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -73,7 +72,6 @@ import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.translator.ExecutionFactory.NullOrder;
 
 
 public final class RuleCollapseSource implements OptimizerRule {
@@ -417,7 +415,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             OrderBy orderBy = null;
             PlanNode sort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.SORT, NodeConstants.Types.SET_OP);
             if (sort != null) {
-                processOrderBy(sort, unionCommand, modelID, context, capFinder);
+                processOrderBy(sort, unionCommand, context);
                 orderBy = unionCommand.getOrderBy();
                 unionCommand.setOrderBy(null);
                 //we have to remap if the primary projection is from a grouping
@@ -793,7 +791,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             case NodeConstants.Types.SORT: 
             {
             	prepareSubqueries(node.getSubqueryContainers());
-                processOrderBy(node, query, modelID, context, capFinder);
+                processOrderBy(node, query, context);
                 break;
             }
             case NodeConstants.Types.DUP_REMOVE: 
@@ -934,8 +932,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         query.setCriteria(null);
     }
     
-	private void processOrderBy(PlanNode node, QueryCommand query, Object modelID, CommandContext context, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
-		boolean userOrdering = NodeEditor.findParent(node, NodeConstants.Types.JOIN|NodeConstants.Types.SOURCE) == null;
+	private void processOrderBy(PlanNode node, QueryCommand query, CommandContext context) throws QueryMetadataException, TeiidComponentException {
 		OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
 		query.setOrderBy(orderBy);
 		if (query instanceof Query) {
@@ -951,38 +948,6 @@ public final class RuleCollapseSource implements OptimizerRule {
 				QueryRewriter.rewriteOrderBy(query, orderBy, query.getProjectedSymbols(), context, context.getMetadata());
 			} catch (TeiidProcessingException e) {
 				throw new TeiidComponentException(e);
-			}
-		}
-		boolean supportsNullOrdering = CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, modelID, context.getMetadata(), capFinder);
-		NullOrder defaultNullOrder = CapabilitiesUtil.getDefaultNullOrder(modelID, context.getMetadata(), capFinder);
-		for (OrderByItem item : orderBy.getOrderByItems()) {
-			if (item.getNullOrdering() != null) {
-				if (!supportsNullOrdering) {
-					item.setNullOrdering(null);
-				}
-			} else if (userOrdering && supportsNullOrdering && defaultNullOrder != context.getOptions().getDefaultNullOrder() && context.getOptions().isPushdownDefaultNullOrder()) {
-				//try to match the expected default
-				if (item.isAscending()) {
-					if (context.getOptions().getDefaultNullOrder() == NullOrder.FIRST || context.getOptions().getDefaultNullOrder() == NullOrder.LOW) {
-						if (defaultNullOrder != NullOrder.FIRST && defaultNullOrder != NullOrder.LOW) {
-							item.setNullOrdering(NullOrdering.FIRST);
-						}
-					} else {
-						if (defaultNullOrder != NullOrder.LAST && defaultNullOrder != NullOrder.HIGH) {
-							item.setNullOrdering(NullOrdering.LAST);
-						}
-					}
-				} else {
-					if (context.getOptions().getDefaultNullOrder() == NullOrder.LAST || context.getOptions().getDefaultNullOrder() == NullOrder.LOW) {
-						if (defaultNullOrder != NullOrder.LAST && defaultNullOrder != NullOrder.LOW) {
-							item.setNullOrdering(NullOrdering.LAST);
-						}
-					} else {
-						if (defaultNullOrder != NullOrder.FIRST && defaultNullOrder != NullOrder.HIGH) {
-							item.setNullOrdering(NullOrdering.FIRST);
-						}
-					}
-				}
 			}
 		}
 	}
