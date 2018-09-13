@@ -27,9 +27,11 @@ import java.util.Set;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.dqp.internal.datamgr.ConnectorWorkItem;
 import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
 import org.teiid.events.EventDistributor;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.Expression;
@@ -68,6 +70,12 @@ public class HardcodedDataManager implements
     public HardcodedDataManager(QueryMetadataInterface metadata) {
     	this(true);
     	this.lbf = new LanguageBridgeFactory(metadata);
+    }
+    
+    public HardcodedDataManager(QueryMetadataInterface metadata, CommandContext context, SourceCapabilities capabilities) {
+        this(true);
+        this.lbf = new LanguageBridgeFactory(metadata);
+        ConnectorWorkItem.initLanguageBridgeFactory(lbf, context, capabilities);
     }
     
     public HardcodedDataManager(boolean mustRegisterCommands) {

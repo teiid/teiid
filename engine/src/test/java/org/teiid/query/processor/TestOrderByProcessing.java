@@ -27,7 +27,9 @@ import org.junit.Test;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -167,8 +169,10 @@ public class TestOrderByProcessing {
         CommandContext cc = new CommandContext();
         cc.setOptions(new Options().pushdownDefaultNullOrder(true));
         ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", metadata), metadata, capFinder, null, true, cc);
-        TestOptimizer.checkAtomicQueries(new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS LAST"}, plan);  //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata, cc, caps);
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS LAST", new List<?>[] {});
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {});
     }
 	
 	/**
@@ -184,8 +188,10 @@ public class TestOrderByProcessing {
         CommandContext cc = new CommandContext();
         cc.setOptions(new Options().pushdownDefaultNullOrder(true));
         ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", metadata), metadata, capFinder, null, true, cc);
-        TestOptimizer.checkAtomicQueries(new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC, g_0.e2"}, plan);  //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata, cc, caps);
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM g1 AS g_0 ORDER BY c_0 DESC, g_0.e2", new List<?>[] {});
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {});
     }
 	
 	/**
@@ -193,17 +199,80 @@ public class TestOrderByProcessing {
 	 * @throws Exception
 	 */
 	@Test public void testNullOrdering4() throws Exception { 
+	    String sql = "select e1 from pm1.g1 order by e1 desc, e2 asc";
+	    String result = "SELECT g_0.e1 AS c_0 FROM g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS FIRST";
+        helpTestNullOrdering(sql, result);
+    }
+	
+	/**
+	 * Make sure it works for inline views
+	 * @throws Exception
+	 */
+    @Test public void testNullOrdering5() throws Exception { 
+        String sql = "select max(e1) from (select e1 from pm1.g1 order by e1 limit 5) x";
+        String result = "SELECT MAX(v_0.c_0) FROM (SELECT g_0.e1 AS c_0 FROM g1 AS g_0 ORDER BY c_0 NULLS FIRST LIMIT 5) AS v_0";
+        helpTestNullOrdering(sql, result);
+    }
+    
+    /**
+     * Make sure it works for aggregate ordering
+     * @throws Exception
+     */
+    @Test public void testNullOrdering6() throws Exception { 
+        String sql = "select string_agg(e1, ',' order by e1 desc) from pm1.g1";
+        String result = "SELECT STRING_AGG(g_0.e1, ',' ORDER BY g_0.e1 DESC NULLS LAST) FROM g1 AS g_0";
+        helpTestNullOrdering(sql, result);
+    }
+    
+    /**
+     * Make sure it works for window function ordering
+     * @throws Exception
+     */
+    @Test public void testNullOrdering7() throws Exception { 
+        String sql = "select string_agg(e1, ',') over (order by e1) from pm1.g1";
+        String result = "SELECT STRING_AGG(g_0.e1, ',') OVER (ORDER BY g_0.e1 NULLS FIRST) FROM g1 AS g_0";
+        helpTestNullOrdering(sql, result);
+    }
+
+    private void helpTestNullOrdering(String sql, String result)
+            throws TeiidComponentException, TeiidProcessingException {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.UNKNOWN);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         CommandContext cc = new CommandContext();
         cc.setOptions(new Options().pushdownDefaultNullOrder(true));
-        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc", metadata), metadata, capFinder, null, true, cc);
-        TestOptimizer.checkAtomicQueries(new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS FIRST"}, plan);  //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, metadata), metadata, capFinder, null, true, cc);
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata, cc, caps);
+        dataManager.addData(result, new List<?>[] {});
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {});
+    }
+    
+    /**
+     * Join processing is insensitive to the null ordering
+     */
+    @Test public void testNullOrderingJoin() throws Exception { 
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, true);
+        caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.UNKNOWN);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); //$NON-NLS-1$
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().pushdownDefaultNullOrder(true));
+        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select pm1.g1.e1, pm2.g1.e3 from /*+ makedep */ pm1.g1, pm2.g1 where pm1.g1.e2 = pm2.g1.e2", metadata), metadata, capFinder, null, true, cc);
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata, cc, caps);
+        dataManager.addData("SELECT g_0.e2 AS c_0, g_0.e3 AS c_1 FROM g1 AS g_0 ORDER BY c_0", new List<?>[] {});
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {});
     }
     
     @Test public void testSortFunctionOverView() {

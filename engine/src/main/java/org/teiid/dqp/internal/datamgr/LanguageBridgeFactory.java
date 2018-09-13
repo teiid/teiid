@@ -36,6 +36,7 @@ import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Select;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.language.WindowSpecification;
@@ -74,6 +75,7 @@ import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 
@@ -157,6 +159,10 @@ public class LanguageBridgeFactory {
     private IdentityHashMap<Object, GroupSymbol> remappedGroups;
 	private String excludeWithName;
 	private CommandContext commandContext;
+
+	//state to handle null ordering
+	private boolean supportsNullOrdering;
+	private NullOrder sourceNullOrder;
 
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
@@ -654,7 +660,18 @@ public class LanguageBridgeFactory {
             orderByItem.setNullOrdering(items.get(i).getNullOrdering());
             translatedItems.add(orderByItem);
         }
-        return new org.teiid.language.OrderBy(translatedItems);
+        org.teiid.language.OrderBy result = new org.teiid.language.OrderBy(translatedItems);
+        
+        if (orderBy.isUserOrdering() && commandContext != null) {
+            NullOrder teiidNullOrder = commandContext.getOptions().getDefaultNullOrder();
+            if (!supportsNullOrdering 
+                    || (sourceNullOrder != teiidNullOrder && commandContext.getOptions().isPushdownDefaultNullOrder())) {
+                correctNullOrdering(result,
+                    supportsNullOrdering, sourceNullOrder, commandContext.getOptions().getDefaultNullOrder());
+            }
+        }
+        
+        return result;
     }
 
 
@@ -1119,5 +1136,47 @@ public class LanguageBridgeFactory {
 	public void setCommandContext(CommandContext commandContext) {
 		this.commandContext = commandContext;
 	}
+	
+    public static void correctNullOrdering(org.teiid.language.OrderBy orderBy, boolean supportsNullOrdering,
+            NullOrder sourceNullOrder, NullOrder teiidNullOrder) {
+        for (SortSpecification item : orderBy.getSortSpecifications()) {
+            if (item.getNullOrdering() != null) {
+                if (!supportsNullOrdering) {
+                    item.setNullOrdering(null);
+                }
+            } else if (supportsNullOrdering) {
+                //try to match the expected default
+                if (item.getOrdering() == Ordering.ASC) {
+                    if (teiidNullOrder == NullOrder.FIRST || teiidNullOrder == NullOrder.LOW) {
+                        if (sourceNullOrder != NullOrder.FIRST && sourceNullOrder != NullOrder.LOW) {
+                            item.setNullOrdering(NullOrdering.FIRST);
+                        }
+                    } else {
+                        if (sourceNullOrder != NullOrder.LAST && sourceNullOrder != NullOrder.HIGH) {
+                            item.setNullOrdering(NullOrdering.LAST);
+                        }
+                    }
+                } else {
+                    if (teiidNullOrder == NullOrder.LAST || teiidNullOrder == NullOrder.LOW) {
+                        if (sourceNullOrder != NullOrder.LAST && sourceNullOrder != NullOrder.LOW) {
+                            item.setNullOrdering(NullOrdering.LAST);
+                        }
+                    } else {
+                        if (sourceNullOrder != NullOrder.FIRST && sourceNullOrder != NullOrder.HIGH) {
+                            item.setNullOrdering(NullOrdering.FIRST);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    public void setSourceNullOrder(NullOrder sourceNullOrder) {
+        this.sourceNullOrder = sourceNullOrder;
+    }
+    
+    public void setSupportsNullOrdering(boolean supportsNullOrdering) {
+        this.supportsNullOrdering = supportsNullOrdering;
+    }
 
 }

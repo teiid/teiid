@@ -77,6 +77,7 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.TeiidTracingUtil;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.*;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.TransactionSupport;
 import org.teiid.util.XMLInputStream;
 
@@ -158,18 +159,17 @@ public class ConnectorWorkItem implements ConnectorWork {
         this.securityContext.setRuntimeMetadata(this.queryMetadata);
 		this.securityContext.setTransactional(requestMsg.isTransactional());
         LanguageBridgeFactory factory = new LanguageBridgeFactory(this.queryMetadata);
+        CommandContext context = requestMsg.getCommandContext();
         try {
 			SourceCapabilities capabilities = manager.getCapabilities();
 			//set other properties once the capabilities have been obtained
-			factory.setSupportsConcat2(capabilities.supportsFunction(SourceSystemFunctions.CONCAT2));
-			//read directly from the connector
-	        factory.setConvertIn(!this.connector.supportsInCriteria());
-	        factory.setMaxInPredicateSize((Integer) capabilities.getSourceProperty(Capability.MAX_IN_CRITERIA_SIZE));
-	        factory.setCommandContext(requestMsg.getCommandContext());
-	        factory.setExcludeWithName((String) capabilities.getSourceProperty(Capability.EXCLUDE_COMMON_TABLE_EXPRESSION_NAME));
+			initLanguageBridgeFactory(factory, context, capabilities);
 		} catch (TranslatorException e) {
 			throw new TeiidComponentException(e);
 		}
+        //read directly from the connector
+        factory.setConvertIn(!this.connector.supportsInCriteria());
+        
         translatedCommand = factory.translate(message.getCommand());
         List<Expression> symbols = this.requestMsg.getCommand().getProjectedSymbols();
 		this.schema = new Class[symbols.size()];
@@ -189,6 +189,16 @@ public class ConnectorWorkItem implements ConnectorWork {
 		    this.copyLobs = true;
 		    this.copyStreamingLobs = true;
 		}
+    }
+
+    public static void initLanguageBridgeFactory(LanguageBridgeFactory factory,
+            CommandContext context, SourceCapabilities capabilities) {
+        factory.setCommandContext(context);
+        factory.setSupportsConcat2(capabilities.supportsFunction(SourceSystemFunctions.CONCAT2));
+        factory.setMaxInPredicateSize((Integer) capabilities.getSourceProperty(Capability.MAX_IN_CRITERIA_SIZE));
+        factory.setExcludeWithName((String) capabilities.getSourceProperty(Capability.EXCLUDE_COMMON_TABLE_EXPRESSION_NAME));
+        factory.setSourceNullOrder((NullOrder) capabilities.getSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER));
+        factory.setSupportsNullOrdering(capabilities.supportsCapability(Capability.QUERY_ORDERBY_NULL_ORDERING));
     }
     
     @Override

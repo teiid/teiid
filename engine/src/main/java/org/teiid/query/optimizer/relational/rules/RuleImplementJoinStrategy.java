@@ -303,6 +303,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
                                            Collection<Expression> outputElements) {
         PlanNode sortNode = NodeFactory.getNewNode(NodeConstants.Types.SORT);
         OrderBy order = new OrderBy(orderSymbols);
+        order.setUserOrdering(false);
 		sortNode.setProperty(NodeConstants.Info.SORT_ORDER, order);
         sortNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList<Expression>(outputElements));
         return sortNode;
