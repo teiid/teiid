@@ -224,16 +224,6 @@ public class TestOrderByProcessing {
         helpTestNullOrdering(sql, result);
     }
     
-    /**
-     * Make sure it works for window function ordering
-     * @throws Exception
-     */
-    @Test public void testNullOrdering7() throws Exception { 
-        String sql = "select string_agg(e1, ',') over (order by e1) from pm1.g1";
-        String result = "SELECT STRING_AGG(g_0.e1, ',') OVER (ORDER BY g_0.e1 NULLS FIRST) FROM g1 AS g_0";
-        helpTestNullOrdering(sql, result);
-    }
-
     private void helpTestNullOrdering(String sql, String result)
             throws TeiidComponentException, TeiidProcessingException {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
