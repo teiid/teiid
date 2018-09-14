@@ -187,6 +187,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	    switch (aggregate) {
 	    case NTILE:
 	    case ROW_NUMBER:
+	    case LEAD:
+	    case LAG:
 	        return true;
         default:
             return false;
