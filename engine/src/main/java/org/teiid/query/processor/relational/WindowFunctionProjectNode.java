@@ -88,6 +88,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		List<Boolean> orderType = new ArrayList<Boolean>();
 		List<WindowFunctionInfo> functions = new ArrayList<WindowFunctionInfo>();
 		List<WindowFunctionInfo> rowValuefunctions = new ArrayList<WindowFunctionInfo>();
+        boolean rowMode;
 	}
 	
 	private LinkedHashMap<WindowSpecification, WindowSpecificationInfo> windows = new LinkedHashMap<WindowSpecification, WindowSpecificationInfo>();
@@ -168,10 +169,16 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			if (ex instanceof WindowFunction) {
 				WindowFunction wf = (WindowFunction)ex;
 				WindowSpecification ws = wf.getWindowSpecification();
+				if (wf.getFunction().getAggregateFunction() == Type.LEAD 
+		                || wf.getFunction().getAggregateFunction() == Type.LAG) {
+		            //work around for row processing of lead/lag
+		            ws = ws.clone();
+		            ws.setRowMode(true);
+		        }
 				WindowSpecificationInfo wsi = windows.get(ws);
 				if (wsi == null) {
 					wsi = new WindowSpecificationInfo();
-					windows.put(wf.getWindowSpecification(), wsi);
+					windows.put(ws, wsi);
 					if (ws.getPartition() != null) {
 						for (Expression ex1 : ws.getPartition()) {
 							Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
@@ -189,6 +196,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 							wsi.nullOrderings.add(item.getNullOrdering());
 						}
 					}
+					wsi.rowMode = ws.getRowMode();
 				}
 				WindowFunctionInfo wfi = new WindowFunctionInfo();
 				wfi.function = wf;
@@ -378,7 +386,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				if (multiGroup) {
 				    if (lastRow != null) {
 				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
-				    	if (!aggs.isEmpty() && (!samePartition || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1)) {
+				    	if (!aggs.isEmpty() && (!samePartition || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1 || info.rowMode)) {
 			        		saveValues(specIndex, aggs, groupId, samePartition, false);
 		        			groupId++;
 				    	}

@@ -594,5 +594,28 @@ public class TestWindowFunctions {
         
         helpProcess(plan, dataMgr, expected);
     }
-    
+        
+    @Test public void testLeadOverDuplicates() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "select e1, lead(e1, 2) over (order by e1 nulls last) from pm1.g1";
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("a", "a"),
+                Arrays.asList(null, null),
+                Arrays.asList("a", "b"),
+                Arrays.asList("c", null),
+                Arrays.asList("b", null),
+                Arrays.asList("a", "c"),
+        }; 
+        
+        helpProcess(plan, dataManager, expected);
+    }
 }
