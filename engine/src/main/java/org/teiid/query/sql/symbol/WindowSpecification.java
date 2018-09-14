@@ -31,6 +31,7 @@ public class WindowSpecification implements LanguageObject {
 	
 	private List<Expression> partition;
 	private OrderBy orderBy;
+    private boolean rowMode;
 	
 	public WindowSpecification() {
 		
@@ -72,7 +73,8 @@ public class WindowSpecification implements LanguageObject {
 		}
 		WindowSpecification other = (WindowSpecification)obj;
 		return EquivalenceUtil.areEqual(this.partition, other.partition) &&
-		EquivalenceUtil.areEqual(this.orderBy, other.orderBy);
+		EquivalenceUtil.areEqual(this.orderBy, other.orderBy) &&
+		this.rowMode == other.rowMode;
 	}
 	
 	@Override
@@ -84,6 +86,7 @@ public class WindowSpecification implements LanguageObject {
 		if (this.orderBy != null) {
 			clone.setOrderBy(this.orderBy.clone());
 		}
+		clone.rowMode = rowMode;
 		return clone;
 	}
 	
@@ -91,5 +94,13 @@ public class WindowSpecification implements LanguageObject {
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
+
+    public void setRowMode(boolean b) {
+        this.rowMode = b;
+    }
+
+    public boolean getRowMode() {
+        return this.rowMode;
+    }
 	
 }
