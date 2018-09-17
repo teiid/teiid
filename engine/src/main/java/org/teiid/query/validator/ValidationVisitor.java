@@ -976,7 +976,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	    }
     	    if (windowFunction.getFunction().isAnalytical() 
     	            && !(windowFunction.getFunction().getAggregateFunction() == Type.FIRST_VALUE 
-    	            || windowFunction.getFunction().getAggregateFunction() == Type.LAST_VALUE)) {
+    	            || windowFunction.getFunction().getAggregateFunction() == Type.LAST_VALUE
+    	            || windowFunction.getFunction().getAggregateFunction() == Type.NTH_VALUE)) {
     	        handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31287, new Object[] {windowFunction}), windowFunction);
     	    }
     	
