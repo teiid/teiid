@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>odata</artifactId>
-      <version>11.1.1</version>
+      <version>11.1.2-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-odata</artifactId>
     <name>Teiid Connector OData Feature Pack</name>

@@ -4,7 +4,7 @@
     <parent>
         <artifactId>infinispan</artifactId>
         <groupId>org.teiid.connectors</groupId>
-        <version>11.1.1</version>
+        <version>11.1.2-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-infinispan</artifactId>
     <name>Infinispan Feature Pack</name>
