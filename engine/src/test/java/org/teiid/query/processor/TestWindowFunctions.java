@@ -29,6 +29,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -575,12 +576,12 @@ public class TestWindowFunctions {
         helpProcess(plan, dataMgr, expected);
     }
     
-    @Test public void testNthValueValue() throws Exception {
+    @Test public void testNthValue() throws Exception {
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         
         String sql = "SELECT e1, Nth_Value(e1, 1) over (order by e2) from pm1.g1";
         
-        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
+        /*ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
@@ -607,12 +608,12 @@ public class TestWindowFunctions {
             Arrays.asList("c", "c")
         }; 
         
-        helpProcess(plan, dataMgr, expected);
+        helpProcess(plan, dataMgr, expected);*/
         
         bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
         bsc.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_NTH_VALUE, true);
         
-        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, Nth_Value(g_0.e1, 3) OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, Nth_Value(g_0.e1, 1) OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
     @Test public void testLead() throws Exception {
@@ -1078,6 +1079,16 @@ public class TestWindowFunctions {
         }; 
         
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testNthValueValueEngine() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "select e1, nth_value(e1, 2) over (order by e1) from pm1.g1";
+        
+        TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
     }
     
 }

@@ -63,6 +63,7 @@ import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -258,6 +259,9 @@ public class PlanToProcessConverter {
 	            			pnode.addChild(wfpn);
 	            			for (WindowFunction wf : windowFunctions) {
 	            			    validateAggregateFunctionEvaluation(wf.getFunction());
+	            			    if (wf.getFunction().getAggregateFunction() == Type.NTH_VALUE) {
+	            			        throw new QueryPlannerException(QueryPlugin.Event.TEIID31289, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31289, wf));
+	            			    }
 	            			}
             			}
             		}
