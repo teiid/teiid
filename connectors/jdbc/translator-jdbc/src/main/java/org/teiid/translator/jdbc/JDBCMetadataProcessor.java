@@ -364,7 +364,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			}
 			TableInfo ti = new TableInfo(tableCatalog, tableSchema, tableName, table);
 			ti.type = tables.getString(4);
-			table.setProperty(TYPE, ti.type); //$NON-NLS-1$
+			table.setProperty(TYPE, ti.type); 
 			tableMap.put(fullName, ti);
 			tableMap.put(tableName, ti);
 		}
@@ -642,6 +642,9 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
+		    if (!getForeignKeysForTable(tableInfo.catalog, tableInfo.schema, tableInfo.name, tableInfo.type)) {
+                continue;
+            }
 		    ResultSet fks = null;
 		    try {
 		        fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
@@ -709,7 +712,20 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		}
 	}
 	
-	private KeyRecord autoCreateUniqueKeys(boolean create, MetadataFactory factory, String name, TreeMap<Short, String> referencedKeyColumns, Table pkTable) {
+	/**
+	 * Override to control or disable the default foreign key logic
+     * @param catalogName
+     * @param schemaName
+     * @param tableName
+     * @param tableType 
+     * @return true if the default logic should still be used, or false if the default foreign key logic should not run
+     */
+	private boolean getForeignKeysForTable(String catalogName, String schemaName,
+            String tableName, String tableType) {
+	    return true;
+    }
+
+    private KeyRecord autoCreateUniqueKeys(boolean create, MetadataFactory factory, String name, TreeMap<Short, String> referencedKeyColumns, Table pkTable) {
 		if (referencedKeyColumns != null && pkTable.getPrimaryKey() == null && pkTable.getUniqueKeys().isEmpty()) {
 			factory.addIndex(name + "_unique", false, new ArrayList<String>(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
 		}
@@ -878,13 +894,14 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     }
     
 	/**
+	 * Override to control or disable the default index logic
 	 * @param catalogName
 	 * @param schemaName
 	 * @param tableName
 	 * @param uniqueOnly
 	 * @param approximateIndexes
 	 * @param tableType 
-	 * @return
+	 * @return true if the default logic should still be used, or false if the default index logic should not run
 	 */
 	protected boolean getIndexInfoForTable(String catalogName, String schemaName, String tableName, boolean uniqueOnly, 
 			boolean approximateIndexes, String tableType) {
