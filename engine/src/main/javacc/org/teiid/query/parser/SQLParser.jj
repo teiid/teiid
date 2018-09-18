@@ -526,6 +526,7 @@ TOKEN : /* NonReserved words */
 |   <DOMAIN: "domain">
 |   <USAGE: "usage">
 |   <POSITION: "position">
+|   <LISTAGG: "listagg">
 }
 /*
 name=all in group identifier
@@ -635,7 +636,7 @@ Token nonReserved() :
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
-     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>)
+     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>)
     {
     	return getToken(0);
     }	
@@ -4597,6 +4598,22 @@ Expression function(ParseInfo info) :
 		}
 	|   LOOKAHEAD(<POSITION><LPAREN>) (funcToken = <POSITION> {funcToken.image="locate";} <LPAREN> expression = commonValueExpression(info) {args.add(expression);} 
 	     <IN> expression = commonValueExpression(info) {args.add(expression);} <RPAREN>)
+	| LOOKAHEAD(1)
+	(   funcToken = <LISTAGG> <LPAREN> 
+	    expression = expression(info) {args.add(new Function("cast", new Expression[] {expression, new Constant("string")}));}
+	    [<COMMA> literal = stringVal() {args.add(new Constant(literal));}]
+	    <RPAREN>
+	    <WITHIN> <GROUP> <LPAREN>
+	    orderBy = orderby(info)
+	    <RPAREN>
+	    {
+	      if (args.size() == 1) {
+	        //oracle's default is described as null, but be need an empty string for consistency
+	        args.add(new Constant(""));
+	      }
+	      return new AggregateSymbol("string_agg", false, (Expression[])args.toArray(new Expression[args.size()]), orderBy);
+	    }
+	)
 	|
 	(	funcName = id(null)
 		<LPAREN>

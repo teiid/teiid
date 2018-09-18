@@ -1229,13 +1229,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
         if (obj instanceof AggregateFunction) {
             AggregateFunction af = (AggregateFunction)obj;
-            if (af.getName().equalsIgnoreCase("LISTAGG")) {
+            if (af.getName().equalsIgnoreCase(LISTAGG) || af.getName().equalsIgnoreCase("STRING_AGG")) { //$NON-NLS-1$
+                af.setName(LISTAGG);
                 OrderBy order = af.getOrderBy();
                 af.setOrderBy(null);
-                if (order == null) {
-                    return null;
-                }
-                return Arrays.asList(af, " WITHIN GROUP (", order, ")");
+                return Arrays.asList(af, " WITHIN GROUP (", order != null?order:"ORDER BY 1", ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
         }
         return super.translate(obj, context);

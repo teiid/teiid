@@ -1400,6 +1400,29 @@ public class TestAggregatePushdown {
             new String[]{"SELECT string_agg(g_0.e1, ',') FROM pm1.g2 AS g_0 GROUP BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
     }
+    
+    @Test public void testListAggPushdown() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_LIST, true);
+        caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        //should fully push as it originates as listagg
+        ProcessorPlan plan = TestOptimizer.helpPlan("select listagg(e1, ',') within group (order by e2) from pm1.g2 group by e1", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT string_agg(g_0.e1, ',' ORDER BY g_0.e2) FROM pm1.g2 AS g_0 GROUP BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
+        
+        TestOptimizer.helpPlan("select string_agg(e1, ',' order by e2) from pm1.g2 group by e3", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+                new String[]{"SELECT string_agg(g_0.e1, ',' ORDER BY g_0.e2) FROM pm1.g2 AS g_0 GROUP BY g_0.e3"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        //should not push as it's not generally supported
+        TestOptimizer.helpPlan("select string_agg(e1, e1 order by e2) from pm1.g2 group by e3", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+                new String[]{"SELECT g_0.e3, g_0.e1, g_0.e2 FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        TestOptimizer.helpPlan("select string_agg(X'AABB', X'AABB' order by e2) from pm1.g2 group by e3", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+                new String[]{"SELECT g_0.e3, g_0.e2 FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
 
     @Test public void testUserDefinedAggPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();

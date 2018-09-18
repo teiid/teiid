@@ -723,6 +723,15 @@ public class ExecutionFactory<F, C> {
     public boolean supportsStringAgg() {
     	return false;
     }
+    
+    /**
+     * 
+     * @return true if the translator supports a simplified string_agg - listagg 
+     * @since 11.2
+     */
+    public boolean supportsListAgg() {
+        return supportsStringAgg();
+    }
 
     /** 
      * Support indicates connector can accept scalar subqueries in the SELECT, WHERE, and

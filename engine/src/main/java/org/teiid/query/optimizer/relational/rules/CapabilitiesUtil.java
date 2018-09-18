@@ -43,6 +43,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 import org.teiid.translator.SourceSystemFunctions;
@@ -184,9 +185,14 @@ public class CapabilitiesUtil {
             }
             break;
         case STRING_AGG:
-        	if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_STRING)) {
-                return false;
-            }
+        	if(!caps.supportsCapability(Capability.QUERY_AGGREGATES_STRING)) {
+        	    //check for more specific list support
+                if(aggregate.getType() == DataTypeManager.DefaultDataClasses.BLOB 
+                        || !caps.supportsCapability(Capability.QUERY_AGGREGATES_LIST)
+                        || !EvaluatableVisitor.willBecomeConstant(aggregate.getArg(1))) {
+                    return false;
+                }
+        	}
             break;
         case RANK:
         case DENSE_RANK:

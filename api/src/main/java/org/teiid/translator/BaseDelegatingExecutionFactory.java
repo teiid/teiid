@@ -1176,6 +1176,19 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		supportsStringAgg = value;
 	}
 	
+	Boolean supportsListAgg;
+    @TranslatorProperty(display="Supports LISTAGG", advanced=true)
+    @Override
+    public boolean supportsListAgg() {
+        if (supportsListAgg != null) {
+            return supportsListAgg;
+        }
+        return delegate.supportsListAgg();
+    }
+    public void setSupportsListAgg(boolean value) {
+        supportsListAgg = value;
+    }
+	
 	Boolean supportsFullDependentJoins;
 	@TranslatorProperty(display="Supports Full Dependent Joins", advanced=true)
 	@Override

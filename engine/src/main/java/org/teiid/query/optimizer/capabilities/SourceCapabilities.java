@@ -362,7 +362,8 @@ public interface SourceCapabilities {
         QUERY_WINDOW_FUNCTION_PERCENT_RANK,
         QUERY_WINDOW_FUNCTION_CUME_DIST,
         QUERY_WINDOW_FUNCTION_NTH_VALUE, 
-        WINDOW_FUNCTION_FRAME_CLAUSE;
+        WINDOW_FUNCTION_FRAME_CLAUSE, 
+        QUERY_AGGREGATES_LIST;
         
         private final String toString;
         

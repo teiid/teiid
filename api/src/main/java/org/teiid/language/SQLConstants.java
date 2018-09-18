@@ -174,6 +174,8 @@ public class SQLConstants {
         public static final String UNBOUNDED = "UNBOUNDED"; //$NON-NLS-1$
         public static final String PRECEDING = "PRECEDING"; //$NON-NLS-1$
         public static final String FOLLOWING = "FOLLOWING"; //$NON-NLS-1$
+        
+        public static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {
