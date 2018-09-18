@@ -880,16 +880,21 @@ public class LanguageBridgeFactory {
 			params.add(translate(expression));
 		}
     	String name = symbol.getAggregateFunction().name();
-    	if (symbol.getAggregateFunction() == AggregateSymbol.Type.USER_DEFINED) {
-    		name = symbol.getName();
-    	}
-    	
-    	AggregateFunction af = new AggregateFunction(name, 
+    	if (symbol.getFunctionDescriptor() != null) {
+            name = Symbol.getShortName(symbol.getFunctionDescriptor().getName());
+        } else if (symbol.getAggregateFunction() == AggregateSymbol.Type.USER_DEFINED) {
+            name = symbol.getName();
+        }
+        
+        AggregateFunction af = new AggregateFunction(name, 
                                 symbol.isDistinct(), 
                                 params,
                                 symbol.getType());
-    	af.setCondition(translate(symbol.getCondition()));
-    	af.setOrderBy(translate(symbol.getOrderBy(), false));
+        af.setCondition(translate(symbol.getCondition()));
+        af.setOrderBy(translate(symbol.getOrderBy(), false));
+        if (symbol.getFunctionDescriptor() != null) {
+            af.setMetadataObject(symbol.getFunctionDescriptor().getMethod());
+        }
     	return af;
     }
 

@@ -1290,8 +1290,8 @@ public class TestOracleTranslator {
     @Test public void testListAgg() throws Exception {
         TRANSLATOR.setDatabaseVersion("12.0");
         TRANSLATOR.initCapabilities(null);
-        String input = "SELECT listagg(stringkey), listagg(stringkey, ';' order by intkey) FROM BQT1.SmallA";
-        String output = "SELECT listagg(SmallA.StringKey), listagg(SmallA.StringKey, ';') WITHIN GROUP (ORDER BY SmallA.IntKey) FROM SmallA"; //$NON-NLS-1$
+        String input = "SELECT listagg(stringkey), oracle.listagg(stringkey, ';' order by intkey) FROM BQT1.SmallA";
+        String output = "SELECT LISTAGG(SmallA.StringKey), LISTAGG(SmallA.StringKey, ';') WITHIN GROUP (ORDER BY SmallA.IntKey) FROM SmallA"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
