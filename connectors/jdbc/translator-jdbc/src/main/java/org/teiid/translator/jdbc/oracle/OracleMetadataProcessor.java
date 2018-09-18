@@ -36,7 +36,7 @@ import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
-public final class OracleMetadataProcessor extends
+public class OracleMetadataProcessor extends
 		JDBCMetadataProcessor {
 
 	private boolean useGeometryType;

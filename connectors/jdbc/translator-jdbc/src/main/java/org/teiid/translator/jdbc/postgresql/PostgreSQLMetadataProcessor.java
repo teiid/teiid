@@ -32,7 +32,7 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
-public final class PostgreSQLMetadataProcessor
+public class PostgreSQLMetadataProcessor
         extends JDBCMetadataProcessor {
     
     @Override
