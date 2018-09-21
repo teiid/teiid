@@ -96,14 +96,6 @@ public class ODataTypeManager {
         odataTypes.put("Edm.GeometryMultiPoint", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
         odataTypes.put("Edm.GeometryMultiLineString", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
         odataTypes.put("Edm.GeometryCollection", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
-        odataTypes.put("Edm.Geography", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
-        odataTypes.put("Edm.GeographyPoint", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
-        odataTypes.put("Edm.GeographyLineString", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
-        odataTypes.put("Edm.GeographyPolygon", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
-        odataTypes.put("Edm.GeographyMultiPolygon", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
-        odataTypes.put("Edm.GeographyMultiPoint", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
-        odataTypes.put("Edm.GeographyMultiLineString", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
-        odataTypes.put("Edm.GeographyCollection", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
         teiidTypes.put(DataTypeManager.DefaultDataTypes.STRING, "Edm.String");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.BOOLEAN, "Edm.Boolean");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.BYTE, "Edm.SByte");
@@ -162,7 +154,7 @@ public class ODataTypeManager {
             case "POLYGON": //$NON-NLS-1$
                 return EdmPrimitiveTypeKind.GeometryPolygon;
             case "MULTIPOLYGON": //$NON-NLS-1$
-                return EdmPrimitiveTypeKind.GeographyMultiPolygon;
+                return EdmPrimitiveTypeKind.GeometryMultiPolygon;
             case "MULTIPOINT": //$NON-NLS-1$
                 return EdmPrimitiveTypeKind.GeometryMultiPoint;
             case "MULTILINESTRING": //$NON-NLS-1$
