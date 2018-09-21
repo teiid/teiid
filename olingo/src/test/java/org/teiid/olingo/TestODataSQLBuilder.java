@@ -131,7 +131,12 @@ public class TestODataSQLBuilder {
             "  DeputyDelegate integer," +
             " CONSTRAINT delegates FOREIGN KEY (Delegate) REFERENCES EmployeeEntity(EmployeeID)," +
             " CONSTRAINT deputyDelegates FOREIGN KEY (DeputyDelegate) REFERENCES EmployeeEntity(EmployeeID)"
-            + ");\n";
+            + ");\n"
+            + "CREATE FOREIGN table geo (id integer primary key,"
+            + "location geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'POINT')"
+            + ",line geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'LINESTRING')"
+            + ",polygon geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'POLYGON')"
+            + ")";
     
     static class QueryState extends BaseState {
         List<SQLParameter> parameters;
@@ -1076,5 +1081,27 @@ public class TestODataSQLBuilder {
     @AfterClass public static void oneTimeTearDown() {
     	TimestampWithTimezone.resetCalendar(null);
     }
+    
+    @Test
+    public void testGeoDistance() throws Exception {
+        helpTest("/odata4/vdb/PM1/geo?$filter="+
+                Encoder.encode("geo.distance(location, geometry'SRID=4326;POINT(-127.89734578345 45.234534534)') gt 10"),
+                "SELECT g0.id, g0.location, g0.line, g0.polygon FROM PM1.geo AS g0 WHERE st_distance(g0.location, st_geomfromewkt('SRID=4326;Point(-127.89734578345 45.234534534)')) > 10 ORDER BY g0.id");   
+    }
+    
+    @Test
+    public void testGeoLength() throws Exception {
+        helpTest("/odata4/vdb/PM1/geo?$filter="+
+                Encoder.encode("geo.length(line) lt 10"),
+                "SELECT g0.id, g0.location, g0.line, g0.polygon FROM PM1.geo AS g0 WHERE st_length(g0.line) < 10 ORDER BY g0.id");   
+    }
+    
+    @Test
+    public void testGeoIntersects() throws Exception {
+        helpTest("/odata4/vdb/PM1/geo?$filter="+
+                Encoder.encode("geo.intersects(location, polygon)"),
+                "SELECT g0.id, g0.location, g0.line, g0.polygon FROM PM1.geo AS g0 WHERE st_intersects(g0.location, g0.polygon) ORDER BY g0.id");   
+    }
+    
     
 }

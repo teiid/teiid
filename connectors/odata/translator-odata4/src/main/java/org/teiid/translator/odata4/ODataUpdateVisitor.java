@@ -110,7 +110,7 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
             int elementCount = obj.getChanges().size();
             for (int i = 0; i < elementCount; i++) {
                 Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();            
-                String type = ODataTypeManager.odataType(column.getRuntimeType())
+                String type = ODataTypeManager.odataType(column)
                         .getFullQualifiedName().getFullQualifiedNameAsString();
                 Expression expr = obj.getChanges().get(i).getValue();
                 Object value = resolveExpressionValue(expr);

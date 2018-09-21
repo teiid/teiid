@@ -3071,4 +3071,37 @@ public class TestODataIntegration {
         }
     }
     
+    @Test public void testGeometry() throws Exception {
+        try {
+            String ddl = "CREATE foreign table geo (id integer primary key, location string);"
+                    + "CREATE view geo_view (id integer primary key,"
+                    + "location geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'point'))"
+                    + " AS select id, ST_GEOMFROMTEXT(location) from geo;";
+            
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("phy");
+            mmd.addSourceMetadata("ddl", ddl);
+            mmd.addSourceMapping("x", "x", null);
+            HardCodedExecutionFactory hef = new HardCodedExecutionFactory();
+            
+            hef.addData("SELECT geo.id, geo.location FROM geo", Arrays.asList(Arrays.asList(1, "POINT (1 3)")));
+            
+            teiid.addTranslator("x", hef);
+            teiid.deployVDB("northwind", mmd);
+            
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/phy/geo_view");
+            assertEquals(200, response.getStatus());
+
+            JsonNode node = getJSONNode(response);
+            String value = node.get("value").toString();
+            assertEquals("[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,3.0]}}]", value);
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
 }

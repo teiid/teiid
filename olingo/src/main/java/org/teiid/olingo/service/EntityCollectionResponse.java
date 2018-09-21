@@ -46,6 +46,7 @@ import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
+import org.apache.olingo.commons.core.edm.primitivetype.AbstractGeospatialType;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDateTimeOffset;
@@ -53,10 +54,12 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.core.responses.EntityResponse;
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -179,9 +182,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                             column.isCollection(), value);
                     entity.addProperty(property);
                 }
-            } catch (IOException e) {
-                throw new SQLException(e);
-            } catch (TeiidProcessingException e) {
+            } catch (IOException | TeiidProcessingException e) {
                 throw new SQLException(e);
             }
         }
@@ -320,19 +321,21 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 
     private static Property createPrimitive(final String name,
             EdmPrimitiveType type, final Object value) {
-        return new Property(type.getFullQualifiedName().getFullQualifiedNameAsString(), name, ValueType.PRIMITIVE,
+        return new Property(type.getFullQualifiedName().getFullQualifiedNameAsString(), name, 
+                (type instanceof AbstractGeospatialType?ValueType.GEOSPATIAL:ValueType.PRIMITIVE),
                 value);
     }
 
     private static Property createCollection(final String name,
             EdmPrimitiveType type, final ArrayList<Object> values) {
         return new Property(type.getFullQualifiedName().getFullQualifiedNameAsString(), name,
-                ValueType.COLLECTION_PRIMITIVE, values);
+                (type instanceof AbstractGeospatialType?ValueType.COLLECTION_GEOSPATIAL:ValueType.COLLECTION_PRIMITIVE),
+                values);
     }
 
     static Object getPropertyValue(SingletonPrimitiveType expectedType, Integer precision, Integer scale, boolean isArray,
             Object value)
-            throws TransformationException, SQLException, IOException {
+            throws TransformationException, SQLException, IOException, FunctionExecutionException {
     	if (value == null) {
     		return null;
     	}
@@ -341,9 +344,19 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     	return value;
     }
     
+    /**
+     * 
+     * @param expectedType
+     * @param isArray
+     * @param value
+     * @return
+     * @see DocumentNode#addProjectedColumn(org.teiid.query.sql.symbol.Expression, org.apache.olingo.commons.api.edm.EdmType, org.apache.olingo.commons.api.edm.EdmProperty, boolean)
+     * for the convention around geometry representation, currently there are none but if we 
+     * need the srid it needs to be associated with the value via ewkb or passed in here based upon the property metadata.
+     */
     private static Object getPropertyValueInternal(SingletonPrimitiveType expectedType, boolean isArray,
             Object value)
-            throws TransformationException, SQLException, IOException {
+            throws TransformationException, SQLException, IOException, FunctionExecutionException {
         Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
         if (sourceType.isAssignableFrom(expectedType.getDefaultType())) {
             return value;
@@ -375,6 +388,8 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 bos.close();
                 return bos.toByteArray(); 
             }
+        } else if (expectedType instanceof AbstractGeospatialType && sourceType == DefaultDataClasses.BLOB) {
+            return ODataTypeManager.convertToODataValue(((Blob)value).getBinaryStream(), false);
         }
 
         Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType, isArray));

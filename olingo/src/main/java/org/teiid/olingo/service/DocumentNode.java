@@ -162,7 +162,7 @@ public class DocumentNode {
             UriParameter key, OData odata, Column column) {        
         org.apache.olingo.server.api.uri.queryoption.expression.Expression expr = key.getExpression();
         if ( expr == null) {
-            EdmPrimitiveTypeKind primitiveTypeKind = ODataTypeManager.odataType(column.getRuntimeType()); 
+            EdmPrimitiveTypeKind primitiveTypeKind = ODataTypeManager.odataType(column); 
             expr = new LiteralImpl(key.getText(), odata.createPrimitiveTypeInstance(primitiveTypeKind));
         }
         return expr;
@@ -252,9 +252,19 @@ public class DocumentNode {
     }
 
     protected void addProjectedColumn(final String columnName,
-            final Expression expr) {
+            Expression expr) {
         EdmPropertyImpl edmProperty = (EdmPropertyImpl) this.edmEntityType.getProperty(columnName);
         Column c = getColumnByName(columnName);
+        /* currently not needed, but if we need to associate the column's srid or if we can rely on
+         * the value for a variable srid, then we need to produce ewkb instead
+          if (c.getDatatype().getName().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.GEOMETRY)) {
+            String val = c.getProperty(BaseColumn.SPATIAL_SRID, false);
+            if (val != null) {
+                expr = new Function("ST_SETSRID", new Expression[] {expr, new Constant(val)}); //$NON-NLS-1$
+            }
+            expr = new Function("ST_ASEWKB", new Expression[] {expr}); //$NON-NLS-1$
+            expr = new AliasSymbol(columnName, expr);
+        }*/
         ProjectedColumn pc = addProjectedColumn(expr, edmProperty.getType(), edmProperty, edmProperty.isCollection());
         pc.setOrdinal(c.getPosition());
     }

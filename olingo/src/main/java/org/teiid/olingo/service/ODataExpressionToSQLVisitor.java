@@ -27,10 +27,20 @@ import java.util.Stack;
 
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
+import org.apache.olingo.commons.api.edm.geo.Geospatial;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.uri.*;
-import org.apache.olingo.server.api.uri.queryoption.expression.*;
+import org.apache.olingo.server.api.uri.queryoption.expression.Alias;
+import org.apache.olingo.server.api.uri.queryoption.expression.Binary;
+import org.apache.olingo.server.api.uri.queryoption.expression.Enumeration;
+import org.apache.olingo.server.api.uri.queryoption.expression.Expression;
+import org.apache.olingo.server.api.uri.queryoption.expression.LambdaRef;
+import org.apache.olingo.server.api.uri.queryoption.expression.Literal;
+import org.apache.olingo.server.api.uri.queryoption.expression.Member;
+import org.apache.olingo.server.api.uri.queryoption.expression.Method;
+import org.apache.olingo.server.api.uri.queryoption.expression.TypeLiteral;
+import org.apache.olingo.server.api.uri.queryoption.expression.Unary;
 import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
@@ -47,15 +57,7 @@ import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.translator.SourceSystemFunctions;
 
 public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor implements  ODataExpressionVisitor{
@@ -69,7 +71,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     private DocumentNode ctxLambda;
     private UniqueNameGenerator nameGenerator;
     private URLParseService parseService;
-    private String lastPropertyType;
+    private Column lastProperty;
     private OData odata;
     private boolean root;
     
@@ -128,18 +130,13 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
             else {
                 String type = "Edm.String";
-                if (this.lastPropertyType != null) {
-                    EdmPrimitiveTypeKind kind = ODataTypeManager.odataType(this.lastPropertyType);
+                if (this.lastProperty != null) {
+                    EdmPrimitiveTypeKind kind = ODataTypeManager.odataType(this.lastProperty);
                     type = kind.getFullQualifiedName().getFullQualifiedNameAsString();
-                    this.lastPropertyType = null;
+                    this.lastProperty = null;
                 }
                 Object value = ODataTypeManager.parseLiteral(type, strValue);
-                if (this.prepared) {
-                    stack.add(new Reference(this.params.size()));
-                    this.params.add(new SQLParameter(value, JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
-                } else {
-                    this.stack.add(new Constant(value));
-                }
+                handleValue(value);
             }
         } catch (TeiidException e) {
             throw new TeiidRuntimeException(e);
@@ -233,25 +230,36 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 String type = expr.getType().getFullQualifiedName().getFullQualifiedNameAsString();
                 value = ODataTypeManager.parseLiteral(type, expr.getText());
             }
-            if (this.prepared) {                
-                if (value == null) {
-                    this.stack.add(new Constant(value));                    
-                } else {
-                    Function ref = new Function(
-                            CONVERT,
-                            new org.teiid.query.sql.symbol.Expression[] {
-                                    new Reference(this.params.size()),
-                                    new Constant(DataTypeManager.getDataTypeName(value.getClass())) });
-                    stack.add(ref);
-                    this.params.add(new SQLParameter(value, 
-                            JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
-                }
-            } else {
-                this.stack.add(new Constant(value));
-            }
+            handleValue(value);
         } catch (TeiidException e) {
         	throw new TeiidRuntimeException(e);
         }
+    }
+
+    private void handleValue(Object value) {
+        boolean isGeo = false;
+        if (value instanceof Geospatial) {
+            String geoLiteral = ((Geospatial)value).toString();
+            //extract ewkt
+            value = geoLiteral.substring(geoLiteral.indexOf("'")+1, geoLiteral.length() - 1); //$NON-NLS-1$
+            isGeo = true;
+        }
+        org.teiid.query.sql.symbol.Expression ex = null;
+        if (!this.prepared || value == null) {                
+            ex = new Constant(value);                    
+        } else {
+            ex = new Function(
+                    CONVERT,
+                    new org.teiid.query.sql.symbol.Expression[] {
+                            new Reference(this.params.size()),
+                            new Constant(DataTypeManager.getDataTypeName(value.getClass())) });
+            this.params.add(new SQLParameter(value, 
+                    JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
+        }
+        if (isGeo) {
+            ex = new Function(SourceSystemFunctions.ST_GEOMFROMEWKT, new org.teiid.query.sql.symbol.Expression[] {ex});
+        }
+        stack.add(ex);
     }
 
     @Override
@@ -390,14 +398,26 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[] 
                     {teiidExprs.get(0),  new Constant(DataTypeManager.DefaultDataTypes.TIME)}));            
             break;
+        case GEODISTANCE:
+            this.stack.push(new Function(SourceSystemFunctions.ST_DISTANCE, new org.teiid.query.sql.symbol.Expression[] {
+                    teiidExprs.get(0), teiidExprs.get(1)
+            }));
+            break;
+        case GEOLENGTH:
+            this.stack.push(new Function(SourceSystemFunctions.ST_LENGTH, new org.teiid.query.sql.symbol.Expression[] {
+                    teiidExprs.get(0)
+            }));
+            break;
+        case GEOINTERSECTS:
+            this.stack.push(new Function(SourceSystemFunctions.ST_INTERSECTS, new org.teiid.query.sql.symbol.Expression[] {
+                    teiidExprs.get(0), teiidExprs.get(1)
+            }));
+            break;
         case FRACTIONALSECONDS:
         case TOTALSECONDS:
         case TOTALOFFSETMINUTES:
         case MINDATETIME:
         case MAXDATETIME:
-        case GEODISTANCE:
-        case GEOLENGTH:
-        case GEOINTERSECTS:
         case ISOF:
         default:
             throw new TeiidRuntimeException(new TeiidNotImplementedException(
@@ -462,7 +482,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         }
         // hack to resolve the property type.
         Column c = this.ctxExpression.getColumnByName(info.getProperty().getName());
-        this.lastPropertyType = c.getRuntimeType();
+        this.lastProperty = c;
         //revert back to the query context
         this.ctxExpression = this.ctxQuery;
     }
@@ -575,7 +595,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 Collection<ProjectedColumn> values = this.ctxQuery.getProjectedColumns().values();
                 Assertion.assertTrue(values.size() == 1);
 				ProjectedColumn projectedColumn = values.iterator().next();
-				ElementSymbol projectedEs = (ElementSymbol)projectedColumn.getExpression();
+				org.teiid.query.sql.symbol.Expression projectedEs = projectedColumn.getExpression();
                 List<SPParameter> params = new ArrayList<SPParameter>();
                 SPParameter param = new SPParameter(1, SPParameter.IN, "val");
                 param.setExpression(projectedEs);
@@ -593,7 +613,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 DocumentNode itResource = new DocumentNode();
                 org.teiid.query.sql.symbol.Expression clone = (org.teiid.query.sql.symbol.Expression) castFunction.clone();
                 AggregateSymbol symbol = new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(), false, clone);
-				AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), symbol);
+				AliasSymbol expression = new AliasSymbol(Symbol.getShortName(projectedEs), symbol);
                 
                 itResource.setFromClause(fromClause);
                 itResource.setGroupSymbol(groupSymbol);            

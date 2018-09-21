@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.olingo.client.api.edm.xml.XMLMetadata;
+import org.apache.olingo.commons.api.edm.geo.SRID;
 import org.apache.olingo.commons.api.edm.provider.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -38,6 +39,7 @@ import org.teiid.util.FullyQualifiedName;
 
 public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     private static final String EDM_GEOMETRY = "Edm.Geometry"; //$NON-NLS-1$
+    private static final String EDM_GEOGRAPHY = "Edm.Geography"; //$NON-NLS-1$
 
 	public enum ODataType {
         COMPLEX, 
@@ -622,9 +624,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             c.setProperty("MIME-TYPE", property.getMimeType());
         }
 
-        if (property.getSrid() != null) {
-            c.setProperty(BaseColumn.SPATIAL_SRID, property.getSrid().toString());
-        }
         if (!property.getType().equals("Edm.String")) {
             if (property.isCollection()) {
                 c.setNativeType("Collection("+property.getType()+")");
@@ -671,9 +670,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (parameter.getScale() != null) {
             p.setScale(parameter.getScale());
         }
-        if (parameter.getSrid() != null) {
-            p.setProperty(BaseColumn.SPATIAL_SRID, parameter.getSrid().toString());
-        }
+        handleGeometryTypes(parameter.getSrid(), parameter.getType(), p);
         return p;
     }    
 
@@ -681,17 +678,40 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         String columnName = property.getName();
         Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(property.getType(), 
                 property.isCollection()), table);
-        if (TypeFacility.RUNTIME_NAMES.GEOMETRY.equals(c.getDatatype().getName())) {
-        	String type = property.getType();
-        	if (type.startsWith(EDM_GEOMETRY) && type.length() > EDM_GEOMETRY.length()) {
-        		c.setProperty(BaseColumn.SPATIAL_TYPE, type.substring(EDM_GEOMETRY.length()).toUpperCase());
-        	}
-        }
+        handleGeometryTypes(property.getSrid(), property.getType(), c);
         if(property.isCollection()) {
             c.setSearchType(SearchType.Unsearchable);
         }
         c.setUpdatable(true);
         return c;
+    }
+
+    private void handleGeometryTypes(SRID srid, String type, BaseColumn c) {
+        //TODO: geometry arrays
+        if (!TypeFacility.RUNTIME_NAMES.GEOMETRY.equals(c.getDatatype().getName())) {
+            return;
+        }
+    	if (type.startsWith(EDM_GEOMETRY)) {
+    	    if (type.length() > EDM_GEOMETRY.length()) {
+    	        c.setProperty(BaseColumn.SPATIAL_TYPE, type.substring(EDM_GEOMETRY.length()).toUpperCase());
+    	    } else {
+    	        c.setProperty(BaseColumn.SPATIAL_TYPE, "GEOMETRY"); //$NON-NLS-1$
+    	    }
+    	} else if (type.startsWith(EDM_GEOGRAPHY)) {
+    	    c.setProperty(BaseColumn.SPATIAL_SRID, "4326"); //$NON-NLS-1$
+    	    if (type.length() > EDM_GEOGRAPHY.length()) {
+                c.setProperty(BaseColumn.SPATIAL_TYPE, type.substring(EDM_GEOGRAPHY.length()).toUpperCase());
+            } else {
+                c.setProperty(BaseColumn.SPATIAL_TYPE, "GEOMETRY"); //$NON-NLS-1$
+            }
+    	}
+    	if (srid != null && srid.isNotDefault()) {
+    	    String value = srid.toString();
+    	    
+    	    if (!value.equalsIgnoreCase("VARIABLE")) { //$NON-NLS-1$
+                c.setProperty(BaseColumn.SPATIAL_SRID, value);
+    	    }
+        }
     }
 
     private void addParameter(MetadataFactory mf, XMLMetadata metadata,

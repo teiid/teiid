@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
+import org.apache.olingo.commons.api.edm.geo.SRID;
 import org.apache.olingo.commons.api.edm.provider.*;
 import org.apache.olingo.commons.api.edm.provider.annotation.CsdlCollection;
 import org.apache.olingo.commons.api.edm.provider.annotation.CsdlConstantExpression;
@@ -34,6 +35,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
@@ -173,7 +175,7 @@ public class ODataSchemaBuilder {
         String runtimeType = c.getRuntimeType();
         CsdlProperty property = new CsdlProperty()
                 .setName(c.getName())
-                .setType(ODataTypeManager.odataType(runtimeType).getFullQualifiedName())
+                .setType(ODataTypeManager.odataType(c).getFullQualifiedName())
                 .setNullable(nullable);
         
         if (DataTypeManager.isArrayType(runtimeType)) {
@@ -203,6 +205,10 @@ public class ODataSchemaBuilder {
         }
         if (c.getDefaultValue() != null) {
             property.setDefaultValue(c.getDefaultValue());
+        }
+        String srid = c.getProperty(BaseColumn.SPATIAL_SRID, false);
+        if (srid != null) {
+            property.setSrid(SRID.valueOf(srid));
         }
         return property;
     }
@@ -479,7 +485,7 @@ public class ODataSchemaBuilder {
 
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();
         for (ProcedureParameter pp : proc.getParameters()) {
-            EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(pp.getRuntimeType());            
+            EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(pp);            
             if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {
                 edmFunction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()).setCollection(DataTypeManager.isArrayType(pp.getRuntimeType())));
                 continue;
@@ -521,19 +527,30 @@ public class ODataSchemaBuilder {
         }
         param.setNullable(pp.getNullType() == NullType.Nullable);
         
-        if (pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
+        String runtimeType = pp.getRuntimeType();
+        
+        if (runtimeType.equals(DataTypeManager.DefaultDataTypes.STRING)
+                || runtimeType.equals(DataTypeManager.DefaultDataTypes.VARBINARY)) {
+            //this will not be correct for a multi-dimensional or other unsupported type
             param.setMaxLength(pp.getLength());
-        } else if (pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+        } else if (runtimeType.equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)
+                || runtimeType.equals(DataTypeManager.DefaultDataTypes.BIG_INTEGER)) {
             if (pp.getScale() < 0) {
                 param.setPrecision((int)Math.min(Integer.MAX_VALUE, (long)pp.getPrecision() - pp.getScale()));
             } else {
                 param.setPrecision(pp.getPrecision());
             }
             param.setScale(Math.max(0, pp.getScale()));
-        } else {
-            if (pp.getDefaultValue() != null) {
-                //param.setDefaultValue(pp.getDefaultValue());
-            }
+        } else if (runtimeType.equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)
+                || runtimeType.equals(DataTypeManager.DefaultDataTypes.TIME)) {
+            param.setPrecision(pp.getPrecision() == 0?new Integer(4):pp.getPrecision());
+        }
+        if (pp.getDefaultValue() != null) {
+            //param.setDefaultValue(c.getDefaultValue());
+        }
+        String srid = pp.getProperty(BaseColumn.SPATIAL_SRID, false);
+        if (srid != null) {
+            param.setSrid(SRID.valueOf(srid));
         }
         return param;
     }
@@ -548,7 +565,7 @@ public class ODataSchemaBuilder {
 
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();        
         for (ProcedureParameter pp : proc.getParameters()) {
-            EdmPrimitiveTypeKind odatatype = ODataTypeManager.odataType(pp.getRuntimeType());
+            EdmPrimitiveTypeKind odatatype = ODataTypeManager.odataType(pp);
             if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {                 
                 edmAction.setReturnType(new CsdlReturnType().setType(odatatype.getFullQualifiedName()).setCollection(DataTypeManager.isArrayType(pp.getRuntimeType())));
                 continue;
