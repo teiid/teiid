@@ -403,18 +403,7 @@ public class ODataTypeManager {
 			} catch (FunctionExecutionException e1) {
 				throw new EdmPrimitiveTypeException(e1.getMessage(), e1);
 			}
-        	StringWriter sw = new StringWriter();
-        	sw.write("geometry'SRID="); //$NON-NLS-1$
-        	sw.write(String.valueOf(g.getSRID()));
-        	sw.write(";"); //$NON-NLS-1$
-        	ODataWKTWriter writer = new ODataWKTWriter();
-        	try {
-				writer.write(g, sw);
-			} catch (IOException e) {
-				throw new TeiidRuntimeException(e);
-			}
-        	sw.write("'"); //$NON-NLS-1$
-        	return sw.toString();
+        	return geometryToODataValueString(g);
         }
         EdmPrimitiveTypeKind kind = EdmPrimitiveTypeKind.valueOf(odataType);
         String value =  EdmPrimitiveTypeFactory.getInstance(kind).valueToString(
@@ -423,6 +412,21 @@ public class ODataTypeManager {
             return EdmString.getInstance().toUriLiteral(value);
         }
         return value;
+    }
+
+    static String geometryToODataValueString(Geometry g) {
+        StringWriter sw = new StringWriter();
+        sw.write("geometry'SRID="); //$NON-NLS-1$
+        sw.write(String.valueOf(g.getSRID()));
+        sw.write(";"); //$NON-NLS-1$
+        ODataWKTWriter writer = new ODataWKTWriter();
+        try {
+        	writer.write(g, sw);
+        } catch (IOException e) {
+        	throw new TeiidRuntimeException(e);
+        }
+        sw.write("'"); //$NON-NLS-1$
+        return sw.toString();
     }   
 
 }
