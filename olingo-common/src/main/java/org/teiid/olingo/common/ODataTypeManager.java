@@ -452,7 +452,7 @@ public class ODataTypeManager {
         return value;
     }
 
-    private static String geometryToODataValueString(Geometry g) {
+    static String geometryToODataValueString(Geometry g) {
         StringWriter sw = new StringWriter();
         sw.write("geometry'SRID="); //$NON-NLS-1$
         sw.write(String.valueOf(g.getSRID()));

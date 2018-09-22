@@ -308,7 +308,7 @@ class ODataWKTWriter
       writer.write("(");
       for (int i = 0; i < lineString.getNumPoints(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         appendCoordinate(lineString.getCoordinateN(i), writer);
       }
@@ -326,11 +326,11 @@ class ODataWKTWriter
     throws IOException
   {
       writer.write("(");
-      appendLineStringText(polygon.getExteriorRing(), writer);
       for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
-        writer.write(", ");
         appendLineStringText(polygon.getInteriorRingN(i), writer);
+        writer.write(",");
       }
+      appendLineStringText(polygon.getExteriorRing(), writer);
       writer.write(")");
   }
 
@@ -347,7 +347,7 @@ class ODataWKTWriter
       writer.write("(");
       for (int i = 0; i < multiPoint.getNumGeometries(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         writer.write("(");
         appendCoordinate(((Point) multiPoint.getGeometryN(i)).getCoordinate(), writer);
@@ -370,7 +370,7 @@ class ODataWKTWriter
       writer.write("(");
       for (int i = 0; i < multiLineString.getNumGeometries(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         appendLineStringText((LineString) multiLineString.getGeometryN(i), writer);
       }
@@ -390,7 +390,7 @@ class ODataWKTWriter
       writer.write("(");
       for (int i = 0; i < multiPolygon.getNumGeometries(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         appendPolygonText((Polygon) multiPolygon.getGeometryN(i), writer);
       }
@@ -411,7 +411,7 @@ class ODataWKTWriter
       writer.write("(");
       for (int i = 0; i < geometryCollection.getNumGeometries(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         write(geometryCollection.getGeometryN(i), writer);
       }
