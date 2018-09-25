@@ -311,6 +311,15 @@ public class TestJDBCSocketTransport {
 		assertEquals(100, ObjectConverterUtil.convertToCharArray(rs.getCharacterStream(1), -1).length);
 	}
 	
+    @Test public void testDynamicStatementNoResultset() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("BEGIN\n" + 
+                "       declare clob sql_query = 'select 1';\n" + 
+                "       execute immediate sql_query;\n" + 
+                "END ;");
+        assertNull(s.getResultSet());
+    }
+	
 	@Test public void testArray() throws Exception {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("SELECT (1, (1,2))");
