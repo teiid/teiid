@@ -308,8 +308,12 @@ public final class RuleCollapseSource implements OptimizerRule {
     	PlanNode child = accessNode.getFirstChild();
         
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
-        	
-        	
+            if (!accessNode.getProperty(Info.OUTPUT_COLS).equals(child.getProperty(Info.OUTPUT_COLS))) {
+                //corner case - the output of a dup removal node will be all the columns
+                //this will be reflected in the source node parent as well, but
+                //will be minimized in the grand parent access if not all columns are needed
+                return root;
+            }
         	child.removeProperty(NodeConstants.Info.INLINE_VIEW);
         	root = RuleRaiseAccess.performRaise(root, child, accessNode);
             //add the groups from the lower project
