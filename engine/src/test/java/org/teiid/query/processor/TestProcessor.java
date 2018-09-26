@@ -8041,6 +8041,33 @@ public class TestProcessor {
                new List<?>[] {Arrays.asList(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), TimestampUtil.createTimestamp(0, 0, 0, 5, 0, 0, 0), "abc", "xyz")});
        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(5l, "abc", "xyz")});
    }
+   
+   @Test public void testSourceViewPreservation() throws Exception {
+       String sql = "SELECT t2.i\n" + 
+               "FROM (\n" + 
+               "    SELECT DISTINCT 1 a, b from test_x) t1,\n" + 
+               "    table(CALL \"pr\"(arg => t1.a)\n" + 
+               "    ) sub\n" + 
+               "JOIN test_y t2 ON true";
+       
+       TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE test_x (b boolean) options (cardinality 1); "
+               + "CREATE FOREIGN TABLE test_y (i integer) options (cardinality 1);"
+               + "CREATE PROCEDURE pr(arg string) RETURNS (res integer) AS\n" + 
+               "    BEGIN\n" + 
+               "        SELECT 2;\n" + 
+               "    END; ", "x", "y");
+       
+       BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+       caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+       
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(caps));
+       HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+       dataManager.addData("SELECT g_0.i FROM test_y AS g_0",
+               new List<?>[] {Arrays.asList(2)});
+       
+       dataManager.addData("SELECT v_0.c_0 FROM (SELECT DISTINCT 1 AS c_0, g_0.b AS c_1 FROM test_x AS g_0) AS v_0", new List<?>[] {Arrays.asList(1)});
+       TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(2)});
+   }
 	
     private static final boolean DEBUG = false;
 }
