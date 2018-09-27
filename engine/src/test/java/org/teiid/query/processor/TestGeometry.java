@@ -453,4 +453,10 @@ public class TestGeometry {
         assertEquals("LINESTRING (30 10, 10 30, 40 40)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
     }
     
+    @Test public void testPreserveSrid() throws Exception {
+        String expr = "st_srid(st_boundary(st_geomfromewkt('SRID=4326;POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))')))";
+        Expression ex = TestFunctionResolving.getExpression(expr);
+        assertEquals(4326, (int)Evaluator.evaluate(ex));
+    }
+    
 }
