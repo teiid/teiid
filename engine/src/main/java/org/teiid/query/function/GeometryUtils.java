@@ -369,6 +369,7 @@ public class GeometryUtils {
     }
     
     public static GeometryType getGeometryType(Geometry jtsGeom, int srid) {
+        jtsGeom.setSRID(srid);
         byte[] bytes = getBytes(jtsGeom, true);
         return new GeometryType(bytes, srid);
     }
@@ -429,12 +430,12 @@ public class GeometryUtils {
 	    douglasPeuckerSimplifier.setEnsureValid(false);
 	    douglasPeuckerSimplifier.setDistanceTolerance(tolerance);
 	    Geometry resultGeometry = douglasPeuckerSimplifier.getResultGeometry();
-        return getGeometryType(resultGeometry);
+        return getGeometryType(resultGeometry, geom.getSrid());
 	}
 	
 	public static GeometryType simplifyPreserveTopology(
             GeometryType geom, double tolerance) throws FunctionExecutionException {
-        return getGeometryType(TopologyPreservingSimplifier.simplify(getGeometry(geom), tolerance));
+        return getGeometryType(TopologyPreservingSimplifier.simplify(getGeometry(geom), tolerance), geom.getSrid());
     }
 	
 	public static boolean boundingBoxIntersects(
@@ -445,7 +446,7 @@ public class GeometryUtils {
 	}
 
 	public static GeometryType envelope(GeometryType geom) throws FunctionExecutionException {
-		return getGeometryType(getGeometry(geom).getEnvelope());
+		return getGeometryType(getGeometry(geom).getEnvelope(), geom.getSrid());
 	}
 
 	public static Boolean within(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
@@ -461,6 +462,7 @@ public class GeometryUtils {
 	public static class Extent implements UserDefinedAggregate<GeometryType> {
 		
 		private Envelope e;
+		private int srid = GeometryType.UNKNOWN_SRID;
 		
 		public Extent() {
 		}
@@ -471,6 +473,7 @@ public class GeometryUtils {
 		}
 		
 		public void addInput(GeometryType geom) throws FunctionExecutionException {
+		    srid = geom.getSrid();
 			Geometry g1 = getGeometry(geom);
 			if (e == null) {
 				e = new Envelope();
@@ -489,7 +492,7 @@ public class GeometryUtils {
 			        new Coordinate(e.getMinX(), e.getMaxY()),
 			        new Coordinate(e.getMaxX(), e.getMaxY()),
 			        new Coordinate(e.getMaxX(), e.getMinY()),
-			        new Coordinate(e.getMinX(), e.getMinY())}));
+			        new Coordinate(e.getMinX(), e.getMinY())}), srid);
 		}
 
 	}
@@ -539,27 +542,27 @@ public class GeometryUtils {
 
 	public static GeometryType boundary(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
-		return getGeometryType(g.getBoundary());
+		return getGeometryType(g.getBoundary(), geom.getSrid());
 	}
 	
 	public static GeometryType buffer(GeometryType geom, double distance)  throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
-		return getGeometryType(g.buffer(distance));
+		return getGeometryType(g.buffer(distance), geom.getSrid());
 	}
 	
 	public static GeometryType buffer(GeometryType geom, double distance, int quadrantSegments)  throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
-		return getGeometryType(g.buffer(distance, quadrantSegments));
+		return getGeometryType(g.buffer(distance, quadrantSegments), geom.getSrid());
 	}
 
 	public static GeometryType centroid(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
-		return getGeometryType(g.getCentroid());
+		return getGeometryType(g.getCentroid(), geom.getSrid());
 	}
 	
 	public static GeometryType convexHull(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
-		return getGeometryType(g.convexHull());
+		return getGeometryType(g.convexHull(), geom.getSrid());
 	}
 
 	public static Integer coordDim(GeometryType geom) throws FunctionExecutionException {
@@ -574,13 +577,13 @@ public class GeometryUtils {
 	public static GeometryType difference(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
 		Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
-		return getGeometryType(g1.difference(g2));
+		return getGeometryType(g1.difference(g2), geom1.getSrid());
 	}
 
 	public static GeometryType intersection(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
 		Geometry g1 = getGeometry(geom1);
 		Geometry g2 = getGeometry(geom2);
-		return getGeometryType(g1.intersection(g2));
+		return getGeometryType(g1.intersection(g2), geom1.getSrid());
 	}
 
 	public static int dimension(GeometryType geom) throws FunctionExecutionException {
@@ -602,7 +605,7 @@ public class GeometryUtils {
 				//can be empty
 				return null;
 			}
-			return getGeometryType(p);
+			return getGeometryType(p, geom.getSrid());
 		}
 		return null;
 	}
@@ -612,7 +615,7 @@ public class GeometryUtils {
 		if (!(g instanceof Polygon)) {
 			return null;
 		}
-		return getGeometryType(((Polygon)g).getExteriorRing());
+		return getGeometryType(((Polygon)g).getExteriorRing(), geom.getSrid());
 	}
 	
 	public static GeometryType geometryN(GeometryType geom, int index) throws FunctionExecutionException {
@@ -622,7 +625,7 @@ public class GeometryUtils {
 			return null;
 		}
 		Geometry n = g.getGeometryN(index);
-		return getGeometryType(n);
+		return getGeometryType(n, geom.getSrid());
 	}
 
 	public static String geometryType(GeometryType geom) throws FunctionExecutionException {
@@ -698,7 +701,7 @@ public class GeometryUtils {
 		if (i < 0 || i >= g2.getNumInteriorRing()) {
 			return null;
 		}
-		return getGeometryType(g2.getInteriorRingN(i));
+		return getGeometryType(g2.getInteriorRingN(i), geom.getSrid());
 	}
 
 	public static Boolean orderingEquals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
@@ -718,7 +721,7 @@ public class GeometryUtils {
 		if (i < 0 || i >= g2.getNumPoints()) {
 			return null;
 		}
-		return getGeometryType(g2.getPointN(i));
+		return getGeometryType(g2.getPointN(i), geom.getSrid());
 	}
 	
 	public static Double perimeter(GeometryType geom) throws FunctionExecutionException {
@@ -735,8 +738,7 @@ public class GeometryUtils {
 		if (point == null) {
 			return null;
 		}
-		point.setSRID(geom.getSrid());
-		return getGeometryType(point);
+		return getGeometryType(point, geom.getSrid());
 	}
 	
 	public static GeometryType polygon(GeometryType geom, int srid) throws FunctionExecutionException {
@@ -746,8 +748,7 @@ public class GeometryUtils {
         }
         LineString ls = (LineString)g;
         Geometry result = GEOMETRY_FACTORY.createPolygon(ls.getCoordinateSequence());
-        result.setSRID(srid);
-        return getGeometryType(result);
+        return getGeometryType(result, srid);
     }
 
     public static Boolean relate(GeometryType geom1, GeometryType geom2, String intersectionPattern) throws FunctionExecutionException {
@@ -766,13 +767,13 @@ public class GeometryUtils {
     public static GeometryType symDifference(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
-        return getGeometryType(g1.symDifference(g2));
+        return getGeometryType(g1.symDifference(g2), geom1.getSrid());
     }
     
     public static GeometryType union(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
-        return getGeometryType(g1.union(g2));
+        return getGeometryType(g1.union(g2), geom1.getSrid());
     }
     
     public static Double ordinate(GeometryType geom, Ordinate ordinate) throws FunctionExecutionException {
@@ -820,8 +821,7 @@ public class GeometryUtils {
         } catch (ParseException e) {
             throw new FunctionExecutionException(e);
         }
-        result.setSRID(geom.getSrid());
-        return getGeometryType(result);
+        return getGeometryType(result, geom.getSrid());
     }
 
 }
