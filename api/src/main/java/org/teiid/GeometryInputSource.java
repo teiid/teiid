@@ -21,12 +21,13 @@ package org.teiid;
 import java.io.InputStream;
 import java.io.Reader;
 
+import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
 
 /**
- * Used to abstract how geometry values are retrieved.
+ * Used to abstract how geometry and geography values are retrieved.
  * 
- * Converted by the engine into a {@link GeometryType}
+ * Converted by the engine into a {@link GeometryType} or {@link GeographyType}
  * 
  */
 public abstract class GeometryInputSource {

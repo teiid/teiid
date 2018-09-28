@@ -28,11 +28,15 @@ import java.sql.SQLException;
 import java.sql.Struct;
 import java.sql.Types;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.core.types.GeographyType;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.language.Literal;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -139,4 +143,20 @@ public class TestJDBCExecutionFactory {
         jef.bindValue(ps, "Hello\u0128World", TypeFacility.RUNTIME_TYPES.STRING, 1);
         Mockito.verify(ps).setObject(1, "Hello\u0128World", Types.NVARCHAR);
     }
+	
+    @Test public void testGeospatialLiterals() throws Exception {
+        JDBCExecutionFactory jef = new JDBCExecutionFactory();
+        List<?> result = jef.translateGeometryLiteral(new Literal(new GeometryType(), TypeFacility.RUNTIME_TYPES.GEOMETRY));
+        assertTrue(result.get(0).toString().startsWith("st_geom"));
+        
+        GeographyType value = new GeographyType();
+        result = jef.translateGeographyLiteral(new Literal(value, TypeFacility.RUNTIME_TYPES.GEOGRAPHY));
+        assertTrue(result.get(0).toString().startsWith("st_geog"));
+        
+        value.setSrid(4333);
+        result = jef.translateGeographyLiteral(new Literal(value, TypeFacility.RUNTIME_TYPES.GEOGRAPHY));
+        assertTrue(result.get(0).toString().startsWith("st_setsrid(st_geog"));
+        assertTrue(result.get(0).toString().endsWith("4333)"));
+    }
+
 }

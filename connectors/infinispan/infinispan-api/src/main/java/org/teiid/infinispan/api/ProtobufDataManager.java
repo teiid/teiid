@@ -37,16 +37,7 @@ import java.util.HashMap;
 
 import org.infinispan.protostream.descriptors.Type;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.GeometryType;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.XMLType;
+import org.teiid.core.types.*;
 import org.teiid.core.types.basic.ObjectToAnyTransform;
 import org.teiid.core.util.ObjectConverterUtil;
 
@@ -167,7 +158,7 @@ public class ProtobufDataManager {
                 });
             } else if (expectedType.isAssignableFrom(XMLType.class)) {
                 return new SQLXMLImpl(rawContents);
-            } else if (expectedType.isAssignableFrom(GeometryType.class)) {
+            } else if (expectedType.isAssignableFrom(AbstractGeospatialType.class)) {
                 return new GeometryType(new BlobImpl(new InputStreamFactory() {
                     @Override
                     public InputStream getInputStream() throws IOException {

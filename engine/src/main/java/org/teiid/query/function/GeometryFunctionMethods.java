@@ -22,6 +22,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.AbstractGeospatialType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
@@ -51,7 +52,7 @@ public class GeometryFunctionMethods {
             throws FunctionExecutionException {
         return GeometryUtils.geometryToClob(geometry, true);
     }
-
+    
     @TeiidFunction(name=SourceSystemFunctions.ST_ASBINARY,
                    category=FunctionCategoryConstants.GEOMETRY,
                    nullOnNull=true,
@@ -61,7 +62,7 @@ public class GeometryFunctionMethods {
         return new BlobType(b);
     }
     
-    public static BlobType asBlob(GeometryType geometry, String encoding) throws FunctionExecutionException {
+    public static BlobType asBlob(AbstractGeospatialType geometry, String encoding) throws FunctionExecutionException {
         if ("NDR".equals(encoding)) { //$NON-NLS-1$
             return new BlobType(GeometryUtils.getBytes(GeometryUtils.getGeometry(geometry), false)); 
         } 
@@ -111,14 +112,14 @@ public class GeometryFunctionMethods {
             throws FunctionExecutionException {
     	return GeometryUtils.geometryFromClob(wkt);
     }
-
+    
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMTEXT,
                    category=FunctionCategoryConstants.GEOMETRY,
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static GeometryType geomFromText(ClobType wkt, int srid) 
             throws FunctionExecutionException {
-    	return GeometryUtils.geometryFromClob(wkt, srid, false);
+    	return GeometryUtils.getGeometryType(GeometryUtils.geometryFromClob(wkt, srid, false));
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMWKB,
@@ -129,7 +130,7 @@ public class GeometryFunctionMethods {
             throws FunctionExecutionException {
     	return GeometryUtils.geometryFromBlob(wkb);
     }
-
+    
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMWKB,
                    category=FunctionCategoryConstants.GEOMETRY,
                    pushdown=PushDown.CAN_PUSHDOWN,
@@ -181,7 +182,7 @@ public class GeometryFunctionMethods {
     public static Boolean intersects(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
     	return GeometryUtils.intersects(geom1, geom2);
     }
-
+    
     @TeiidFunction(name=SourceSystemFunctions.ST_CONTAINS,
                    category=FunctionCategoryConstants.GEOMETRY,
                    nullOnNull=true,
@@ -346,7 +347,7 @@ public class GeometryFunctionMethods {
             pushdown=PushDown.CAN_PUSHDOWN)
 	public static GeometryType geomFromEwkt(ClobType ewkt) 
 	     throws FunctionExecutionException {
-		return GeometryUtils.geometryFromClob(ewkt, null, true);
+		return GeometryUtils.getGeometryType(GeometryUtils.geometryFromClob(ewkt, null, true));
 	}
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMEWKB,

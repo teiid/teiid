@@ -42,6 +42,7 @@ import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
@@ -95,7 +96,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_pg_prepared_xacts();
 		add_pg_inherits();
 		add_pg_stats();
-		add_geography_columns();
 		add_pg_constraint();
 		
 		//limited emulation of information_schema
@@ -117,6 +117,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addFunction("colDescription", "col_description"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("pgHasRole", "pg_has_role"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("asBinary2", "ST_asBinary"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("asBinary3", "ST_asBinary"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("postgisLibVersion", "public.PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("postgisGeosVersion", "public.postgis_geos_version"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("postgisProjVersion", "public.postgis_proj_version"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -195,20 +196,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
         t.setSelectTransformation(transformation);
     }
 	
-	private void add_geography_columns() {
-        Table t = createView("geography_columns"); //$NON-NLS-1$ 
-        addColumn("f_table_catalog", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
-        addColumn("f_table_schema", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
-        addColumn("f_table_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
-        addColumn("f_geography_column", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
-        addColumn("coord_dimension", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
-        addColumn("srid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
-        addColumn("type", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
-
-        String transformation = "SELECT null, null, null, null, null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
-        t.setSelectTransformation(transformation);
-	}
-
     private Table createView(String name) {
 		Table t = addTable(name);
 		t.setSystem(true);
@@ -613,6 +600,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"142,xml,-1,b,0,-1,0,0,xml\n" + //$NON-NLS-1$
 			"14939,lo,-1,b,0,-1,0,0,\n" + //$NON-NLS-1$
 			"32816,geometry,-1,b,0,-1,0,0,geometry\n" + //$NON-NLS-1$
+			"33454,geography,-1,b,0,-1,0,0,geography\n" + //$NON-NLS-1$
 			"2278,void,4,p,0,-1,0,0,\n" + //$NON-NLS-1$
 			"2249,record,-1,p,0,-1,0,0,\n" + //$NON-NLS-1$
 			"30,oidvector,-1,b,0,-1,0,26,\n" + //$NON-NLS-1$
@@ -633,6 +621,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"1182,_date,-1,b,0,-1,0,1082,date[]\n" + //$NON-NLS-1$
 			"1183,_time,-1,b,0,-1,0,1083,time[]\n" + //$NON-NLS-1$
 			"32824,_geometry,-1,b,0,-1,0,32816,geometry[]\n" + //$NON-NLS-1$
+			"33462,_geography,-1,b,0,-1,0,33454,geography[]\n" + //$NON-NLS-1$
 			"143,_xml,-1,b,0,-1,0,142,xml[]\n" + //$NON-NLS-1$
 			"2287,_record,-1,b,0,-1,0,2249,\n" + //$NON-NLS-1$
 			"2283,anyelement,4,p,0,-1,0,0,\n" + //$NON-NLS-1$
@@ -999,6 +988,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		public static BlobType asBinary2(GeometryType geom, String encoding) throws FunctionExecutionException {
 		    return GeometryFunctionMethods.asBlob(geom, encoding);
 		}
+		
+		public static BlobType asBinary3(GeographyType geog, String encoding) throws FunctionExecutionException {
+            return GeometryFunctionMethods.asBlob(geog, encoding);
+        }
 		
 		public static boolean pg_table_is_visible(int oid) throws FunctionExecutionException {
             return true;

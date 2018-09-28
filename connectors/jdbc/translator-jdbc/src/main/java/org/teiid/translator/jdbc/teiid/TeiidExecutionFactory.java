@@ -20,11 +20,13 @@
  */
 package org.teiid.translator.jdbc.teiid;
 
+import java.io.InputStream;
+import java.sql.Blob;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -32,12 +34,12 @@ import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
+import org.teiid.GeometryInputSource;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -71,6 +73,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
 	public static final Version ELEVEN_1 = Version.getVersion("11.1"); //$NON-NLS-1$
+	public static final Version ELEVEN_2 = Version.getVersion("11.2"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -273,6 +276,11 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
             supportedFunctions.add(SourceSystemFunctions.SHA1);
             supportedFunctions.add(SourceSystemFunctions.SHA2_256);
             supportedFunctions.add(SourceSystemFunctions.SHA2_512);
+        }
+        
+        if (getVersion().compareTo(ELEVEN_2) >= 0) {
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOGFROMTEXT);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOGFROMWKB);
         }
         
         return supportedFunctions;
@@ -484,47 +492,21 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
             protected String getRuntimeType(int type, String typeName, int precision) {
             	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
                     return TypeFacility.RUNTIME_NAMES.GEOMETRY;
-                }                
+                } 
+            	if ("geography".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                    return TypeFacility.RUNTIME_NAMES.GEOGRAPHY;
+                } 
                 return super.getRuntimeType(type, typeName, precision);                    
             }
             
             @Override
-            protected void getGeometryMetadata(Column c, Connection conn,
-            		String tableCatalog, String tableSchema, String tableName,
-            		String columnName) {
-            	PreparedStatement ps = null;
-            	ResultSet rs = null;
-            	try {
-            		if (tableCatalog == null) {
-            			tableCatalog = conn.getCatalog();
-            		}
-	            	ps = conn.prepareStatement("select coord_dimension, srid, type from sys.geometry_columns where f_table_catalog=? and f_table_schema=? and f_table_name=? and f_geometry_column=?"); //$NON-NLS-1$
-	            	ps.setString(1, tableCatalog);
-	            	ps.setString(2, tableSchema);
-	            	ps.setString(3, tableName);
-	            	ps.setString(4, columnName);
-	            	rs = ps.executeQuery();
-	            	if (rs.next()) {
-	            		c.setProperty(MetadataFactory.SPATIAL_URI + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
-	            		c.setProperty(MetadataFactory.SPATIAL_URI + "srid", rs.getString(2)); //$NON-NLS-1$
-	            		c.setProperty(MetadataFactory.SPATIAL_URI + "type", rs.getString(3)); //$NON-NLS-1$
-	            	}
-            	} catch (SQLException e) {
-            		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get geometry metadata for column", tableSchema, tableName, columnName); //$NON-NLS-1$
-            	} finally {
-            		if (rs != null) {
-            			try {
-							rs.close();
-						} catch (SQLException e) {
-						}
-            		}
-            		if (ps != null) {
-            			try {
-							ps.close();
-						} catch (SQLException e) {
-						}
-            		}
-            	}
+            protected String getGeographyMetadataTableName() {
+                return "sys.geography_columns"; //$NON-NLS-1$
+            }
+            
+            @Override
+            protected String getGeometryMetadataTableName() {
+                return "sys.geometry_columns"; //$NON-NLS-1$
             }
     	};
     }
@@ -573,6 +555,40 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
                 return SQLConstants.Reserved.MERGE;
             }  
         };
+    }
+    
+    @Override
+    public boolean supportsGeographyType() {
+        return getVersion().compareTo(ELEVEN_2) > 0;
+    }
+    
+    @Override
+    public Expression translateGeometrySelect(Expression expr) {
+        return new Function(SourceSystemFunctions.ST_ASEWKB, Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.BLOB);
+    }
+
+    @Override
+    public Expression translateGeographySelect(Expression expr) {
+        return new Function(SourceSystemFunctions.ST_ASEWKB, Arrays.asList(
+                new Function("CAST", //$NON-NLS-1$
+                        Arrays.asList(expr, new Literal("geometry", TypeFacility.RUNTIME_TYPES.STRING)), //$NON-NLS-1$ 
+                        TypeFacility.RUNTIME_TYPES.GEOMETRY)),   
+                TypeFacility.RUNTIME_TYPES.BLOB); 
+    }
+    
+    @Override
+    public Object retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
+        //geometry strategy includes the srid
+        Blob blob = results.getBlob(paramIndex);
+        if (blob != null) {
+            return new GeometryInputSource() {
+                @Override
+                public InputStream getEwkb() throws Exception {
+                    return blob.getBinaryStream();
+                }
+            };
+        }
+        return null;
     }
     
 }

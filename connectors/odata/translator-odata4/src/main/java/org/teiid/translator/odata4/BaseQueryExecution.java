@@ -44,6 +44,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.olingo.common.ODataTypeManager;
@@ -238,7 +239,8 @@ public class BaseQueryExecution {
             Object value;
 			try {
 				value = ODataTypeManager.convertToTeiidRuntimeType(expectedType[i], 
-						values.get(colName), ODataMetadataProcessor.getNativeType(column));
+						values.get(colName), ODataMetadataProcessor.getNativeType(column), 
+						column.getProperty(BaseColumn.SPATIAL_SRID, false));
 			} catch (TeiidException e) {
 				throw new TranslatorException(e);
 			}

@@ -263,6 +263,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
     	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
     	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("geography", FunctionModifier.GEOGRAPHY); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("geometry", FunctionModifier.GEOMETRY); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
     	convertModifier.addConvert(FunctionModifier.FLOAT, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
     	convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
@@ -956,11 +958,21 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public Expression translateGeometrySelect(Expression expr) {
-        return new Function("ST_ASEWKB", Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.VARBINARY); //$NON-NLS-1$
+        return new Function(SourceSystemFunctions.ST_ASEWKB, Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.VARBINARY);
     }
 
     @Override
+    public Expression translateGeographySelect(Expression expr) {
+        return new Function(SourceSystemFunctions.ST_ASEWKB, Arrays.asList(
+                new Function("CAST", //$NON-NLS-1$
+                        Arrays.asList(expr, new Literal("geometry", TypeFacility.RUNTIME_TYPES.STRING)), //$NON-NLS-1$ 
+                        TypeFacility.RUNTIME_TYPES.GEOMETRY)),   
+                TypeFacility.RUNTIME_TYPES.VARBINARY); 
+    }
+    
+    @Override
     public Object retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
+        //geometry strategy includes the srid
         final byte[] bytes = results.getBytes(paramIndex);
         if (bytes != null) {
             return new GeometryInputSource() {
@@ -971,6 +983,19 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 			};
         }
         return null;
+    }
+    
+    @Override
+    public Object retrieveGeographyValue(ResultSet results, int paramIndex)
+            throws SQLException {
+        return retrieveGeometryValue(results, paramIndex);
+        /*//geography for now only includes the wkb
+        //to include the srid 
+        final byte[] bytes = results.getBytes(paramIndex);
+        if (bytes != null) {
+            return new GeographyType(bytes);
+        }
+        return null;*/
     }
     
     @Override
@@ -992,7 +1017,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     public void bindValue(PreparedStatement stmt, Object param,
             Class<?> paramType, int i) throws SQLException {
         if (param == null && (paramType == TypeFacility.RUNTIME_TYPES.BLOB 
-                || paramType == TypeFacility.RUNTIME_TYPES.GEOMETRY)) {
+                || paramType == TypeFacility.RUNTIME_TYPES.GEOMETRY 
+                || paramType == TypeFacility.RUNTIME_TYPES.GEOGRAPHY)) {
             //the blob sql type causes a failure with nulls
             paramType = TypeFacility.RUNTIME_TYPES.VARBINARY;
         }
@@ -1007,6 +1033,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return true;
+    }
+    
+    @Override
+    public boolean supportsGeographyType() {
+        return this.postGisVersion.compareTo(ONE_5) >= 0;
     }
     
 }

@@ -41,8 +41,8 @@ import java.util.Properties;
 import javax.net.ssl.SSLEngine;
 
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.types.AbstractGeospatialType;
 import org.teiid.core.types.ArrayImpl;
-import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
@@ -573,10 +573,11 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			    	writer.write(value);
 		    	}
 		    	break;
+		    case PG_TYPE_GEOGRAPHY:
 		    case PG_TYPE_GEOMETRY:
 		        Object val = rs.getObject(column);
 		        if (val != null) {
-	                Blob blob = GeometryUtils.geometryToEwkb((GeometryType)rs.unwrap(ResultSetImpl.class).getRawCurrentValue());
+	                Blob blob = GeometryUtils.geometryToEwkb((AbstractGeospatialType)rs.unwrap(ResultSetImpl.class).getRawCurrentValue());
                     String hexewkb = PropertiesUtils.toHex(blob.getBytes(1, (int) blob.length()));
                     writer.write(hexewkb);
 		        }

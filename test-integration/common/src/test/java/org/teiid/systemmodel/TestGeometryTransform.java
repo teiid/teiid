@@ -18,6 +18,8 @@
 
 package org.teiid.systemmodel;
 
+import static org.junit.Assert.*;
+
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -134,5 +136,14 @@ public class TestGeometryTransform extends AbstractQueryTest {
         String result = ClobType.getString(internalResultSet.getClob(1));
         String expectedWkt = "<Point>\n  <coordinates>\n    7.596214015140495,45.37485400208321 \n  </coordinates>\n</Point>\n";
         Assert.assertEquals(expectedWkt, result);
+    }
+    
+    @Test public void testGeoProjectedDistance() throws Exception {
+        String sql = "select ST_Distance(\n" + 
+            "ST_Transform(ST_GeomFromText('POINT(-72.1235 42.3521)',4326),26986),\n" + 
+            "ST_Transform(ST_GeomFromText('LINESTRING(-72.1260 42.45, -72.123 42.1546)', 4326),26986))";
+        execute(sql);
+        internalResultSet.next();
+        assertEquals(123.797937878454, internalResultSet.getDouble(1), .0000001);
     }
 }

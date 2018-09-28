@@ -29,6 +29,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.Schema;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
@@ -271,8 +272,6 @@ public class CapabilitiesUtil {
         //TODO: this call should be functionDescriptor.getFullName - but legacy function models are parsed without setting the parent model as the schema
         String fullName = method.getFullName();
         if (schema == null || !schema.isPhysical()) {
-            // Find capabilities
-        	
             if (!caps.supportsFunction(fullName)) {
                 if(SourceSystemFunctions.CONCAT2.equalsIgnoreCase(fullName)) {
                     //special handling for delayed rewrite of concat2
@@ -297,6 +296,16 @@ public class CapabilitiesUtil {
                 	return true; //this should be removed in rewrite
                 }
                 return caps.supportsConvert(DataTypeManager.getTypeCode(fromType), DataTypeManager.getTypeCode(targetType));
+            }
+            if (!caps.supportsCapability(Capability.GEOGRAPHY_TYPE) 
+                    && method.getCategory() != null 
+                    && method.getCategory().equals(FunctionCategoryConstants.GEOGRAPHY)) {
+                //geometry functions can also accept geographies, but that type needs to be supported
+                for (Expression ex : function.getArgs()) {
+                    if (ex.getType() == DataTypeManager.DefaultDataClasses.GEOGRAPHY) {
+                        return false;
+                    }
+                }
             }
         } else if (!isSameConnector(modelID, schema, metadata, capFinder)) {
         	return caps.supportsFunction(fullName);

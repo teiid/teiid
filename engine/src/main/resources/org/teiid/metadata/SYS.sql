@@ -270,5 +270,19 @@ as select c.VDBName, c.SchemaName, c.TableName, c.Name,
   nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}srid') as integer), 0),
   nvl((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}type'), 'GEOMETRY') 
   from sys.columns as c where DataType = 'geometry';
+
+CREATE VIEW GEOGRAPHY_COLUMNS ( 
+    F_TABLE_CATALOG VARCHAR(256) NOT NULL, 
+    F_TABLE_SCHEMA VARCHAR(256) NOT NULL, 
+    F_TABLE_NAME VARCHAR(256) NOT NULL, 
+    F_GEOMETRY_COLUMN VARCHAR(256) NOT NULL,
+    COORD_DIMENSION INTEGER NOT NULL, 
+    SRID INTEGER NOT NULL, 
+    TYPE VARCHAR(30) NOT NULL)
+as select c.VDBName, c.SchemaName, c.TableName, c.Name, 
+  nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}coord_dimension') as integer), 2), 
+  nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}srid') as integer), 4326),
+  nvl((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}type'), 'GEOGRAPY') 
+  from sys.columns as c where DataType = 'geography';
   
 CREATE FOREIGN PROCEDURE ARRAYITERATE (val object[]) RETURNS TABLE (col object);

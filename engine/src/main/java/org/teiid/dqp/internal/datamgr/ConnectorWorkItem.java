@@ -709,6 +709,9 @@ public class ConnectorWorkItem implements ConnectorWork {
 				try {
 					InputStream is = gis.getEwkb();
 					if (is != null) {
+					    if (desiredType == GeographyType.class) {
+					        return GeometryUtils.geographyFromEwkb(context, is);
+					    }
 						return GeometryUtils.geometryFromEwkb(is, gis.getSrid());
 					}
 				} catch (Exception e) {
@@ -717,6 +720,9 @@ public class ConnectorWorkItem implements ConnectorWork {
 				try {
 					Reader r = gis.getGml();
 					if (r != null) {
+					    if (desiredType == GeographyType.class) {
+                            return GeometryUtils.getGeographyType(GeometryUtils.geometryFromGml(r, gis.getSrid()));
+                        }
 						return GeometryUtils.geometryFromGml(r, gis.getSrid());
 					}
 				} catch (Exception e) {

@@ -52,7 +52,7 @@ public class TestODataWKTWriter {
         assertEquals("Polygon((1.0 1.0,2.0 1.0,2.0 2.0,1.0 2.0,1.0 1.0),"
                 + "(0.0 0.0,3.0 0.0,3.0 3.0,0.0 3.0,0.0 0.0))", writer.write(polygon));
         
-        String uriValue = ODataTypeManager.geometryToODataValueString(polygon);
+        String uriValue = ODataTypeManager.geometryToODataValueString(polygon, true);
         
         org.apache.olingo.commons.api.edm.geo.Polygon olingoPolygon = (org.apache.olingo.commons.api.edm.geo.Polygon) EdmGeometryPolygon.getInstance().valueOfString(uriValue, null, null, null, null, null, EdmGeometryPolygon.getInstance().getDefaultType());
         

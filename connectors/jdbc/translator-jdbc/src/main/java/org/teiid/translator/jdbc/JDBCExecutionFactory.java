@@ -40,9 +40,11 @@ import javax.sql.DataSource;
 import javax.sql.rowset.serial.SerialStruct;
 
 import org.teiid.core.TeiidException;
+import org.teiid.core.types.AbstractGeospatialType;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.MixinProxy;
@@ -570,6 +572,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	            Expression expr = dc.getExpression();
 	            if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
 	                dc.setExpression(translateGeometrySelect(expr));
+	            } else if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOGRAPHY) {
+	                dc.setExpression(translateGeographySelect(expr));
 	            }
             }
         } else if (obj instanceof Literal) {
@@ -577,10 +581,16 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY && l.getValue() != null) {
                 return translateGeometryLiteral(l);
             }
+            if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOGRAPHY && l.getValue() != null) {
+                return translateGeographyLiteral(l);
+            }
         } else if (obj instanceof Parameter) {
             Parameter p = (Parameter) obj;
             if (p.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
                 return translateGeometryParameter(p);
+            }
+            if (p.getType() == TypeFacility.RUNTIME_TYPES.GEOGRAPHY) {
+                return translateGeographyParameter(p);
             }
         }
     	if (!supportsBooleanExpressions() && obj instanceof Condition) {
@@ -610,13 +620,24 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 
     /**
      * Translate GEOMETRY column reference into an expression that 
-     * will return SRID & WKB.
+     * will return WKB and possibly the SRID.
      * 
      * @param expr
      * @return 
      */
     public Expression translateGeometrySelect(Expression expr) {
         return new Function(SourceSystemFunctions.ST_ASBINARY, Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.BLOB);
+    }
+    
+    /**
+     * Translate GEOGRAPHY column reference into an expression that 
+     * will return WKB and possibly the SRID.
+     * 
+     * @param expr
+     * @return 
+     */
+    public Expression translateGeographySelect(Expression expr) {
+        return translateGeometrySelect(expr);
     }
     
     /**
@@ -628,14 +649,31 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     public List<?> translateGeometryLiteral(Literal l) {
         Literal srid = getLanguageFactory().createLiteral(
-                ((GeometryType) l.getValue()).getSrid(),
+                ((AbstractGeospatialType) l.getValue()).getSrid(),
                 Integer.class
         );
-        return Arrays.asList(getLanguageFactory().createFunction(
-                SourceSystemFunctions.ST_GEOMFROMWKB, 
-                new Expression[] { l, srid }, 
-                TypeFacility.RUNTIME_TYPES.GEOMETRY)
-        );
+        return createGeometryExpression(l, srid);
+    }
+    
+    /**
+     * Translate GEOGRAPHY literal into an expression that will convert to database 
+     * geography type.
+     * 
+     * @param l
+     * @return 
+     */
+    public List<?> translateGeographyLiteral(Literal l) {
+        Function geog = getLanguageFactory().createFunction(
+                SourceSystemFunctions.ST_GEOGFROMWKB, new Expression[] { l }, 
+                TypeFacility.RUNTIME_TYPES.GEOGRAPHY);
+        int sridVal = ((AbstractGeospatialType) l.getValue()).getSrid();
+        if (sridVal == GeographyType.DEFAULT_SRID) {
+            return Arrays.asList(geog);
+        }
+        Literal srid = getLanguageFactory().createLiteral(
+                sridVal,
+                Integer.class);
+        return createGeographyExpression(geog, srid);
     }
     
     /**
@@ -650,13 +688,49 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         srid.setType(TypeFacility.RUNTIME_TYPES.INTEGER);
         srid.setValueIndex(p.getValueIndex());
         
+        return createGeometryExpression(p, srid);
+    }
+
+    private List<?> createGeometryExpression(Expression geom, Expression srid) {
         return Arrays.asList(getLanguageFactory().createFunction(
                 SourceSystemFunctions.ST_GEOMFROMWKB, 
-                new Expression[] { p, srid }, 
+                new Expression[] { geom, srid }, 
                 TypeFacility.RUNTIME_TYPES.GEOMETRY)
         );
     }
     
+    /**
+     * Translate GEOGRAPHY parameter into an expression that will convert to database 
+     * geography type.
+     * 
+     * @param p
+     * @return 
+     */
+    public List<?> translateGeographyParameter(Parameter p) {
+        Parameter srid = new Parameter();
+        srid.setType(TypeFacility.RUNTIME_TYPES.INTEGER);
+        srid.setValueIndex(p.getValueIndex());
+        return createGeographyExpression(p, srid);
+    }
+
+    private List<?> createGeographyExpression(Expression geogVal, Expression srid) {
+        Function geog = getLanguageFactory().createFunction(
+                SourceSystemFunctions.ST_GEOGFROMWKB, 
+                new Expression[] { geogVal }, 
+                TypeFacility.RUNTIME_TYPES.GEOGRAPHY);
+        return Arrays.asList(getLanguageFactory().createFunction(
+                SourceSystemFunctions.ST_SETSRID,
+                new Expression[] { geog, srid },
+                TypeFacility.RUNTIME_TYPES.GEOGRAPHY));
+    }
+    
+    /**
+     * The default strategy assumes a blob value containing wkb
+     * @param results
+     * @param paramIndex
+     * @return
+     * @throws SQLException
+     */
     public Object retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
         GeometryType geom = null;
         Blob val = results.getBlob(paramIndex);
@@ -664,11 +738,31 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             geom = new GeometryType(val);
         }
         return geom;
-    }    
+    } 
+    
+    /**
+     * The default strategy assumes a blob value containing wkb
+     * @param results
+     * @param paramIndex
+     * @return
+     * @throws SQLException
+     */
+    public Object retrieveGeographyValue(ResultSet results, int paramIndex) throws SQLException {
+        GeographyType geog = null;
+        Blob val = results.getBlob(paramIndex);
+        if (val != null) {
+            geog = new GeographyType(val);
+        }
+        return geog;
+    }
     
     public GeometryType retrieveGeometryValue(CallableStatement results, int parameterIndex) throws SQLException {
     	throw new SQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11022));
 	}
+    
+    public GeographyType retrieveGeographyValue(CallableStatement results, int parameterIndex) throws SQLException {
+        throw new SQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11022));
+    }
     
     /**
      * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
@@ -993,8 +1087,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         }
         
         //special handling for the srid parameter
-        if (paramType == TypeFacility.RUNTIME_TYPES.INTEGER && param instanceof GeometryType) {
-            stmt.setInt(i, ((GeometryType)param).getSrid());
+        if (paramType == TypeFacility.RUNTIME_TYPES.INTEGER && param instanceof AbstractGeospatialType) {
+            stmt.setInt(i, ((AbstractGeospatialType)param).getSrid());
             return;
         }
         
@@ -1138,6 +1232,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     				}
     				break;
     			}
+    			case DataTypeManager.DefaultTypeCodes.GEOGRAPHY: {
+                    return retrieveGeographyValue(results, columnIndex);
+                }
     			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
                     return retrieveGeometryValue(results, columnIndex);
     			}
@@ -1245,6 +1342,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     					// ignore
     				}
     			}
+    			case DataTypeManager.DefaultTypeCodes.GEOGRAPHY: {
+                    return retrieveGeographyValue(results, parameterIndex);
+                }
     			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
     				return retrieveGeometryValue(results, parameterIndex);
     			}

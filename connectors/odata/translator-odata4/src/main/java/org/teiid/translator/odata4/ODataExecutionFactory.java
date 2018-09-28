@@ -120,6 +120,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         
         registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new AliasModifier("geo.distance")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("geo.intersects")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_LENGTH, new AliasModifier("geo.length")); //$NON-NLS-1$
         
         addPushDownFunction("odata", "startswith", TypeFacility.RUNTIME_NAMES.BOOLEAN, //$NON-NLS-1$ //$NON-NLS-2$
                 TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); 
@@ -233,6 +234,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         // geospatial functions
         supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
         supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+        supportedFunctions.add(SourceSystemFunctions.ST_LENGTH);
 
         return supportedFunctions;
     }
@@ -403,5 +405,10 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 
     protected String escapeString(String str, String quote) {
         return StringUtil.replaceAll(str, quote, quote + quote);
+    }
+    
+    @Override
+    public boolean supportsGeographyType() {
+        return true;
     }
 }

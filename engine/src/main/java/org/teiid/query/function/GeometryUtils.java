@@ -34,11 +34,13 @@ import javax.xml.parsers.SAXParserFactory;
 import org.teiid.CommandContext;
 import org.teiid.UserDefinedAggregate;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.AbstractGeospatialType;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.ClobType.Type;
+import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.query.QueryPlugin;
@@ -74,11 +76,13 @@ public class GeometryUtils {
         X, Y, Z
     }
 	
-	private static GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
+	public static GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 	
     private static final int SRID_4326 = 4326;
+    
+    private static String SRS_PREFIX = "EPSG:"; //$NON-NLS-1$
 
-	public static ClobType geometryToClob(GeometryType geometry, 
+	public static ClobType geometryToClob(AbstractGeospatialType geometry, 
                                           boolean withSrid) 
             throws FunctionExecutionException {
         Geometry jtsGeometry = getGeometry(geometry);
@@ -93,10 +97,10 @@ public class GeometryUtils {
 
     public static GeometryType geometryFromClob(ClobType wkt)
             throws FunctionExecutionException {
-        return geometryFromClob(wkt, GeometryType.UNKNOWN_SRID, false);
+        return getGeometryType(geometryFromClob(wkt, GeometryType.UNKNOWN_SRID, false));
     }
 
-    public static GeometryType geometryFromClob(ClobType wkt, Integer srid, boolean allowEwkt) 
+    public static Geometry geometryFromClob(ClobType wkt, Integer srid, boolean allowEwkt) 
             throws FunctionExecutionException {
     	Reader r = null;
         try {
@@ -149,10 +153,10 @@ public class GeometryUtils {
             	//don't allow ewkt that requires a specific function
             	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31160, "EWKT")); //$NON-NLS-1$
             }
-            if (srid == null) {
-            	srid = jtsGeometry.getSRID();
+            if (srid != null) {
+            	jtsGeometry.setSRID(srid);
             }
-            return getGeometryType(jtsGeometry, srid);
+            return jtsGeometry;
         } catch (ParseException e) {
             throw new FunctionExecutionException(e);
         } catch (SQLException e) {
@@ -217,8 +221,7 @@ public class GeometryUtils {
         	}
             writer.setPrefix(null);
         } else if (geometry.getSrid() != GeometryType.UNKNOWN_SRID) {
-        	//TODO: should include the srsName
-        	//writer.setSrsName(String.valueOf(geometry.getSrid()));
+        	writer.setSrsName(SRS_PREFIX + geometry.getSrid());
         }
         String gmlText = writer.write(jtsGeometry);
         return new ClobType(new ClobImpl(gmlText));
@@ -227,7 +230,8 @@ public class GeometryUtils {
     public static GeometryType geometryFromGml(ClobType gml, Integer srid) 
             throws FunctionExecutionException {
         try {
-			return geometryFromGml(gml.getCharacterStream(), srid);
+			Geometry geom = geometryFromGml(gml.getCharacterStream(), srid);
+	        return getGeometryType(geom);
 		} catch (SQLException e) {
 			throw new FunctionExecutionException(e);
 		}
@@ -268,7 +272,7 @@ public class GeometryUtils {
         } 
     }
     
-    public static GeometryType geometryFromGml(Reader reader, Integer srid) 
+    public static Geometry geometryFromGml(Reader reader, Integer srid) 
             throws FunctionExecutionException {
         Geometry jtsGeometry = null;
         try {            
@@ -284,10 +288,10 @@ public class GeometryUtils {
         
             if (srid == null) { 
         		if (jtsGeometry.getSRID() == GeometryType.UNKNOWN_SRID) {
-        			srid = handler.getSrid();
-        		} else {
-        			srid = jtsGeometry.getSRID();
+        			jtsGeometry.setSRID(handler.getSrid());
         		}
+            } else {
+                jtsGeometry.setSRID(srid);
             }
         } catch (IOException e) {
             throw new FunctionExecutionException(e);
@@ -304,7 +308,7 @@ public class GeometryUtils {
                 }
             }
         }
-        return getGeometryType(jtsGeometry, srid);
+        return jtsGeometry;
     }
     
     public static GeometryType geometryFromBlob(BlobType wkb)
@@ -371,7 +375,47 @@ public class GeometryUtils {
     public static GeometryType getGeometryType(Geometry jtsGeom, int srid) {
         jtsGeom.setSRID(srid);
         byte[] bytes = getBytes(jtsGeom, true);
-        return new GeometryType(bytes, srid);
+        GeometryType result = new GeometryType(bytes, srid);
+        result.setGeoCache(jtsGeom);
+        return result;
+    }
+    
+    public static GeographyType getGeographyType(Geometry geom, CommandContext ctx) throws FunctionExecutionException {
+        if (geom.getSRID() == GeometryType.UNKNOWN_SRID) {
+            geom.setSRID(GeographyType.DEFAULT_SRID);
+        }
+        if (!GeometryTransformUtils.isLatLong(ctx, geom.getSRID())) {
+            throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31290, geom.getSRID()));
+        }
+        geom.apply(new CoordinateFilter() {
+            
+            @Override
+            public void filter(Coordinate coord) {
+                if (coord.x > 180) {
+                    ctx.addWarning(new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31291)));
+                    coord.x = ((coord.x+180)%360) - 180;
+                } else if (coord.x < -180) {
+                    ctx.addWarning(new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31291)));
+                    coord.x = ((coord.x+180)%360) + 180;
+                }
+                if (coord.y > 90) {
+                    ctx.addWarning(new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31291)));
+                    coord.y = (((coord.y/90)%2>=1?90:0)-(coord.y%90))*((((coord.y-90)/180)%2>=1)?-1:1);
+                } else if (coord.y < -90) {
+                    ctx.addWarning(new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31291)));
+                    coord.y = (((coord.y/90)%2<=-1?-90:0)-(coord.y%90))*((((coord.y+90)/180)%2<=-1)?-1:1);
+                }
+            }
+        });
+        GeographyType result = getGeographyType(geom);
+        return result;
+    }
+
+    public static GeographyType getGeographyType(Geometry geom) {
+        byte[] bytes = getBytes(geom, true);
+        GeographyType result = new GeographyType(bytes, geom.getSRID());
+        result.setGeoCache(geom);
+        return result;
     }
     
     public static byte[] getBytes(Geometry jtsGeom, boolean bigEndian) {
@@ -379,10 +423,17 @@ public class GeometryUtils {
         return writer.write(jtsGeom);
     }
     
-    public static Geometry getGeometry(GeometryType geom)
+    public static Geometry getGeometry(AbstractGeospatialType geom)
             throws FunctionExecutionException {
+        Object value = geom.getGeoCache();
+        if (value instanceof Geometry) {
+            return (Geometry)value;
+        }
+        
         try {
-			return getGeometry(geom.getBinaryStream(), geom.getSrid(), false);
+			Geometry result = getGeometry(geom.getBinaryStream(), geom.getSrid(), false);
+			geom.setGeoCache(result);
+			return result;
 		} catch (SQLException e) {
 			throw new FunctionExecutionException(e);
 		}
@@ -423,6 +474,11 @@ public class GeometryUtils {
 		Geometry geom = getGeometry(is, srid, true);
 		return getGeometryType(geom);
 	}
+	
+	public static GeographyType geographyFromEwkb(CommandContext ctx, InputStream is) throws FunctionExecutionException {
+        Geometry geom = getGeometry(is, null, true);
+        return getGeographyType(geom, ctx);
+    }
 
 	public static GeometryType simplify(
 			GeometryType geom, double tolerance) throws FunctionExecutionException {
@@ -502,7 +558,7 @@ public class GeometryUtils {
 	 * @param geometry
 	 * @return
 	 */
-	public static BlobType geometryToEwkb(final GeometryType geometry) {
+	public static BlobType geometryToEwkb(final AbstractGeospatialType geometry) {
 		final Blob b = geometry.getReference();
     	BlobImpl blobImpl = new BlobImpl(new InputStreamFactory() {
 			

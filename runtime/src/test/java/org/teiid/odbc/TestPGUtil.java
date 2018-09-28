@@ -16,33 +16,20 @@
  * limitations under the License.
  */
 
-package org.teiid.core.types;
+package org.teiid.odbc;
 
-import java.sql.Blob;
+import static org.junit.Assert.*;
 
-public final class GeometryType extends AbstractGeospatialType {
-    public static final int UNKNOWN_SRID = 0;
+import java.sql.Types;
+
+import org.junit.Test;
+
+@SuppressWarnings("nls")
+public class TestPGUtil {
+
+    @Test public void testGeospatialTypes() {
+        assertEquals(PGUtil.PG_TYPE_GEOMETRY, PGUtil.convertType(Types.BLOB, "geometry"));
+        assertEquals(PGUtil.PG_TYPE_GEOGRAPHY, PGUtil.convertType(Types.LONGVARBINARY, "geography"));
+    }
     
-    public GeometryType() {
-
-    }
-
-    public GeometryType(Blob blob) {
-        this(blob, UNKNOWN_SRID);
-    }
-
-    public GeometryType(byte[] bytes) {
-        this(bytes, UNKNOWN_SRID);
-    }
-
-    public GeometryType(Blob blob, int srid) {
-        super(blob);
-        setSrid(srid);
-    }
-
-    public GeometryType(byte[] bytes, int srid) {
-        super(bytes);
-        setSrid(srid);
-    }
-
 }

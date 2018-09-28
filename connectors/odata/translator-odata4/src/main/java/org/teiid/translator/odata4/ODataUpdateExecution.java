@@ -41,6 +41,7 @@ import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.GeneratedKeys;
 import org.teiid.core.TeiidException;
 import org.teiid.language.Command;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.olingo.common.ODataTypeManager;
@@ -320,7 +321,8 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
             Property prop = entity.getProperty(columnNames[i]);
             Object value;
 			try {
-				value = ODataTypeManager.convertToTeiidRuntimeType(columnDataTypes[i], prop.getValue(), odataTypes[i]);
+				value = ODataTypeManager.convertToTeiidRuntimeType(columnDataTypes[i], prop.getValue(), odataTypes[i], 
+				        table.getPrimaryKey().getColumns().get(i).getProperty(BaseColumn.SPATIAL_SRID, false));
 			} catch (TeiidException e) {
 				throw new TranslatorException(e);
 			}

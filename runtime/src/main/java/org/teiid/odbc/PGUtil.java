@@ -41,6 +41,9 @@ public class PGUtil {
 	
 	public static final int PG_TYPE_GEOMETRY = 32816;
 	public static final int PG_TYPE_GEOMETRYARRAY = 32824;
+	
+    public static final int PG_TYPE_GEOGRAPHY = 33454;
+    public static final int PG_TYPE_GEOGRAPHYARRAY = 33462;
     
 	public static final int PG_TYPE_OIDVECTOR = 30;
 	public static final int PG_TYPE_INT2VECTOR = 22;
@@ -114,8 +117,11 @@ public class PGUtil {
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
-            if (typeName.equals("geometry")) { //$NON-NLS-1$
+            if (typeName.equalsIgnoreCase("geometry")) { //$NON-NLS-1$
                 return PG_TYPE_GEOMETRY;
+            }
+            if (typeName.equalsIgnoreCase("geography")) { //$NON-NLS-1$ 
+                return PG_TYPE_GEOGRAPHY;
             }
         	return PG_TYPE_BYTEA;
 
@@ -152,6 +158,8 @@ public class PGUtil {
                 return PG_TYPE_TIMESTAMP_NO_TMZONEARRAY;
             case "geometry[]": //$NON-NLS-1$
                 return PG_TYPE_GEOMETRYARRAY;
+            case "geography[]": //$NON-NLS-1$
+                return PG_TYPE_GEOGRAPHYARRAY;
             case "xml[]": //$NON-NLS-1$
                 return PG_TYPE_XMLARRAY;
             default:
