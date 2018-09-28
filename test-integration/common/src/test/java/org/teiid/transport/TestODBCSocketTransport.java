@@ -782,6 +782,7 @@ public class TestODBCSocketTransport {
         rs.next();
         ResultSetMetaData rsmd = rs.getMetaData();
         assertEquals("geometry", rsmd.getColumnTypeName(1));
+        assertEquals("java.lang.Object", rsmd.getColumnClassName(1));
         assertEquals("00200000030000000000000001000000054044000000000000000000000000000040490000000000004049000000000000000000000000000040490000000000000000000000000000000000000000000040440000000000000000000000000000", rs.getString(1));
     }
     

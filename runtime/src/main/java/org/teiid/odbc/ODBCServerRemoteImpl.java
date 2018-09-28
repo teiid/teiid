@@ -808,7 +808,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 			//we don't support generate_series or the natural join syntax
 			if (modified.equals(TYPE_QUERY)) {
-			    return "select typname like '_%', typname from pg_catalog.pg_type where typname = $1"; //$NON-NLS-1$
+			    return "select typname like '\\_%' escape '\\', typname from pg_catalog.pg_type where typname = $1"; //$NON-NLS-1$
 			}
 			//we don't support _pg_expandarray and referencing elements by name
 			if (modified.startsWith(PK_QUERY)) {
