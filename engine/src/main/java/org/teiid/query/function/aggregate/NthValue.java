@@ -22,56 +22,47 @@ import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.ArrayImpl;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.QueryPlugin;
-import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.util.CommandContext;
 
-/**
- * We store two values related to nth_value
- */
 public class NthValue extends AggregateFunction {
     
-    private Object[] vals = null;
-    private int partition = 0;
+    private Object value;
     
     @Override
     public void addInputDirect(List<?> tuple, CommandContext commandContext)
             throws TeiidComponentException, TeiidProcessingException {
-        vals = new Object[argIndexes.length + 1];
-        for (int i = 0; i < argIndexes.length; i++) {
-            vals[i] = tuple.get(argIndexes[i]);
-        }
-        if ((Integer)vals[1] < 1) {
-            throw new TeiidProcessingException(QueryPlugin.Event.TEIID31281, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31281));
-        }
-        vals[argIndexes.length] = partition;
+        throw new AssertionError();
     }
     
-    @Override
-    public Object getResult(CommandContext commandContext)
-            throws FunctionExecutionException, ExpressionEvaluationException,
-            TeiidComponentException, TeiidProcessingException {
-        return new ArrayImpl(vals);
-    }
-    
-    @Override
-    public void reset() {
-        vals = null;
-        partition++;
+    public void addInput(List<?> tuple, CommandContext commandContext, long startFrame, long endFrame, TupleBuffer frame)
+            throws TeiidComponentException, TeiidProcessingException {
+        Integer nthIndex = (Integer)tuple.get(argIndexes[1]);
+        if (nthIndex > endFrame || nthIndex < startFrame) {
+            this.value = null;
+        } else {
+            this.value = frame.getBatch(nthIndex).getTuple(nthIndex).get(argIndexes[0]);
+        }
+        //TODO: the computation of the nth value should be done as needed, not over the whole input set
     }
     
     @Override
     public boolean respectsNull() {
         return true;
     }
-    
+
     @Override
-    public Class<?> getOutputType(AggregateSymbol function) {
-        return DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
+    public void reset() {
+        value = null;
     }
 
+    @Override
+    public Object getResult(CommandContext commandContext)
+            throws FunctionExecutionException, ExpressionEvaluationException,
+            TeiidComponentException, TeiidProcessingException {
+        return value;
+    }
+    
 }

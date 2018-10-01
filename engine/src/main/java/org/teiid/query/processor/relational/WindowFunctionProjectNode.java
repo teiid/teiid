@@ -50,6 +50,7 @@ import org.teiid.language.WindowFrame.FrameMode;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.AggregateFunction;
+import org.teiid.query.function.aggregate.NthValue;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.GroupingNode.ProjectingTupleSource;
 import org.teiid.query.processor.relational.SortUtility.Mode;
@@ -126,6 +127,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                 case STRING_AGG:
                 case JSONARRAY_AGG:
                 case TEXTAGG:
+                case NTH_VALUE: //the logic needs to know the frame start/end
                     if (windowFrame == null) {
                         //use the default frame range unbounded preceding
                         this.windowFrame = new WindowFrame(FrameMode.RANGE);
@@ -375,29 +377,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                                     value = defaultValue;
                                 }
                             }
-                        } else if (aggregateFunction == Type.NTH_VALUE) {
-                            ArrayImpl array = (ArrayImpl)value;
-                            Object[] args = array.getValues();
-                            int index = (Integer)args[1] - 1;
-                            if (index > rowId) {
-                                //only operate over the rolling window
-                                //this will change when we allow the windowing clause
-                                value = null;
-                            } else {
-                                List<?> newIdRow = Arrays.asList(index);
-                                List<?> newValueRow = valueMapping[specIndex].find(newIdRow);
-                                if (newValueRow == null) {
-                                    value = null;
-                                } else {
-                                    Object[] newArgs = ((ArrayImpl)newValueRow.get(i+1)).getValues();
-                                    //make sure it's the same partition
-                                    if (args[args.length-1].equals(newArgs[newArgs.length-1])) {
-                                        value = newArgs[0];
-                                    } else {
-                                        value = null;
-                                    }
-                                }
-                            }
                         } else if (wfi.primaryFunction != null) {
                             switch (wfi.primaryFunction.getFunction().getAggregateFunction()) {
                             case NTILE:
@@ -522,18 +501,15 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
     				if (multiGroup) {
     				    if (lastRow != null) {
     				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
-    				    	if (!aggs.isEmpty() && !(samePartition && info.isUnboundedFollowing()) 
-    				    	        && (!samePartition 
-    				    	                || (info.windowFrame != null && info.windowFrame.getMode() == FrameMode.ROWS) 
-    				    	                || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1)) {
+    				    	if (!samePartition || (!info.isUnboundedFollowing() 
+    				    	        && ((info.windowFrame != null && info.windowFrame.getMode() == FrameMode.ROWS) 
+    				    	                || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1))) {
     			        		saveValues(specIndex, aggs, groupId, samePartition);
     		        			groupId++;
     				    	}
     		        	}
-    				    if (!aggs.isEmpty()) {
-    			        	List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
-    						partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
-    				    }
+			        	List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
+						partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
     		        }
     		        for (AggregateFunction function : aggs) {
     		        	function.addInput(tuple, getContext());
@@ -646,14 +622,19 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                         end++;
                     }
                 }
+                end = Math.min(end, endPartition);
             }
             
             //compute the aggregates
             
-            for (long i = start; i <= end && i <= endPartition; i++) {
+            for (long i = start; i <= end; i++) {
                 List<?> frameTuple = sorted.getBatch(i).getTuple(i);
                 for (AggregateFunction function : aggs) {
-                    function.addInput(frameTuple, getContext());
+                    if (function instanceof NthValue) {
+                        ((NthValue) function).addInput(frameTuple, getContext(), start, end, sorted);
+                    } else {
+                        function.addInput(frameTuple, getContext());
+                    }
                 }
             }
             
