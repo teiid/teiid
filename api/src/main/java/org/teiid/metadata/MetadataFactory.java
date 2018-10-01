@@ -81,6 +81,8 @@ public class MetadataFactory extends NamespaceContainer {
 	private Map<String, Grant> grants;
 
     private String nameFormat;
+
+    private ClassLoader vdbClassLoader;
     
     public MetadataFactory() {
         
@@ -941,6 +943,14 @@ public class MetadataFactory extends NamespaceContainer {
 	
 	public void setImportPushdownFunctions(boolean importPushdownFunctions) {
         this.importPushdownFunctions = importPushdownFunctions;
+    }
+
+    public void setVDBClassLoader(ClassLoader classLoader) {
+        this.vdbClassLoader = classLoader;
+    }
+    
+    public ClassLoader getVDBClassLoader() {
+        return vdbClassLoader;
     }
 
 }
