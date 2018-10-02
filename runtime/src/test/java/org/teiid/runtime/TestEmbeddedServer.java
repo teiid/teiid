@@ -2568,5 +2568,21 @@ public class TestEmbeddedServer {
             org.teiid.logging.LogManager.setLogListener(old);
         }
     }
+    
+    @Test public void testImportFunctions() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "IMPORT FOREIGN SCHEMA \"org.teiid.runtime.Funcs\" FROM REPOSITORY UDF INTO test2;"
+                + "IMPORT FOREIGN SCHEMA \"java.lang.System\" FROM REPOSITORY UDF INTO test2;";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl.getBytes("UTF-8")), true);
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select something(1), nanoTime()");
+        rs.next();
+        assertTrue(rs.getObject(1) instanceof Boolean);
+        assertTrue(rs.getObject(2) instanceof Long);
+    }
 
 }

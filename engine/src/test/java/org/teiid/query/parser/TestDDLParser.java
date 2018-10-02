@@ -366,7 +366,7 @@ public class TestDDLParser {
 		
 		assertFalse(report.hasItems());
 		
-		assertEquals(fk.getPrimaryKey().getColumns(), tableMap.get("G1").getColumns());
+		assertEquals(fk.getReferenceKey().getColumns(), tableMap.get("G1").getColumns());
 	}	
 	
 	@Test
@@ -431,7 +431,7 @@ public class TestDDLParser {
 		assertEquals(fk.getColumns(), table.getColumns());
 		assertEquals("G1", fk.getReferenceTableName());
 		
-		assertEquals(fk.getPrimaryKey().getColumns(), s.getSchema("model").getTable("G1").getColumns());
+		assertEquals(fk.getReferenceKey().getColumns(), s.getSchema("model").getTable("G1").getColumns());
 	}	
 	
 	@Test(expected=MetadataException.class)
@@ -536,7 +536,7 @@ public class TestDDLParser {
 		
 		FunctionMethod fm = s.getFunction("hello world");
 		assertNotNull(fm);
-		assertEquals("integer", fm.getOutputParameter().getType());
+		assertEquals("integer", fm.getOutputParameter().getRuntimeType());
 		assertEquals(FunctionMethod.PushDown.MUST_PUSHDOWN, fm.getPushdown());
 	}	
 	
@@ -574,13 +574,13 @@ public class TestDDLParser {
 		
 		FunctionMethod fm = s.getFunction("x");
 		assertNotNull(fm);
-		assertEquals("string", fm.getOutputParameter().getType());
+		assertEquals("string", fm.getOutputParameter().getRuntimeType());
 		assertEquals(FunctionMethod.PushDown.CAN_PUSHDOWN, fm.getPushdown());
 		assertEquals(2, fm.getInputParameterCount());
 		assertEquals("flag", fm.getInputParameters().get(0).getName());
-		assertEquals("boolean", fm.getInputParameters().get(0).getType());
+		assertEquals("boolean", fm.getInputParameters().get(0).getRuntimeType());
 		assertEquals("msg", fm.getInputParameters().get(1).getName());
-		assertEquals("string", fm.getInputParameters().get(1).getType());
+		assertEquals("string", fm.getInputParameters().get(1).getRuntimeType());
 		assertFalse( fm.getInputParameters().get(1).isVarArg());
 		
 		assertEquals(FunctionMethod.Determinism.DETERMINISTIC, fm.getDeterminism());
@@ -600,13 +600,13 @@ public class TestDDLParser {
 		
 		FunctionMethod fm = s.getFunction("y");
 		assertNotNull(fm);
-		assertEquals("string", fm.getOutputParameter().getType());
+		assertEquals("string", fm.getOutputParameter().getRuntimeType());
 		assertEquals(FunctionMethod.PushDown.CAN_PUSHDOWN, fm.getPushdown());
 		assertEquals(2, fm.getInputParameterCount());
 		assertEquals("flag", fm.getInputParameters().get(0).getName());
-		assertEquals("boolean", fm.getInputParameters().get(0).getType());
+		assertEquals("boolean", fm.getInputParameters().get(0).getRuntimeType());
 		assertEquals("msg", fm.getInputParameters().get(1).getName());
-		assertEquals("string", fm.getInputParameters().get(1).getType());
+		assertEquals("string", fm.getInputParameters().get(1).getRuntimeType());
 		assertFalse( fm.getInputParameters().get(1).isVarArg());
 		assertNotNull(fm.getAggregateAttributes());
 		assertTrue(fm.getAggregateAttributes().allowsDistinct());
@@ -631,7 +631,7 @@ public class TestDDLParser {
 		Schema s = helpParse(ddl, "model").getSchema();
 		
 		FunctionMethod fm = s.getFunction("z");	
-		assertEquals("boolean", fm.getInputParameters().get(0).getType());
+		assertEquals("boolean", fm.getInputParameters().get(0).getRuntimeType());
 	}
 	
 	@Test(expected=MetadataException.class) public void testInvalidFunctionBody() throws Exception {
@@ -1584,7 +1584,7 @@ public class TestDDLParser {
 			}
 		}
 		assertNotNull(method);
-		assertEquals("boolean", method.getInputParameters().get(0).getType());
+		assertEquals("boolean", method.getInputParameters().get(0).getRuntimeType());
 	}
 	
 	@Test 

@@ -29,7 +29,6 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -600,39 +599,45 @@ public class TestWindowFunctions {
         
         String sql = "SELECT e1, Nth_Value(e1, 1) over (order by e2) from pm1.g1";
         
-        /*ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
-        HardcodedDataManager dataMgr = new HardcodedDataManager();
-        dataMgr.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList(null, 1), Arrays.asList("b", 2), Arrays.asList("c", 3));
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);        
         
         List<?>[] expected = new List<?>[] {
-                Arrays.asList(null, null),
-                Arrays.asList("b", null),
-                Arrays.asList("c", null)
+                Arrays.asList("a", "a"),
+                Arrays.asList(null, "a"),
+                Arrays.asList("a", "a"),
+                Arrays.asList("c", "a"),
+                Arrays.asList("b", "a"),
+                Arrays.asList("a", "a")
         }; 
         
-        helpProcess(plan, dataMgr, expected);
+        helpProcess(plan, dataManager, expected);
         
-        sql = "SELECT e1, Nth_Value(e1, 3) over (order by e2) from pm1.g1";
+        sql = "SELECT e1, Nth_Value(e1, 4) over (order by e2) from pm1.g1";
         
         plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached()), 
                 RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
                 null, true, new CommandContext()); //$NON-NLS-1$
         
         expected = new List<?>[] {
-            Arrays.asList(null, null),
-            Arrays.asList("b", null),
-            Arrays.asList("c", "c")
+            Arrays.asList("a", null),
+            Arrays.asList(null, "c"),
+            Arrays.asList("a", "c"),
+            Arrays.asList("c", "c"),
+            Arrays.asList("b", "c"),
+            Arrays.asList("a", null)
         }; 
         
-        helpProcess(plan, dataMgr, expected);*/
+        helpProcess(plan, dataManager, expected);
         
         bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
         bsc.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_NTH_VALUE, true);
         
-        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, Nth_Value(g_0.e1, 1) OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, Nth_Value(g_0.e1, 4) OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
     @Test public void testLead() throws Exception {
@@ -1253,6 +1258,44 @@ public class TestWindowFunctions {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testOrderByLiteral() throws Exception {
+        String sql = "select e1, row_number() over (order by 1) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 1),
+                Arrays.asList(null, 2),
+                Arrays.asList("a", 3),
+                Arrays.asList("c", 4),
+                Arrays.asList("b", 5),
+                Arrays.asList("a", 6),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testOrderPartitionLiteral() throws Exception {
+        String sql = "select e1, row_number() over (partition by 1 order by 1) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 1),
+                Arrays.asList(null, 2),
+                Arrays.asList("a", 3),
+                Arrays.asList("c", 4),
+                Arrays.asList("b", 5),
+                Arrays.asList("a", 6),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
     @Test public void testStringAggOverOrderBy() throws Exception {
         String sql = "select string_agg(e1, ',') over (order by e1) c from pm1.g1";
         
@@ -1296,7 +1339,7 @@ public class TestWindowFunctions {
         helpProcess(plan, dataManager, expected);
     }
     
-    @Test(expected=TeiidRuntimeException.class) public void testNthValueValueWindowFrame() throws Exception {
+    @Test public void testNthValueWindowFrame() throws Exception {
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         
         String sql = "select e1, nth_value(e1, 2) over (order by e1 range current row) from pm1.g1";

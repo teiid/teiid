@@ -90,6 +90,7 @@ public abstract class AbstractVDBDeployer {
 		repositories.put("ddl", new DDLMetadataRepository()); //$NON-NLS-1$
 		repositories.put("native", new NativeMetadataRepository()); //$NON-NLS-1$
 		repositories.put("ddl-file", new DDLFileMetadataRepository()); //$NON-NLS-1$
+		repositories.put("udf", new UDFMetadataRepository()); //$NON-NLS-1$
 	}
 	
 	public void addMetadataRepository(String name, MetadataRepository<?, ?> metadataRepository) {
@@ -292,11 +293,13 @@ public abstract class AbstractVDBDeployer {
                     if (!excludeTables.isEmpty()) {
                         modelProperties.put("importer.excludeTables", StringUtil.join(excludeTables, ",")); //$NON-NLS-1$
                     }
+                    modelProperties.put("importer.schemaName", foreignSchemaName); //$NON-NLS-1$
                     MetadataFactory factory = DatabaseStore.createMF(this, getSchema(schemaName), true, modelProperties);
                     factory.setParser(new QueryParser());
                     if (vdbResources != null) {
                         factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
                     }
+                    factory.setVDBClassLoader(vdb.getAttachment(ClassLoader.class));
                     MetadataRepository baseRepo = model.getAttachment(MetadataRepository.class);
                     
                     MetadataRepository metadataRepository;
@@ -373,6 +376,7 @@ public abstract class AbstractVDBDeployer {
 		factory.getSchema().setPhysical(model.isSource());
 		factory.setParser(new QueryParser()); //for thread safety each factory gets it's own instance.
 		factory.setVdbResources(vdbResources);
+		factory.setVDBClassLoader(vdb.getAttachment(ClassLoader.class));
 		return factory;
 	}
 
