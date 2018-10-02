@@ -66,6 +66,7 @@ import org.teiid.query.sql.symbol.WindowFrame.FrameBound;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -92,6 +93,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		List<Boolean> orderType = new ArrayList<Boolean>();
 		List<WindowFunctionInfo> functions = new ArrayList<WindowFunctionInfo>();
         WindowFrame windowFrame;
+        boolean emptyOrdering = false;
         
         boolean isUnboundedFollowing() {
             return windowFrame != null && windowFrame.getEnd() != null && windowFrame.getEnd().getBound() == null && windowFrame.getEnd().getBoundMode() == BoundMode.FOLLOWING;
@@ -281,6 +283,10 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
         	windows.put(ws, wsi);
         	if (ws.getPartition() != null) {
         		for (Expression ex1 : ws.getPartition()) {
+        		    if (EvaluatableVisitor.willBecomeConstant(ex1)) {
+        		        wsi.emptyOrdering = true;
+        		        continue;
+        		    }
         			Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
         			wsi.groupIndexes.add(index);
         			wsi.orderType.add(OrderBy.ASC);
@@ -289,6 +295,10 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
         	}
         	if (ws.getOrderBy() != null) {
         		for (OrderByItem item : ws.getOrderBy().getOrderByItems()) {
+        		    if (EvaluatableVisitor.willBecomeConstant(SymbolMap.getExpression(item.getSymbol()))) {
+        		        wsi.emptyOrdering = true;
+                        continue;
+                    }
         			Expression ex1 = SymbolMap.getExpression(item.getSymbol());
         			Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
         			wsi.sortIndexes.add(index);
@@ -426,9 +436,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	}
 
 	/**
-	 * Build the results by maintaining indexes that either map
-	 * rowid->values
-	 * or
+	 * Build the results by maintaining indexes that map
 	 * rowid->partitionid and partitionid->values
 	 * 
 	 * TODO use the size hint for tree balancing
@@ -446,7 +454,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			int[] orderIndexes = null;
 			TupleBuffer sorted = null;
 			//if there is partitioning or ordering, then sort
-			if (!info.orderType.isEmpty()) {
+			if (!info.orderType.isEmpty() || info.emptyOrdering) {
 				multiGroup = true;
 				int[] sortKeys = new int[info.orderType.size()];
 				int i = 0;
@@ -470,19 +478,21 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					List<ElementSymbol> elements = Arrays.asList(key, value);
 					partitionMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
 				}
-				SortUtility su = new SortUtility(null, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
-				su.setWorkingBuffer(tb);
-				su.setNonBlocking(true);
-				boolean success = false;
-				try {
-				    sorted = su.sort();
-				    success = true;
-				} finally {
-				    if (!success) {
-				        su.remove();
-				    }
-				}
-				specificationTs = sorted.createIndexedTupleSource(!info.processEachFrame());
+				if (!info.orderType.isEmpty()) {
+    				SortUtility su = new SortUtility(null, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
+    				su.setWorkingBuffer(tb);
+    				su.setNonBlocking(true);
+    				boolean success = false;
+    				try {
+    				    sorted = su.sort();
+    				    success = true;
+    				} finally {
+    				    if (!success) {
+    				        su.remove();
+    				    }
+    				}
+    				specificationTs = sorted.createIndexedTupleSource(!info.processEachFrame());
+    			}
 			}
 			
 			try {

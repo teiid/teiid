@@ -1258,6 +1258,44 @@ public class TestWindowFunctions {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testOrderByLiteral() throws Exception {
+        String sql = "select e1, row_number() over (order by 1) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 1),
+                Arrays.asList(null, 2),
+                Arrays.asList("a", 3),
+                Arrays.asList("c", 4),
+                Arrays.asList("b", 5),
+                Arrays.asList("a", 6),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testOrderPartitionLiteral() throws Exception {
+        String sql = "select e1, row_number() over (partition by 1 order by 1) c from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 1),
+                Arrays.asList(null, 2),
+                Arrays.asList("a", 3),
+                Arrays.asList("c", 4),
+                Arrays.asList("b", 5),
+                Arrays.asList("a", 6),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
     @Test public void testStringAggOverOrderBy() throws Exception {
         String sql = "select string_agg(e1, ',') over (order by e1) c from pm1.g1";
         
