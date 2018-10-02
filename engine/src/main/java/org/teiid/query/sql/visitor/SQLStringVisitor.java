@@ -1321,7 +1321,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
 
         if (obj.getArgs().length == 0) {
-        	if (obj.getAggregateFunction() == Type.COUNT) {
+        	if (obj.isCount()) {
         		append(Tokens.ALL_COLS);
         	}
         } else {

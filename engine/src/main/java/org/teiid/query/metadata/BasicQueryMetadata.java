@@ -586,4 +586,9 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	    return true;
 	}
 	
+	@Override
+	public boolean isLongRanks() {
+	    return false;
+	}
+	
 }

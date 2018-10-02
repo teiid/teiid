@@ -348,6 +348,27 @@ public class TestAggregateProcessing {
         
         helpProcess(plan, dataManager, expected);
     }
+    
+    @Test public void testPushDownOverUnionMixed2() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+        caps.setFunctionSupport(SourceSystemFunctions.POWER, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm1", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpGetPlan(helpParse("select max(e2), count_big(*), stddev_pop(e2), var_samp(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z"), RealMetadataFactory.example1Cached(), capFinder); //$NON-NLS-1$
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1), Arrays.asList(2)});
+        dataManager.addData("SELECT MAX(g_0.e2), COUNT_BIG(*), COUNT(g_0.e2), SUM(power(g_0.e2, 2)), SUM(g_0.e2) FROM pm2.g2 AS g_0", new List[] {Arrays.asList(5, 6l, 4, BigInteger.valueOf(50l), 10l)});
+        
+        List[] expected = new List[] {
+            Arrays.asList(5, 8l, 2.1147629234082532, 5.366666666666666),
+        }; 
+        
+        helpProcess(plan, dataManager, expected);
+    }
 
     @Test public void testBooleanAgg() {
     	String sql = "select every(e3), any(e3) from pm1.g1"; //$NON-NLS-1$
@@ -1427,6 +1448,16 @@ public class TestAggregateProcessing {
         hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", Arrays.asList("a"));
         hdm.addData("SELECT pm1.g2.e1 FROM pm1.g2", Arrays.asList("b"));
         helpProcess(plan, hdm, new List[] {Arrays.asList(BigDecimal.valueOf(2))});
+    }
+    
+    @Test public void testCountBig() throws Exception {
+        String sql = "select count_big(e1) from pm1.g1"; //$NON-NLS-1$
+
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        ProcessorPlan plan = helpGetPlan(sql, metadata);
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", Arrays.asList("a"));
+        helpProcess(plan, hdm, new List[] {Arrays.asList(1l)});
     }
     
 }

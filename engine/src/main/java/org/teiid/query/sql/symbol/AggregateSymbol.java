@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
@@ -45,6 +46,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	private static final Expression[] EMPTY_ARGS = new Expression[0];
 
 	public enum Type {
+	    COUNT_BIG,
 		COUNT,
 		SUM,
 		AVG,
@@ -105,6 +107,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	private static final Class<Integer> COUNT_TYPE = DataTypeManager.DefaultDataClasses.INTEGER;
 	private static final Map<Class<?>, Class<?>> SUM_TYPES;
     private static final Map<Class<?>, Class<?>> AVG_TYPES;
+    
+    public static boolean LONG_RANKS = PropertiesUtils.getHierarchicalProperty("org.teiid.longRanks", false, Boolean.class); //$NON-NLS-1$
 
 	static {
 		SUM_TYPES = new HashMap<Class<?>, Class<?>>();
@@ -215,6 +219,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	 */
 	public Class<?> getType() {
 		switch (this.aggregate) {
+		case COUNT_BIG:
+		    return DataTypeManager.DefaultDataClasses.LONG;
 		case COUNT:
 			return COUNT_TYPE;
 		case SUM:
@@ -230,13 +236,9 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 			return DataTypeManager.getArrayType(this.getArg(0).getType());
 		case TEXTAGG:
 			return DataTypeManager.DefaultDataClasses.BLOB;
-		case USER_DEFINED:
-			if (this.getFunctionDescriptor() == null) {
-				return null;
-			}
-			return this.getFunctionDescriptor().getReturnType();
 		case JSONARRAY_AGG:
 			return DataTypeManager.DefaultDataClasses.CLOB;
+        case USER_DEFINED:
 		case STRING_AGG:
 			return super.getType();
 		case PERCENT_RANK:
@@ -250,14 +252,14 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 			return DataTypeManager.DefaultDataClasses.DOUBLE;
 		}
 		if (isRanking()) {
-			return DataTypeManager.DefaultDataClasses.INTEGER;
+		    return super.getType();
 		}
 		if (this.getArgs().length == 0) {
 			return null;
 		}
 		return this.getArg(0).getType();
 	}
-	
+
 	public boolean isRanking() {
 		switch (this.aggregate) {
 		case RANK:
@@ -268,6 +270,16 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		    return false;
 		}
 	}
+	
+	public boolean isCount() {
+        switch (this.aggregate) {
+        case COUNT:
+        case COUNT_BIG:
+            return true;
+        default:
+            return false;
+        }
+    }
 	
     public boolean isAnalytical() {
         return this.aggregate.analytical;

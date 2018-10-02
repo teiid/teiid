@@ -18,6 +18,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
@@ -39,6 +40,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.WindowFunctionProjectNode;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.NullOrder;
@@ -1361,6 +1363,31 @@ public class TestWindowFunctions {
         }; 
         
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testLongRanks() throws Exception {
+        String sql = "select e1, row_number() over (order by e1), rank() over (order by e1), dense_rank() over (order by e1 nulls last) from pm1.g1";
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 2l, 2l, 1l),
+                Arrays.asList(null, 1l, 1l, 4l),
+                Arrays.asList("a", 3l, 2l, 1l),
+                Arrays.asList("c", 6l, 6l, 3l),
+                Arrays.asList("b", 5l, 5l, 2l),
+                Arrays.asList("a", 4l, 2l, 1l),
+        };
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        TransformationMetadata tm = RealMetadataFactory.example1();
+        tm.setLongRanks(true);
+        
+        ProcessorPlan plan = helpGetPlan(sql, tm, TestOptimizer.getGenericFinder());
+        assertEquals(Long.class, ((Expression)plan.getOutputElements().get(1)).getType());
+        assertEquals(Long.class, ((Expression)plan.getOutputElements().get(2)).getType());
+        assertEquals(Long.class, ((Expression)plan.getOutputElements().get(3)).getType());
+        helpProcess(plan, dataManager, expected); 
     }
     
 }

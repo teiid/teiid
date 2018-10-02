@@ -1485,6 +1485,17 @@ public class ExecutionFactory<F, C> {
     public boolean supportsMultipleOpenExecutions() {
         return true;
     }
+
+    /**
+     * @since 11.2
+     * @return true if the translator supports a specific count aggregate returning a long value
+     * 
+     * {@link #supportsAggregatesCount()} will be consulted by the engine, this capability
+     * only affects the name of the pushed count function if a long value is expected
+     */
+    public boolean supportsAggregatesCountBig() {
+        return false;
+    }
     
     /**
      * If the geography type is supported by the standard ST_ geospatial functions

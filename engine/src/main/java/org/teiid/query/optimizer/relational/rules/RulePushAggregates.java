@@ -26,6 +26,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -522,13 +523,13 @@ public class RulePushAggregates implements
 		if (viewOnly) {
 			for (AggregateSymbol agg : aggregates) {
 	        	agg = (AggregateSymbol)agg.clone();
-	    		if (agg.getAggregateFunction() == Type.COUNT) {
+	    		if (agg.isCount()) {
 	    			if (isCountStar(agg)) {
-	    				allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", new Constant(1))); //$NON-NLS-1$
+	    				allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", newLiteral(1, agg.getType()))); //$NON-NLS-1$
 	    			} else { 
-	        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getArg(0))), Arrays.asList(new Constant(Integer.valueOf(0))));
-	        			count.setElseExpression(new Constant(Integer.valueOf(1)));
-	        			count.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+	        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getArg(0))), Arrays.asList(newLiteral(0, agg.getType())));
+	        			count.setElseExpression(newLiteral(1, agg.getType()));
+	        			count.setType(agg.getType());
 	        			allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", count)); //$NON-NLS-1$
 	    			}
 	    		} else { //min, max, sum
@@ -1112,7 +1113,7 @@ public class RulePushAggregates implements
     }
 
     private static boolean isCountStar(AggregateSymbol as) {
-        return as.getAggregateFunction() == Type.COUNT && (as.getArgs().length == 0 || EvaluatableVisitor.willBecomeConstant(as.getArg(0)));
+        return as.isCount() && (as.getArgs().length == 0 || EvaluatableVisitor.willBecomeConstant(as.getArg(0)));
     }
 
     private static Map<AggregateSymbol, Expression> buildAggregateMap(Collection<? extends AggregateSymbol> aggregateExpressions,
@@ -1124,24 +1125,28 @@ public class RulePushAggregates implements
             Expression newExpression = null;
 
             Type aggFunction = partitionAgg.getAggregateFunction();
-            if (aggFunction == Type.COUNT) {
+            if (partitionAgg.isCount()) {
                 //COUNT(x) -> IFNULL(CONVERT(SUM(COUNT(x)), INTEGER), 0)
             	AggregateSymbol newAgg = null;
             	if (isCountStar(partitionAgg) && join) {
             		//count * case (if on the inner side of an outer join)
-            		Function ifnull = new Function(FunctionLibrary.IFNULL, new Expression[] {partitionAgg, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER)});
+            		Function ifnull = new Function(FunctionLibrary.IFNULL, new Expression[] {partitionAgg, newLiteral(1, partitionAgg.getType())});
             		newAgg = new AggregateSymbol(NonReserved.SUM, false, ifnull);
             	} else {
             		newAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg);
             	}
-                // Build conversion function to convert SUM (which returns LONG) back to INTEGER
-                Function func = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
+            	newExpression = newAgg;
+            	if (partitionAgg.getAggregateFunction() == Type.COUNT) {
+                    // Build conversion function to convert SUM (which returns LONG) back to INTEGER
+                	newExpression = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
+            	}
                 if (join) {
-                	func = new Function(FunctionLibrary.IFNULL, new Expression[] {func, new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER)});
+                    newExpression = new Function(FunctionLibrary.IFNULL,
+                            new Expression[] { newExpression,
+                                    newLiteral(0, partitionAgg.getType()) });
                 }
-                ResolverVisitor.resolveLanguageObject(func, metadata);
+                ResolverVisitor.resolveLanguageObject(newExpression, metadata);
                 
-                newExpression = func;  
                 nestedAggregates.add(partitionAgg);
             } else if (aggFunction == Type.AVG) {
                 //AVG(x) -> SUM(SUM(x)) / SUM(COUNT(x))
@@ -1219,6 +1224,10 @@ public class RulePushAggregates implements
             aggMap.put(partitionAgg, newExpression);
         }
         return aggMap;
+    }
+
+    private static Constant newLiteral(int value, Class<?> type) {
+        return new Constant(type==DefaultDataClasses.LONG?(long)value:value, type);
     }
     
     /**

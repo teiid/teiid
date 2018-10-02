@@ -668,6 +668,10 @@ public class ResolverVisitor extends LanguageVisitor {
 				handleException(e);
 			}
     		break;
+    	default:
+    	    if (obj.isRanking()) {
+    	        obj.setType(metadata.isLongRanks()?DefaultDataClasses.LONG:DefaultDataClasses.INTEGER);
+    	    }
     	}
     }
 

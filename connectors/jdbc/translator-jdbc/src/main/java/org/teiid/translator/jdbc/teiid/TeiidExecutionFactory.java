@@ -558,6 +558,11 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    public boolean supportsAggregatesCountBig() {
+        return getVersion().compareTo(ELEVEN_2) > 0;
+    }
+    
+    @Override
     public boolean supportsGeographyType() {
         return getVersion().compareTo(ELEVEN_2) > 0;
     }

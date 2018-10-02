@@ -649,4 +649,6 @@ public interface QueryMetadataInterface {
     Class<?> getDataTypeClass(String typeOrDomainName) throws QueryMetadataException;
 
     boolean isEnvAllowed();
+
+    boolean isLongRanks();
 }

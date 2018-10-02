@@ -364,6 +364,7 @@ public interface SourceCapabilities {
         QUERY_WINDOW_FUNCTION_NTH_VALUE, 
         WINDOW_FUNCTION_FRAME_CLAUSE, 
         QUERY_AGGREGATES_LIST, 
+        QUERY_AGGREGATES_COUNT_BIG,
         GEOGRAPHY_TYPE;
         
         private final String toString;

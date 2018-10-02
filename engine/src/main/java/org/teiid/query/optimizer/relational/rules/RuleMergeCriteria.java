@@ -54,7 +54,6 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -534,7 +533,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			}
 		} else if (rightExpr instanceof AggregateSymbol) {
 			AggregateSymbol as = (AggregateSymbol)rightExpr;
-			if (as.getAggregateFunction() != Type.COUNT) {
+			if (!as.isCount()) {
 				return false;
 			}
 		} else {

@@ -43,7 +43,7 @@ import org.teiid.core.types.DataTypeManager;
 public class TimestampWithTimezone {
 	
 	public static final String ISO8601_WEEK_PROP = "org.teiid.iso8601Week"; //$NON-NLS-1$
-	public static boolean ISO8601_WEEK = PropertiesUtils.getHierarchicalProperty(ISO8601_WEEK_PROP, true, Boolean.class); 
+	public static final boolean ISO8601_WEEK = PropertiesUtils.getHierarchicalProperty(ISO8601_WEEK_PROP, true, Boolean.class); 
 	
 	private static ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>() {
 		protected Calendar initialValue() {

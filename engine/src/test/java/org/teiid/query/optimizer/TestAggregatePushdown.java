@@ -37,6 +37,7 @@ import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -50,6 +51,7 @@ public class TestAggregatePushdown {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_BIG, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_HAVING, true);
@@ -1578,5 +1580,30 @@ public class TestAggregatePushdown {
                 new String[] {"SELECT g_0.IntKey, g_0.StringKey FROM BQT1.SmallA AS g_0 WHERE (g_0.IntKey <> 10) AND (convert(g_0.IntKey, string) = (SELECT MIN(g_1.StringKey) FROM BQT1.SmallA AS g_1 WHERE g_1.IntKey = g_0.IntKey)) GROUP BY g_0.IntKey, g_0.StringKey"}, ComparisonMode.EXACT_COMMAND_STRING);
     }
     
+    @Test public void testCountBigPushdown() throws Exception {
+        String sql = "select count_big(e1) from pm1.g1"; //$NON-NLS-1$
+
+        CommandContext cc = TestProcessor.createCommandContext();
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        BasicSourceCapabilities aggregateCapabilities = getAggregateCapabilities();
+        aggregateCapabilities.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_BIG, true);
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(aggregateCapabilities), 
+                new String[] {"SELECT COUNT_BIG(g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata, cc, aggregateCapabilities);
+        hdm.addData("SELECT COUNT_BIG(g_0.e1) FROM g1 AS g_0", Arrays.asList(1l));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1l)});
+
+        //same as before, but the source will just use count
+        aggregateCapabilities.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_BIG, false);
+
+        plan = TestOptimizer.helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(aggregateCapabilities), 
+                new String[] {"SELECT COUNT_BIG(g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+        hdm = new HardcodedDataManager(metadata, cc, aggregateCapabilities);
+        hdm.addData("SELECT COUNT(g_0.e1) FROM g1 AS g_0", Arrays.asList(1l));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1l)});
+    }
 
 }

@@ -425,6 +425,7 @@ TOKEN : /* NonReserved words */
 |   <KEY: "key">
 |   <SERIAL: "serial">
 |   <TEXTAGG: "textagg">
+|   <COUNT_BIG: "count_big">
 |   <COUNT: "count">
 |   <ROW_NUMBER: "row_number">
 |   <RANK: "rank">
@@ -630,7 +631,7 @@ Token nonReserved() :
 {
 }
 {
-    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>
+    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<COUNT_BIG>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>
      |<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>
      |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
@@ -2286,13 +2287,13 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 {
 	(
 		// COUNT(*)
-		LOOKAHEAD(3) (func = <COUNT>
+		LOOKAHEAD(3) ((func = <COUNT> | func = <COUNT_BIG>)
 			<LPAREN>
 			starToken = <STAR>
 			<RPAREN> )	
 		| 
 		// Remaining aggregates
-		(	(<COUNT> | <SUM> | <AVG> | <MIN> | <MAX> | <EVERY> | <STDDEV_POP> | <STDDEV_SAMP> | <VAR_SAMP> | <VAR_POP> | <SOME> | <ANY>) {func = getToken(0);}
+		(	(<COUNT> | <COUNT_BIG> | <SUM> | <AVG> | <MIN> | <MAX> | <EVERY> | <STDDEV_POP> | <STDDEV_SAMP> | <VAR_SAMP> | <VAR_POP> | <SOME> | <ANY>) {func = getToken(0);}
 			<LPAREN>
 			[ <DISTINCT> {isDistinct=true;} | <ALL>]
 			expression = expression(info)

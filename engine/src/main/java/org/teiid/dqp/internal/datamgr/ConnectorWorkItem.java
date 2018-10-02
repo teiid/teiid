@@ -195,6 +195,7 @@ public class ConnectorWorkItem implements ConnectorWork {
             CommandContext context, SourceCapabilities capabilities) {
         factory.setCommandContext(context);
         factory.setSupportsConcat2(capabilities.supportsFunction(SourceSystemFunctions.CONCAT2));
+        factory.setSupportsCountBig(capabilities.supportsCapability(Capability.QUERY_AGGREGATES_COUNT_BIG));
         factory.setMaxInPredicateSize((Integer) capabilities.getSourceProperty(Capability.MAX_IN_CRITERIA_SIZE));
         factory.setExcludeWithName((String) capabilities.getSourceProperty(Capability.EXCLUDE_COMMON_TABLE_EXPRESSION_NAME));
         factory.setSourceNullOrder((NullOrder) capabilities.getSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER));

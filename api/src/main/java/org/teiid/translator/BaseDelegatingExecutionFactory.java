@@ -1618,6 +1618,20 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         this.supportsMultipleOpenStatements = supportsMultipleOpenStatements;
     }
     
+    Boolean supportsAggregatesCountBig;
+    @Override
+    public boolean supportsAggregatesCountBig() {
+        if (supportsAggregatesCountBig != null) {
+            return supportsAggregatesCountBig;
+        }
+        return delegate.supportsAggregatesCountBig();
+    }
+    
+    public void setSupportsAggregatesCountBig(
+            boolean supportsAggregatesCountBig) {
+        this.supportsAggregatesCountBig = supportsAggregatesCountBig;
+    }
+
     Boolean supportsGeographyType;
     @Override
     public boolean supportsGeographyType() {

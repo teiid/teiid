@@ -146,7 +146,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                   .append(Tokens.SPACE);
         }
         
-        if (obj.getParameters().isEmpty() && SQLConstants.NonReserved.COUNT.equalsIgnoreCase(obj.getName())) {
+        if (obj.getParameters().isEmpty() 
+                && (SQLConstants.NonReserved.COUNT.equalsIgnoreCase(obj.getName())
+                || SQLConstants.NonReserved.COUNT_BIG.equalsIgnoreCase(obj.getName()))) {
     		buffer.append(Tokens.ALL_COLS);
         } else {
         	append(obj.getParameters());

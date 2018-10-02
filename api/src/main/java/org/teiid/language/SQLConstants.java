@@ -70,6 +70,7 @@ public class SQLConstants {
 		public static final String MAX = "MAX"; //$NON-NLS-1$
 		public static final String MIN = "MIN"; //$NON-NLS-1$
 		public static final String COUNT = "COUNT"; //$NON-NLS-1$
+		public static final String COUNT_BIG = "COUNT_BIG"; //$NON-NLS-1$
 		public static final String AVG = "AVG"; //$NON-NLS-1$
 		public static final String SUM = "SUM"; //$NON-NLS-1$
 		//texttable

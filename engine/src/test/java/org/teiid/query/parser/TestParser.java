@@ -5171,6 +5171,16 @@ public class TestParser {
         helpTest(sql, "SELECT COUNT(*) FILTER(WHERE x = 1) FROM g", query);
     }
     
+    @Test public void testAggFilterCountBig() throws Exception {
+        String sql = "select count_big(*) filter (where x = 1) from g";
+        Query query = new Query();
+        AggregateSymbol aggregateSymbol = new AggregateSymbol(AggregateSymbol.Type.COUNT_BIG.name(), false, null);
+        aggregateSymbol.setCondition(new CompareCriteria(new ElementSymbol("x"), CompareCriteria.EQ, new Constant(1)));
+        query.setSelect(new Select(Arrays.asList(aggregateSymbol)));
+        query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
+        helpTest(sql, "SELECT COUNT_BIG(*) FILTER(WHERE x = 1) FROM g", query);
+    }
+    
     @Test public void testWindowFunction() throws Exception {
     	String sql = "select row_number() over (partition by x order by y) from g";
     	Query query = new Query();

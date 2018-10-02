@@ -147,8 +147,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private Map<String, Collection<StoredProcedureInfo>> procedureCache = Collections.synchronizedMap(new LRUCache<String, Collection<StoredProcedureInfo>>(200));
 
 	private boolean widenComparisonToString = true;
-
     private boolean allowEnv = true;
+    private boolean longRanks;
     /**
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadata.
@@ -1099,6 +1099,15 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public void setAllowENV(boolean b) {
         this.allowEnv = b;
+    }
+    
+    @Override
+    public boolean isLongRanks() {
+        return longRanks;
+    }
+    
+    public void setLongRanks(boolean longRanks) {
+        this.longRanks = longRanks;
     }
 	
 }

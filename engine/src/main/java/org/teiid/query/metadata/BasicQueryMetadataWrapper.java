@@ -431,5 +431,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
     public boolean isEnvAllowed() {
         return actualMetadata.isEnvAllowed();
     }
+    
+    @Override
+    public boolean isLongRanks() {
+        return actualMetadata.isLongRanks();
+    }
 	
 }

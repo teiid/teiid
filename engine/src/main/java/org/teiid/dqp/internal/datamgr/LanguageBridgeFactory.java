@@ -62,6 +62,7 @@ import org.teiid.query.sql.lang.SetClause;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Constant;
@@ -156,6 +157,7 @@ public class LanguageBridgeFactory {
     private boolean convertIn;
     private boolean supportsConcat2;
 	private int maxInCriteriaSize;
+	private boolean supportsCountBig;
 	
 	//state to handle with name exclusion
     private IdentityHashMap<Object, GroupSymbol> remappedGroups;
@@ -187,6 +189,10 @@ public class LanguageBridgeFactory {
     public void setExcludeWithName(String excludeWithName) {
 		this.excludeWithName = excludeWithName;
 	}
+    
+    public void setSupportsCountBig(boolean supportsCountBig) {
+        this.supportsCountBig = supportsCountBig;
+    }
     
     public org.teiid.language.Command translate(Command command) {
     	try {
@@ -920,6 +926,8 @@ public class LanguageBridgeFactory {
             name = Symbol.getShortName(symbol.getFunctionDescriptor().getName());
         } else if (symbol.getAggregateFunction() == AggregateSymbol.Type.USER_DEFINED) {
             name = symbol.getName();
+        } else if (symbol.getAggregateFunction() == Type.COUNT_BIG && !supportsCountBig) {
+            name = Type.COUNT.name();
         }
         
         AggregateFunction af = new AggregateFunction(name, 

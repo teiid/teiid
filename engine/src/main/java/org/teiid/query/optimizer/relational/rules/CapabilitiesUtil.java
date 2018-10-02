@@ -149,6 +149,7 @@ public class CapabilitiesUtil {
         // Check particular function
         Type func = aggregate.getAggregateFunction();
         switch (func) {
+        case COUNT_BIG:
         case COUNT:
             if(aggregate.getArgs().length == 0) {
                 if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_COUNT_STAR)) {

@@ -156,5 +156,10 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
     protected boolean supportsBooleanExpressions() {
         return false;
     }
+    
+    @Override
+    public boolean supportsAggregatesCountBig() {
+        return true;
+    }
 
 }

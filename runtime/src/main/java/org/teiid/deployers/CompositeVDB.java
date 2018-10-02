@@ -41,6 +41,7 @@ import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -126,6 +127,7 @@ public class CompositeVDB {
 		
 		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, systemFunctions, udfs);
 		metadata.setAllowENV(allowEnv);
+		metadata.setLongRanks(AggregateSymbol.LONG_RANKS);
 		metadata.setUseOutputNames(false);
 		metadata.setWidenComparisonToString(WIDEN_COMPARISON_TO_STRING);
 		return metadata;

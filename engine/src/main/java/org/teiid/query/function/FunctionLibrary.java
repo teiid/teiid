@@ -579,7 +579,7 @@ public class FunctionLibrary {
 			case RANK:
 			case ROW_NUMBER:
 				aa.setAllowsDistinct(false);
-				returnType = DataTypeManager.DefaultDataTypes.INTEGER;
+				returnType = AggregateSymbol.LONG_RANKS?DataTypeManager.DefaultDataTypes.LONG:DataTypeManager.DefaultDataTypes.INTEGER;
 				argTypes = new String[] {};
 				break;
 			case ANY:
@@ -588,6 +588,10 @@ public class FunctionLibrary {
 				returnType = DataTypeManager.DefaultDataTypes.BOOLEAN;
 				argTypes = new String[] {DataTypeManager.DefaultDataTypes.BOOLEAN};
 				break;
+			case COUNT_BIG:
+                returnType = DataTypeManager.DefaultDataTypes.LONG;
+                argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+                break;
 			case COUNT:
 				returnType = DataTypeManager.DefaultDataTypes.INTEGER;
 				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};

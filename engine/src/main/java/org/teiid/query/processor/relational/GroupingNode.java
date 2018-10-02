@@ -253,13 +253,24 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		switch (function) {
 		case RANK:
 		case DENSE_RANK:
-			result = new RankingFunction(function);
+		    if (aggSymbol.getType() == DataTypeManager.DefaultDataClasses.LONG) {
+		        result = new RankingFunctionBig(function);
+		    } else {
+		        result = new RankingFunction(function);
+		    }
 			break;
 		case ROW_NUMBER: //same as count(*)
+		    if (aggSymbol.getType() == DataTypeManager.DefaultDataClasses.LONG) {
+		        result = new CountBig();
+		        break;
+		    }
 		case CUME_DIST:
 		case COUNT:
 			result = new Count();
 			break;
+		case COUNT_BIG:
+            result = new CountBig();
+            break;
 		case SUM:
 			result = new Sum();
 			break;

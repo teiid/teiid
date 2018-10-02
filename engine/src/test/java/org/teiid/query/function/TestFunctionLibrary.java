@@ -1488,7 +1488,7 @@ public class TestFunctionLibrary {
     }
 	
 	@Test public void testGetBuiltin() throws Exception {
-		assertEquals(17, RealMetadataFactory.SFM.getSystemFunctionLibrary().getBuiltInAggregateFunctions(false).size());
+		assertEquals(18, RealMetadataFactory.SFM.getSystemFunctionLibrary().getBuiltInAggregateFunctions(false).size());
 	}
 	
 	@Test public void testClobConcat() throws Exception {

@@ -52,7 +52,12 @@ public class TestSQLStringVisitor  {
      */
     @Test public void testVisitIAggregate() throws Exception {
         String expected = "COUNT(42)"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestAggregateImpl.example("COUNT", NonReserved.COUNT, false, 42))); //$NON-NLS-1$
+        assertEquals(expected, getString(TestAggregateImpl.example(NonReserved.COUNT, false, 42))); //$NON-NLS-1$
+    }
+    
+    @Test public void testVisitIAggregate1() throws Exception {
+        String expected = "COUNT_BIG(*)"; //$NON-NLS-1$
+        assertEquals(expected, getString(new AggregateFunction(NonReserved.COUNT_BIG, false, null, Long.class))); //$NON-NLS-1$
     }
 
     @Test public void testVisitIAggregateDistinct() throws Exception {
