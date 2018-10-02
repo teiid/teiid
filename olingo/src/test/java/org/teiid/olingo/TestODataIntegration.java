@@ -3098,6 +3098,45 @@ public class TestODataIntegration {
             JsonNode node = getJSONNode(response);
             String value = node.get("value").toString();
             assertEquals("[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,3.0]}}]", value);
+            
+            response = http.GET(baseURL + "/northwind/phy/$metadata");
+            assertTrue(response.getContentAsString().contains("<Property Name=\"location\" Type=\"Edm.GeometryPoint\">"));
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test public void testGeography() throws Exception {
+        try {
+            String ddl = "CREATE foreign table geo (id integer primary key, location string);"
+                    + "CREATE view geo_view (id integer primary key,"
+                    + "location geography options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'point'))"
+                    + " AS select id, ST_GEOGFROMTEXT(location) from geo;";
+            
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("phy");
+            mmd.addSourceMetadata("ddl", ddl);
+            mmd.addSourceMapping("x", "x", null);
+            HardCodedExecutionFactory hef = new HardCodedExecutionFactory();
+            
+            hef.addData("SELECT geo.id, geo.location FROM geo", Arrays.asList(Arrays.asList(1, "POINT (1 3)")));
+            
+            teiid.addTranslator("x", hef);
+            teiid.deployVDB("northwind", mmd);
+            
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/phy/geo_view");
+            assertEquals(200, response.getStatus());
+
+            JsonNode node = getJSONNode(response);
+            String value = node.get("value").toString();
+            assertEquals("[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,3.0]}}]", value);
+            
+            response = http.GET(baseURL + "/northwind/phy/$metadata");
+            assertTrue(response.getContentAsString().contains("<Property Name=\"location\" Type=\"Edm.GeographyPoint\">"));
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

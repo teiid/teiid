@@ -35,11 +35,11 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
-class JTStoOlingoBridge {
+class JTS2OlingoBridge {
     private Dimension dimension;
     private SRID srid;
 
-    public JTStoOlingoBridge(Dimension dimension, SRID srid) {
+    public JTS2OlingoBridge(Dimension dimension, SRID srid) {
         this.dimension = dimension;
         this.srid = srid;
     }

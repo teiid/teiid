@@ -194,6 +194,7 @@ public class DataTypeManager {
 		public static final String XML = "xml"; //$NON-NLS-1$
 		public static final String VARBINARY = "varbinary"; //$NON-NLS-1$
 		public static final String GEOMETRY = "geometry"; //$NON-NLS-1$
+		public static final String GEOGRAPHY = "geography"; //$NON-NLS-1$
 	}
 
 	public static final class DefaultDataClasses {
@@ -218,6 +219,7 @@ public class DataTypeManager {
 		public static final Class<XMLType> XML = XMLType.class;
 		public static final Class<BinaryType> VARBINARY = BinaryType.class;
 		public static final Class<GeometryType> GEOMETRY = GeometryType.class;
+		public static final Class<GeographyType> GEOGRAPHY = GeographyType.class;
 	}
 	
 	public static final class DefaultTypeCodes {
@@ -242,9 +244,10 @@ public class DataTypeManager {
 		public static final int NULL = 18;
 		public static final int VARBINARY = 19;
 		public static final int GEOMETRY = 20;
+		public static final int GEOGRAPHY = 21;
 	}
 	
-	public static int MAX_TYPE_CODE = DefaultTypeCodes.GEOMETRY;
+	public static int MAX_TYPE_CODE = DefaultTypeCodes.GEOGRAPHY;
 	
     private static final Map<Class<?>, Integer> typeMap = new LinkedHashMap<Class<?>, Integer>(64);
     private static final List<Class<?>> typeList;
@@ -271,6 +274,7 @@ public class DataTypeManager {
         typeMap.put(DataTypeManager.DefaultDataClasses.NULL, DefaultTypeCodes.NULL);
         typeMap.put(DataTypeManager.DefaultDataClasses.VARBINARY, DefaultTypeCodes.VARBINARY);
         typeMap.put(DataTypeManager.DefaultDataClasses.GEOMETRY, DefaultTypeCodes.GEOMETRY);
+        typeMap.put(DataTypeManager.DefaultDataClasses.GEOGRAPHY, DefaultTypeCodes.GEOGRAPHY);
         typeList = new ArrayList<Class<?>>(typeMap.keySet());
     }    
     
@@ -633,14 +637,16 @@ public class DataTypeManager {
 		return DataTypeManager.DefaultDataClasses.BLOB.equals(type)
 				|| DataTypeManager.DefaultDataClasses.CLOB.equals(type)
 				|| DataTypeManager.DefaultDataClasses.XML.equals(type)
-                || DataTypeManager.DefaultDataClasses.GEOMETRY.equals(type);
+                || DataTypeManager.DefaultDataClasses.GEOMETRY.equals(type)
+                || DataTypeManager.DefaultDataClasses.GEOGRAPHY.equals(type);
 	}
 
 	public static boolean isLOB(String type) {
 		return DataTypeManager.DefaultDataTypes.BLOB.equals(type)
 				|| DataTypeManager.DefaultDataTypes.CLOB.equals(type)
 				|| DataTypeManager.DefaultDataTypes.XML.equals(type)
-                || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type);
+                || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type)
+                || DataTypeManager.DefaultDataClasses.GEOGRAPHY.equals(type);
 	}
 
 	/**
@@ -668,6 +674,7 @@ public class DataTypeManager {
 		DataTypeManager.addDataType(DefaultDataTypes.BLOB, DefaultDataClasses.BLOB);
 		DataTypeManager.addDataType(DefaultDataTypes.VARBINARY, DefaultDataClasses.VARBINARY);
 		DataTypeManager.addDataType(DefaultDataTypes.GEOMETRY, DefaultDataClasses.GEOMETRY);
+		DataTypeManager.addDataType(DefaultDataTypes.GEOGRAPHY, DefaultDataClasses.GEOGRAPHY);
 		DATA_TYPE_NAMES = Collections.unmodifiableSet(new LinkedHashSet<String>(dataTypeNames.keySet()));
 		dataTypeNames.put(DataTypeAliases.BIGINT, DefaultDataClasses.LONG);
 		dataTypeNames.put(DataTypeAliases.DECIMAL, DefaultDataClasses.BIG_DECIMAL);
@@ -837,6 +844,8 @@ public class DataTypeManager {
 		
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.SQLXMLToStringTransform());
 		
+		DataTypeManager.addTransform(new org.teiid.core.types.basic.GeographyToGeometryTransform());
+		
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.OBJECT) {
 			@Override
 			public boolean isExplicit() {
@@ -946,6 +955,7 @@ public class DataTypeManager {
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.BLOB.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.CLOB.equals(type))
             || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type)
+            || DataTypeManager.DefaultDataTypes.GEOGRAPHY.equals(type)
             || DataTypeManager.DefaultDataTypes.XML.equals(type);
     }
     
@@ -987,11 +997,13 @@ public class DataTypeManager {
 	    if (type == null) {
 	        return true;
 	    }
-	    if ((type == DataTypeManager.DefaultDataClasses.STRING
-                || type == DataTypeManager.DefaultDataClasses.CHAR) && collationLocale != null) {
+	    if (collationLocale != null && (type == DataTypeManager.DefaultDataClasses.STRING
+                || type == DataTypeManager.DefaultDataClasses.CHAR
+                || type == DataTypeManager.DefaultDataClasses.CLOB) ) {
             return false;
         }
-        if (type == DataTypeManager.DefaultDataClasses.STRING) {
+        if (type == DataTypeManager.DefaultDataClasses.STRING 
+                || type == DataTypeManager.DefaultDataClasses.CLOB) {
             return !padSpace; 
         }
         if (type.isArray() ) {
@@ -999,7 +1011,6 @@ public class DataTypeManager {
         }
         return !(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
                 || type == DataTypeManager.DefaultDataClasses.BLOB
-                || type == DataTypeManager.DefaultDataClasses.CLOB
                 || type == DataTypeManager.DefaultDataClasses.OBJECT);
     }
     

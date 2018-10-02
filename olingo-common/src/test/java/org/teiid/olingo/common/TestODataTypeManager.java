@@ -40,9 +40,17 @@ public class TestODataTypeManager {
         assertEquals("GeometryLineString", ODataTypeManager.odataType(c).name());
         
         assertEquals("geometry", ODataTypeManager.teiidType(EdmGeometryPoint.getInstance(), false));
+    }
+    
+    @Test public void testGeographyTypes() {
+        Column c = new Column();
+        c.setDatatype(SystemMetadata.getInstance().getRuntimeTypeMap().get(DefaultDataTypes.GEOGRAPHY));
+        c.setProperty(BaseColumn.SPATIAL_TYPE, "MULTILINESTRING"); //$NON-NLS-1$
+        assertEquals("GeographyMultiLineString", ODataTypeManager.odataType(c).name());
+        c.setProperty(BaseColumn.SPATIAL_TYPE, "POLYGON"); //$NON-NLS-1$
+        assertEquals("GeographyPolygon", ODataTypeManager.odataType(c).name());
         
-        //not yet supported
-        assertEquals("string", ODataTypeManager.teiidType(EdmGeographyPoint.getInstance(), false));
+        assertEquals("geography", ODataTypeManager.teiidType(EdmGeographyPoint.getInstance(), false));
     }
     
 }

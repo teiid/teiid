@@ -22,6 +22,7 @@ package org.teiid.translator.jdbc;
 
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.BulkCommand;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
@@ -98,10 +99,7 @@ public class TranslatedCommand {
      * @return
      */
     static boolean isBindEligible(Literal l) {
-		return TypeFacility.RUNTIME_TYPES.XML.equals(l.getType())
-				|| TypeFacility.RUNTIME_TYPES.CLOB.equals(l.getType())
-				|| TypeFacility.RUNTIME_TYPES.BLOB.equals(l.getType())
-				|| TypeFacility.RUNTIME_TYPES.GEOMETRY.equals(l.getType())
+		return DataTypeManager.isLOB(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.OBJECT.equals(l.getType());
 	}
     

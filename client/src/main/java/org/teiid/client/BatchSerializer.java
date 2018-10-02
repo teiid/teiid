@@ -43,6 +43,7 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.XMLType;
 import org.teiid.jdbc.JDBCPlugin;
@@ -67,7 +68,8 @@ import org.teiid.jdbc.JDBCPlugin;
 public class BatchSerializer {
 
 	public static final byte VERSION_GEOMETRY = (byte)4;
-    static final byte CURRENT_VERSION = VERSION_GEOMETRY;
+	public static final byte VERSION_GEOGRAPHY = (byte)5;
+    static final byte CURRENT_VERSION = VERSION_GEOGRAPHY;
 
 	private BatchSerializer() {} // Uninstantiable
 
@@ -92,6 +94,7 @@ public class BatchSerializer {
         serializers.put(DataTypeManager.DefaultDataTypes.CLOB,  	   	new ColumnSerializer[] {defaultSerializer, new ClobColumnSerializer1()});
         serializers.put(DataTypeManager.DefaultDataTypes.BLOB,     		new ColumnSerializer[] {defaultSerializer, new BlobColumnSerializer1()});
         serializers.put(DataTypeManager.DefaultDataTypes.GEOMETRY,     	new ColumnSerializer[] {defaultSerializer, new GeometryColumnSerializer()});
+        serializers.put(DataTypeManager.DefaultDataTypes.GEOGRAPHY,      new ColumnSerializer[] {defaultSerializer, new GeographyColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.XML,     		new ColumnSerializer[] {defaultSerializer, new XmlColumnSerializer1()});
         serializers.put(DataTypeManager.DefaultDataTypes.NULL,     		new ColumnSerializer[] {defaultSerializer, new NullColumnSerializer1()});
         serializers.put(DataTypeManager.DefaultDataTypes.OBJECT,     	new ColumnSerializer[] {defaultSerializer, new ObjectColumnSerializer((byte)1)});
@@ -140,7 +143,8 @@ public class BatchSerializer {
     		}
 			out.writeInt(values.length);
 			int code = DataTypeManager.getTypeCode(values.getClass().getComponentType());
-			if (code == DataTypeManager.DefaultTypeCodes.GEOMETRY && version < VERSION_GEOMETRY) {
+			if ((code == DataTypeManager.DefaultTypeCodes.GEOMETRY && version < VERSION_GEOMETRY)
+			        || (code == DataTypeManager.DefaultTypeCodes.GEOGRAPHY && version < VERSION_GEOGRAPHY)){
 				code = DataTypeManager.DefaultTypeCodes.BLOB;
 			}
     		out.writeByte((byte)code);
@@ -233,8 +237,14 @@ public class BatchSerializer {
     	protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version)
     			throws IOException {
     		int code = DataTypeManager.getTypeCode(obj.getClass());
-    		if (code == DataTypeManager.DefaultTypeCodes.GEOMETRY && version < VERSION_GEOMETRY) {
-				code = DataTypeManager.DefaultTypeCodes.BLOB;
+    		if (code == DataTypeManager.DefaultTypeCodes.GEOMETRY) {
+    		    if (version < VERSION_GEOMETRY) {
+    		        code = DataTypeManager.DefaultTypeCodes.BLOB;
+    		    }
+			} else if (code == DataTypeManager.DefaultTypeCodes.GEOGRAPHY) {
+			    if (version < VERSION_GEOGRAPHY) {
+                    code = DataTypeManager.DefaultTypeCodes.BLOB;
+                }
 			}
     		out.writeByte((byte)code);
     		writeObject(out, obj, code, cache, version<VERSION_GEOMETRY?this.defaultVersion:version);
@@ -406,13 +416,31 @@ public class BatchSerializer {
         }
         @Override
 		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
-        	if (version < 4) {
+        	if (version < VERSION_GEOMETRY) {
             	BlobType bt = new BlobType();
             	bt.readExternal(in);
                 return bt;
         	}
         	GeometryType bt = new GeometryType();
         	bt.readExternal(in);
+            return bt;
+        }
+    }
+    
+    private static class GeographyColumnSerializer extends ColumnSerializer {
+        @Override
+        protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
+            ((Externalizable)obj).writeExternal(out);
+        }
+        @Override
+        protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
+            if (version < VERSION_GEOGRAPHY) {
+                BlobType bt = new BlobType();
+                bt.readExternal(in);
+                return bt;
+            }
+            GeographyType bt = new GeographyType();
+            bt.readExternal(in);
             return bt;
         }
     }

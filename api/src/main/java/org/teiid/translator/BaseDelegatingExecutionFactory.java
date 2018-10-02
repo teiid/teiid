@@ -1617,4 +1617,18 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
             boolean supportsMultipleOpenStatements) {
         this.supportsMultipleOpenStatements = supportsMultipleOpenStatements;
     }
+    
+    Boolean supportsGeographyType;
+    @Override
+    public boolean supportsGeographyType() {
+        if (supportsGeographyType != null) {
+            return supportsGeographyType;
+        }
+        return delegate.supportsGeographyType();
+    }
+    
+    public void setSupportsGeographyType(
+            boolean supportsGeographyType) {
+        this.supportsGeographyType = supportsGeographyType;
+    }
 }

@@ -501,6 +501,7 @@ TOKEN : /* NonReserved words */
 |   <JSONOBJECT: "jsonobject">
 |   <PRESERVE: "preserve">
 |   <GEOMETRY: "geometry">
+|   <GEOGRAPHY: "geography">
 |   <UPSERT: "upsert">
 |   <AFTER: "after">
 |   <DEFAULT_KEYWORD: "default">
@@ -636,7 +637,7 @@ Token nonReserved() :
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
-     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>)
+     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>|<GEOGRAPHY>)
     {
     	return getToken(0);
     }	
@@ -4927,6 +4928,7 @@ ParsedDataType parseDataTypePrimary() :
 		(typeToken = <CLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <VARBINARY> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) |
 		typeToken = <GEOMETRY> |
+		typeToken = <GEOGRAPHY> |
 		typeToken = <XML>
 	)
 	{

@@ -90,6 +90,7 @@ public class RealMetadataFactory {
         createElement("MKT_ID", colaMarkets, "integer");
         createElement("NAME", colaMarkets, "string");
         createElement("SHAPE", colaMarkets, "geometry");
+        createElement("GEOG_SHAPE", colaMarkets, "geography");
 
         // Create physical groups
         Table bqt1SmallA = createPhysicalGroup("SmallA", bqt1); //$NON-NLS-1$

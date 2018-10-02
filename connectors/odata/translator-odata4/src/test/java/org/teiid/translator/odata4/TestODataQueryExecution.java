@@ -44,14 +44,16 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmGeometryPoint;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.teiid.GeometryInputSource;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
@@ -657,16 +659,16 @@ public class TestODataQueryExecution {
         assertEquals("187 Suffolk Ln.", row.get(2));
         assertEquals("xyz", row.get(0));
         
-        GeometryInputSource gis = (GeometryInputSource)row.get(1);
-        assertEquals("<gml:Point><gml:pos>-48.23456 20.12345</gml:pos></gml:Point>", ObjectConverterUtil.convertToString(gis.getGml()));
-        assertEquals(4326, gis.getSrid().intValue());
+        GeometryType gis = (GeometryType)row.get(1);
+        assertEquals("SRID=4326;POINT (-48.23456 20.12345)", ClobType.getString((GeometryUtils.geometryToClob(gis, true))));
+        //assertEquals(4326, gis.getSrid());
         
         row = execution.next();
         
         assertEquals("gso", row.get(0));
         
-        gis = (GeometryInputSource)row.get(1);
-        assertEquals("<gml:Point><gml:pos>1.0 2.0</gml:pos></gml:Point>", ObjectConverterUtil.convertToString(gis.getGml()));
+        gis = (GeometryType)row.get(1);
+        assertEquals("SRID=4326;POINT (1 2)", ClobType.getString((GeometryUtils.geometryToClob(gis, true))));
         
         assertNull(execution.next());
         

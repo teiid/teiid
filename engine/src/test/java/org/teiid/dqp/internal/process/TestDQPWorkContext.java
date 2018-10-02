@@ -36,7 +36,7 @@ import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 
-
+@SuppressWarnings("nls")
 public class TestDQPWorkContext {
 
 	public static DQPWorkContext example() {
@@ -157,5 +157,8 @@ public class TestDQPWorkContext {
 		assertEquals(previousSC, sc.getSecurityContext());
 	}	
 	
-	
+	@Test public void testVersion() {
+        assertEquals(4, DQPWorkContext.Version.getVersion("11.0").getClientSerializationVersion());
+        assertEquals(5, DQPWorkContext.Version.getVersion("11.2").getClientSerializationVersion());
+    }
 }

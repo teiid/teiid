@@ -37,6 +37,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.function.GeographyFunctionMethods;
 import org.teiid.query.function.GeometryFunctionMethods;
 import org.teiid.query.function.GeometryUtils;
 import org.teiid.query.function.JSONFunctionMethods;
@@ -197,6 +198,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 
         addFunctions(JSONFunctionMethods.class);
         addLibrary(GeometryFunctionMethods.class.getName(), null);
+        addLibrary(GeographyFunctionMethods.class.getName(), null);
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
         if (addLibrary(XMLSystemFunctions.class.getName(), null)) {

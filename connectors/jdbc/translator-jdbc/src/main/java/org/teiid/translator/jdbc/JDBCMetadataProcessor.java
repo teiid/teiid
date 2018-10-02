@@ -20,6 +20,7 @@ package org.teiid.translator.jdbc;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -34,7 +35,10 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import org.teiid.core.types.AbstractGeospatialType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeographyType;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -457,26 +461,17 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 					continue;
 				}
 			}
+			//TODO: geometry/geography arrays
 			Column c = addColumn(columns, tableInfo.table, metadataFactory, rsColumns);
 			if (TypeFacility.RUNTIME_TYPES.GEOMETRY.equals(c.getJavaType())) {
 				String columnName = columns.getString(4);
 				getGeometryMetadata(c, conn, tableCatalog, tableSchema, tableName, columnName);
-			}
+			} else if (TypeFacility.RUNTIME_TYPES.GEOGRAPHY.equals(c.getJavaType())) {
+                String columnName = columns.getString(4);
+                getGeographyMetadata(c, conn, tableCatalog, tableSchema, tableName, columnName);
+            }
 		}
 		columns.close();
-	}
-	
-	/**
-	 * 
-	 * @param c
-	 * @param conn
-	 * @param tableCatalog
-	 * @param tableSchema
-	 * @param tableName
-	 * @param columnName 
-	 */
-	protected void getGeometryMetadata(Column c, Connection conn, String tableCatalog, String tableSchema, String tableName, String columnName) {
-		
 	}
 	
 	/**
@@ -1218,6 +1213,99 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
      */
     protected boolean isHiddenSchema(String catalog, String schema) {
         return false;
+    }
+    
+    /**
+     * Get the geospatial metadata for the column, including srid, type, and dimensionality
+     * @param c
+     * @param conn
+     * @param tableCatalog
+     * @param tableSchema
+     * @param tableName
+     * @param columnName
+     */
+    protected void getGeometryMetadata(Column c, Connection conn,
+            String tableCatalog, String tableSchema, String tableName,
+            String columnName) {
+        getGeospatialMetadata(c, conn, tableCatalog, tableSchema, tableName,
+                columnName, GeometryType.class);
+    }
+    
+    /**
+     * Get the geospatial metadata for the column, including srid, type, and dimensionality
+     * @param c
+     * @param conn
+     * @param tableCatalog
+     * @param tableSchema
+     * @param tableName
+     * @param columnName 
+     */
+    protected void getGeographyMetadata(Column c, Connection conn,
+            String tableCatalog, String tableSchema, String tableName,
+            String columnName) {
+        getGeospatialMetadata(c, conn, tableCatalog, tableSchema, tableName,
+                columnName, GeographyType.class);
+    }
+    
+    protected void getGeospatialMetadata(Column c, Connection conn,
+            String tableCatalog, String tableSchema, String tableName,
+            String columnName, Class<? extends AbstractGeospatialType> clazz) {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            if (tableCatalog == null) {
+                tableCatalog = conn.getCatalog();
+            }
+            String viewName = clazz==GeometryType.class?getGeometryMetadataTableName():getGeographyMetadataTableName();
+            if (viewName == null) {
+                return;
+            }
+            ps = conn.prepareStatement("select coord_dimension, srid, type from " + viewName //$NON-NLS-1$
+                    + " where f_table_catalog=? and f_table_schema=? and f_table_name=? and f_geometry_column=?"); //$NON-NLS-1$
+            ps.setString(1, tableCatalog);
+            ps.setString(2, tableSchema);
+            ps.setString(3, tableName);
+            ps.setString(4, columnName);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                c.setProperty(MetadataFactory.SPATIAL_URI + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
+                c.setProperty(MetadataFactory.SPATIAL_URI + "srid", rs.getString(2)); //$NON-NLS-1$
+                c.setProperty(MetadataFactory.SPATIAL_URI + "type", rs.getString(3)); //$NON-NLS-1$
+            }
+        } catch (SQLException e) {
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get geometry metadata for column", tableSchema, tableName, columnName); //$NON-NLS-1$
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
+    }
+    
+    /**
+     * Return the name of the metadata table or view for geography metadata
+     * that conforms to the simple features specification or null if none exists
+     * @return
+     */
+    protected String getGeographyMetadataTableName() {
+        return null;
+    }
+    
+    /**
+     * Return the name of the metadata table or view for geometry metadata
+     * that conforms to the simple features specification or null if none exists
+     * @return
+     */
+    protected String getGeometryMetadataTableName() {
+        return null;
     }
        
 }

@@ -59,6 +59,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
@@ -596,12 +597,14 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         if (rawValue) {
             return new SQLParameter(ODataTypeManager.convertByteArrayToTeiidRuntimeType(
                     DataTypeManager.getDataTypeClass(teiidType), (byte[])value, 
-                    ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString()), 
+                    ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString(), 
+                    edmProp.getSrid() != null?edmProp.getSrid().toString():null), 
                     sqlType);            
         }        
         return new SQLParameter(ODataTypeManager.convertToTeiidRuntimeType(
                 DataTypeManager.getDataTypeClass(teiidType), value, 
-                ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString()), 
+                ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString(), 
+                edmProp.getSrid() != null?edmProp.getSrid().toString():null), 
                 sqlType);
     }    
     
@@ -644,7 +647,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             Property prop = entity.getProperty(c.getName());
             Constant right = null;
             if (prop != null) {
-                right = new Constant(ODataTypeManager.convertToTeiidRuntimeType(c.getJavaType(), prop.getValue(), null));
+                right = new Constant(ODataTypeManager.convertToTeiidRuntimeType(c.getJavaType(), prop.getValue(), null, c.getProperty(BaseColumn.SPATIAL_SRID, false)));
             } else {
                 Object value = generatedKeys.get(c.getName());
                 if (value == null) {

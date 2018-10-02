@@ -138,6 +138,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.UPSERT, srcCaps.supportsUpsert());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SET_LIMIT_OFFSET, srcCaps.supportsSetQueryLimitOffset());
         tgtCaps.setCapabilitySupport(Capability.ONLY_TIMESTAMPADD_LITERAL, srcCaps.supportsOnlyTimestampAddLiteral());
+        tgtCaps.setCapabilitySupport(Capability.GEOGRAPHY_TYPE, srcCaps.supportsGeographyType());
         if (srcCaps.supportsPartialFiltering()) {
         	//disable supports that could end up being not filterable
         	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);

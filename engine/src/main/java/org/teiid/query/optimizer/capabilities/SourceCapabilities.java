@@ -363,7 +363,8 @@ public interface SourceCapabilities {
         QUERY_WINDOW_FUNCTION_CUME_DIST,
         QUERY_WINDOW_FUNCTION_NTH_VALUE, 
         WINDOW_FUNCTION_FRAME_CLAUSE, 
-        QUERY_AGGREGATES_LIST;
+        QUERY_AGGREGATES_LIST, 
+        GEOGRAPHY_TYPE;
         
         private final String toString;
         

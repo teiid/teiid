@@ -74,4 +74,6 @@ public interface FunctionCategoryConstants {
     public static final String AGGREGATE = "Aggregate"; //$NON-NLS-1$
         
     public static final String GEOMETRY = "Geometry"; //$NON-NLS-1$
+    
+    public static final String GEOGRAPHY = "Geography"; //$NON-NLS-1$
 }

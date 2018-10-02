@@ -425,7 +425,9 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	    			continue;
 	    		}
 	    		SourceCapabilities caps = capabiltiesFinder.findCapabilities(mmd.getName());
-    			if (caps.supportsCapability(Capability.SELECT_WITHOUT_FROM) && caps.supportsFunction(fd.getMethod().getFullName())) {
+	    		Object mid = this.context.getMetadata().getModelID(mmd.getName());
+    			if (caps.supportsCapability(Capability.SELECT_WITHOUT_FROM) 
+    			        && CapabilitiesUtil.supportsScalarFunction(mid, function, this.context.getMetadata(), capabiltiesFinder)) {
     				schema = mmd.getName();
     				break;
     			}

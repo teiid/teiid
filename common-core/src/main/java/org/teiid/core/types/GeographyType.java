@@ -20,29 +20,37 @@ package org.teiid.core.types;
 
 import java.sql.Blob;
 
-public final class GeometryType extends AbstractGeospatialType {
-    public static final int UNKNOWN_SRID = 0;
+public final class GeographyType extends AbstractGeospatialType {
+    public static final int DEFAULT_SRID = 4326;
     
-    public GeometryType() {
-
+    public GeographyType() {
+        setSrid(DEFAULT_SRID);
     }
 
-    public GeometryType(Blob blob) {
-        this(blob, UNKNOWN_SRID);
+    public GeographyType(Blob blob) {
+        this(blob, DEFAULT_SRID);
     }
 
-    public GeometryType(byte[] bytes) {
-        this(bytes, UNKNOWN_SRID);
+    public GeographyType(byte[] bytes) {
+        this(bytes, DEFAULT_SRID);
     }
 
-    public GeometryType(Blob blob, int srid) {
+    public GeographyType(Blob blob, int srid) {
         super(blob);
         setSrid(srid);
     }
 
-    public GeometryType(byte[] bytes, int srid) {
+    public GeographyType(byte[] bytes, int srid) {
         super(bytes);
         setSrid(srid);
+    }
+    
+    @Override
+    public void setSrid(int srid) {
+        if (srid == GeometryType.UNKNOWN_SRID) {
+            srid = DEFAULT_SRID;
+        }
+        super.setSrid(srid);
     }
 
 }

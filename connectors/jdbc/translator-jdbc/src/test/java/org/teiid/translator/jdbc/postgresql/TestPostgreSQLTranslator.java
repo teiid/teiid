@@ -608,6 +608,27 @@ public class TestPostgreSQLTranslator {
     	assertFalse(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_GEOMFROMGEOJSON));
     }
     
+    @Test public void testGeographyFunctions() throws Exception {
+        PostgreSQLExecutionFactory pgef = new PostgreSQLExecutionFactory();
+        pgef.setPostGisVersion("2.1");
+        pgef.setDatabaseVersion(Version.DEFAULT_VERSION);
+        pgef.start();
+        assertTrue(pgef.supportsGeographyType());
+        assertFalse(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_GEOGFROMTEXT));
+    }
+    
+    @Test public void testGeometryFilter() throws Exception {
+        String input = "select mkt_id from cola_markets where ST_Contains(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))'), shape);"; //$NON-NLS-1$
+        String output = "SELECT COLA_MARKETS.MKT_ID FROM COLA_MARKETS WHERE st_contains(st_geomfromwkb(?, 0), COLA_MARKETS.SHAPE) = TRUE"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testGeographySelect() throws Exception {
+        String input = "select geog_shape from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT st_asewkb(CAST(COLA_MARKETS.GEOG_SHAPE AS geometry)) FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
     @Test public void testBooleanConversion() throws Exception {
         String input = "SELECT cast(bigdecimalvalue as boolean), cast(doublenum as boolean) from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT SmallA.BigDecimalValue <> 0, cast(SmallA.DoubleNum AS boolean) FROM SmallA";  //$NON-NLS-1$

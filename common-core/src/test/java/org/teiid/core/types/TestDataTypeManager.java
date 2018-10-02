@@ -242,5 +242,9 @@ public class TestDataTypeManager {
         assertFalse(DataTypeManager.isHashable(DataTypeManager.DefaultDataClasses.STRING, true, null));
         assertFalse(DataTypeManager.isHashable(String[].class, false, "Something"));
     }
+    
+    @Test public void testGeographyToGeometry() throws Exception {
+        assertTrue(DataTypeManager.transformValue(new GeographyType(new byte[0]), DataTypeManager.DefaultDataClasses.GEOMETRY) instanceof GeometryType); //$NON-NLS-1$
+    }
 	
 }

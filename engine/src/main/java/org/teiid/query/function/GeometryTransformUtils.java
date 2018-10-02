@@ -122,6 +122,40 @@ public class GeometryTransformUtils {
 
         return projText;
     }
+    
+    public static boolean isLatLong(CommandContext ctx, int srid) 
+            throws FunctionExecutionException {
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            TeiidConnection conn = ctx.getConnection();
+            pstmt = conn.prepareStatement("select (proj4text like '%longlat%') from SYS.spatial_ref_sys where srid = ?"); //$NON-NLS-1$
+            pstmt.setInt(1, srid);
+            rs = pstmt.executeQuery();
+            if (!rs.next()) {
+                throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31162, srid));
+            }
+            return rs.getBoolean(1);
+        } catch (SQLException e) {
+            throw new FunctionExecutionException(e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31163));
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+            try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+    }
 
     /**
      * Convert geometry to different coordinate system given the source/target

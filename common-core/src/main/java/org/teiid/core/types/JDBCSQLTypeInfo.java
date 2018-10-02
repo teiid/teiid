@@ -73,6 +73,7 @@ public final class JDBCSQLTypeInfo {
     	addType(DataTypeManager.DefaultDataTypes.BIG_INTEGER, 20, 19, DataTypeManager.DefaultDataClasses.BIG_INTEGER.getName(), Types.NUMERIC);
     	addType(new String[] {DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "decimal"}, 22, 20, DataTypeManager.DefaultDataClasses.BIG_DECIMAL.getName(), Types.NUMERIC, Types.DECIMAL); //$NON-NLS-1$
         addType(DataTypeManager.DefaultDataTypes.GEOMETRY, Integer.MAX_VALUE, Integer.MAX_VALUE, GeometryType.class.getName(), Types.BLOB, Types.LONGVARBINARY);
+        addType(DataTypeManager.DefaultDataTypes.GEOGRAPHY, Integer.MAX_VALUE, Integer.MAX_VALUE, GeographyType.class.getName(), Types.BLOB, Types.LONGVARBINARY);
     	addType(DataTypeManager.DefaultDataTypes.BLOB, Integer.MAX_VALUE, Integer.MAX_VALUE, Blob.class.getName(), Types.BLOB, Types.LONGVARBINARY);
     	addType(DataTypeManager.DefaultDataTypes.BOOLEAN, 5, 1, DataTypeManager.DefaultDataClasses.BOOLEAN.getName(), Types.BIT, Types.BOOLEAN);
     	addType(new String[] {DataTypeManager.DefaultDataTypes.BYTE, "tinyint"}, 4, 3, DataTypeManager.DefaultDataClasses.BYTE.getName(), Types.TINYINT); //$NON-NLS-1$

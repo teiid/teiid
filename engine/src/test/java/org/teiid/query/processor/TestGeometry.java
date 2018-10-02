@@ -38,9 +38,16 @@ import org.teiid.core.types.GeometryType;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.GeometryTransformUtils;
 import org.teiid.query.function.GeometryUtils;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -159,7 +166,7 @@ public class TestGeometry {
         );
         assertEval(
                 "ST_AsGML(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))', 4326))",
-                "<gml:Polygon>\n" +
+                "<gml:Polygon srsName='EPSG:4326'>\n" +
                 "  <gml:outerBoundaryIs>\n" +
                 "    <gml:LinearRing>\n" +
                 "      <gml:coordinates>\n" +
@@ -457,6 +464,50 @@ public class TestGeometry {
         String expr = "st_srid(st_boundary(st_geomfromewkt('SRID=4326;POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))')))";
         Expression ex = TestFunctionResolving.getExpression(expr);
         assertEquals(4326, (int)Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testGeometryFunctionPushdown() throws Exception {
+        final String sql = "SELECT ST_AsText(geom) from x"; //$NON-NLS-1$
+        String ddl = "create foreign table x (geom geometry)";
+        QueryMetadataInterface md = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        
+        TestOptimizer.helpPlan(sql, md, 
+                new String[] {"SELECT g_0.geom FROM y.x AS g_0"}, 
+                TestOptimizer.getGenericFinder(), ComparisonMode.EXACT_COMMAND_STRING);
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setFunctionSupport(SourceSystemFunctions.ST_ASTEXT, true);
+        
+        TestOptimizer.helpPlan(sql, md, 
+                new String[] {"SELECT ST_AsText(g_0.geom) FROM y.x AS g_0"}, 
+                new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    /**
+     * contrived test as the source is returning the geography value
+     * @throws Exception
+     */
+    @Test public void testGeographyFunctionPushdown() throws Exception {
+        final String sql = "SELECT ST_AsEWKT(geog) from x"; //$NON-NLS-1$
+        String ddl = "create foreign table x (geog geography)";
+        QueryMetadataInterface md = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        
+        TestOptimizer.helpPlan(sql, md, 
+                new String[] {"SELECT g_0.geog FROM y.x AS g_0"}, 
+                TestOptimizer.getGenericFinder(), ComparisonMode.EXACT_COMMAND_STRING);
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setFunctionSupport(SourceSystemFunctions.ST_ASEWKT, true);
+        
+        TestOptimizer.helpPlan(sql, md, 
+                new String[] {"SELECT g_0.geog FROM y.x AS g_0"}, 
+                new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        
+        bsc.setCapabilitySupport(Capability.GEOGRAPHY_TYPE, true);
+        
+        TestOptimizer.helpPlan(sql, md, 
+                new String[] {"SELECT ST_AsEWKT(g_0.geog) FROM y.x AS g_0"}, 
+                new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
 }

@@ -246,5 +246,8 @@ public class SourceSystemFunctions {
     public static final String ST_Z = "st_z"; //$NON-NLS-1$
     public static final String ST_MAKEENVELOPE = "st_makeenvelope"; //$NON-NLS-1$
     public static final String ST_SNAPTOGRID = "st_snaptogrid"; //$NON-NLS-1$
-	
+    
+    //geography
+    public static final String ST_GEOGFROMWKB = "st_geogfromwkb"; //$NON-NLS-1$
+    public static final String ST_GEOGFROMTEXT = "st_geogfromtext"; //$NON-NLS-1$
 }

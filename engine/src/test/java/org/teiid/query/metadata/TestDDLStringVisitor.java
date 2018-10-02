@@ -365,6 +365,14 @@ public class TestDDLStringVisitor {
 		helpTest(ddl, expected);
 	}
 	
+	@Test public void testGeography() throws Exception {
+        String ddl = "CREATE foreign table G1( e1 geography)";
+        String expected = "CREATE FOREIGN TABLE G1 (\n" + 
+                "\te1 geography\n" + 
+                ");";
+        helpTest(ddl, expected);
+    }
+	
 	public static String[] someMethod(int param) {return null;}
 	
 	@Test public void testFunction() throws Exception {
