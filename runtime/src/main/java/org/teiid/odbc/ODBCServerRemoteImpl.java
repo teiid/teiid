@@ -362,35 +362,45 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			if (cursorName == null || cursorName.length() == 0) {
 				cursorName = UNNAMED;
 			}
-			Cursor cursor = cursorMap.get(cursorName);
-			if (cursor != null) {
-				errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40111, cursorName));
-				return;
-			}
-			
-			final PreparedStatementImpl stmt = this.connection.prepareStatement(sql, scroll?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-            this.executionFuture = stmt.submitExecute(ResultsMode.RESULTSET, null);
-            final String name = cursorName;
-            this.executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
-        		@Override
-        		public void onCompletion(ResultsFuture<Boolean> future) {
-        			executionFuture = null;
-                    try {
-                        if (future.get()) {
-		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-	                        cursorMap.put(name, new Cursor(name, sql, stmt, stmt.getResultSet(), cols, binary));
-    						client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
-							completion.getResultsReceiver().receiveResults(0);
-						}
-					} catch (Throwable e) {
-						completion.getResultsReceiver().exceptionOccurred(e);
-					}
-        		}
-			});					
+			//implicit binding - although there's no requirement or expectation that this should be prepared
+	        final PreparedStatementImpl stmt = this.connection.prepareStatement(sql, scroll?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			internalCursorExecute(completion, cursorName, null, stmt, sql, binary?new short[] {1}:null, null);					
 		} catch (SQLException e) {
 			completion.getResultsReceiver().exceptionOccurred(e);
 		} 
 	}
+
+    private void internalCursorExecute(final ResultsFuture<Integer> completion, final String cursorName, final String portalName, 
+            PreparedStatementImpl stmt, String sql, short[] resultColumnFormat, List<PgColInfo> cols) throws SQLException {
+        Cursor cursor = cursorMap.get(cursorName);
+        if (cursor != null) {
+        	errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40111, cursorName));
+        	return;
+        }
+        
+        this.executionFuture = stmt.submitExecute(ResultsMode.RESULTSET, null);
+        this.executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
+        	@Override
+        	public void onCompletion(ResultsFuture<Boolean> future) {
+        		executionFuture = null;
+                try {
+                    if (future.get()) {
+                        cursorMap.put(cursorName, 
+                                new Cursor(cursorName, sql, stmt, stmt.getResultSet(), cols==null?getPgColInfo(stmt.getResultSet().getMetaData()):cols, resultColumnFormat));
+                        if (portalName != null) {
+                            //we've upgraded the portal into a cursor, and need to remove it from the former
+                            //to prevent closure
+                            portalMap.remove(portalName); 
+                        }
+        				client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
+        				completion.getResultsReceiver().receiveResults(0);
+        			}
+        		} catch (Throwable e) {
+        			completion.getResultsReceiver().exceptionOccurred(e);
+        		}
+        	}
+        });
+    }
 	
 	private void cursorFetch(String cursorName, CursorDirection direction, int rows, final ResultsFuture<Integer> completion) throws SQLException {
 		Cursor cursor = this.cursorMap.get(cursorName);
@@ -475,6 +485,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
     private void sqlExecute(final String sql, final ResultsFuture<Integer> completion) throws SQLException {
     	String modfiedSQL = fixSQL(sql); 
+    	final boolean autoCommit = connection.getAutoCommit();
     	final StatementImpl stmt = connection.createStatement();
         executionFuture = stmt.submitExecute(modfiedSQL, null);
         completion.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
@@ -496,6 +507,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                 		String tag = PgBackendProtocol.getCompletionTag(sql, null);
                         client.sendResults(sql, stmt.getResultSet(), cols, completion, CursorDirection.FORWARD, -1, tag.equals("SELECT") || tag.equals("SHOW"), null); //$NON-NLS-1$ //$NON-NLS-2$
 	                } else {
+	                    if (autoCommit ^ connection.getAutoCommit()) {
+	                        //toggled autocommit, any portal is now invalid
+	                        closePortals(); 
+	                    }
 	                	client.sendUpdateCount(sql, stmt.getUpdateCount());
 	                	updateSessionProperties();
 	                	completion.getResultsReceiver().receiveResults(1);
@@ -531,8 +546,17 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				}
 				//just pull the initial information - leave statement formation until binding 
 				String modfiedSQL = fixSQL(sql);
-				stmt = this.connection.prepareStatement(modfiedSQL);
-				Prepared prepared = new Prepared(prepareName, sql, modfiedSQL, paramType, getPgColInfo(stmt.getMetaData()));
+				Matcher m = null;
+				String cursorName = null;
+				boolean scroll = false;
+				if ((m = cursorSelectPattern.matcher(modfiedSQL)).matches()){
+				    //per docs binary is irrelevant as that should be specifed by bind
+                    modfiedSQL = fixSQL(m.group(5));
+                    cursorName = normalizeName(m.group(1));
+                    scroll = m.group(3) != null && m.group(4) == null;
+                }
+				stmt = this.connection.prepareStatement(modfiedSQL, scroll?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+				Prepared prepared = new Prepared(prepareName, sql, modfiedSQL, paramType, getPgColInfo(stmt.getMetaData()), cursorName);
 				this.preparedMap.put(prepareName, prepared);
 				this.client.prepareCompleted(prepareName);
 			} catch (SQLException e) {
@@ -683,6 +707,29 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}
 		final PreparedStatementImpl stmt = query.stmt;
         try {
+            //prepared cursor case
+            if (query.prepared.cursorName != null) {
+                ResultsFuture<Integer> results = new ResultsFuture<Integer>();
+                results.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
+                    public void onCompletion(ResultsFuture<Integer> future) {
+                        try {                                   
+                            future.get();
+                            doneExecuting();
+                        } catch (ExecutionException e) {
+                            Throwable cause = e;
+                            while (cause instanceof ExecutionException && cause.getCause() != null && cause != cause.getCause()) {
+                                cause = cause.getCause();
+                            }
+                            errorOccurred(cause);
+                        } catch (Throwable e) {
+                            errorOccurred(e);
+                        }
+                    };
+                });
+                //TODO: pass in the full Portal/Prepared - likely requires getting rid of the Cursor class
+                internalCursorExecute(results, query.prepared.cursorName, query.name, stmt, query.prepared.sql, query.resultColumnFormat, query.prepared.columnMetadata);
+                return;
+            }
             this.executionFuture = stmt.submitExecute(ResultsMode.EITHER, null);
             executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
         		@Override
@@ -938,7 +985,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, bindName));
 		}
 		else {
-			this.client.sendResultSetDescription(query.prepared.columnMetadata, query.resultColumnFormat);
+		    if (query.prepared.cursorName != null) {
+		        //there are no columns for a prepared declare
+		        this.client.sendResultSetDescription(null, query.resultColumnFormat);
+		    } else {
+		        this.client.sendResultSetDescription(query.prepared.columnMetadata, query.resultColumnFormat);
+		    }
 		}
 	}
 
@@ -1023,10 +1075,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	@Override
 	public void terminate() {
-		for (Portal p: this.portalMap.values()) {
-			closePortal(p);
-		}
-		this.portalMap.clear();
+		closePortals();
+		
 		this.preparedMap.clear();
 		try {			
 			if (this.connection != null) {
@@ -1039,7 +1089,18 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			//ignore
 		}
 		this.client.terminated();
-	}	
+	}
+
+    private void closePortals() {
+        for (Portal p: this.portalMap.values()) {
+			closePortal(p);
+		}
+		for (Cursor p: this.cursorMap.values()) {
+            closePortal(p);
+        }
+		this.portalMap.clear();
+		this.cursorMap.clear();
+    }	
 	
 	@Override
 	public void flush() {
@@ -1282,12 +1343,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
      */
     static class Prepared {
 
-    	public Prepared (String name, String sql, String modifiedSql, int[] paramType, List<PgColInfo> columnMetadata) {
+        public Prepared (String name, String sql, String modifiedSql, int[] paramType, List<PgColInfo> columnMetadata, 
+                String cursorName) {
     		this.name = name;
     		this.sql = sql;
     		this.modifiedSql = modifiedSql;
     		this.paramType = paramType;
     		this.columnMetadata = columnMetadata;
+    		this.cursorName = cursorName;
     	}
     	
         /**
@@ -1311,6 +1374,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
          * calculated column metadata
          */
         final List<PgColInfo> columnMetadata;	
+        
+        /**
+         * The cursor name if this is a prepared cursor
+         */
+        final String cursorName;
     }
 
     /**
@@ -1346,8 +1414,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     
     static class Cursor extends Portal {
     	
-    	public Cursor (String name, String sql, PreparedStatementImpl stmt, ResultSetImpl rs, List<PgColInfo> colMetadata, boolean binary) {
-    		super(name, new Prepared(UNNAMED, sql, sql, null, colMetadata), binary?new short[] {1}:null, stmt);
+    	public Cursor (String name, String sql, PreparedStatementImpl stmt, ResultSetImpl rs, List<PgColInfo> colMetadata, short[] resultColumnFormat) {
+    		super(name, new Prepared(UNNAMED, sql, sql, null, colMetadata, null), resultColumnFormat, stmt);
     		this.rs = rs;
     	}
     }    

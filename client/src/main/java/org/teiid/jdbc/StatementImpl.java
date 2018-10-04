@@ -157,7 +157,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
 	private boolean closeOnCompletion;
     
-    static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*((?:(?:commit|rollback|abort)(?:\\s+(?:transaction|work))?)|(start\\s+transaction(\\s+[^;]*)?))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s+(?:(?:to|=)\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_CHARACTERISTIC_STATEMENT = Pattern.compile("\\s*set\\s+session\\s+characteristics\\s+as\\s+transaction\\s+isolation\\s+level\\s+((?:read\\s+(?:(?:committed)|(?:uncommitted)))|(?:repeatable\\s+read)|(?:serializable))\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+((?:transaction isolation level)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -481,15 +481,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         	match = SET_CHARACTERISTIC_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {
         		String value = match.group(1);
-				if (StringUtil.endsWithIgnoreCase(value, "uncommitted")) { //$NON-NLS-1$
-					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-				} else if (StringUtil.endsWithIgnoreCase(value, "committed")) { //$NON-NLS-1$
-					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-				} else if (StringUtil.startsWithIgnoreCase(value, "repeatable")) { //$NON-NLS-1$
-					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-				} else if ("serializable".equalsIgnoreCase(value)) { //$NON-NLS-1$
-					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);	
-				}        		
+				setIsolationLevel(value);        		
         		this.updateCounts = new int[] {0};
         		return booleanFuture(false);
         	}
@@ -502,14 +494,41 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		String command = match.group(1);
         		Boolean commit = null;
         		if (StringUtil.startsWithIgnoreCase(command, "start")) { //$NON-NLS-1$
-        			//TODO: this should force a start and through an exception if we're already in a txn
-        			this.getConnection().setAutoCommit(false);
-        		} else if (command.equalsIgnoreCase("commit")) { //$NON-NLS-1$
+        		    boolean success = false;
+                    try {
+            		    String characteristic = match.group(3);
+            		    if (characteristic != null) {
+            		        //this does not match the per connection semantics of jdbc,
+            		        //as this is per transaction
+            		        characteristic = characteristic.trim();
+        		            this.getMMConnection().saveTransactionCharacteristics();
+            		        if (StringUtil.endsWithIgnoreCase(characteristic, "only")) { //$NON-NLS-1$
+            		            this.getMMConnection().setReadOnly(true);
+            		        } else if (StringUtil.endsWithIgnoreCase(characteristic, "write")) { //$NON-NLS-1$
+            		            this.getMMConnection().setReadOnly(false);
+            		        } else {
+            		            int i = characteristic.indexOf("level"); //$NON-NLS-1$
+            		            if (i > -1) {
+            		                //remove isolation level
+            		                characteristic = characteristic.substring(i+5, characteristic.length()).trim();
+            		            }
+            		            setIsolationLevel(characteristic);
+            		        }
+            		    }
+            			//TODO: this should force a start and through an exception if we're already in a txn
+            			this.getConnection().setAutoCommit(false);
+            			success = true;
+        		    } finally {
+        		        if (!success) {
+        		            this.getMMConnection().restoreTransactionCharacteristics();
+        		        }
+        		    }
+        		} else if (StringUtil.startsWithIgnoreCase(command, "commit")) { //$NON-NLS-1$
         			commit = true;
         			if (synch) {
         				this.getConnection().setAutoCommit(true);
         			}
-        		} else if (command.equalsIgnoreCase("rollback")) { //$NON-NLS-1$
+        		} else if (StringUtil.startsWithIgnoreCase(command, "rollback") || StringUtil.startsWithIgnoreCase(command, "abort")) { //$NON-NLS-1$ //$NON-NLS-2$
         			commit = false;
         			if (synch || !this.getConnection().isInLocalTxn()) {
         				this.getConnection().rollback(false);
@@ -587,6 +606,18 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     		throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Timeout_before_complete")); //$NON-NLS-1$
     	}
     	return result;
+    }
+
+    private void setIsolationLevel(String value) throws SQLException {
+        if (StringUtil.endsWithIgnoreCase(value, "uncommitted")) { //$NON-NLS-1$
+        	this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+        } else if (StringUtil.endsWithIgnoreCase(value, "committed")) { //$NON-NLS-1$
+        	this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        } else if (StringUtil.startsWithIgnoreCase(value, "repeatable")) { //$NON-NLS-1$
+        	this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+        } else if ("serializable".equalsIgnoreCase(value)) { //$NON-NLS-1$
+        	this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);	
+        }
     }
 
 	private String unescapeId(String key) {

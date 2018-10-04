@@ -201,7 +201,6 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
     private String clientEncoding = DEFAULT_ENCODING;
     private ReflectionHelper clientProxy = new ReflectionHelper(ODBCClientRemote.class);
     private ChannelHandlerContext ctx;
-    private Object message;
     private int maxLobSize = (2*1024*1024); // 2 MB
 	private final int maxBufferSize;
 	private boolean requireSecure;
@@ -220,7 +219,6 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	@Override
 	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
 		this.ctx = ctx;
-		this.message = msg;
 		ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)msg;
 
 		try {
@@ -448,8 +446,10 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 
 	public static String getCompletionTag(String sql, Integer count) {
 		String tag;
-		if (StringUtil.startsWithIgnoreCase(sql, "BEGIN") || StringUtil.startsWithIgnoreCase(sql, "START TRANSACTION")) {
-			tag = "BEGIN";
+		if (StringUtil.startsWithIgnoreCase(sql, "BEGIN")) {
+		    tag = "BEGIN";
+		} else if (StringUtil.startsWithIgnoreCase(sql, "START TRANSACTION")) {
+			tag = "START TRANSACTION";
 		} else if (sql.indexOf(' ') == -1 || sql.equals("CLOSE CURSOR")) {
 			//should already be a completion tag
 			tag = sql.toUpperCase();

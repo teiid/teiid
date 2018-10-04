@@ -182,6 +182,13 @@ public class TestStatement {
 		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
 		assertFalse(statement.execute("rollback")); //$NON-NLS-1$
 		Mockito.verify(conn).rollback(false);
+		assertFalse(statement.execute("abort transaction")); //$NON-NLS-1$
+        Mockito.verify(conn, Mockito.times(2)).rollback(false);
+        assertFalse(statement.execute("rollback work")); //$NON-NLS-1$
+        Mockito.verify(conn, Mockito.times(3)).rollback(false);
+        
+		assertFalse(statement.execute("start transaction isolation level repeatable read")); //$NON-NLS-1$
+		Mockito.verify(conn).setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
 	}
 	
 	@Test public void testDisableLocalTransations() throws Exception {

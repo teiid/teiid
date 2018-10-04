@@ -100,6 +100,10 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     private Collection<Annotation> annotations;
     private Properties connectionProps;
     private Properties payload;
+    
+    //used to mimic transaction level, rather than connection level characteristics
+    private Boolean savedReadOnly;
+    private int savedIsolationLevel;
         
     public ConnectionImpl(ServerConnection serverConn, Properties info, String url) { 
     	this.connectionProps = info;
@@ -336,6 +340,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
             try {
                 directCommit();
             } finally {
+                restoreTransactionCharacteristics();
                 inLocalTxn = false; 
             }
         }
@@ -638,6 +643,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	                logger.fine(JDBCPlugin.Util.getString("MMConnection.Rollback_success")); //$NON-NLS-1$
             	}
             } finally {
+                restoreTransactionCharacteristics();
                 if (startTxn) {
                     this.inLocalTxn = false;
                 }
@@ -1063,5 +1069,18 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	public void setInLocalTxn(boolean inLocalTxn) {
 		this.inLocalTxn = inLocalTxn;
 	}
+
+    public void saveTransactionCharacteristics() {
+        this.savedReadOnly = this.readOnly;
+        this.savedIsolationLevel = this.transactionIsolation;
+    }
+    
+    public void restoreTransactionCharacteristics() {
+        if (savedReadOnly != null) {
+            this.readOnly = savedReadOnly;
+            this.transactionIsolation = savedIsolationLevel;
+            savedReadOnly = null;
+        }
+    }
 	
 }
