@@ -82,7 +82,7 @@ public class MetadataFactory extends NamespaceContainer {
 
     private String nameFormat;
 
-    private ClassLoader vdbClassLoader;
+    private transient ClassLoader vdbClassLoader;
     
     public MetadataFactory() {
         
