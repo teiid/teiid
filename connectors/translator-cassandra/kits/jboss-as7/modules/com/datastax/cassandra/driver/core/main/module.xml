@@ -6,8 +6,10 @@
     
     <resources>
         <resource-root path="cassandra-driver-core-${version.cassandra-driver-core}.jar"/>
-        <resource-root path="metrics-core-${version.com.codahale.metrics.metrics-core}.jar"/>
-        <resource-root path="guava-${version.com.google.guava}.jar"/>
+        <resource-root path="metrics-core-${version.io.dropwizard.metrics.metrics-core}.jar"/>
+        <resource-root path="guava-19.0.jar"/>
+        <resource-root path="jnr-posix-3.0.44.jar"/>
+        <resource-root path="jnr-ffi-2.1.7.jar"/>
     </resources>
 
     <dependencies>
@@ -15,10 +17,6 @@
         <module name="sun.jdk" />
         <module name="org.slf4j" />
         <module name="org.jboss.netty"/>
-        <module name="org.codehaus.jackson.jackson-core-asl"/>
-        <module name="org.codehaus.jackson.jackson-mapper-asl"/>
-        <module name="org.apache.thrift"/>
-        <module name="org.apache.httpcomponents"/>
     </dependencies>
 
 </module>
