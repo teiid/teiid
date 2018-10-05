@@ -37,7 +37,7 @@ import org.teiid.translator.TranslatorException;
  * 
  * TODO: make the {@link TeiidFunction} annotation public
  */
-public class UDFMetadataRepository extends MetadataRepository {
+public class UDFMetadataRepository implements MetadataRepository {
     
     @Override
     public void loadMetadata(MetadataFactory factory,

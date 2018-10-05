@@ -18,64 +18,8 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CONTENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ENABLED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.PERSISTENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.URL;
-import static org.teiid.jboss.TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.ASYNC_THREAD_POOL_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.DATA_ROLES_REQUIRED_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.DC_STACK_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.DETECTING_CHANGE_EVENTS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.ENCRYPT_FILES_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.INLINE_LOBS;
-import static org.teiid.jboss.TeiidConstants.LOB_CHUNK_SIZE_IN_KB_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_BUFFER_SPACE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_FILE_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_OPEN_FILES_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_PROCESSING_KB_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_RESERVED_KB_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_ROWS_FETCH_SIZE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_SOURCE_ROWS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_THREADS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.POLICY_DECIDER_MODULE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.PPC_CONTAINER_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PPC_ENABLE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PPC_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PREPARSER_MODULE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.PROCESSOR_BATCH_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.QUERY_THRESHOLD_IN_SECS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.QUERY_TIMEOUT;
-import static org.teiid.jboss.TeiidConstants.RSC_CONTAINER_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.RSC_ENABLE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.RSC_MAX_STALENESS_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.RSC_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.THREAD_COUNT_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TIME_SLICE_IN_MILLI_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.USE_DISK_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.WORKMANAGER;
-import static org.teiid.jboss.TeiidConstants.asBoolean;
-import static org.teiid.jboss.TeiidConstants.asInt;
-import static org.teiid.jboss.TeiidConstants.asLong;
-import static org.teiid.jboss.TeiidConstants.asString;
-import static org.teiid.jboss.TeiidConstants.isDefined;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.teiid.jboss.TeiidConstants.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -120,9 +64,9 @@ import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.Phase;
+import org.jboss.as.server.moduleservice.ServiceModuleLoader;
 import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
@@ -696,22 +640,21 @@ class TeiidAdd extends AbstractAddStepHandler {
         }
     }
 
+    /**
+     * Load the service and wrap it with a proxy to associate the appropriate classloader.
+     * @param type
+     * @param moduleName
+     * @return
+     * @throws OperationFailedException
+     */
     static <T> T buildService(Class<T> type, String moduleName) throws OperationFailedException {
-        final ModuleIdentifier moduleId;
-        final Module module;
-        try {
-            moduleId = ModuleIdentifier.create(moduleName);
-            module = Module.getCallerModuleLoader().loadModule(moduleId);
-        } catch (ModuleLoadException e) {
-            throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50069, moduleName), e);
-        }
-        ServiceLoader<T> services = module.loadService(type);
-        Iterator<T> iter = services.iterator();
-        if (!iter.hasNext()) {
-        	throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50089, type.getName(), moduleName));
-        }
-        final T instance = iter.next();
-		@SuppressWarnings("unchecked")
+        final T instance = loadService(type, moduleName, null);
+		return wrapWithClassLoaderProxy(type, instance);
+    }
+
+    static <T> T wrapWithClassLoaderProxy(Class<T> type,
+            final T instance) {
+        @SuppressWarnings("unchecked")
         T proxy = (T) Proxy.newProxyInstance(instance.getClass().getClassLoader(), new Class[] { type }, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -727,6 +670,30 @@ class TeiidAdd extends AbstractAddStepHandler {
             }
         });
         return proxy;
+    }
+
+    static <T> T loadService(Class<T> type, String moduleName, ServiceModuleLoader sml)
+            throws OperationFailedException {
+        Module module = null;
+        try {
+            module = Module.getModuleFromCallerModuleLoader(moduleName);
+        } catch (ModuleLoadException e) {
+            if (sml != null) {
+                try {
+                    module = sml.loadModule(moduleName);
+                } catch (ModuleLoadException e1) {
+                }
+            }
+            if (module == null) {
+                throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50069, moduleName), e);
+            }
+        }
+        ServiceLoader<T> services = module.loadService(type);
+        Iterator<T> iter = services.iterator();
+        if (!iter.hasNext()) {
+        	throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50089, type.getName(), moduleName));
+        }
+        return iter.next();
     }
 
     private BufferManagerService buildBufferManager(final OperationContext context, ModelNode node) throws OperationFailedException {

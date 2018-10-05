@@ -28,7 +28,7 @@ import org.teiid.translator.TranslatorException;
 /**
  * This Metadata Repository adds/corrects metadata for materialization 
  */
-public class MaterializationMetadataRepository extends MetadataRepository {
+public class MaterializationMetadataRepository implements MetadataRepository {
 	
 	public static final String ALLOW_MATVIEW_MANAGEMENT = "{http://www.teiid.org/ext/relational/2012}ALLOW_MATVIEW_MANAGEMENT";//$NON-NLS-1$
 	public static final String ON_VDB_START_SCRIPT = "{http://www.teiid.org/ext/relational/2012}ON_VDB_START_SCRIPT";//$NON-NLS-1$

@@ -37,7 +37,7 @@ import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class NativeMetadataRepository extends MetadataRepository {
+public class NativeMetadataRepository implements MetadataRepository {
 
 	public static final String IMPORT_PUSHDOWN_FUNCTIONS = "importer.importPushdownFunctions"; //$NON-NLS-1$
 

@@ -199,6 +199,7 @@ public class MetadataFactory extends NamespaceContainer {
 		table.setName(name);
 		setUUID(table);
 		this.schema.addTable(table);
+		table.setVirtual(!this.schema.isPhysical());
 		return table;
 	}
 

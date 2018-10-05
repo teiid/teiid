@@ -34,7 +34,7 @@ import org.teiid.metadata.TableStats;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class ChainingMetadataRepository extends MetadataRepository<Object, Object> {
+public class ChainingMetadataRepository implements MetadataRepository<Object, Object> {
 
 	final ArrayList<MetadataRepository<Object, Object>> repositories;
 

@@ -31,7 +31,7 @@ import org.teiid.translator.TypeFacility;
 /**
  * This Metadata repository adds the "native" procedure to all the execution factories that support them. 
  */
-public class DirectQueryMetadataRepository extends MetadataRepository {
+public class DirectQueryMetadataRepository implements MetadataRepository {
 	
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {

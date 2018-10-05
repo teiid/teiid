@@ -34,7 +34,7 @@ import org.teiid.translator.TranslatorException;
  */
 @SuppressWarnings("unused")
 @Deprecated
-public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository<F, C> {
+public abstract class DefaultMetadataRepository<F, C> implements MetadataRepository<F, C> {
 
 	/**
 	 * Calls the specific getter methods of this class to populate metadata on schema being loaded.

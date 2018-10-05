@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.server.moduleservice.ServiceModuleLoader;
 import org.jboss.msc.service.LifecycleContext;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
@@ -469,7 +470,8 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			return repo;
 		}
 		try {
-			repo = TeiidAdd.buildService(MetadataRepository.class, repoType);
+			repo = TeiidAdd.loadService(MetadataRepository.class, repoType, vdb.getAttachment(ServiceModuleLoader.class));
+			repo = TeiidAdd.wrapWithClassLoaderProxy(MetadataRepository.class, repo);
 		} catch (OperationFailedException e) {
 			throw new VirtualDatabaseException(IntegrationPlugin.Event.TEIID50057, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, repoType));
 		}

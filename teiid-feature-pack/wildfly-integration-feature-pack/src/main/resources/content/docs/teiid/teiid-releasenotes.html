@@ -45,6 +45,11 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-4731">TEIID-4731</a> The default authentication scheme for MongoDB resource adapter has been changed to SCRAM_SHA_1 to match with latest versions of MongoDB. If using MongoDB version less than 3.0, to restore previous functionality change/add SecurityType to 'None' in the resource adapter configuration.
 </ul>
 
+<h4>from 11.1</h4>
+<ul>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5497">TEIID-5497</a> MetadataRepository is again an interface.  Custom concrete classes will need to be modified to implement, rather than extend.</li>
+</ul>
+
 <h4>from 11.0</h4>
 <ul>
   <li><a href="https://issues.jboss.org/browse/TEIID-5411">TEIID-5411</a> Pluggable server discovery has been removed as a client feature.  The client will focus on better integration with existing load-balancing paradigms instead.</li>

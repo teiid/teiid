@@ -31,7 +31,7 @@ import org.teiid.query.QueryPlugin.Event;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class DDLFileMetadataRepository extends MetadataRepository {
+public class DDLFileMetadataRepository implements MetadataRepository {
 	
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory, String text) throws TranslatorException {

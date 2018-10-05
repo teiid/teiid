@@ -34,6 +34,7 @@ import org.jboss.as.server.deployment.module.ModuleSpecification;
 import org.jboss.as.server.deployment.module.MountHandle;
 import org.jboss.as.server.deployment.module.ResourceRoot;
 import org.jboss.as.server.deployment.module.TempFileProviderService;
+import org.jboss.as.server.moduleservice.ServiceModuleLoader;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
@@ -58,25 +59,24 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
 		
 		
 		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+		ServiceModuleLoader sml = deploymentUnit.getAttachment(Attachments.SERVICE_MODULE_LOADER);
+		deployment.addAttchment(ServiceModuleLoader.class, sml);
 		ArrayList<ModuleDependency> localDependencies = new ArrayList<ModuleDependency>();
 		ArrayList<ModuleDependency> userDependencies = new ArrayList<ModuleDependency>();
 		String moduleNames = deployment.getPropertyValue("lib"); //$NON-NLS-1$
+		ModuleLoader callerModuleLoader = Module.getCallerModuleLoader();
         if (moduleNames != null) {
         	StringTokenizer modules = new StringTokenizer(moduleNames);
         	while (modules.hasMoreTokens()) {
         		String moduleName = modules.nextToken().trim();
-            	ModuleIdentifier lib = ModuleIdentifier.create(moduleName);
-            	ModuleLoader moduleLoader = Module.getCallerModuleLoader();
-    	        
             	try {
-    	        	moduleLoader.loadModule(lib);
-    	        	localDependencies.add(new ModuleDependency(moduleLoader, ModuleIdentifier.create(moduleName), false, false, false, false));
+            	    callerModuleLoader.loadModule(moduleName);
+    	        	localDependencies.add(new ModuleDependency(callerModuleLoader, ModuleIdentifier.create(moduleName), false, false, false, false));
     	        } catch (ModuleLoadException e) {
     	        	// this is to handle JAR based deployments which take on name like "deployment.<jar-name>"
-    	        	moduleLoader = deploymentUnit.getAttachment(Attachments.SERVICE_MODULE_LOADER);
     	        	try {
-    	        		moduleLoader.loadModule(lib);
-    	        		userDependencies.add(new ModuleDependency(moduleLoader, ModuleIdentifier.create(moduleName), false, false, false, true));
+    	        		sml.loadModule(moduleName);
+    	        		userDependencies.add(new ModuleDependency(sml, ModuleIdentifier.create(moduleName), false, false, false, true));
     				} catch (ModuleLoadException e1) {
     		        	throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50088, moduleName, deployment.getName(), deployment.getVersion(), e1));					
     				}

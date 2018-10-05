@@ -32,7 +32,7 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class MultiSourceMetadataRepository extends MetadataRepository<Object, Object> {
+public class MultiSourceMetadataRepository implements MetadataRepository<Object, Object> {
 	
 	private String multiSourceColumnName;
 	

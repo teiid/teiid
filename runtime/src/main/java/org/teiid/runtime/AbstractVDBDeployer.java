@@ -66,7 +66,7 @@ public abstract class AbstractVDBDeployer {
 	/**
 	 * A wrapper to add a stateful text config
 	 */
-	private static class MetadataRepositoryWrapper<F, C> extends MetadataRepository<F, C> {
+	private static class MetadataRepositoryWrapper<F, C> implements MetadataRepository<F, C> {
 
 		private MetadataRepository<F, C> repo;
 		private String text;

@@ -211,6 +211,25 @@ public class IntegrationTestDeployment {
 		assertNull(t);
 	}
 	
+	@Test
+    public void testCustomMetadataRepository() throws Exception {
+        JavaArchive jar = getMetyArchive();
+        
+        try {
+            admin.deploy("mety.jar", jar.as(ZipExporter.class).exportAsInputStream());
+            String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+                    "<vdb name=\"test\" version=\"1\">\n" + 
+                    "    <model type=\"virtual\" name=\"mety\">\n" + 
+                    "        <metadata type = \"deployment.mety.jar\"/>" + 
+                    "    </model>\n" + 
+                    "</vdb>";
+            admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
+            AdminUtil.waitForVDBLoad(admin, "test", 1);
+        } finally {
+            admin.undeploy("mety.jar");    
+        }
+    }
+	
     @Test
     public void testTranslatorProperties() throws Exception {
         Collection<? extends PropertyDefinition> props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.OVERRIDE);
@@ -242,6 +261,16 @@ public class IntegrationTestDeployment {
 	            ArchivePaths.create("MANIFEST.MF"));
 		return jar;
 	}
+	
+	private JavaArchive getMetyArchive() {
+        JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "mety.jar")
+                  .addClasses(SampleMetadataRepository.class)
+                  .addAsManifestResource(new ByteArrayAsset(SampleMetadataRepository.class.getName().getBytes()),
+                        ArchivePaths.create("services/org.teiid.metadata.MetadataRepository"));
+        jar.addAsManifestResource(new ByteArrayAsset("Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api\n".getBytes()),
+                ArchivePaths.create("MANIFEST.MF"));
+        return jar;
+    }
 
 	@Test
 	public void testVDBConnectionType() throws Exception {

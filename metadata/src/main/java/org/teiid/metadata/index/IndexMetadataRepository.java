@@ -38,7 +38,7 @@ import org.teiid.translator.TranslatorException;
 /**
  * Loads MetadataRecords from index files.  
  */
-public class IndexMetadataRepository extends MetadataRepository {
+public class IndexMetadataRepository implements MetadataRepository {
 
 	private RecordFactory recordFactory = new RecordFactory() {
 		
