@@ -32,10 +32,10 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
 import com.datastax.driver.core.ColumnDefinitions;
+import com.datastax.driver.core.GuavaCompatibility;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
-import com.google.common.util.concurrent.MoreExecutors;
 
 public class CassandraQueryExecution implements ResultSetExecution {
 
@@ -85,7 +85,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 			public void run() {
 				executionContext.dataAvailable();
 			}
-		}, MoreExecutors.directExecutor());
+		}, GuavaCompatibility.INSTANCE.sameThreadExecutor());
 	}
 
 	@Override

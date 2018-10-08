@@ -36,8 +36,8 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
+import com.datastax.driver.core.GuavaCompatibility;
 import com.datastax.driver.core.ResultSetFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 
 public class CassandraUpdateExecution implements UpdateExecution {
 	
@@ -77,7 +77,7 @@ public class CassandraUpdateExecution implements UpdateExecution {
 			public void run() {
 				executionContext.dataAvailable();
 			}
-		}, MoreExecutors.sameThreadExecutor());
+		}, GuavaCompatibility.INSTANCE.sameThreadExecutor());
 	}
 
 	private void internalExecute() throws TranslatorException {
