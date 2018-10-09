@@ -23,6 +23,7 @@ import static org.junit.Assert.*;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -73,6 +74,18 @@ public class TestMetadataProcessor {
 	@Test public void testQuoteStringNull() {
 		JDBCMetadataProcessor jmp = new JDBCMetadataProcessor();
 		assertEquals("x", jmp.quoteName("x"));
+	}
+	
+	@Test public void testArrayRuntimeType() {
+	    JDBCMetadataProcessor jmp = new JDBCMetadataProcessor() {
+	        @Override
+	        protected String getNativeComponentType(String typeName) {
+	            return typeName.substring(0, typeName.length() -2);
+	        }
+	    };
+	    jmp.typeMapping.put("varchar", Types.VARCHAR);
+
+	    assertEquals("string[]", jmp.getRuntimeType(Types.ARRAY, "varchar[]", 100, 0));
 	}
 	
 }

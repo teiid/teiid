@@ -50,6 +50,14 @@ public class PostgreSQLMetadataProcessor
     	}
         return super.getRuntimeType(type, typeName, precision);                    
     }
+    
+    @Override
+    protected String getNativeComponentType(String typeName) {
+        if (typeName.startsWith("_")) { //$NON-NLS-1$
+            return typeName.substring(1);
+        }
+        return super.getNativeComponentType(typeName);
+    }
 
     @Override
     protected Column addColumn(ResultSet columns, Table table,

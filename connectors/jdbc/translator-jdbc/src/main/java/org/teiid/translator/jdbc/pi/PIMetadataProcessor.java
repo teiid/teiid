@@ -42,11 +42,10 @@ public class PIMetadataProcessor extends JDBCMetadataProcessor {
     }
     
     protected String getRuntimeType(int type, String typeName, int precision, int scale) {
-        String rtType = super.getRuntimeType(type, typeName, precision);
         if (typeName != null && guidPattern.matcher(typeName).find()) {
-            rtType = TypeFacility.RUNTIME_NAMES.STRING;
+            return TypeFacility.RUNTIME_NAMES.STRING;
         }
-        return rtType;
+        return super.getRuntimeType(type, typeName, precision, scale);
     } 
     
     public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)

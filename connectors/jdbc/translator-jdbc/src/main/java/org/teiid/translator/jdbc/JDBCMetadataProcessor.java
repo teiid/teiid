@@ -122,6 +122,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     private boolean importLargeAsLob;
     private boolean useIntegralTypes;
 
+    Map<String, Integer> typeMapping = new TreeMap<>();
 	
 	public void process(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
     	try {
@@ -152,23 +153,27 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		this.startQuoteString = getDefaultQuoteStr(metadata, startQuoteString);
 		this.endQuoteString = getDefaultQuoteStr(metadata, endQuoteString);
 		
-		if (widenUnsingedTypes) {
-			ResultSet rs = null;
-			try {
-				rs = metadata.getTypeInfo();
-			} catch (SQLException e) {
-				LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11021));
-			}
-			if (rs != null) {
-				while (rs.next()) {
-					String name = rs.getString(1);
-					boolean unsigned = rs.getBoolean(10);
-					if (unsigned && isUnsignedTypeName(name)) {
-						unsignedTypes.add(name);
-					}
-				}
-			}
-		}
+		ResultSet rs = null;
+        try {
+            rs = metadata.getTypeInfo();
+            while (rs.next()) {
+                String name = rs.getString(1);
+                int type = rs.getInt(2);
+                this.typeMapping.put(name, type);
+                if (widenUnsingedTypes) {
+                    boolean unsigned = rs.getBoolean(10);
+                    if (unsigned && isUnsignedTypeName(name)) {
+                        unsignedTypes.add(name);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11021));
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+        }
 		
 		if (useCatalogName) {
 			String separator = metadata.getCatalogSeparator();
@@ -545,10 +550,42 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
             }
             return TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
         }
+	    if (type == Types.ARRAY) {
+            return getComponentRuntimeType(typeName, precision, scale) + DataTypeManager.ARRAY_SUFFIX;
+        }
 		return getRuntimeType(type, typeName, precision);
 	}
 
-	protected String getRuntimeType(int type, String typeName, int precision) {
+	/**
+	 * Extract the component runtime type from the typeName
+	 * The default is simply object.
+	 * @param typeName
+	 * @param precision
+	 * @param scale
+	 * @return
+	 */
+	private String getComponentRuntimeType(String typeName, int precision, int scale) {
+	    String componentTypeName = getNativeComponentType(typeName);
+	    if (componentTypeName != null) {
+    	    Integer val = this.typeMapping.get(componentTypeName);
+    	    if (val != null) {
+    	        return getRuntimeType(val, componentTypeName, precision, scale);
+    	    }
+	    }
+        return TypeFacility.RUNTIME_NAMES.OBJECT;
+    }
+
+    /**
+     * Extract the native component type from the typeName, 
+     * or return null if that is not possible.
+     * @param typeName
+     * @return
+     */
+	protected String getNativeComponentType(String typeName) {
+        return null;
+    }
+
+    protected String getRuntimeType(int type, String typeName, int precision) {
 		if (importRowIdAsBinary && type == Types.ROWID) {
 			return TypeFacility.RUNTIME_NAMES.VARBINARY;
 		}

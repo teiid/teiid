@@ -501,7 +501,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
                 }
                 return super.getRuntimeType(type, typeName, precision);                    
             }
-            
+    		
             @Override
             protected String getGeographyMetadataTableName() {
                 return "sys.geography_columns"; //$NON-NLS-1$
@@ -510,6 +510,14 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
             @Override
             protected String getGeometryMetadataTableName() {
                 return "sys.geometry_columns"; //$NON-NLS-1$
+            }
+            
+            @Override
+            protected String getNativeComponentType(String typeName) {
+                if (typeName.endsWith("[]")) { //$NON-NLS-1$
+                    return typeName.substring(0, typeName.length()-1);
+                }
+                return super.getNativeComponentType(typeName);
             }
     	};
     }
