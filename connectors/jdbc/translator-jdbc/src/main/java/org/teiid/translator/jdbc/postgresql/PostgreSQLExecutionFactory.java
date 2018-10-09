@@ -22,6 +22,7 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -36,6 +37,8 @@ import java.util.List;
 
 import org.teiid.GeometryInputSource;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.JsonType;
 import org.teiid.language.*;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -265,6 +268,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
     	convertModifier.addTypeMapping("geography", FunctionModifier.GEOGRAPHY); //$NON-NLS-1$
     	convertModifier.addTypeMapping("geometry", FunctionModifier.GEOMETRY); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("json", FunctionModifier.JSON); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
     	convertModifier.addConvert(FunctionModifier.FLOAT, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
     	convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
@@ -1038,6 +1042,24 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsGeographyType() {
         return this.postGisVersion.compareTo(ONE_5) >= 0;
+    }
+    
+    @Override
+    public Object retrieveValue(CallableStatement results, int parameterIndex,
+            Class<?> expectedType) throws SQLException {
+        if (expectedType == TypeFacility.RUNTIME_TYPES.JSON) {
+            return new JsonType(new ClobImpl(results.getString(parameterIndex)));
+        }
+        return super.retrieveValue(results, parameterIndex, expectedType);
+    }
+    
+    @Override
+    public Object retrieveValue(ResultSet results, int columnIndex,
+            Class<?> expectedType) throws SQLException {
+        if (expectedType == TypeFacility.RUNTIME_TYPES.JSON) {
+            return new JsonType(new ClobImpl(results.getString(columnIndex)));
+        }
+        return super.retrieveValue(results, columnIndex, expectedType);
     }
     
 }

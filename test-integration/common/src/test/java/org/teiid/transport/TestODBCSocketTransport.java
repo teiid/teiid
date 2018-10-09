@@ -786,6 +786,28 @@ public class TestODBCSocketTransport {
         assertEquals("00200000030000000000000001000000054044000000000000000000000000000040490000000000004049000000000000000000000000000040490000000000000000000000000000000000000000000040440000000000000000000000000000", rs.getString(1));
     }
     
+    @Test public void testGeography() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT ST_GeogFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))')");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        assertEquals("geography", rsmd.getColumnTypeName(1));
+        assertEquals("java.lang.Object", rsmd.getColumnClassName(1));
+        assertEquals("0020000003000010E600000001000000054044000000000000000000000000000040490000000000004049000000000000000000000000000040490000000000000000000000000000000000000000000040440000000000000000000000000000", rs.getString(1));
+    }
+    
+    @Test public void testJson() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT jsonParse('[1,2]', false);");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        assertEquals("json", rsmd.getColumnTypeName(1));
+        assertEquals("org.postgresql.util.PGobject", rsmd.getColumnClassName(1));
+        assertEquals("[1,2]", rs.getString(1));
+    }
+    
     @Test public void testConstraintDef() throws Exception {
         Statement s = conn.createStatement();
         s.execute("SELECT pg_get_constraintdef((select oid from pg_constraint where contype = 'f' and conrelid = (select oid from pg_class where relname = 'Functions')), true)");

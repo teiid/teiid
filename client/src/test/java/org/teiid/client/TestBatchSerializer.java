@@ -33,9 +33,12 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.JsonType;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.unittest.TimestampUtil;
 
@@ -164,10 +167,10 @@ public class TestBatchSerializer {
 		assertEquals(10000, ((GeometryType)val).getSrid());
     	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)0); //object serialization - should fail on the client side
     	
-    	val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)1); //blob serialization
+    	val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
     	assertFalse(val instanceof GeometryType);
     	
-    	val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(geometryType)}, (byte)1); //blob serialization
+    	val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
     	assertFalse(val instanceof GeometryType);
     }
     
@@ -180,11 +183,25 @@ public class TestBatchSerializer {
         assertEquals(4326, ((GeographyType)val).getSrid());
         helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOGRAPHY}, new List[] {Arrays.asList(geometryType)}, (byte)0); //object serialization - should fail on the client side
         
-        val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOGRAPHY}, new List[] {Arrays.asList(geometryType)}, (byte)1); //blob serialization
+        val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOGRAPHY}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
         assertFalse(val instanceof GeographyType);
         
-        val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(geometryType)}, (byte)1); //blob serialization
+        val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
         assertFalse(val instanceof GeographyType);
+    }
+    
+    @Test public void testJson() throws IOException, ClassNotFoundException {
+        JsonType json = new JsonType(new ClobImpl("5"));
+        json.setReferenceStreamId(null);
+        Object val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.JSON}, new List[] {Arrays.asList(json)}, BatchSerializer.VERSION_GEOGRAPHY).get(0).get(0);
+        assertTrue(val instanceof JsonType);
+        helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.JSON}, new List[] {Arrays.asList(json)}, (byte)0); //object serialization - should fail on the client side
+        
+        val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.JSON}, new List[] {Arrays.asList(json)}, (byte)1).get(0).get(0); //clob serialization
+        assertTrue(val instanceof ClobType);
+        
+        val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(json)}, (byte)1).get(0).get(0); //clob serialization
+        assertTrue(val instanceof ClobType);
     }
 
 }

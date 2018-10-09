@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.ClobType;
+import org.teiid.core.types.JsonType;
 import org.teiid.query.function.JSONFunctionMethods.JSONBuilder;
 import org.teiid.query.util.CommandContext;
 
@@ -31,7 +31,7 @@ import org.teiid.query.util.CommandContext;
  */
 public class JSONArrayAgg extends SingleArgumentAggregateFunction {
 
-	private ClobType result;
+	private JsonType result;
 	private JSONBuilder concat;
     
     public JSONArrayAgg() {

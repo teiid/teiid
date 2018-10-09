@@ -47,6 +47,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.JsonType;
 import org.teiid.core.util.MixinProxy;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
@@ -1238,6 +1239,13 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
                     return retrieveGeometryValue(results, columnIndex);
     			}
+    			case DataTypeManager.DefaultTypeCodes.JSON:
+    			    try {
+                        return new JsonType(results.getClob(columnIndex));
+                    } catch (SQLException e) {
+                        // ignore
+                    }
+                    break;
     			case DataTypeManager.DefaultTypeCodes.CLOB: {
     				try {
     					return results.getClob(columnIndex);
@@ -1348,6 +1356,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
     				return retrieveGeometryValue(results, parameterIndex);
     			}
+    			case DataTypeManager.DefaultTypeCodes.JSON:
+    			    try {
+                        new JsonType(results.getClob(parameterIndex));
+                    } catch (SQLException e) {
+                        // ignore
+                    }
     			case DataTypeManager.DefaultTypeCodes.CLOB: {
     				try {
     					return results.getClob(parameterIndex);
@@ -1733,7 +1747,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 */
 	protected boolean isNonAscii(Expression obj) {
         if (obj == null 
-                || !(obj.getType() == TypeFacility.RUNTIME_TYPES.STRING || obj.getType() == TypeFacility.RUNTIME_TYPES.CHAR || obj.getType() == TypeFacility.RUNTIME_TYPES.CLOB)) {
+                || !(obj.getType() == TypeFacility.RUNTIME_TYPES.STRING || obj.getType() == TypeFacility.RUNTIME_TYPES.CHAR 
+                || obj.getType() == TypeFacility.RUNTIME_TYPES.CLOB || obj.getType() == TypeFacility.RUNTIME_TYPES.JSON)) {
             return false;
         }
         if (obj instanceof ColumnReference) {
@@ -1742,7 +1757,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                     && (StringUtil.startsWithIgnoreCase(cr.getMetadataObject().getNativeType(), "N")); //$NON-NLS-1$
             
         }
-        if (obj.getType() == TypeFacility.RUNTIME_TYPES.CLOB) {
+        if (obj.getType() == TypeFacility.RUNTIME_TYPES.CLOB || obj.getType() == TypeFacility.RUNTIME_TYPES.JSON) {
             return true;
         }
         if (obj instanceof Literal) {

@@ -78,6 +78,7 @@ public final class JDBCSQLTypeInfo {
     	addType(DataTypeManager.DefaultDataTypes.BOOLEAN, 5, 1, DataTypeManager.DefaultDataClasses.BOOLEAN.getName(), Types.BIT, Types.BOOLEAN);
     	addType(new String[] {DataTypeManager.DefaultDataTypes.BYTE, "tinyint"}, 4, 3, DataTypeManager.DefaultDataClasses.BYTE.getName(), Types.TINYINT); //$NON-NLS-1$
     	addType(DataTypeManager.DefaultDataTypes.CHAR, 1, 1, DataTypeManager.DefaultDataClasses.CHAR.getName(), Types.CHAR);
+    	addType(DataTypeManager.DefaultDataTypes.JSON, Integer.MAX_VALUE, Integer.MAX_VALUE, Clob.class.getName(), Types.CLOB, Types.NCLOB, Types.LONGNVARCHAR, Types.LONGVARCHAR);
     	addType(DataTypeManager.DefaultDataTypes.CLOB, Integer.MAX_VALUE, Integer.MAX_VALUE, Clob.class.getName(), Types.CLOB, Types.NCLOB, Types.LONGNVARCHAR, Types.LONGVARCHAR);
     	addType(DataTypeManager.DefaultDataTypes.DATE, 10, 10, DataTypeManager.DefaultDataClasses.DATE.getName(), Types.DATE);
     	addType(DataTypeManager.DefaultDataTypes.DOUBLE, 22, 20, DataTypeManager.DefaultDataClasses.DOUBLE.getName(), Types.DOUBLE, Types.FLOAT);

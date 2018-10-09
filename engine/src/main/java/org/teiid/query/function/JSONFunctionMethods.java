@@ -31,6 +31,7 @@ import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BaseClobType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
@@ -38,6 +39,7 @@ import org.teiid.core.types.ClobType.Type;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
+import org.teiid.core.types.JsonType;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.json.simple.ContentHandler;
@@ -137,16 +139,16 @@ public class JSONFunctionMethods {
 				startValue(key);
 				if (object == null) {
 					writer.append("null"); //$NON-NLS-1$
-				} else if (object instanceof ClobType) {
-					ClobType clob = (ClobType)object;
-					if (clob.getType() == Type.JSON) {
-						Reader r = clob.getCharacterStream();
+				} else if (object instanceof BaseClobType) {
+					if (object instanceof JsonType) {
+						Reader r = ((JsonType)object).getCharacterStream();
 						try {
 							ObjectConverterUtil.write(writer, r, -1, false);
 						} finally {
 							r.close();
 						}
 					} else {
+					    ClobType clob = (ClobType)object;
 						writer.append('"');
 						JSONParser.escape(clob.getCharSequence(), writer);
 						writer.append('"');
@@ -193,7 +195,7 @@ public class JSONFunctionMethods {
 			return writer;
 		}
 		
-		public ClobType close(CommandContext cc) throws TeiidProcessingException {
+		public JsonType close(CommandContext cc) throws TeiidProcessingException {
 			try {
 				writer.close();
 			} catch (IOException e) {
@@ -204,15 +206,13 @@ public class JSONFunctionMethods {
 		        //detach if just in memory
 		    	byte[] bytes = fsisf.getMemoryBytes();
 		    	fsisf.free();
-		    	ClobType result = new ClobType(new ClobImpl(new String(bytes, Streamable.CHARSET)));
-		        result.setType(Type.JSON);
+		    	JsonType result = new JsonType(new ClobImpl(new String(bytes, Streamable.CHARSET)));
 		        return result;
 			}
-	        ClobType result = new ClobType(new ClobImpl(fsisf, -1));
+			JsonType result = new JsonType(new ClobImpl(fsisf, -1));
 	        if (cc != null) {
 	        	cc.addCreatedLob(fsisf);
 	        }
-	        result.setType(Type.JSON);
 	        return result;
 		}
 
@@ -237,10 +237,10 @@ public class JSONFunctionMethods {
 	}
 
 	@TeiidFunction(category=FunctionCategoryConstants.JSON)
-	public static ClobType jsonParse(ClobType val, boolean wellformed) throws SQLException, IOException, ParseException {
+	public static JsonType jsonParse(ClobType val, boolean wellformed) throws SQLException, IOException, ParseException {
 		Reader r = null;
 		if (val.getType() == Type.JSON) {
-			return val;
+			return new JsonType(val.getReference());
 		}
 		if (!wellformed) {
 			r = val.getCharacterStream();
@@ -250,9 +250,7 @@ public class JSONFunctionMethods {
 				JSONParser parser = new JSONParser();
 				parser.parse(r, validatingContentHandler);
 			}
-			ClobType ct = new ClobType(val.getReference());
-			ct.setType(Type.JSON);
-			return ct;
+			return new JsonType(val.getReference());
 		} finally {
 			if (r != null) {
 				r.close();
@@ -261,7 +259,7 @@ public class JSONFunctionMethods {
 	}
 	
 	@TeiidFunction(category=FunctionCategoryConstants.JSON)
-	public static ClobType jsonParse(BlobType val, boolean wellformed) throws SQLException, IOException, ParseException {
+	public static JsonType jsonParse(BlobType val, boolean wellformed) throws SQLException, IOException, ParseException {
 		InputStreamReader r = XMLSystemFunctions.getJsonReader(val);
 		try {
 			if (!wellformed) {
@@ -271,16 +269,14 @@ public class JSONFunctionMethods {
 			ClobImpl clobImpl = new ClobImpl();
 			clobImpl.setStreamFactory(new InputStreamFactory.BlobInputStreamFactory(val.getReference()));
 			clobImpl.setEncoding(r.getEncoding());
-			ClobType ct = new ClobType(clobImpl);
-			ct.setType(Type.JSON);
-			return ct;
+			return new JsonType(clobImpl);
 		} finally {
 			r.close();
 		}
 	}
 	
 	@TeiidFunction(category=FunctionCategoryConstants.JSON)
-	public static ClobType jsonArray(CommandContext context, Object... vals) throws TeiidProcessingException, BlockedException, TeiidComponentException {
+	public static JsonType jsonArray(CommandContext context, Object... vals) throws TeiidProcessingException, BlockedException, TeiidComponentException {
 		if (vals == null) {
 			return null;
 		}

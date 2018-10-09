@@ -1115,7 +1115,7 @@ public class ExecutionFactory<F, C> {
 	 * @since 8.0
 	 */
 	public boolean supportsConvert(int fromType, int toType) {
-		if (fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.CLOB || fromType == RUNTIME_CODES.XML 
+		if (fromType == RUNTIME_CODES.OBJECT || (fromType == RUNTIME_CODES.CLOB && toType != RUNTIME_CODES.JSON) || fromType == RUNTIME_CODES.XML 
 		        || fromType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.CLOB || toType == RUNTIME_CODES.XML 
 		        || toType == RUNTIME_CODES.BLOB || (fromType == RUNTIME_CODES.GEOGRAPHY && !supportsGeographyType())) {
 			return false;

@@ -498,6 +498,7 @@ TOKEN : /* NonReserved words */
 |   <EXCEPTION: "exception">
 |   <RAISE: "raise">
 |   <CHAIN: "chain">
+|   <JSON: "json">
 |   <JSONARRAY_AGG: "jsonarray_agg">
 |   <JSONOBJECT: "jsonobject">
 |   <PRESERVE: "preserve">
@@ -636,7 +637,7 @@ Token nonReserved() :
      |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
-     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
+     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSON>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
      |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>|<GEOGRAPHY>)
     {
@@ -4927,6 +4928,7 @@ ParsedDataType parseDataTypePrimary() :
 		(typeToken = <OBJECT> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <BLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <CLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
+		typeToken = <JSON> |
 		(typeToken = <VARBINARY> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) |
 		typeToken = <GEOMETRY> |
 		typeToken = <GEOGRAPHY> |

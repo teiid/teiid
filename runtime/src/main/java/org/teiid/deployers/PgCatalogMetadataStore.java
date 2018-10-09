@@ -599,6 +599,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"1700,numeric,-1,b,0,-1,0,0,bigdecimal\n" + //$NON-NLS-1$
 			"142,xml,-1,b,0,-1,0,0,xml\n" + //$NON-NLS-1$
 			"14939,lo,-1,b,0,-1,0,0,\n" + //$NON-NLS-1$
+			"3803,json,-1,b,0,-1,0,0,json\n" + //$NON-NLS-1$
 			"32816,geometry,-1,b,0,-1,0,0,geometry\n" + //$NON-NLS-1$
 			"33454,geography,-1,b,0,-1,0,0,geography\n" + //$NON-NLS-1$
 			"2278,void,4,p,0,-1,0,0,\n" + //$NON-NLS-1$
@@ -620,6 +621,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"1115,_timestamp,-1,b,0,-1,0,1114,timestamp[]\n" + //$NON-NLS-1$
 			"1182,_date,-1,b,0,-1,0,1082,date[]\n" + //$NON-NLS-1$
 			"1183,_time,-1,b,0,-1,0,1083,time[]\n" + //$NON-NLS-1$
+			"3811,_json,-1,b,0,-1,0,3811,json[]\n" + //$NON-NLS-1$
 			"32824,_geometry,-1,b,0,-1,0,32816,geometry[]\n" + //$NON-NLS-1$
 			"33462,_geography,-1,b,0,-1,0,33454,geography[]\n" + //$NON-NLS-1$
 			"143,_xml,-1,b,0,-1,0,142,xml[]\n" + //$NON-NLS-1$

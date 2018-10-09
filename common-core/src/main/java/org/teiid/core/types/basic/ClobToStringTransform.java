@@ -23,10 +23,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.types.ClobType;
+import org.teiid.core.types.BaseClobType;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.types.TransformationException;
 
 
 public class ClobToStringTransform extends AnyToStringTransform {
@@ -34,6 +34,10 @@ public class ClobToStringTransform extends AnyToStringTransform {
 	public ClobToStringTransform() {
 		super(DefaultDataClasses.CLOB);
 	}
+	
+    public ClobToStringTransform(Class<? extends BaseClobType> fromType) {
+        super(fromType);
+    }
 	
     /**
      * This method transforms a value of the source type into a value
@@ -44,7 +48,7 @@ public class ClobToStringTransform extends AnyToStringTransform {
      * the transformation fails
      */
     public Object transformDirect(Object value) throws TransformationException {
-        ClobType source = (ClobType)value;
+        BaseClobType source = (BaseClobType)value;
         BufferedReader reader = null;
         try {
             reader = new BufferedReader (source.getCharacterStream());

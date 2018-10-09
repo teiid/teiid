@@ -45,6 +45,7 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.JsonType;
 import org.teiid.core.types.XMLType;
 import org.teiid.jdbc.JDBCPlugin;
 
@@ -63,6 +64,7 @@ import org.teiid.jdbc.JDBCPlugin;
  *   uses a safer date/time serialization
  * <li>version 3: starts with 8.6 and adds better repeated string performance
  * <li>version 4: starts with 8.10 and adds the geometry type
+ * <li>version 5: starts with 11.2 and adds the geography and json types
  * </ul>
  */
 public class BatchSerializer {
@@ -92,6 +94,7 @@ public class BatchSerializer {
         serializers.put(DataTypeManager.DefaultDataTypes.TIMESTAMP,     new ColumnSerializer[] {new TimestampColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.STRING,     	new ColumnSerializer[] {defaultSerializer, new StringColumnSerializer1(), new StringColumnSerializer1(), new StringColumnSerializer3()});
         serializers.put(DataTypeManager.DefaultDataTypes.CLOB,  	   	new ColumnSerializer[] {defaultSerializer, new ClobColumnSerializer1()});
+        serializers.put(DataTypeManager.DefaultDataTypes.JSON,          new ColumnSerializer[] {defaultSerializer, new ClobColumnSerializer1(), new ClobColumnSerializer1(), new ClobColumnSerializer1(), new ClobColumnSerializer1(), new JsonColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.BLOB,     		new ColumnSerializer[] {defaultSerializer, new BlobColumnSerializer1()});
         serializers.put(DataTypeManager.DefaultDataTypes.GEOMETRY,     	new ColumnSerializer[] {defaultSerializer, new GeometryColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.GEOGRAPHY,      new ColumnSerializer[] {defaultSerializer, new GeographyColumnSerializer()});
@@ -146,7 +149,9 @@ public class BatchSerializer {
 			if ((code == DataTypeManager.DefaultTypeCodes.GEOMETRY && version < VERSION_GEOMETRY)
 			        || (code == DataTypeManager.DefaultTypeCodes.GEOGRAPHY && version < VERSION_GEOGRAPHY)){
 				code = DataTypeManager.DefaultTypeCodes.BLOB;
-			}
+			} else if ((code == DataTypeManager.DefaultTypeCodes.JSON && version < VERSION_GEOGRAPHY)){
+                code = DataTypeManager.DefaultTypeCodes.CLOB;
+            }
     		out.writeByte((byte)code);
     		for (int i = 0; i < values.length;) {
     			writeIsNullData(out, i, values);
@@ -392,6 +397,19 @@ public class BatchSerializer {
 		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
         	ClobType ct = new ClobType();
         	ct.readExternal(in);
+            return ct;
+        }
+    }
+    
+    private static class JsonColumnSerializer extends ColumnSerializer {
+        @Override
+        protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
+            ((Externalizable)obj).writeExternal(out);
+        }
+        @Override
+        protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
+            JsonType ct = new JsonType();
+            ct.readExternal(in);
             return ct;
         }
     }
@@ -958,11 +976,16 @@ public class BatchSerializer {
         if (DataTypeManager.isArrayType(type)) {
             return getClientSafeType(DataTypeManager.getComponentType(type), clientSerializationVersion) + DataTypeManager.ARRAY_SUFFIX;
         }
-        if (type.equals(DataTypeManager.DefaultDataTypes.GEOMETRY) && clientSerializationVersion < BatchSerializer.VERSION_GEOMETRY) {
+        if (clientSerializationVersion < BatchSerializer.VERSION_GEOMETRY && type.equals(DataTypeManager.DefaultDataTypes.GEOMETRY)) {
             return DataTypeManager.DefaultDataTypes.BLOB;
         }  
-        if (type.equals(DataTypeManager.DefaultDataTypes.GEOGRAPHY) && clientSerializationVersion < BatchSerializer.VERSION_GEOGRAPHY) {
-            return DataTypeManager.DefaultDataTypes.BLOB;
+        if (clientSerializationVersion < BatchSerializer.VERSION_GEOGRAPHY) {
+            if (type.equals(DataTypeManager.DefaultDataTypes.GEOGRAPHY)) {
+                return DataTypeManager.DefaultDataTypes.BLOB;
+            }
+            if (type.equals(DataTypeManager.DefaultDataTypes.JSON)) {
+                return DataTypeManager.DefaultDataTypes.CLOB;
+            }
         }
         return type;
     }

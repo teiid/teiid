@@ -495,7 +495,10 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
                 } 
             	if ("geography".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
                     return TypeFacility.RUNTIME_NAMES.GEOGRAPHY;
-                } 
+                }
+            	if ("json".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                    return TypeFacility.RUNTIME_NAMES.JSON;
+                }
                 return super.getRuntimeType(type, typeName, precision);                    
             }
             

@@ -44,7 +44,10 @@ public class PGUtil {
 	
     public static final int PG_TYPE_GEOGRAPHY = 33454;
     public static final int PG_TYPE_GEOGRAPHYARRAY = 33462;
-    
+
+    public static final int PG_TYPE_JSON = 3803;
+    public static final int PG_TYPE_JSONARRAY = 3811;
+
 	public static final int PG_TYPE_OIDVECTOR = 30;
 	public static final int PG_TYPE_INT2VECTOR = 22;
     public static final int PG_TYPE_OIDARRAY = 1028;
@@ -129,7 +132,10 @@ public class PGUtil {
             return PG_TYPE_XML;
         	
         case Types.LONGVARCHAR:
-        case Types.CLOB:            
+        case Types.CLOB:
+            if (typeName.equalsIgnoreCase("json")) { //$NON-NLS-1$
+                return PG_TYPE_JSON; 
+            }
             return PG_TYPE_TEXT;
             
         case Types.ARRAY:
@@ -162,6 +168,8 @@ public class PGUtil {
                 return PG_TYPE_GEOGRAPHYARRAY;
             case "xml[]": //$NON-NLS-1$
                 return PG_TYPE_XMLARRAY;
+            case "json[]": //$NON-NLS-1$
+                return PG_TYPE_JSONARRAY;
             default:
                 return PG_TYPE_TEXTARRAY;
             }

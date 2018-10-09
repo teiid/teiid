@@ -169,6 +169,17 @@ public class TestJDBCSocketTransport {
 		assertEquals("", s.getResultSet().getString(1));
 	}
 	
+	@Test public void testJsonStreaming() throws Exception {
+        Statement s = conn.createStatement();
+        assertTrue(s.execute("select jsonParse('5', true) from sys.tables"));
+        s.getResultSet().next();
+        assertEquals("5", s.getResultSet().getString(1));
+        toggleInline(false);
+        assertTrue(s.execute("select jsonParse('5', true) from sys.tables"));
+        s.getResultSet().next();
+        assertEquals("5", s.getResultSet().getString(1));
+    }
+	
 	@Test public void testVarbinary() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select X'aab1'"));

@@ -28,8 +28,8 @@ import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BaseClobType;
 import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobType;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
@@ -122,8 +122,8 @@ public class LobWorkItem implements Work {
             XMLType xml = (XMLType)streamable;
             return new ByteLobChunkStream(xml.getBinaryStream(), chunkSize);
         }
-        else if (streamable instanceof ClobType) {
-            ClobType clob = (ClobType)streamable;
+        else if (streamable instanceof BaseClobType) {
+            BaseClobType clob = (BaseClobType)streamable;
             return new ByteLobChunkStream(new ReaderInputStream(clob.getCharacterStream(), Charset.forName(Streamable.ENCODING)), chunkSize);            
         } 
         BlobType blob = (BlobType)streamable;

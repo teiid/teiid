@@ -39,7 +39,7 @@ public class TestDataTypeManager {
         assertEquals("Mismatch in expected and actual MetaMatrix type class for [" + value + "]: ", expectedClass, actualClass); //$NON-NLS-1$ //$NON-NLS-2$
     }
     public static String[] dataTypes = {"string","char","boolean","byte","short","integer","long","biginteger",  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-        "float","double","bigdecimal","date","time","timestamp","object","blob","clob", DataTypeManager.DefaultDataTypes.XML}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
+        "float","double","bigdecimal","date","time","timestamp","object","blob","clob", "xml"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
     
     /**
      * I - Implicitly Converted
@@ -163,7 +163,12 @@ public class TestDataTypeManager {
             assertEquals("Didn't get match for "+ type, JDBCSQLTypeInfo.getSQLType(type), JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.getDataTypeClass(type))); //$NON-NLS-1$
             
             //the classnames will not match the runtime types for xml, clob, blob
-            if (!type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.NULL) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.VARBINARY) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.XML) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CLOB) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.BLOB)) {
+            if (!type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.NULL) 
+                    && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.VARBINARY) 
+                    && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.XML) 
+                    && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CLOB) 
+                    && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.BLOB)
+                    && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.JSON)) {
                 assertEquals("Didn't get match for "+ type, JDBCSQLTypeInfo.getSQLType(type), JDBCSQLTypeInfo.getSQLTypeFromClass(DataTypeManager.getDataTypeClass(type).getName())); //$NON-NLS-1$
             }
         }

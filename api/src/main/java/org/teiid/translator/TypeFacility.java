@@ -27,15 +27,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import org.teiid.core.types.BinaryType;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.GeographyType;
-import org.teiid.core.types.GeometryType;
-import org.teiid.core.types.JDBCSQLTypeInfo;
-import org.teiid.core.types.NullType;
-import org.teiid.core.types.XMLType;
+import org.teiid.core.types.*;
 import org.teiid.core.types.basic.ObjectToAnyTransform;
 import org.teiid.core.util.TimestampWithTimezone;
 
@@ -66,6 +58,7 @@ public class TypeFacility {
 		public static final int VARBINARY = DataTypeManager.DefaultTypeCodes.VARBINARY;
 		public static final int GEOMETRY = DataTypeManager.DefaultTypeCodes.GEOMETRY;
 		public static final int GEOGRAPHY = DataTypeManager.DefaultTypeCodes.GEOGRAPHY;
+		public static final int JSON = DataTypeManager.DefaultTypeCodes.JSON;
 	}
 
     public interface RUNTIME_TYPES {
@@ -91,7 +84,7 @@ public class TypeFacility {
         public static final Class<BinaryType> VARBINARY         = DataTypeManager.DefaultDataClasses.VARBINARY;
         public static final Class<GeometryType> GEOMETRY         = DataTypeManager.DefaultDataClasses.GEOMETRY;
         public static final Class<GeographyType> GEOGRAPHY         = DataTypeManager.DefaultDataClasses.GEOGRAPHY;
-        
+        public static final Class<JsonType> JSON         = DataTypeManager.DefaultDataClasses.JSON;
     }
     
     public static final class RUNTIME_NAMES {
@@ -117,6 +110,7 @@ public class TypeFacility {
         public static final String VARBINARY    = DataTypeManager.DefaultDataTypes.VARBINARY;
         public static final String GEOMETRY     = DataTypeManager.DefaultDataTypes.GEOMETRY;
         public static final String GEOGRAPHY     = DataTypeManager.DefaultDataTypes.GEOGRAPHY;
+        public static final String JSON         = DataTypeManager.DefaultDataTypes.JSON;
     }
     
     /**

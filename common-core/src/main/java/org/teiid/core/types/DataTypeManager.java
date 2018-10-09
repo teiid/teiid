@@ -195,6 +195,7 @@ public class DataTypeManager {
 		public static final String VARBINARY = "varbinary"; //$NON-NLS-1$
 		public static final String GEOMETRY = "geometry"; //$NON-NLS-1$
 		public static final String GEOGRAPHY = "geography"; //$NON-NLS-1$
+		public static final String JSON = "json"; //$NON-NLS-1$
 	}
 
 	public static final class DefaultDataClasses {
@@ -220,6 +221,7 @@ public class DataTypeManager {
 		public static final Class<BinaryType> VARBINARY = BinaryType.class;
 		public static final Class<GeometryType> GEOMETRY = GeometryType.class;
 		public static final Class<GeographyType> GEOGRAPHY = GeographyType.class;
+		public static final Class<JsonType> JSON = JsonType.class;
 	}
 	
 	public static final class DefaultTypeCodes {
@@ -245,9 +247,10 @@ public class DataTypeManager {
 		public static final int VARBINARY = 19;
 		public static final int GEOMETRY = 20;
 		public static final int GEOGRAPHY = 21;
+		public static final int JSON = 22;
 	}
 	
-	public static int MAX_TYPE_CODE = DefaultTypeCodes.GEOGRAPHY;
+	public static final int MAX_TYPE_CODE = DefaultTypeCodes.JSON;
 	
     private static final Map<Class<?>, Integer> typeMap = new LinkedHashMap<Class<?>, Integer>(64);
     private static final List<Class<?>> typeList;
@@ -275,6 +278,7 @@ public class DataTypeManager {
         typeMap.put(DataTypeManager.DefaultDataClasses.VARBINARY, DefaultTypeCodes.VARBINARY);
         typeMap.put(DataTypeManager.DefaultDataClasses.GEOMETRY, DefaultTypeCodes.GEOMETRY);
         typeMap.put(DataTypeManager.DefaultDataClasses.GEOGRAPHY, DefaultTypeCodes.GEOGRAPHY);
+        typeMap.put(DataTypeManager.DefaultDataClasses.JSON, DefaultTypeCodes.JSON);
         typeList = new ArrayList<Class<?>>(typeMap.keySet());
     }    
     
@@ -634,11 +638,12 @@ public class DataTypeManager {
 	 * @return true if yes; false otherwise
 	 */
 	public static boolean isLOB(Class<?> type) {
-		return DataTypeManager.DefaultDataClasses.BLOB.equals(type)
-				|| DataTypeManager.DefaultDataClasses.CLOB.equals(type)
-				|| DataTypeManager.DefaultDataClasses.XML.equals(type)
-                || DataTypeManager.DefaultDataClasses.GEOMETRY.equals(type)
-                || DataTypeManager.DefaultDataClasses.GEOGRAPHY.equals(type);
+		return type == DefaultDataClasses.BLOB 
+		        || type == DefaultDataClasses.CLOB
+                || type == DefaultDataClasses.XML
+                || type == DefaultDataClasses.GEOMETRY
+                || type == DefaultDataClasses.GEOGRAPHY
+                || type == DefaultDataClasses.JSON;
 	}
 
 	public static boolean isLOB(String type) {
@@ -646,7 +651,8 @@ public class DataTypeManager {
 				|| DataTypeManager.DefaultDataTypes.CLOB.equals(type)
 				|| DataTypeManager.DefaultDataTypes.XML.equals(type)
                 || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type)
-                || DataTypeManager.DefaultDataClasses.GEOGRAPHY.equals(type);
+                || DataTypeManager.DefaultDataClasses.GEOGRAPHY.equals(type)
+                || DataTypeManager.DefaultDataClasses.JSON.equals(type);
 	}
 
 	/**
@@ -675,6 +681,7 @@ public class DataTypeManager {
 		DataTypeManager.addDataType(DefaultDataTypes.VARBINARY, DefaultDataClasses.VARBINARY);
 		DataTypeManager.addDataType(DefaultDataTypes.GEOMETRY, DefaultDataClasses.GEOMETRY);
 		DataTypeManager.addDataType(DefaultDataTypes.GEOGRAPHY, DefaultDataClasses.GEOGRAPHY);
+		DataTypeManager.addDataType(DefaultDataTypes.JSON, DefaultDataClasses.JSON);
 		DATA_TYPE_NAMES = Collections.unmodifiableSet(new LinkedHashSet<String>(dataTypeNames.keySet()));
 		dataTypeNames.put(DataTypeAliases.BIGINT, DefaultDataClasses.LONG);
 		dataTypeNames.put(DataTypeAliases.DECIMAL, DefaultDataClasses.BIG_DECIMAL);
@@ -839,12 +846,15 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.BinaryToBlobTransform());
 
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.ClobToStringTransform());
+		DataTypeManager.addTransform(new org.teiid.core.types.basic.ClobToStringTransform(DefaultDataClasses.JSON));
 
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.BlobToBinaryTransform());
 		
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.SQLXMLToStringTransform());
 		
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.GeographyToGeometryTransform());
+		
+		DataTypeManager.addTransform(new org.teiid.core.types.basic.JsonToClobTransform());
 		
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.OBJECT) {
 			@Override
@@ -954,6 +964,7 @@ public class DataTypeManager {
         return (!COMPARABLE_OBJECT && DataTypeManager.DefaultDataTypes.OBJECT.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.BLOB.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.CLOB.equals(type))
+            || DataTypeManager.DefaultDataTypes.JSON.equals(type)
             || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type)
             || DataTypeManager.DefaultDataTypes.GEOGRAPHY.equals(type)
             || DataTypeManager.DefaultDataTypes.XML.equals(type);
@@ -1027,6 +1038,7 @@ public class DataTypeManager {
             Arrays.asList(
                     DataTypeManager.DefaultDataTypes.CHAR,
                     DataTypeManager.DefaultDataTypes.CLOB,
+                    DataTypeManager.DefaultDataTypes.JSON,
                     DataTypeManager.DefaultDataTypes.BLOB,
                     DataTypeManager.DefaultDataTypes.OBJECT,
                     DataTypeManager.DefaultDataTypes.XML,

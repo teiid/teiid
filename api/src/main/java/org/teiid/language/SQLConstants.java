@@ -135,12 +135,15 @@ public class SQLConstants {
 		public static final String RAISE = "RAISE"; //$NON-NLS-1$
 		public static final String CHAIN = "CHAIN"; //$NON-NLS-1$
 		public static final String JSONOBJECT = "JSONOBJECT"; //$NON-NLS-1$
+		public static final String JSONARRAY_AGG = "JSONARRAY_AGG"; //$NON-NLS-1$
+		public static final String JSON = "JSON"; //$NON-NLS-1$
 		
 		public static final String AUTO_INCREMENT = "AUTO_INCREMENT"; //$NON-NLS-1$
 		
 		public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 		
 		public static final String GEOMETRY = "GEOMETRY"; //$NON-NLS-1$
+		public static final String GEOGRAPHY = "GEOGRAPHY"; //$NON-NLS-1$
 		public static final String UPSERT = "UPSERT"; //$NON-NLS-1$
         public static final String AFTER = "AFTER"; //$NON-NLS-1$
 

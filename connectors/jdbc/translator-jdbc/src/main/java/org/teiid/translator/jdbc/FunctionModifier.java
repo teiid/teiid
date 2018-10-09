@@ -59,6 +59,7 @@ public abstract class FunctionModifier {
     public static final int VARBINARY = DataTypeManager.DefaultTypeCodes.VARBINARY;
     public static final int GEOMETRY = DataTypeManager.DefaultTypeCodes.GEOMETRY;
     public static final int GEOGRAPHY = DataTypeManager.DefaultTypeCodes.GEOGRAPHY;
+    public static final int JSON = DataTypeManager.DefaultTypeCodes.JSON;
 
     public static int getCode(Class<?> source) {
         return DataTypeManager.getTypeCode(source);

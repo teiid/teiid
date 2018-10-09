@@ -42,6 +42,9 @@ public class PostgreSQLMetadataProcessor
     	if ("geography".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
             return TypeFacility.RUNTIME_NAMES.GEOGRAPHY;
         }
+    	if ("json".equalsIgnoreCase(typeName) || "jsonb".equalsIgnoreCase(typeName)) { //$NON-NLS-1$ //$NON-NLS-2$
+            return TypeFacility.RUNTIME_NAMES.JSON;
+        }
     	if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(typeName)) { 
     	    return TypeFacility.RUNTIME_NAMES.STRING;
     	}

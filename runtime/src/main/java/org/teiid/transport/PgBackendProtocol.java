@@ -584,6 +584,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		        break;
 		    case PG_TYPE_XML:
 		    case PG_TYPE_TEXT:
+		    case PG_TYPE_JSON:
 		    	Reader r = rs.getCharacterStream(column);
 		    	if (r != null) {
 		    		try {

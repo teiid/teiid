@@ -890,7 +890,7 @@ public class Evaluator {
 			} catch (SQLException e) {
 			}
 		}
-		if (s instanceof ClobType) {
+		if (s instanceof BaseClobType) {
 			return new InputStreamFactory.ClobInputStreamFactory((Clob)s.getReference());
 		} else if (s instanceof BlobType){
 			return new InputStreamFactory.BlobInputStreamFactory((Blob)s.getReference());
@@ -1040,7 +1040,7 @@ public class Evaluator {
 			}
 			builder.end(false);
 			if (returnValue) {
-				ClobType result = builder.close(context);
+			    JsonType result = builder.close(context);
 				builder = null;
 				return result;
 			}
@@ -1079,7 +1079,7 @@ public class Evaluator {
 		}
 	}
 	
-	public static ClobType jsonArray(CommandContext context, Function f, Object[] vals, JSONBuilder builder, Evaluator eval, List<?> tuple) throws TeiidProcessingException, BlockedException, TeiidComponentException {
+	public static JsonType jsonArray(CommandContext context, Function f, Object[] vals, JSONBuilder builder, Evaluator eval, List<?> tuple) throws TeiidProcessingException, BlockedException, TeiidComponentException {
 		boolean returnValue = false;
 		try {
 			if (builder == null) {
@@ -1102,7 +1102,7 @@ public class Evaluator {
 			}
 			builder.end(true);
 			if (returnValue) {
-				ClobType result = builder.close(context);
+			    JsonType result = builder.close(context);
 				builder = null;
 				return result;
 			}

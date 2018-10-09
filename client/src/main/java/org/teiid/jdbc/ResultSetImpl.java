@@ -42,11 +42,11 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BaseClobType;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Streamable;
@@ -302,8 +302,8 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         	if (reference != null) {
         		return reference;
         	}
-            if(currentValue instanceof ClobType){
-            	return new ClobImpl(createInputStreamFactory((ClobType)currentValue), ((ClobType)currentValue).getLength());
+            if(currentValue instanceof BaseClobType){
+            	return new ClobImpl(createInputStreamFactory((BaseClobType)currentValue), ((BaseClobType)currentValue).getLength());
             }
             else if (currentValue instanceof BlobType) {
             	InputStreamFactory isf = createInputStreamFactory((BlobType)currentValue);

@@ -34,10 +34,10 @@ import java.util.Map;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.BaseClobType;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
@@ -138,7 +138,7 @@ public class LobManager {
 					StorageMode storageMode = InputStreamFactory.getStorageMode(lob);
 					if (lob.getReferenceStreamId() == null || (inlineLobs 
 							&& (storageMode == StorageMode.MEMORY
-							|| (storageMode != StorageMode.FREE && lob.length()*(lob instanceof ClobType?2:1) <= maxMemoryBytes)))) {
+							|| (storageMode != StorageMode.FREE && lob.length()*(lob instanceof BaseClobType?2:1) <= maxMemoryBytes)))) {
 						lob.setReferenceStreamId(null);
 						//since this is untracked at this point, we must detach if possible
 						if (inlineLobs && storageMode == StorageMode.OTHER) {
@@ -209,7 +209,7 @@ public class LobManager {
 		long byteLength = Integer.MAX_VALUE;
 		
 		try {
-			byteLength = lob.length()*(lob instanceof ClobType?2:1);
+			byteLength = lob.length()*(lob instanceof BaseClobType?2:1);
 		} catch (SQLException e) {
 			//just ignore for now - for a single read resource computing the length invalidates
 			//TODO - inline small persisted lobs
@@ -228,8 +228,8 @@ public class LobManager {
 					BlobType b = (BlobType)lob;
 					byte[] blobBytes = b.getBytes(1, (int)byteLength);
 					b.setReference(new SerialBlob(blobBytes));
-				} else if (lob instanceof ClobType) {
-					ClobType c = (ClobType)lob;
+				} else if (lob instanceof BaseClobType) {
+				    BaseClobType c = (BaseClobType)lob;
 					String s = ""; //$NON-NLS-1$
 					//some clob impls return null for 0 length
 					if (byteLength != 0) {
@@ -248,7 +248,7 @@ public class LobManager {
 			InputStream is = null;
 	    	if (lob instanceof BlobType) {
 	    		is = new BlobInputStreamFactory((Blob)lob).getInputStream();
-	    	} else if (lob instanceof ClobType) {
+	    	} else if (lob instanceof BaseClobType) {
 	    		is = new ClobInputStreamFactory((Clob)lob).getInputStream();
 	    	} else {
 	    		is = new SQLXMLInputStreamFactory((SQLXML)lob).getInputStream();
@@ -282,14 +282,14 @@ public class LobManager {
 			if (lob instanceof BlobType) {
 				((BlobType)lob).setReference(new BlobImpl(isf));
 			}
-			else if (lob instanceof ClobType) {
+			else if (lob instanceof BaseClobType) {
 			    long length = -1;
 			    try {
-			        length = ((ClobType)lob).length();
+			        length = ((BaseClobType)lob).length();
 			    } catch (SQLException e) {
 			        //could be streaming
 			    }
-				((ClobType)lob).setReference(new ClobImpl(isf, length));
+				((BaseClobType)lob).setReference(new ClobImpl(isf, length));
 			}
 			else {
 				((XMLType)lob).setReference(new SQLXMLImpl(isf));
