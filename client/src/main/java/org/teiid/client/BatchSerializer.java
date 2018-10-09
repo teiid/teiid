@@ -949,4 +949,21 @@ public class BatchSerializer {
         }
         return batch;
     }
+
+    public static String getClientSafeType(String type,
+            byte clientSerializationVersion) {
+        if (clientSerializationVersion == CURRENT_VERSION) {
+            return type;
+        }
+        if (DataTypeManager.isArrayType(type)) {
+            return getClientSafeType(DataTypeManager.getComponentType(type), clientSerializationVersion) + DataTypeManager.ARRAY_SUFFIX;
+        }
+        if (type.equals(DataTypeManager.DefaultDataTypes.GEOMETRY) && clientSerializationVersion < BatchSerializer.VERSION_GEOMETRY) {
+            return DataTypeManager.DefaultDataTypes.BLOB;
+        }  
+        if (type.equals(DataTypeManager.DefaultDataTypes.GEOGRAPHY) && clientSerializationVersion < BatchSerializer.VERSION_GEOGRAPHY) {
+            return DataTypeManager.DefaultDataTypes.BLOB;
+        }
+        return type;
+    }
 }

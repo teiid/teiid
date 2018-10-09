@@ -54,7 +54,7 @@ import org.teiid.core.util.PropertiesUtils;
  */
 public class DataTypeManager {
 	
-	static final String ARRAY_SUFFIX = "[]"; //$NON-NLS-1$
+	public static final String ARRAY_SUFFIX = "[]"; //$NON-NLS-1$
 	public static final boolean USE_VALUE_CACHE = PropertiesUtils.getHierarchicalProperty("org.teiid.useValueCache", false, Boolean.class); //$NON-NLS-1$
 	private static final boolean COMPARABLE_LOBS = PropertiesUtils.getHierarchicalProperty("org.teiid.comparableLobs", false, Boolean.class); //$NON-NLS-1$
 	private static final boolean COMPARABLE_OBJECT = PropertiesUtils.getHierarchicalProperty("org.teiid.comparableObject", false, Boolean.class); //$NON-NLS-1$

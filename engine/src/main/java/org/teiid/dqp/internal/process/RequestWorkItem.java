@@ -1106,8 +1106,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             Expression symbol = columnSymbols.get(i);
             columnNames[i] = Symbol.getShortName(Symbol.getOutputName(symbol));
             dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
-            if (dataTypes[i].equals(DataTypeManager.DefaultDataTypes.GEOMETRY) && !this.dqpWorkContext.getSession().isEmbedded() && clientSerializationVersion < BatchSerializer.VERSION_GEOMETRY) {
-            	dataTypes[i] = DataTypeManager.DefaultDataTypes.BLOB;
+            if (!this.dqpWorkContext.getSession().isEmbedded()) {
+                dataTypes[i] = BatchSerializer.getClientSafeType(dataTypes[i], clientSerializationVersion);
             }
         }
         ResultsMessage result = new ResultsMessage(batch, columnNames, dataTypes);
