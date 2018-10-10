@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,6 +46,7 @@ import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.PropertiesUtils;
@@ -206,7 +208,16 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private Map<String, Portal> portalMap = Collections.synchronizedMap(new HashMap<String, Portal>());
 	private Map<String, Cursor> cursorMap = Collections.synchronizedMap(new HashMap<String, Cursor>());
 	private	LogonImpl logon;
+
+	//state needed to implement cancel
 	
+	private static final long BIT_MASK = (1l << 32) -1;
+	private static ConcurrentHashMap<Long, ODBCServerRemoteImpl> remotes = new ConcurrentHashMap<>();
+	//TODO: there are ways to lookup pid, but nothing built-in. instead we'll increase the "security"
+    //of cancellation with 63 random bits - the high bit needs to be 0 as pid must be positive
+    private long secretKey = (long)(Math.random()*Long.MAX_VALUE);
+    private volatile String executingStatement;
+    
 	public ODBCServerRemoteImpl(ODBCClientInstance client, TeiidDriver driver, LogonImpl logon) {
 		this.driver = driver;
 		this.client = client.getClient();
@@ -305,7 +316,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			SessionMetadata sm = ((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession();
 			sm.addAttchment(ODBCServerRemoteImpl.class, this);
 			setConnectionProperties(this.connection);
-			int hash = this.connection.getConnectionId().hashCode();
 			Enumeration<?> keys = this.props.propertyNames();
 			while (keys.hasMoreElements()) {
 				String key = (String)keys.nextElement();
@@ -317,8 +327,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			} finally {
 				s.close();
 			}
-			this.client.authenticationSucess(hash, hash);
+			this.client.authenticationSucess((int)((secretKey>>32)&BIT_MASK), (int)(secretKey&BIT_MASK));
 			ready();
+			remotes.put(secretKey, this);
 		} catch (SQLException e) {
 			errorOccurred(e);
 			terminate();
@@ -330,7 +341,25 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			terminate();			
 		}
 	}
-
+	
+	@Override
+	public void cancel(int pid, int key) {
+	    long keyToCancel = pid;
+        keyToCancel <<= 32;
+	    keyToCancel |= (key&BIT_MASK);
+	    ODBCServerRemoteImpl remote = remotes.get(keyToCancel);
+	    if (remote != null) {
+	        String current = remote.executingStatement;
+	        if (current != null) {
+    	        try {
+                    remote.connection.cancelRequest(current);
+                } catch (TeiidProcessingException | TeiidComponentException e) {
+                    LogManager.logDetail(LogConstants.CTX_ODBC, e, "Error cancelling statement"); //$NON-NLS-1$
+                }
+	        }
+	    }
+	}
+	
 	public static void setConnectionProperties(ConnectionImpl conn)
 			throws SQLException {
 		SessionMetadata sm = ((LocalServerConnection)conn.getServerConnection()).getWorkContext().getSession();
@@ -379,6 +408,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
         }
         
         this.executionFuture = stmt.submitExecute(ResultsMode.RESULTSET, null);
+        this.executingStatement = stmt.getRequestIdentifier();
         this.executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
         	@Override
         	public void onCompletion(ResultsFuture<Boolean> future) {
@@ -488,6 +518,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     	final boolean autoCommit = connection.getAutoCommit();
     	final StatementImpl stmt = connection.createStatement();
         executionFuture = stmt.submitExecute(modfiedSQL, null);
+        this.executingStatement = stmt.getRequestIdentifier();
         completion.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
         	public void onCompletion(ResultsFuture<Integer> future) {
         		try {
@@ -731,6 +762,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                 return;
             }
             this.executionFuture = stmt.submitExecute(ResultsMode.EITHER, null);
+            this.executingStatement = stmt.getRequestIdentifier();
             executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
         		@Override
         		public void onCompletion(ResultsFuture<Boolean> future) {
@@ -1016,14 +1048,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		synchronized (this) {
 			this.errorOccurred = false;
 		}
+		this.executingStatement = null;
 		this.client.ready(inTxn, failedTxn);
 	}
 	
-	@Override
-	public void cancel() {
-		// TODO Auto-generated method stub
-	}
-
 	@Override
 	public void closeBoundStatement(String bindName) {
 		if (bindName == null || bindName.length() == 0) {
@@ -1075,6 +1103,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	@Override
 	public void terminate() {
+	    remotes.remove(this.secretKey);
 		closePortals();
 		
 		this.preparedMap.clear();

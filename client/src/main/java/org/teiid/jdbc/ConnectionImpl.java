@@ -39,6 +39,8 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.SqlUtil;
@@ -259,6 +261,15 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      */
     protected synchronized long nextRequestID() {
         return requestIDGenerator++;
+    }
+    
+    /**
+     * Cancel the request
+     * @throws TeiidProcessingException
+     * @throws TeiidComponentException
+     */
+    public void cancelRequest(String id) throws TeiidProcessingException, TeiidComponentException {
+        this.dqp.cancelRequest(Long.valueOf(id));
     }
 
     public void clearWarnings() throws SQLException {

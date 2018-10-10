@@ -31,6 +31,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+import java.util.concurrent.ForkJoinPool;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -40,6 +41,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.postgresql.core.v3.ExtendedQueryExecutorImpl;
+import org.postgresql.util.PSQLException;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -52,6 +54,7 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.logging.LogConstants;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.TestEmbeddedServer;
 import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
@@ -806,6 +809,18 @@ public class TestODBCSocketTransport {
         assertEquals("json", rsmd.getColumnTypeName(1));
         assertEquals("org.postgresql.util.PGobject", rsmd.getColumnClassName(1));
         assertEquals("[1,2]", rs.getString(1));
+    }
+    
+    @Test(expected=PSQLException.class) public void testCancel() throws Exception {
+        final Statement s = conn.createStatement();
+        ForkJoinPool.commonPool().execute(() -> {
+            try {
+                Thread.sleep(300);
+                s.cancel();
+            } catch (SQLException | InterruptedException e) {
+            }
+        });
+        s.execute("SELECT t1.* from sys.tables t1, sys.tables t2, sys.tables t3");
     }
     
     @Test public void testConstraintDef() throws Exception {

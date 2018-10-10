@@ -199,6 +199,14 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         	this.odbcProxy.sslRequest();
         	return message;
         }
+
+        //cancel
+        if (version == 80877102) {
+            int pid = data.readInt();
+            int key = data.readInt();
+            this.odbcProxy.cancel(pid, key);
+            return message;
+        }
         
         if (this.pgBackendProtocol.secureData() && channel.pipeline().get(org.teiid.transport.PgBackendProtocol.SSL_HANDLER_KEY) == null) {
         	this.odbcProxy.unsupportedOperation(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40123));

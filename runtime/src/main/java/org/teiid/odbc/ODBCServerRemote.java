@@ -45,8 +45,6 @@ public interface ODBCServerRemote {
 	
 	void terminate();
 	
-	void cancel();
-	
 	void closePreparedStatement(String preparedName);
 	
 	void closeBoundStatement(String bindName);
@@ -58,6 +56,8 @@ public interface ODBCServerRemote {
 	void functionCall(int oid);
 	
 	void sslRequest();
+
+    void cancel(int pid, int key);
 	
 	//  unimplemented frontend messages
 	//	CopyData (F & B)
