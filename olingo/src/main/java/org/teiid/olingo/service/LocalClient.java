@@ -214,16 +214,24 @@ public class LocalClient implements Client {
         ConnectionImpl conn = getConnection();
         String sessionId = conn.getServerConnection().getLogonResult().getSessionID();
         
-        String nextToken = null;
+        Integer nextSkip = null; 
         Integer savedEntityCount = null;
         if (nextOption != null) {
-            nextToken = nextOption;
             if (cache) {
                 StringTokenizer st = new StringTokenizer(nextOption, DELIMITER);
                 sessionId = st.nextToken();
-                nextToken = st.nextToken();
-                if (st.hasMoreTokens()) {
-                    savedEntityCount = Integer.parseInt(st.nextToken());
+                if (!st.hasMoreTokens()) {
+                    throw new TeiidRuntimeException(ODataPlugin.Util.gs(
+                            ODataPlugin.Event.TEIID16062));
+                }
+                try {
+                    nextSkip = Integer.parseInt(st.nextToken());
+                    if (st.hasMoreTokens()) {
+                        savedEntityCount = Integer.parseInt(st.nextToken());
+                    }
+                } catch (NumberFormatException e) {
+                    throw new TeiidRuntimeException(ODataPlugin.Util.gs(
+                            ODataPlugin.Event.TEIID16062));
                 }
             }
             getCount = false; // the URL might have $count=true, but ignore it.
@@ -253,18 +261,16 @@ public class LocalClient implements Client {
         int skipSize = 0;
         
         //skip based upon the skip value
-        if (nextToken == null && skipOption != null && !skipAndTopApplied) {            
-            if (skipOption > 0) {                
+        if (nextSkip == null) {            
+            if (skipOption != null && skipOption > 0 && !skipAndTopApplied) {                
                 int s = skipEntities(rs, skipOption);
                 count += s;
                 entityCount = s;
                 skipSize = count;
             }                        
-        }
-        
+        } else {
         //skip based upon the skipToken
-        if (nextToken != null) {
-            skipSize += Integer.parseInt(nextToken);
+            skipSize += nextSkip;
             if (skipSize > 0) {
                 count += skip(cache, rs, skipSize);
             }            

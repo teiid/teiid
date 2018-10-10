@@ -1105,6 +1105,11 @@ public class TestODataIntegration {
             stats = teiid.getAdmin().getCacheStats(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name()).iterator().next();
             //third should miss as it's a new session
             assertEquals(33, stats.getHitRatio(), 1);
+            
+            //invalid
+            response = http.GET(baseURL + "/northwind/vw/x?$skiptoken=a");
+            assertEquals(500, response.getStatus());
+            assertTrue(response.getContentAsString(), response.getContentAsString().contains("TEIID16062"));
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
