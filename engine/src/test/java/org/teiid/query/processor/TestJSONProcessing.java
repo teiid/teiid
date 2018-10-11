@@ -28,6 +28,7 @@ import javax.sql.rowset.serial.SerialBlob;
 
 import org.junit.Test;
 import org.teiid.core.types.BlobType;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -108,5 +109,22 @@ public class TestJSONProcessing {
         
       	helpProcess(plan, fdm, expected);
 	}
+	
+	@Test public void testJSONCasts() throws Exception {
+	    TransformationMetadata tm = RealMetadataFactory.fromDDL("create view json as select jsonParse('{}', true) as col", "x", "y");
+	    
+        String sql = "select cast(jsonObject(col) as string), cast(cast(jsonParse(col, true) as clob) as string) from json"; //$NON-NLS-1$
+        
+        //note in the first results contains the nested json, not a nested string
+        List<?>[] expected = new List[] {
+                Arrays.asList("{\"col\":{}}", "{}"),
+        };    
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        ProcessorPlan plan = helpGetPlan(sql, tm);
+        helpProcess(plan, hdm, expected);
+        
+        //small breaking potential - if we explicitly expect clob results
+        //tm = RealMetadataFactory.fromDDL("create view json (col clob) as select jsonParse('{}', true) as col", "x", "y");
+    }
 	
 }
