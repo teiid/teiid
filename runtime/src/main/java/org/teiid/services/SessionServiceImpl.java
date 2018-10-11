@@ -92,7 +92,6 @@ public class SessionServiceImpl implements SessionService {
     private Timer sessionMonitor = null;    
     private String securityDomainName;
 	private boolean trustAllLocal = true;
-	private boolean allowSecurityDomainQualifier;
     
     public void setSecurityDomain(String domainName) {
         this.securityDomainName = domainName;
@@ -177,7 +176,7 @@ public class SessionServiceImpl implements SessionService {
 	             throw new SessionServiceException(RuntimePlugin.Event.TEIID40043, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40043, new Long(sessionMaxLimit)));
 	        }
 	        
-	        String securityDomain = getSecurityDomain(userName, vdbName, vdbVersion, vdb);
+	        String securityDomain = getSecurityDomain(vdbName, vdbVersion, vdb);
 	        
 			if (securityDomain != null) {
 		        // Authenticate user...
@@ -185,9 +184,6 @@ public class SessionServiceImpl implements SessionService {
 	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
 	
 	        	String baseUserName = userName;
-	        	if (allowSecurityDomainQualifier) {
-	        	    baseUserName = getBaseUsername(userName);
-	        	}
 	    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
 	        		subject = this.securityHelper.getSubjectInContext(securityDomain);
 	    	        if (subject == null) {
@@ -483,11 +479,7 @@ public class SessionServiceImpl implements SessionService {
 		return this.defaultAuthenticationType;
 	}
 
-	public String getSecurityDomain(String userName, String vdbName, String version, VDB vdb) throws LoginException {
-		String securityDomain = null;
-		if (allowSecurityDomainQualifier) {
-		    securityDomain = getDomainName(userName);
-		}
+	public String getSecurityDomain(String vdbName, String version, VDB vdb) {
 		if (vdbName != null) {
 	    	try {    		
 	    		if (vdb == null) {
@@ -496,10 +488,6 @@ public class SessionServiceImpl implements SessionService {
 	    		if (vdb != null) {
 					String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);				
 					if (typeProperty != null) {
-						if (securityDomain != null && !typeProperty.equals(securityDomain)) {
-							//conflicting
-			    			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
-						}
 						return typeProperty;
 					}
 	    		}
@@ -507,12 +495,6 @@ public class SessionServiceImpl implements SessionService {
 				// ignore and return default, this only occur if the name and version are wrong 
 			}			
 		} 
-		if (securityDomain != null) {
-			if (this.securityDomainName != null && this.securityDomainName.equals(securityDomain)) {
-				return securityDomain;
-			}
-			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
-		}
 		
 		return this.securityDomainName;
 	}
@@ -520,7 +502,7 @@ public class SessionServiceImpl implements SessionService {
 	@Override
 	public GSSResult neogitiateGssLogin(String user, String vdbName,
 			String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException {
-		String securityDomain = getSecurityDomain(user, vdbName, vdbVersion, null);
+		String securityDomain = getSecurityDomain(vdbName, vdbVersion, null);
 		if (securityDomain == null ) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40059, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40059));
 		}
@@ -550,11 +532,4 @@ public class SessionServiceImpl implements SessionService {
 		this.trustAllLocal = trustAllLocal;
 	}
     
-    public void setAllowSecurityDomainQualifier(boolean useSecurityDomainQualifier) {
-        this.allowSecurityDomainQualifier = useSecurityDomainQualifier;
-    }
-    
-    public boolean isAllowSecurityDomainQualifier() {
-        return allowSecurityDomainQualifier;
-    }
 }

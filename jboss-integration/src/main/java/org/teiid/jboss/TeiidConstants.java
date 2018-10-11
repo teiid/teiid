@@ -405,13 +405,6 @@ public class TeiidConstants {
     	.setDefaultValue(new ModelNode(true))
     	.build();
 	
-	public static SimpleAttributeDefinition AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER.getModelName(), ModelType.BOOLEAN)
-        .setXmlName(Element.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER.getXMLName())
-        .setAllowNull(true)
-        .setAllowExpression(false)
-        .setDefaultValue(new ModelNode(true))
-        .build();
-	
 	//PG_ELEMENT("pg"), //$NON-NLS-1$
 	public static SimpleAttributeDefinition PG_MAX_LOB_SIZE_ALLOWED_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.getXMLName())

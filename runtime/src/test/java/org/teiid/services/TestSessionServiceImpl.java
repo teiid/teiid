@@ -167,13 +167,6 @@ public class TestSessionServiceImpl {
 		s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties);
 		assertEquals("sd", s.getSecurityDomain());
 		
-		ssi.setAllowSecurityDomainQualifier(true);
-		ssi.setSecurityDomain("sd");
-		s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd", new Credentials(new char[] {'y'}), "z", properties);
-		assertEquals("sd", s.getSecurityDomain());
-		assertEquals("x", s.getUserName());
-		
-		ssi.setAllowSecurityDomainQualifier(false);
         s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd", new Credentials(new char[] {'y'}), "z", properties);
         assertEquals("sd", s.getSecurityDomain());
         assertEquals("x@sd", s.getUserName());

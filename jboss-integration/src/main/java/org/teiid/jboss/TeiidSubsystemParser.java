@@ -106,7 +106,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 			AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			AUTHENTICATION_TYPE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER.marshallAsAttribute(node, false, writer);
 			writer.writeEndElement();
     	}
     	 
@@ -472,7 +471,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
 
     			case AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE:
-    			case AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER:
                     node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
                     break;
 
