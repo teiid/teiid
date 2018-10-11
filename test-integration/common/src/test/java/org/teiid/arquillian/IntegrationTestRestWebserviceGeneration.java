@@ -118,7 +118,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		assertEquals(327801, response.length());
 		
 		//test streaming xmltable
-		execute("select * from xmltable('/rows/row/e1' passing xmlparse(document (select result from (call invokeHttp(action=>'GET',endpoint=>'sample_1/View/g1/123?p2=test')) as d))) as x");
+		execute("select * from xmltable('/rows/row/e1' passing xmlparse(document (select result from (call invokeHttp(headers=>jsonObject('application/xml' as \"Content-Type\"), action=>'GET',endpoint=>'sample_1/View/g1/123?p2=test')) as d))) as x");
 		this.internalResultSet.next();
 		assertEquals("<e1>ABCDEFGHIJ</e1>", this.internalResultSet.getString(1));
 		

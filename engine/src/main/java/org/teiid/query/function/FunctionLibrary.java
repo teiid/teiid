@@ -622,7 +622,7 @@ public class FunctionLibrary {
 				aa.setAllowsDistinct(false);
 				break;
 			case JSONARRAY_AGG:
-				returnType = DataTypeManager.DefaultDataTypes.CLOB;
+				returnType = DataTypeManager.DefaultDataTypes.JSON;
 				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
 				aa.setAllowsOrderBy(true);
 				aa.setAllowsDistinct(false);

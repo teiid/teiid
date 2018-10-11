@@ -1019,7 +1019,7 @@ public class Evaluator {
 		}
 	}
 	
-	private Object evaluateJSONObject(List<?> tuple, JSONObject function, JSONBuilder builder)
+	private JsonType evaluateJSONObject(List<?> tuple, JSONObject function, JSONBuilder builder)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, FunctionExecutionException {
 		List<DerivedColumn> args = function.getArgs();
