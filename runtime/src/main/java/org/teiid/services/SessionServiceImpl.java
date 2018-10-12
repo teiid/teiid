@@ -71,6 +71,7 @@ public class SessionServiceImpl implements SessionService {
 	public static final String PASSWORD_PATTERN_PROPERTY = "password-pattern"; //$NON-NLS-1$
 	public static final String SECURITY_DOMAIN_PROPERTY = "security-domain"; //$NON-NLS-1$
 	public static final String AUTHENTICATION_TYPE_PROPERTY = "authentication-type"; //$NON-NLS-1$
+	public static final String MAX_SESSIONS_PER_USER = "max-sessions-per-user"; //$NON-NLS-1$
 	public static final String AT = "@"; //$NON-NLS-1$
 	/*
 	 * Configuration state
@@ -183,7 +184,6 @@ public class SessionServiceImpl implements SessionService {
 		        // if not authenticated, this method throws exception
 	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
 	
-	        	String baseUserName = userName;
 	    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
 	        		subject = this.securityHelper.getSubjectInContext(securityDomain);
 	    	        if (subject == null) {
@@ -191,18 +191,20 @@ public class SessionServiceImpl implements SessionService {
 	    	        		throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
 	    	        	}
 	    	        } else {
-	    	        	userName = getUserName(subject, baseUserName);
+	    	        	userName = getUserName(subject, userName);
 	    	        }
 	    	        securityContext = this.securityHelper.getSecurityContext();
 	        	} else {
-	        		userName = baseUserName;
-	        		securityContext = this.securityHelper.authenticate(securityDomain, baseUserName, credentials, applicationName);
+	        		securityContext = this.securityHelper.authenticate(securityDomain, userName, credentials, applicationName);
 	        		subject = this.securityHelper.getSubjectInContext(securityContext);
+	        		//TODO: it may be appropriate here to obtain the username from the subject as well
 	        	}
 			}
 			else {
 	        	LogManager.logDetail(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40117)); 
 			}
+			
+			enforceMaxSessions(userName, vdb);
 	        
 	        long creationTime = System.currentTimeMillis();
 	
@@ -221,8 +223,6 @@ public class SessionServiceImpl implements SessionService {
 		        newSession.setVDBName(vdb.getName());
 		        newSession.setVDBVersion(vdb.getVersion());
 	        }
-	        
-	        // these are local no need for monitoring.
 	        newSession.setSubject(subject);
 	        newSession.setSecurityContext(securityContext);
 	        newSession.setVdb(vdb);
@@ -246,6 +246,39 @@ public class SessionServiceImpl implements SessionService {
         	throw e;
         }
 	}
+	
+	static class MaxSessions {
+	    Integer val;
+	}
+
+    private void enforceMaxSessions(String userName, VDBMetaData vdb) throws SessionServiceException {
+        if (vdb == null) {
+            return;
+        }
+        MaxSessions max = vdb.getAttachment(MaxSessions.class);
+        if (max == null) {
+            max = new MaxSessions();
+            String maxProp = vdb.getPropertyValue(MAX_SESSIONS_PER_USER);
+            if (maxProp != null) {
+                try {
+                    max.val = Integer.valueOf(maxProp);
+                } catch (NumberFormatException e) {
+                    LogManager.logDetail(LogConstants.CTX_SECURITY, "Value for max sessions is invalid on", vdb); //$NON-NLS-1$
+                }
+            }
+            vdb.addAttchment(MaxSessions.class, max);
+        }
+        if (max.val == null || max.val < 0) {
+            return;
+        }
+        //TODO: this assumes user names are case sensitive - they
+        //may or may not be in the underlying system.
+        //perhaps it would be more accurate to always use the name from the subject
+        int count = getSessionsLoggedInToVDB(vdb.getAttachment(VDBKey.class), userName).size();
+        if (count >= max.val) {
+            throw new SessionServiceException(RuntimePlugin.Event.TEIID40044, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40044, max.val));
+        }
+    }
 	
 	/**
 	 * 
@@ -293,9 +326,14 @@ public class SessionServiceImpl implements SessionService {
 
 	@Override
 	public Collection<SessionMetadata> getSessionsLoggedInToVDB(VDBKey key) {
+	    return getSessionsLoggedInToVDB(key, null);
+	}
+	    
+    public Collection<SessionMetadata> getSessionsLoggedInToVDB(VDBKey key, String username) {
 		ArrayList<SessionMetadata> results = new ArrayList<SessionMetadata>();
 		for (SessionMetadata info : this.sessionCache.values()) {
-			if (info.getVdb() != null && key.equals(info.getVdb().getAttachment(VDBKey.class))) {
+			if (info.getVdb() != null && key.equals(info.getVdb().getAttachment(VDBKey.class)) && 
+			        (username == null || info.getUserName().equals(username))) {
 				results.add(info);
 			}
 		}
@@ -519,7 +557,10 @@ public class SessionServiceImpl implements SessionService {
             if (p instanceof Group) {
                 continue;
             }
-            return p.getName();
+            String name = p.getName();
+            if (name != null) {
+                return name;
+            }
         }
         return userName;
     }

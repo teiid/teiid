@@ -11,10 +11,12 @@ import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.DoNothingSecurityHelper;
 import org.teiid.security.Credentials;
+import org.teiid.vdb.runtime.VDBKey;
 
 @SuppressWarnings("nls")
 public class TestSessionServiceImpl {
@@ -228,6 +230,31 @@ public class TestSessionServiceImpl {
         assertEquals(null, SessionServiceImpl.getDomainName("@")); //$NON-NLS-1$
         
         assertEquals("@", SessionServiceImpl.getBaseUsername("@")); //$NON-NLS-1$ //$NON-NLS-2$
-    }	
+    }
+    
+    @Test public void testMaxSessionsPerUser() throws Exception {
+        VDBRepository repo = Mockito.mock(VDBRepository.class);
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("name");
+        vdb.setVersion(1);
+        vdb.setStatus(Status.ACTIVE);
+        vdb.addProperty(SessionServiceImpl.MAX_SESSIONS_PER_USER, "1");
+        vdb.addAttchment(VDBKey.class, new VDBKey("x", 1));
+        
+        Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
+        
+        ssi.setVDBRepository(repo);
+        Properties properties = new Properties();
+        properties.setProperty(TeiidURL.JDBC.VDB_NAME, "name.1");
+        ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties);
+        
+        try {
+            //second should fail
+            ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties);
+            fail();
+        } catch (SessionServiceException e) {
+            
+        }
+    }
     
 }
