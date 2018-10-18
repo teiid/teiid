@@ -17,7 +17,7 @@
         <stack-file name="default-jgroups-tcp" path="tcp-shared.xml" />
     </jgroups>
 
-    <cache-container name="teiid" default-cache="default"
+    <cache-container name="teiid" default-cache="resultset"
         statistics="false" shutdown-hook="DONT_REGISTER">
 
         <transport stack="default-jgroups-tcp" cluster="teiid-cluster"
@@ -29,8 +29,10 @@
             <transaction mode="NON_XA" 
                  transaction-manager-lookup="org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup" 
                  locking="PESSIMISTIC"/>
-            <eviction max-entries="1024" strategy="LIRS" />
             <expiration lifespan="7200000" />
+            <memory>
+                <object size="1024" strategy="REMOVE"></object>
+            </memory>
         </local-cache>
 
         <local-cache name="preparedplan">
@@ -43,8 +45,10 @@
             <transaction mode="NON_XA" 
                  transaction-manager-lookup="org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup" 
                  locking="PESSIMISTIC"/>
-            <eviction max-entries="1024" strategy="LIRS" />
-            <expiration lifespan="7200000" />           
+            <expiration lifespan="7200000" />
+            <memory>
+                <object size="1024" strategy="REMOVE"></object>
+            </memory>
             <state-transfer enabled="true" timeout="480000" await-initial-transfer="true" />            
         </replicated-cache>
     </cache-container>

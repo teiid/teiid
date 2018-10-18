@@ -51,7 +51,6 @@
             <plugin>
                 <groupId>org.wildfly.build</groupId>
                 <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
-                <version>1.1.6.Final</version>
                 <executions>
                     <execution>
                         <id>feature-pack-build</id>

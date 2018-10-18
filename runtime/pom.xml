@@ -84,6 +84,16 @@
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-core</artifactId>
     </dependency>
+    <!-- these are excluded from infinispan core in the wildfly parent
+         but needed to run/test -->
+    <dependency>
+        <groupId>com.github.ben-manes.caffeine</groupId>
+        <artifactId>caffeine</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.reactivex.rxjava2</groupId>
+        <artifactId>rxjava</artifactId>
+    </dependency>
     <dependency>
         <groupId>org.jboss.narayana.jta</groupId>
         <artifactId>narayana-jta</artifactId>

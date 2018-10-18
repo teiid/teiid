@@ -22,16 +22,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
 
-import org.jboss.as.cli.CliConfig;
-import org.jboss.as.cli.CliEventListener;
-import org.jboss.as.cli.CommandContext;
-import org.jboss.as.cli.CommandFormatException;
-import org.jboss.as.cli.CommandHistory;
-import org.jboss.as.cli.CommandLineCompleter;
-import org.jboss.as.cli.CommandLineException;
-import org.jboss.as.cli.CommandLineRedirection;
-import org.jboss.as.cli.ConnectionInfo;
-import org.jboss.as.cli.ControllerAddress;
+import org.jboss.as.cli.*;
 import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.cli.batch.BatchedCommand;
 import org.jboss.as.cli.operation.CommandLineParser;
@@ -294,4 +285,10 @@ public class DMRCommandContext implements CommandContext {
 	public DMRCommandContext(CommandContext delegate) {
 		this.delegate = delegate;
 	}
+
+    @Override
+    public void connectController(String arg0, String arg1)
+            throws CommandLineException {
+        this.delegate.connectController(arg0, arg1);
+    }
 }

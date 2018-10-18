@@ -70,6 +70,10 @@
 			<artifactId>wildfly-clustering-jgroups-api</artifactId>
 		</dependency>
 		<dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-clustering-jgroups-spi</artifactId>
+        </dependency>
+		<dependency>
 			<groupId>org.wildfly</groupId>
 			<artifactId>wildfly-security</artifactId>
 		</dependency>

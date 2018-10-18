@@ -61,6 +61,7 @@
             <plugin>
                 <groupId>org.wildfly.build</groupId>
                 <artifactId>wildfly-server-provisioning-maven-plugin</artifactId>
+                <!-- See https://github.com/wildfly/wildfly-build-tools/issues/47 -->
                 <version>1.2.6.Final</version>
                 <executions>
                     <execution>

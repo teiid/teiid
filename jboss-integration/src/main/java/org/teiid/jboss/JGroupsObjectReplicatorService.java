@@ -24,7 +24,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.jgroups.Channel;
+import org.jgroups.JChannel;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.wildfly.clustering.jgroups.ChannelFactory;
 
@@ -39,8 +39,8 @@ class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator>
 	public void start(StartContext context) throws StartException {
 		this.replicator = new JGroupsObjectReplicator(new org.teiid.replication.jgroups.ChannelFactory() {
 			@Override
-			public Channel createChannel(String id) throws Exception {
-				 Channel c = channelFactoryInjector.getValue().createChannel(id);
+			public JChannel createChannel(String id) throws Exception {
+			    JChannel c = channelFactoryInjector.getValue().createChannel(id);
 				 c.connect(id);
 				 return c;
 			}

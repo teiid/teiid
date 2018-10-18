@@ -26,7 +26,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.jgroups.Address;
-import org.jgroups.Channel;
+import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
@@ -41,11 +41,11 @@ public abstract class NodeTracker extends ReceiverAdapter{
     }
     public abstract ScheduledExecutorService getScheduledExecutorService();    
     private Map<Address, String> nodes = new HashMap<>();
-    private Channel channel;
+    private JChannel channel;
     private String nodeName;
     private Set<NodeListener> nodeListeners = Collections.synchronizedSet(new HashSet<NodeListener>());
     
-    public NodeTracker(Channel channel, String nodeName) throws Exception {
+    public NodeTracker(JChannel channel, String nodeName) throws Exception {
         this.nodeName = nodeName;
         this.channel = channel;
         this.channel.setReceiver(this);
@@ -98,7 +98,7 @@ public abstract class NodeTracker extends ReceiverAdapter{
         getScheduledExecutorService().schedule(
         new Runnable() {
             public void run() {
-                Message msg=new Message(null, null, nodeName);
+                Message msg=new Message(null, nodeName);
                 try {
                     channel.send(msg);
                 } catch (Exception e) {

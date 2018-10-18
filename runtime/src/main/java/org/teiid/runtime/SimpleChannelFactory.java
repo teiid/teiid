@@ -18,7 +18,6 @@
 
 package org.teiid.runtime;
 
-import org.jgroups.Channel;
 import org.jgroups.JChannel;
 import org.jgroups.fork.ForkChannel;
 import org.teiid.replication.jgroups.ChannelFactory;
@@ -35,7 +34,7 @@ final class SimpleChannelFactory implements ChannelFactory {
     }
 
     @Override
-    public Channel createChannel(String id) throws Exception {
+    public JChannel createChannel(String id) throws Exception {
     	synchronized (this) {
         	if (channel == null) {
         		channel = new JChannel(this.getClass().getClassLoader().getResource(this.embeddedConfiguration.getJgroupsConfigFile()));
