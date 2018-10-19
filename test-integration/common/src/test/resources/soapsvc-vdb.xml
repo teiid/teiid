@@ -14,7 +14,10 @@
             CREATE VIRTUAL PROCEDURE sayHello_request(IN sayHello string NOT NULL, IN MessageID string NOT NULL, IN "To" string NOT NULL, IN ReplyTo string NOT NULL, IN Action string NOT NULL) RETURNS TABLE (xml_out xml)
             AS
             BEGIN
-                SELECT XMLELEMENT(NAME "soap:Envelope", XMLNAMESPACES('http://schemas.xmlsoap.org/soap/envelope/' AS soap, 'http://www.jboss.org/jbossws/ws-extensions/wsaddressing' AS tns, 'http://www.w3.org/2005/08/addressing' AS wsa), XMLELEMENT(NAME "soap:Header", XMLELEMENT(NAME "wsa:MessageID", AddressingService.sayHello_request.MessageID), XMLELEMENT(NAME "wsa:To", AddressingService.sayHello_request."To"), XMLELEMENT(NAME "wsa:ReplyTo", AddressingService.sayHello_request.ReplyTo), XMLELEMENT(NAME "wsa:Action", AddressingService.sayHello_request.Action)), XMLELEMENT(NAME "soap:Body", XMLELEMENT(NAME "tns:sayHello", AddressingService.sayHello_request.sayHello))) AS xml_out;
+                SELECT XMLELEMENT(NAME "soap:Envelope", XMLNAMESPACES('http://schemas.xmlsoap.org/soap/envelope/' AS soap, 'http://www.jboss.org/jbossws/ws-extensions/wsaddressing' AS tns, 'http://www.w3.org/2005/08/addressing' AS wsa), 
+                XMLELEMENT(NAME "soap:Header", XMLELEMENT(NAME "wsa:MessageID", AddressingService.sayHello_request.MessageID), XMLELEMENT(NAME "wsa:To", AddressingService.sayHello_request."To"), 
+                XMLELEMENT(NAME "wsa:ReplyTo", XMLELEMENT(NAME "wsa:Address", AddressingService.sayHello_request.ReplyTo)), 
+                XMLELEMENT(NAME "wsa:Action", AddressingService.sayHello_request.Action)), XMLELEMENT(NAME "soap:Body", XMLELEMENT(NAME "tns:sayHello", AddressingService.sayHello_request.sayHello))) AS xml_out;
             END;
             
             CREATE VIRTUAL PROCEDURE sayHello_response(IN xml_in xml NOT NULL) RETURNS TABLE (sayHelloResponse string) 
