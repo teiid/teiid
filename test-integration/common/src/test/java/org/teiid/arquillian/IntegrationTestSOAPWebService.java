@@ -18,9 +18,7 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.sql.Connection;
@@ -94,10 +92,10 @@ public class IntegrationTestSOAPWebService {
         Statement stmt = conn.createStatement();
         String sql = "SELECT *\n" + 
                 "FROM ADDRESSINGSERVICE.SAYHELLO\n" + 
-                "WHERE MESSAGEID = 'UUID-100' AND SAYHELLO = 'Teiid'\n" + 
-                "AND ADDRESSINGSERVICE.SAYHELLO.To = 'http://www.w3.org/2005/08/addressing/anonymous'\n" + 
+                "WHERE MESSAGEID = 'uuid:73e4d992-6bfe-4434-b8c3-37e00f36ad97' AND SAYHELLO = 'Teiid'\n" + 
+                "AND ADDRESSINGSERVICE.SAYHELLO.To = 'http://localhost:8080/jboss-jaxws-addressing/AddressingService'\n" + 
                 "AND ADDRESSINGSERVICE.SAYHELLO.ReplyTo = 'http://www.w3.org/2005/08/addressing/anonymous'\n" + 
-                "AND ADDRESSINGSERVICE.SAYHELLO.Action = 'http://www.w3.org/2005/08/addressing/ServiceIface/sayHello'";
+                "AND ADDRESSINGSERVICE.SAYHELLO.Action = 'http://www.jboss.org/jbossws/ws-extensions/wsaddressing/ServiceIface/sayHello'";
         ResultSet rs = stmt.executeQuery(sql);
         assertTrue(rs.next());
         assertEquals("Hello World!", rs.getString(1));
