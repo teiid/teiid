@@ -19,9 +19,15 @@ package org.teiid.translator.jpa;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
@@ -29,7 +35,6 @@ import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
-import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
 
@@ -99,6 +104,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 			public Set<EntityType<?>> getEntities() {
 				return model.getEntities().stream()
 						.filter(e -> e.getJavaType() != null)
+						.sorted(Comparator.comparing(EntityType::getName))
 						.collect(Collectors.toSet());
 			}
 
@@ -152,7 +158,10 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 	private void addSingularAttributes(MetadataFactory mf, Metamodel model,
 			ManagedType<?> entity, Table entityTable, List<String> path)
 			throws TranslatorException {
-		for (Attribute<?, ?> attr:entity.getAttributes()) {
+	    List<Attribute<?,?>> attributes = new ArrayList<>(entity.getAttributes());
+	    Collections.sort(attributes, Comparator.comparing(Attribute::getName));
+	    
+		for (Attribute<?, ?> attr:attributes) {
 			if (!attr.isCollection()) {
 				List<String> attrPath = new LinkedList<>(path);
 				attrPath.add(attr.getName());

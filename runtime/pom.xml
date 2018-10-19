@@ -95,10 +95,6 @@
         <artifactId>rxjava</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.jboss.narayana.jta</groupId>
-        <artifactId>narayana-jta</artifactId>
-    </dependency>            
-    <dependency>
         <groupId>org.jboss.marshalling</groupId>
         <artifactId>jboss-marshalling-river</artifactId>
     </dependency>

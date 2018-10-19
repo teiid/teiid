@@ -21,6 +21,7 @@ package org.teiid.translator.jpa.model;
 import java.io.Serializable;
 import java.util.Collection;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -29,7 +30,8 @@ public class Exchange implements Serializable {
 
     @Id
     private String name;
-    
+
+    @ElementCollection(targetClass=Marketdata.class)
     private Collection<Marketdata> quotes;
     
     public Collection<Marketdata> getQuotes() {

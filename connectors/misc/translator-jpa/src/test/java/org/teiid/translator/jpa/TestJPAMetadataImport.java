@@ -60,8 +60,8 @@ public class TestJPAMetadataImport {
                 "\n" + 
                 "CREATE FOREIGN TABLE Marketdata (\n" + 
                 "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" + 
-                "\tprice bigdecimal OPTIONS (NAMEINSOURCE 'price'),\n" + 
                 "\texchange_name string OPTIONS (NAMEINSOURCE 'name', \"teiid_jpa:assosiated_with_table\" 'market.Exchange', \"teiid_jpa:relation_key\" 'name', \"teiid_jpa:relation_property\" 'exchange'),\n" + 
+                "\tprice bigdecimal OPTIONS (NAMEINSOURCE 'price'),\n" + 
                 "\tstock_id string OPTIONS (NAMEINSOURCE 'id', \"teiid_jpa:assosiated_with_table\" 'market.Stock', \"teiid_jpa:relation_key\" 'id', \"teiid_jpa:relation_property\" 'stock'),\n" + 
                 "\tCONSTRAINT PK_Marketdata PRIMARY KEY(id),\n" + 
                 "\tCONSTRAINT FK_exchange FOREIGN KEY(exchange_name) REFERENCES Exchange  OPTIONS (NAMEINSOURCE 'exchange'),\n" + 
@@ -73,8 +73,8 @@ public class TestJPAMetadataImport {
                 "\n" +
                 "CREATE FOREIGN TABLE Stock (\n" + 
                 "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" + 
-                "\tsymbol string OPTIONS (NAMEINSOURCE 'symbol'),\n" + 
                 "\tcompanyName string OPTIONS (NAMEINSOURCE 'companyName'),\n" + 
+                "\tsymbol string OPTIONS (NAMEINSOURCE 'symbol'),\n" + 
                 "\tCONSTRAINT PK_Stock PRIMARY KEY(id)\n" + 
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_jpa:entity_class\" 'org.teiid.translator.jpa.model.Stock');", ddl);
         

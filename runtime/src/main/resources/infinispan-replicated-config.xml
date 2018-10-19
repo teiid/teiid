@@ -37,8 +37,10 @@
 
 		<local-cache name="preparedplan">
 		    <transaction mode="NONE"/>
-			<eviction max-entries="512" strategy="LIRS" />
 			<expiration lifespan="28800" />
+            <memory>
+               <object size="512" strategy="REMOVE"></object>
+            </memory>
 		</local-cache>
 
 		<replicated-cache name="resultset-repl" mode="SYNC" remote-timeout="25000">

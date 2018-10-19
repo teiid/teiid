@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Marketdata implements Serializable {
@@ -30,8 +31,10 @@ public class Marketdata implements Serializable {
 
 	@Id
 	private String id;
+	@ManyToOne
 	private Stock stock;
 	private BigDecimal price;
+	@ManyToOne
 	private Exchange exchange;
 	
 	public Stock getStock() {
