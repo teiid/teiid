@@ -670,16 +670,18 @@ public class TestFunctionLibrary {
 		helpInvokeMethod("cot", new Object[] { new Double(1.57) }, new Double(7.963269632231926E-4)); //$NON-NLS-1$
 	}
 
-	@Test public void testInvokeDegrees() {
-		helpInvokeMethod("degrees", new Object[] { new Double(1.57) }, new Double(89.95437383553926)); //$NON-NLS-1$
+	@Test public void testInvokeDegrees() throws Exception {
+		Double result = (Double) helpInvokeMethod("degrees", null, new Object[] { new Double(1.57) }, null); //$NON-NLS-1$
+        assertEquals(result, 89.95437383553926, .000000001);
 	}
 
 	@Test public void testInvokePI() {
 		helpInvokeMethod("pi", new Object[] { }, new Double(3.141592653589793)); //$NON-NLS-1$
 	}
 
-	@Test public void testInvokeRadians() {
-		helpInvokeMethod("radians", new Object[] { new Double(89.95437383553926) }, new Double(1.57)); //$NON-NLS-1$
+	@Test public void testInvokeRadians() throws Exception {
+		Double result = (Double) helpInvokeMethod("radians", null, new Object[] { new Double(89.95437383553926) }, null); //$NON-NLS-1$
+		assertEquals(result, 1.57, .000000001);
 	}
 	
 	@Test public void testInvokeSin() {

@@ -46,7 +46,14 @@
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-common</artifactId>
-		</dependency>
+			<exclusions>
+			     <exclusion>
+			         <!-- removed for Java 9 -->
+			         <artifactId>jdk.tools</artifactId>
+			         <groupId>jdk.tools</groupId>
+			     </exclusion>
+			</exclusions>
+		</dependency> 
 		<dependency>
 			<groupId>org.apache.thrift</groupId>
 			<artifactId>libthrift</artifactId>

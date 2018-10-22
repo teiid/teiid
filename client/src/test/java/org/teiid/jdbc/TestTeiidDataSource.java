@@ -22,15 +22,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
-
-import junit.framework.TestCase;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.net.TeiidURL;
+
+import junit.framework.TestCase;
 
 @SuppressWarnings("nls")
 public class TestTeiidDataSource extends TestCase {
@@ -176,7 +178,20 @@ public class TestTeiidDataSource extends TestCase {
 		} catch (TeiidSQLException e) {
 			throw new RuntimeException(e);
 		}
-        assertEquals(expectedURL, url);
+		compareUrls(expectedURL, url);
+    }
+
+    /**
+     * Compare urls without regard to property ordering
+     * @param expectedURL
+     * @param url
+     */
+    private void compareUrls(final String expectedURL, String url) {
+        String parts[] = url.split(";", 2);
+		String expectedParts[] = expectedURL.split(";", 2);
+		
+		assertEquals(parts[0], expectedParts[0]);
+		assertEquals(new HashSet<String>(Arrays.asList(parts[1].split(";"))), new HashSet<String>(Arrays.asList(expectedParts[1].split(";"))));
     }
 
     public Connection helpTestConnection( final String vdbName, final String vdbVersion,
@@ -666,7 +681,7 @@ public class TestTeiidDataSource extends TestCase {
     	ds.setServerName("hostName"); //$NON-NLS-1$
     	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
     	ds.setPortNumber(1);
-    	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;fetchSize=2048;ApplicationName=JDBC;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
+    	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;ApplicationName=JDBC;VirtualDatabaseName=vdbName;a=b;fetchSize=2048;foo=bar", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
     }
     
     public void testBuildURLEncryptRequests() throws TeiidSQLException {
@@ -674,7 +689,7 @@ public class TestTeiidDataSource extends TestCase {
     	ds.setServerName("hostName"); //$NON-NLS-1$
     	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
     	ds.setEncryptRequests(true);
-    	assertEquals("jdbc:teiid:vdbName@mm://hostname:0;fetchSize=2048;ApplicationName=JDBC;encryptRequests=true;VirtualDatabaseName=vdbName", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
+    	compareUrls("jdbc:teiid:vdbName@mm://hostname:0;fetchSize=2048;ApplicationName=JDBC;encryptRequests=true;VirtualDatabaseName=vdbName", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
     }
 
     public void testInvalidDataSource() {
@@ -766,7 +781,7 @@ public class TestTeiidDataSource extends TestCase {
     	tds.setJaasName("x");
     	tds.setKerberosServicePrincipleName("z");
     	tds.setServerName("t");
-    	assertEquals("jdbc:teiid:y@mm://t:0;fetchSize=2048;ApplicationName=JDBC;user=%2525user;jaasName=x;VirtualDatabaseName=y;kerberosServicePrincipleName=z", tds.buildURL().getJDBCURL());
+    	compareUrls("jdbc:teiid:y@mm://t:0;fetchSize=2048;ApplicationName=JDBC;user=%2525user;jaasName=x;VirtualDatabaseName=y;kerberosServicePrincipleName=z", tds.buildURL().getJDBCURL());
     	
     }
     

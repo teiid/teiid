@@ -34,7 +34,7 @@ public class TestXMLInputStream {
 	
 	@Test public void testStreaming() throws Exception {
 		StringBuilder xmlBuilder = new StringBuilder();
-		xmlBuilder.append("<?xml version=\"1.0\"?><root>");
+		xmlBuilder.append("<root>");
 		for (int i = 0; i < 1000; i++) {
 			xmlBuilder.append("<a></a>");
 			xmlBuilder.append("<b></b>");
@@ -45,12 +45,15 @@ public class TestXMLInputStream {
 		StAXSource source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader(xml)));
 		XMLInputStream is = new XMLInputStream(source, XMLOutputFactory.newFactory());
 		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
-		assertEquals(xml, new String(bytes, "UTF-8"));
+		String string = new String(bytes, "UTF-8");
+		assertTrue(string, string.startsWith("<?xml version=\"1.0\""));
+		//omit document declaration
+        assertEquals(xml, string.substring(string.indexOf("><") + 1));
 	}
 	
 	@Test public void testUTF16Streaming() throws Exception {
 		StringBuilder xmlBuilder = new StringBuilder();
-		xmlBuilder.append("<?xml version=\"1.0\"?><root>");
+		xmlBuilder.append("<root>");
 		for (int i = 0; i < 1000; i++) {
 			xmlBuilder.append("<a></a>");
 			xmlBuilder.append("<b></b>");
@@ -61,7 +64,10 @@ public class TestXMLInputStream {
 		StAXSource source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader(xml)));
 		XMLInputStream is = new XMLInputStream(source, XMLOutputFactory.newFactory(), "UTF-16");
 		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
-		assertEquals(xml, new String(bytes, "UTF-16"));
+		String string = new String(bytes, "UTF-16");
+		assertTrue(string, string.startsWith("<?xml version=\"1.0\""));
+        //omit document declaration
+        assertEquals(xml, string.substring(string.indexOf("><") + 1));
 	}
 
 }

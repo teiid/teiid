@@ -223,7 +223,7 @@ public class TestJDBCURL {
         props.setProperty(BaseDataSource.PASSWORD, "mypassword"); //$NON-NLS-1$
         props.put("ClieNTtOKeN", new Integer(1)); //$NON-NLS-1$
         url = new JDBCURL("myVDB", "mm://myhost:12345", props); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("jdbc:teiid:myVDB@mm://myhost:12345;user=myuser;password=mypassword", url.getJDBCURL()); //$NON-NLS-1$
+        assertEquals("jdbc:teiid:myVDB@mm://myhost:12345;password=mypassword;user=myuser", url.getJDBCURL()); //$NON-NLS-1$
     }
     
     @Test public void testConstructor_Exception() {
@@ -328,7 +328,7 @@ public class TestJDBCURL {
     	p.setProperty("any", "thing"); //$NON-NLS-1$ //$NON-NLS-2$
     	
     	url = new JDBCURL("vdb", "/home/foo/deploy.properties", p); //$NON-NLS-1$ //$NON-NLS-2$
-    	assertTrue(url.getJDBCURL().startsWith("jdbc:teiid:vdb@/home/foo/deploy.properties;user=test;")); //$NON-NLS-1$
+    	assertTrue(url.getJDBCURL().startsWith("jdbc:teiid:vdb@/home/foo/deploy.properties;")); //$NON-NLS-1$
     	assertTrue(url.getJDBCURL().indexOf("any=thing")!=-1); //$NON-NLS-1$
     	assertTrue(url.getJDBCURL().indexOf("password=pass")!=-1); //$NON-NLS-1$
     	assertTrue(url.getJDBCURL().indexOf("autoFailover=true")!=-1); //$NON-NLS-1$

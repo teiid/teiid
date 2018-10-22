@@ -34,7 +34,7 @@ public class TestXMLReader {
 	
 	@Test public void testStreaming() throws Exception {
 		StringBuilder xmlBuilder = new StringBuilder();
-		xmlBuilder.append("<?xml version=\"1.0\"?><root>");
+		xmlBuilder.append("<root>");
 		for (int i = 0; i < 1000; i++) {
 			xmlBuilder.append("<a></a>");
 			xmlBuilder.append("<b></b>");
@@ -45,7 +45,9 @@ public class TestXMLReader {
 		StAXSource source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader(xml)));
 		XMLReader is = new XMLReader(source, XMLOutputFactory.newFactory());
 		String str = ObjectConverterUtil.convertToString(is);
-		assertEquals(xml, str);
+		assertTrue(str, str.startsWith("<?xml version=\"1.0\""));
+        //omit document declaration
+        assertEquals(xml, str.substring(str.indexOf("><") + 1));
 	}
 
 }

@@ -203,7 +203,10 @@ public class JDBCURL {
             	if (this.connectionURL != null) {
             		buf.append('@').append(connectionURL);
             	}
-            for (Iterator i = properties.entrySet().iterator(); i.hasNext();) {
+            TreeMap sorted = new TreeMap();
+            sorted.putAll(properties);
+            
+            for (Iterator i = sorted.entrySet().iterator(); i.hasNext();) {
                 Map.Entry entry = (Map.Entry)i.next();
                 if (entry.getValue() instanceof String) {
                     // get only the string properties, because a non-string property could not have been set on the url.

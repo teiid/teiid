@@ -85,4 +85,10 @@
           </resource>
 		</resources>
 	</build>
+	<dependencies>
+		<dependency>
+			<groupId>javax.activation</groupId>
+			<artifactId>activation</artifactId>
+		</dependency>
+	</dependencies>
 </project>

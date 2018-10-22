@@ -524,6 +524,40 @@ public final class PropertiesUtils {
     	return sb.toString();
     }
     
+    /**
+     * Return the bytes for a given hex string, or throw an {@link IllegalArgumentException}
+     * @param hex
+     * @return
+     */
+    public static byte[] fromHex(String hex) {
+        if (hex.length() % 2 != 0) {
+            throw new IllegalArgumentException();
+        }
+        byte[] result = new byte[hex.length() / 2];
+        for (int i = 0; i < hex.length(); i++) {
+            int charValue = hex.charAt(i);
+            //48-57 0-9
+            //65-70 A-F
+            //97-102 a-f
+            if (charValue >= 48 && charValue <= 57) {
+                charValue -= 48;
+            } else if (charValue >= 65 && charValue <= 70) {
+                charValue -= 55;
+            } else if (charValue >= 97 && charValue <= 102) {
+                charValue -= 87;
+            } else {
+                throw new IllegalArgumentException();
+            }
+            if (i % 2 == 0) {
+                //high nibble
+                result[i/2] |= (charValue << 4);  
+            } else {
+                result[i/2] |= charValue; 
+            }
+        }
+        return result;
+    }
+    
     public static void toHex(StringBuilder sb, InputStream is) throws IOException {
     	int i = 0;
     	while ((i = is.read()) != -1) {

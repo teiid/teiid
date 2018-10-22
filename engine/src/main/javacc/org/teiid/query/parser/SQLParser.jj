@@ -17,6 +17,7 @@ import java.math.BigInteger;
 import java.util.*;
 import org.teiid.core.types.*;
 import org.teiid.core.util.StringUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.proc.*;
@@ -5050,7 +5051,7 @@ Constant nonNumericLiteral() :
 		strVal=stringVal()	{ 
 			constant = new Constant(strVal, DataTypeManager.DefaultDataClasses.STRING);
 		} |
-		t=<BINARYSTRINGVAL> { constant = new Constant(new BinaryType(javax.xml.bind.DatatypeConverter.parseHexBinary(t.image.substring(2, t.image.length() - 1))), DataTypeManager.DefaultDataClasses.VARBINARY); } |
+		t=<BINARYSTRINGVAL> { constant = new Constant(new BinaryType(PropertiesUtils.fromHex(t.image.substring(2, t.image.length() - 1))), DataTypeManager.DefaultDataClasses.VARBINARY); } |
 		t=<FALSE>    { constant = new Constant(Boolean.FALSE, DataTypeManager.DefaultDataClasses.BOOLEAN); } |
 		t=<TRUE>     { constant = new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN); }  |
         t=<UNKNOWN>  { constant = new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN); }       |
