@@ -13,7 +13,7 @@
     </fileSets>
     <files>
         <file>
-            <source>../../../teiid-releasenotes.html</source>
+            <source>${project.basedir}/teiid-releasenotes.html</source>
             <outputDirectory>content/docs/teiid</outputDirectory>
             <filtered>true</filtered>
         </file>
