@@ -9,14 +9,11 @@
         <fileSet>
             <directory>${project.build.directory}/${project.artifactId}-${project.version}</directory>
             <outputDirectory/>
-            <excludes>
-                <exclude>content/docs/teiid/teiid-releasenotes.html</exclude>
-            </excludes>
         </fileSet>
     </fileSets>
     <files>
         <file>
-            <source>${project.build.directory}/${project.artifactId}-${project.version}/content/docs/teiid/teiid-releasenotes.html</source>
+            <source>../../../teiid-releasenotes.html</source>
             <outputDirectory>content/docs/teiid</outputDirectory>
             <filtered>true</filtered>
         </file>
