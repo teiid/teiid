@@ -523,11 +523,6 @@
 	        </dependency>
 			<dependency>
 				<groupId>org.teiid</groupId>
-				<artifactId>teiid-adminshell</artifactId>
-                <version>${project.version}</version>
-			</dependency>                      
-			<dependency>
-				<groupId>org.teiid</groupId>
 				<artifactId>teiid-client</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
@@ -622,7 +617,6 @@
 		<module>engine</module>
 		<module>metadata</module>
 		<module>runtime</module>
-		<module>adminshell</module>
 		<module>hibernate-dialect</module>
 		<module>eclipselink-platform</module>		
 		<module>olingo-common</module>
