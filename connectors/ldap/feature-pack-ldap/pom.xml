@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>ldap</artifactId>
-      <version>10.3.5</version>
+      <version>10.3.6-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-ldap</artifactId>
     <name>Teiid Connector ldap Feature Pack</name>
