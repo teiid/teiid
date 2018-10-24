@@ -726,7 +726,7 @@ public class MetadataValidator {
 		    Block b = cpc.getBlock();
 		    PreOrderNavigator.doVisit(b, new LanguageVisitor() {
 		        public void visit(CommandStatement obj) {
-		            if (!obj.isReturnable() || obj.getCommand() instanceof DynamicCommand) {
+		            if (!obj.isReturnable() || obj.getCommand() instanceof DynamicCommand || !obj.getCommand().returnsResultSet()) {
 		                return;
 		            }
 		            for (int i = 0; i < proc.getResultSet().getColumns().size(); i++) {

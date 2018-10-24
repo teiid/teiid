@@ -145,7 +145,19 @@ public class TestMetadataValidator {
 		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
 		assertTrue(printError(report), report.hasItems());			
 	}
-	
+
+    @Test
+    public void testProcDependencies() throws Exception {
+        String ddl = "create virtual procedure proc1(IN e1 varchar) as begin end; "
+                + "create virtual procedure proc2(IN e1 varchar) RETURNS (x integer) as begin call proc1(e1); select 1; end; ";
+        buildModel("vm1", false, this.vdb, this.store, ddl);
+        buildTransformationMetadata();
+        ValidatorReport report = new ValidatorReport();
+        new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report,
+                new MetadataValidator());
+        assertFalse(printError(report), report.hasItems());
+    }
+
     @Test
     public void testInvalidView() throws Exception {
         String ddl = "create view g1 (e1 integer, e2 varchar(12)) AS select 'a';";
