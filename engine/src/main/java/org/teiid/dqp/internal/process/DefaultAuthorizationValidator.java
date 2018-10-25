@@ -22,6 +22,7 @@
  
 package org.teiid.dqp.internal.process;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -142,9 +143,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	@Override
 	public boolean isAccessible(AbstractMetadataRecord record,
 			CommandContext commandContext) {
-		if (policyDecider == null || !policyDecider.validateCommand(commandContext) 
-				//TODO - schemas cannot be hidden - unless we traverse them and find that nothing is accessible
-				|| record instanceof Schema) {
+		if (policyDecider == null || !policyDecider.validateCommand(commandContext)) {
 			return true;
 		}
 		AbstractMetadataRecord parent = record;
@@ -164,16 +163,42 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 		}
 		
 		//cache permission check
-		Boolean result = commandContext.isAccessible(record);
+		Boolean result = isAccessible(record, commandContext, action);
+		if (!result && record instanceof Schema) {
+		    Schema s = (Schema)record;
+	        //check if anything can be seen below the schema level
+		    
+		    if (anyAccessible(s.getTables().values(), commandContext, PermissionType.READ)) {
+		        result = true;
+		    } else if (anyAccessible(s.getProcedures().values(), commandContext, PermissionType.EXECUTE)) {
+                result = true;
+            } else if (anyAccessible(s.getFunctions().values(), commandContext, PermissionType.EXECUTE)) {
+                result = true;
+            }
+		}
+		commandContext.setAccessible(record, result);
+		return result;
+	}
+	
+	private boolean anyAccessible(Collection<? extends AbstractMetadataRecord> records, CommandContext commandContext, PermissionType permission) {
+        for (AbstractMetadataRecord record : records) {
+            if (isAccessible(record, commandContext, permission)) {
+                return true;
+            }
+        }
+        return false;
+	}
+
+    private Boolean isAccessible(AbstractMetadataRecord record,
+            CommandContext commandContext, PermissionType action) {
+        Boolean result = commandContext.isAccessible(record);
 		if (result != null) {
 			return result;
 		}
 		
 		HashSet<String> resources = new HashSet<String>(2);
-		resources.add(record.getFullName());
-		result = this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
-		commandContext.setAccessible(record, result);
-		return result;
-	}
+        resources.add(record.getFullName());
+		return this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
+    }
 	
 }

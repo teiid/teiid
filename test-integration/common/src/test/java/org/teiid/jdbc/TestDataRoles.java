@@ -151,11 +151,9 @@ public class TestDataRoles {
     	assertFalse(rs.next());
     	
     	rs = s.executeQuery("select * from sys.schemas where name like 's_' order by name");
-    	//both are visible for now
+    	//only s1 is visible, nothing in s2 is visible
     	assertTrue(rs.next());
     	assertEquals("s1", rs.getString("name"));
-    	assertTrue(rs.next());
-    	assertEquals("s2", rs.getString("name"));
     	assertFalse(rs.next());
     	
     	rs = s.executeQuery("select * from sys.columns where tablename like 't_'");
