@@ -138,9 +138,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	@Override
 	public boolean isAccessible(AbstractMetadataRecord record,
 			CommandContext commandContext) {
-		if (policyDecider == null || !policyDecider.validateCommand(commandContext) 
-				//TODO - schemas cannot be hidden - unless we traverse them and find that nothing is accessible
-				|| record instanceof Schema) {
+		if (policyDecider == null || !policyDecider.validateCommand(commandContext)) {
 			return true;
 		}
 		AbstractMetadataRecord parent = record;
@@ -160,16 +158,32 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 		}
 		
 		//cache permission check
-		Boolean result = commandContext.isAccessible(record);
+		Boolean result = isAccessible(record, commandContext, action);
+		if (!result && record instanceof Schema) {
+		    Schema s = (Schema)record;
+	        //check if anything can be seen below the schema level
+		    if (s.getTables().entrySet().stream().anyMatch(e->isAccessible(e.getValue(), commandContext, PermissionType.READ))) {
+		        result = true;
+		    } else if (s.getProcedures().entrySet().stream().anyMatch(e->isAccessible(e.getValue(), commandContext, PermissionType.EXECUTE))) {
+                result = true;
+            } else if (s.getFunctions().entrySet().stream().anyMatch(e->isAccessible(e.getValue(), commandContext, PermissionType.EXECUTE))) {
+                result = true;
+            }
+		}
+		commandContext.setAccessible(record, result);
+		return result;
+	}
+
+    private Boolean isAccessible(AbstractMetadataRecord record,
+            CommandContext commandContext, PermissionType action) {
+        Boolean result = commandContext.isAccessible(record);
 		if (result != null) {
 			return result;
 		}
 		
 		HashSet<String> resources = new HashSet<String>(2);
-		resources.add(record.getFullName());
-		result = this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
-		commandContext.setAccessible(record, result);
-		return result;
-	}
+        resources.add(record.getFullName());
+		return this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
+    }
 	
 }
