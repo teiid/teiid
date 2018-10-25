@@ -2584,5 +2584,20 @@ public class TestEmbeddedServer {
         assertTrue(rs.getObject(1) instanceof Boolean);
         assertTrue(rs.getObject(2) instanceof Long);
     }
+    
+    @Test public void testLongRanksDefault() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIRTUAL VIEW x as select row_number() over (order by 1) rn from (select 1) as x";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl.getBytes("UTF-8")), true);
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from x");
+        rs.next();
+        assertTrue(rs.getObject(1) instanceof Long);
+    }
 
 }

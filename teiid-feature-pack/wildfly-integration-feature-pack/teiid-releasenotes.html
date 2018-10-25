@@ -208,6 +208,11 @@ specified and isSourceRequired should return false (see setSourceRequired).  If 
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
+<h4>from 11.2</h4>
+<ul>
+   <li><a href="https://issues.jboss.org/browse/TEIID-5490">TEIID-5490</a> org.teiid.longRanks now defaults to true.  Analytical functions such as row_number return a long by default.</li>
+</ul>
+
 <h4>from 10.3</h4>
 <ul>
    <li><a href="https://issues.jboss.org/browse/TEIIDTOOLS-381">TEIIDTOOLS-381</a> the default max buffer space for Teiid embedded and derived runtimes (Thorntail/Spring Boot) is 5 gigabytes, rather than 50.  

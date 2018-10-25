@@ -108,7 +108,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	private static final Map<Class<?>, Class<?>> SUM_TYPES;
     private static final Map<Class<?>, Class<?>> AVG_TYPES;
     
-    public static boolean LONG_RANKS = PropertiesUtils.getHierarchicalProperty("org.teiid.longRanks", false, Boolean.class); //$NON-NLS-1$
+    public static final boolean LONG_RANKS = PropertiesUtils.getHierarchicalProperty("org.teiid.longRanks", true, Boolean.class); //$NON-NLS-1$
 
 	static {
 		SUM_TYPES = new HashMap<Class<?>, Class<?>>();
