@@ -579,7 +579,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		String transformation =
 			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, "  //$NON-NLS-1$ --we use SYS, but pg uses public
 			+ "typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, " //$NON-NLS-1$
-			+ "typelem, null as typinput, 2147483647 - row_number() over (order by typname) as typreceive, null as typdfault, teiid_name from texttable('" + //$NON-NLS-1$
+			+ "typelem, null as typinput, 2147483647 - cast(row_number() over (order by typname) as integer) as typreceive, null as typdfault, teiid_name from texttable('" + //$NON-NLS-1$
 			"16,bool,1,b,0,-1,0,0,boolean\n" + //$NON-NLS-1$
 			"17,bytea,-1,b,0,-1,0,0,blob\n" + //$NON-NLS-1$
 			"18,char,1,b,0,-1,0,0,\n" + //$NON-NLS-1$
