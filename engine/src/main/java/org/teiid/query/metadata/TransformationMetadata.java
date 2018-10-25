@@ -985,6 +985,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		tm.importedModels = this.importedModels;
 		tm.allowedLanguages = this.allowedLanguages;
 		tm.widenComparisonToString = this.widenComparisonToString;
+		tm.longRanks = this.longRanks;
 		return tm;
 	}
 	
