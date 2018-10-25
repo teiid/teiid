@@ -20,7 +20,7 @@ batch
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl:add()
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/component=locking:add(isolation=READ_COMMITTED)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/component=expiration:add(lifespan=7200000)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/component=eviction:add(max-entries=1024, strategy=LIRS)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/memory=object:add(max-entries=1024, strategy=REMOVE)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/component=transaction:add(mode=NON_XA)
 run-batch
 
@@ -28,7 +28,7 @@ batch
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset:add()
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/component=locking:add(isolation=READ_COMMITTED)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/component=expiration:add(lifespan=7200000)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/component=eviction:add(max-entries=1024, strategy=LIRS)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/memory=object:add(max-entries=1024, strategy=REMOVE)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/component=transaction:add(mode=NON_XA)
 run-batch
 
@@ -36,7 +36,7 @@ batch
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan:add()
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/component=locking:add(isolation=READ_COMMITTED)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/component=expiration:add(lifespan=28800)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/component=eviction:add(max-entries=512, strategy=LIRS)
+/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/memory=object:add(max-entries=512, strategy=REMOVE)
 /subsystem=infinispan/cache-container=teiid-cache:write-attribute(name=default-cache, value=resultset)
 run-batch
 
