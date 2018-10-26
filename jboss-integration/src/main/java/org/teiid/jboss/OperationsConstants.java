@@ -55,7 +55,7 @@ class OperationsConstants {
 	        .setAllowNull(true)
 	        .setAllowExpression(false)
 	        .build();   
-	public static final SimpleAttributeDefinition INCLUDE_SOURCE = new SimpleAttributeDefinition("include-source", ModelType.STRING, true); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition INCLUDE_SOURCE = new SimpleAttributeDefinition("include-source", ModelType.BOOLEAN, true); //$NON-NLS-1$
 	
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_NAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, true); //$NON-NLS-1$
@@ -67,5 +67,5 @@ class OperationsConstants {
 	public static final SimpleAttributeDefinition DDL = new SimpleAttributeDefinition("ddl", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition PERSIST = new SimpleAttributeDefinition("persist", ModelType.BOOLEAN, false); //$NON-NLS-1$
 	
-	public static final SimpleAttributeDefinition INCLUDE_SCHEMA = new SimpleAttributeDefinition("include-schema", ModelType.STRING, true); //$NON-NLS-1$	
+	public static final SimpleAttributeDefinition INCLUDE_SCHEMA = new SimpleAttributeDefinition("include-schema", ModelType.BOOLEAN, true); //$NON-NLS-1$	
 }

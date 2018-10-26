@@ -18,14 +18,13 @@
 
 package org.teiid.adminapi.jboss;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.jboss.VDBMetadataMapper;
 @SuppressWarnings("nls")
 public class TestRequestMetadata {
 	
@@ -55,73 +54,102 @@ public class TestRequestMetadata {
 		return request;
 	}
 	
-	public static final String desc = "{\n" + 
-			"    \"execution-id\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Unique Identifier for Request\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"session-id\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Session Identifier\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"start-time\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Start time for the request\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"command\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Executing Command\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"source-request\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"BOOLEAN\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Is this Connector level request\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"node-id\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"INT\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Node Identifier\",\n" + 
-			"        \"required\" : false\n" + 
-			"    },\n" + 
-			"    \"transaction-id\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Get Transaction XID if transaction involved\",\n" + 
-			"        \"required\" : false\n" + 
-			"    },\n" + 
-			"    \"processing-state\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"State of the Request\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"thread-state\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Thread state\",\n" + 
-			"        \"required\" : true\n" + 
-			"    }\n" + 
-			"}";
+	public static final String desc = "{\"attributes\" : {\n" + 
+	        "    \"execution-id\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"execution-id\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false\n" + 
+	        "    },\n" + 
+	        "    \"session-id\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"session-id\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"start-time\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"start-time\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false\n" + 
+	        "    },\n" + 
+	        "    \"command\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"command\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"source-request\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"BOOLEAN\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"source-request\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false\n" + 
+	        "    },\n" + 
+	        "    \"node-id\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"INT\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"node-id\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : false,\n" + 
+	        "        \"nillable\" : true\n" + 
+	        "    },\n" + 
+	        "    \"transaction-id\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"transaction-id\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : false,\n" + 
+	        "        \"nillable\" : true,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"processing-state\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"processing-state\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"thread-state\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"thread-state\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    }\n" + 
+	        "}}";
+	
 	@Test public void testDescribe() {
-		assertEquals(desc, VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(new ModelNode()).toJSONString(false));
+		assertEquals(desc, TestVDBMetaData.describe(new ModelNode(), VDBMetadataMapper.RequestMetadataMapper.INSTANCE.getAttributeDefinitions()).toJSONString(false));
 	}
 
 }

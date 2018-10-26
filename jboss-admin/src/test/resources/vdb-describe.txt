@@ -1,76 +1,100 @@
-{
+{"attributes" : {
     "vdb-name" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "STRING"
         },
-        "description" : "The Virtual Database Name",
-        "required" : true
+        "description" : "vdb-name",
+        "expressions-allowed" : false,
+        "required" : true,
+        "nillable" : false,
+        "min-length" : 1,
+        "max-length" : 2147483647
     },
     "connection-type" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "STRING"
         },
-        "description" : "Allowable Connections: 1) NONE - disallow new connections 2) BY VERSION - allow connections only if the version is specified or if this is the earliest 'BY VERSION' vdb and there are no vdbs marked as 'ANY' 3) ANY - allow connections with or without a version specified. If multiple versions of same VDB are deployed, connect to one specified with ANY, or if there are multiple VDBs with ANY then connect to the latest version with ANY ",
-        "required" : false,
-        "allowed" : [
-            "NONE",
-            "ANY",
-            "BY_VERSION"
-        ]
+        "description" : "connection-type",
+        "expressions-allowed" : false,
+        "required" : true,
+        "nillable" : false,
+        "min-length" : 1,
+        "max-length" : 2147483647
     },
     "status" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "STRING"
         },
-        "description" : "The Virtual Database Status",
+        "description" : "status",
+        "expressions-allowed" : false,
         "required" : true,
-        "allowed" : [
-            "ACTIVE",
-            "LOADING",
-            "FAILED",
-            "REMOVED"
-        ]
+        "nillable" : false,
+        "min-length" : 1,
+        "max-length" : 2147483647
     },
     "vdb-version" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "STRING"
         },
-        "description" : "The Virtual Database Version",
-        "required" : true
+        "description" : "vdb-version",
+        "expressions-allowed" : false,
+        "required" : true,
+        "nillable" : false,
+        "min-length" : 1,
+        "max-length" : 2147483647
     },
     "vdb-description" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "STRING"
         },
-        "description" : "Description of the Virtual Database",
-        "required" : false
+        "description" : "vdb-description",
+        "expressions-allowed" : false,
+        "required" : false,
+        "nillable" : true,
+        "min-length" : 1,
+        "max-length" : 2147483647
     },
     "xml-deployment" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "BOOLEAN"
         },
-        "description" : "If the deployment is only the vdb.xml file.",
-        "required" : false
+        "description" : "xml-deployment",
+        "expressions-allowed" : false,
+        "required" : false,
+        "nillable" : true
     },
     "properties" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "LIST"
         },
         "description" : "properties",
+        "expressions-allowed" : false,
+        "required" : false,
+        "nillable" : true,
+        "min-length" : 0,
+        "max-length" : 2147483647,
         "value-type" : {
             "property-name" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Name",
-                "required" : true
+                "description" : "properties.property-name",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "property-value" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Property value",
-                "required" : true
+                "description" : "properties.property-value",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647
             }
         }
     },
@@ -78,96 +102,153 @@
         "type" : {
             "TYPE_MODEL_VALUE" : "LIST"
         },
+        "description" : "import-vdbs",
+        "expressions-allowed" : false,
+        "required" : false,
+        "nillable" : true,
+        "min-length" : 0,
+        "max-length" : 2147483647,
         "value-type" : {
             "import-vdb-name" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Name of the Virtual Database to import",
-                "required" : true
+                "description" : "import-vdbs.import-vdb-name",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "import-vdb-version" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Version of the Virtual Database to import",
-                "required" : true
+                "description" : "import-vdbs.import-vdb-version",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "import-policies" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "BOOLEAN"
                 },
-                "description" : "Whether to import associated data policies",
-                "required" : false
+                "description" : "import-vdbs.import-policies",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true
             }
-        },
-        "description" : "Imported vdbs"
+        }
     },
     "models" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "LIST"
         },
+        "description" : "models",
+        "expressions-allowed" : false,
+        "required" : false,
+        "nillable" : true,
+        "min-length" : 0,
+        "max-length" : 2147483647,
         "value-type" : {
             "model-name" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Name of the model",
-                "required" : true
+                "description" : "models.model-name",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "description" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Description",
-                "required" : false
+                "description" : "models.description",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "visible" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "BOOLEAN"
                 },
-                "description" : "Visibility of the model",
-                "required" : false
+                "description" : "models.visible",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true
             },
             "model-type" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Type of the Model(PHYSICAL, VIRTUAL, FUNCTION, OTHER)",
+                "description" : "models.model-type",
+                "expressions-allowed" : false,
                 "required" : true,
-                "allowed" : [
-                    "PHYSICAL",
-                    "VIRTUAL",
-                    "FUNCTION",
-                    "OTHER"
-                ]
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "model-path" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Path to model file inside the archive",
-                "required" : false
+                "description" : "models.model-path",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 1,
+                "max-length" : 2147483647
+            },
+            "metadata-status" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "STRING"
+                },
+                "description" : "models.metadata-status",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "properties" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "LIST"
                 },
-                "description" : "properties",
+                "description" : "models.properties",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 0,
+                "max-length" : 2147483647,
                 "value-type" : {
                     "property-name" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Name",
-                        "required" : true
+                        "description" : "models.property-name",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : false,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     },
                     "property-value" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Property value",
-                        "required" : true
+                        "description" : "models.property-value",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : false,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     }
                 }
             },
@@ -175,28 +256,45 @@
                 "type" : {
                     "TYPE_MODEL_VALUE" : "LIST"
                 },
-                "description" : "Model to source mapping",
+                "description" : "models.source-mappings",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 0,
+                "max-length" : 2147483647,
                 "value-type" : {
                     "source-name" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Source name for this model",
-                        "required" : true
+                        "description" : "models.source-name",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : false,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     },
                     "jndi-name" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Connection JNDI Name",
-                        "required" : true
+                        "description" : "models.jndi-name",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     },
                     "translator-name" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Name of the translator",
-                        "required" : true
+                        "description" : "models.translator-name",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : false,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     }
                 }
             },
@@ -204,100 +302,172 @@
                 "type" : {
                     "TYPE_MODEL_VALUE" : "LIST"
                 },
-                "description" : "Model validation errors",
+                "description" : "models.validity-errors",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 0,
+                "max-length" : 2147483647,
                 "value-type" : {
                     "error-path" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Path to the error in the Virtual Database",
-                        "required" : false
+                        "description" : "models.error-path",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     },
                     "severity" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Severity",
-                        "required" : true
+                        "description" : "models.severity",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : false,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     },
                     "message" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Error message",
-                        "required" : true
+                        "description" : "models.message",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : false,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     }
                 }
             },
-            "metadata-status" : {
+            "metadatas" : {
                 "type" : {
-                    "TYPE_MODEL_VALUE" : "STRING"
+                    "TYPE_MODEL_VALUE" : "LIST"
                 },
-                "description" : "Model metadata loading status",
-                "required" : true,
-                "allowed" : [
-                    "LOADING",
-                    "LOADED",
-                    "FAILED",
-                    "RETRYING"
-                ]
+                "description" : "models.metadatas",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 0,
+                "max-length" : 2147483647,
+                "value-type" : {
+                    "metadata" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "models.metadata",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
+                    },
+                    "metadata-type" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "models.metadata-type",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
+                    }
+                }
             }
-        },
-        "description" : "Models inside a virtual database"
+        }
     },
     "override-translators" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "LIST"
         },
-        "description" : "Overridden translators for the Virtual Database",
+        "description" : "override-translators",
+        "expressions-allowed" : false,
+        "required" : false,
+        "nillable" : true,
+        "min-length" : 0,
+        "max-length" : 2147483647,
         "value-type" : {
             "translator-name" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Name of the translator",
-                "required" : true
+                "description" : "override-translators.translator-name",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "base-type" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Translator Base Type",
-                "required" : true
+                "description" : "override-translators.base-type",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "translator-description" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Translator description",
-                "required" : false
+                "description" : "override-translators.translator-description",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "module-name" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Translator's Module name",
-                "required" : false
+                "description" : "override-translators.module-name",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "properties" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "LIST"
                 },
-                "description" : "properties",
+                "description" : "override-translators.properties",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 0,
+                "max-length" : 2147483647,
                 "value-type" : {
                     "property-name" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Name",
-                        "required" : true
+                        "description" : "override-translators.property-name",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : false,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     },
                     "property-value" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Property value",
-                        "required" : true
+                        "description" : "override-translators.property-value",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : false,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     }
                 }
             }
@@ -307,104 +477,197 @@
         "type" : {
             "TYPE_MODEL_VALUE" : "LIST"
         },
-        "description" : "Data access policies defined for the Virtual Database",
+        "description" : "data-policies",
+        "expressions-allowed" : false,
+        "required" : false,
+        "nillable" : true,
+        "min-length" : 0,
+        "max-length" : 2147483647,
         "value-type" : {
             "policy-name" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Name of the policy",
-                "required" : true
+                "description" : "data-policies.policy-name",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "policy-description" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Description of the policy",
-                "required" : false
+                "description" : "data-policies.policy-description",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 1,
+                "max-length" : 2147483647
             },
             "allow-create-temp-tables" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "BOOLEAN"
                 },
-                "description" : "Allows create of temporary table",
-                "required" : false
+                "description" : "data-policies.allow-create-temp-tables",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true
             },
             "any-authenticated" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "BOOLEAN"
                 },
-                "description" : "Indicates if the role is mapped to any authenticated user",
-                "required" : false
+                "description" : "data-policies.any-authenticated",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true
             },
             "grant-all" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "BOOLEAN"
                 },
-                "description" : "Indicates if the role grants all permissions",
-                "required" : false
+                "description" : "data-policies.grant-all",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true
             },
             "data-permissions" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "LIST"
                 },
-                "description" : "Permissions defined for data access",
+                "description" : "data-policies.data-permissions",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 0,
+                "max-length" : 2147483647,
                 "value-type" : {
                     "resource-name" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "STRING"
                         },
-                        "description" : "Resource path name for this permission",
-                        "required" : true
+                        "description" : "data-policies.resource-name",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : false,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
+                    },
+                    "resource-type" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "data-policies.resource-type",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
                     },
                     "allow-create" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "BOOLEAN"
                         },
-                        "description" : "create allowed",
-                        "required" : false
+                        "description" : "data-policies.allow-create",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true
                     },
                     "allow-delete" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "BOOLEAN"
                         },
-                        "description" : "delete allowed",
-                        "required" : false
+                        "description" : "data-policies.allow-delete",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true
                     },
                     "allow-update" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "BOOLEAN"
                         },
-                        "description" : "update allowed",
-                        "required" : false
+                        "description" : "data-policies.allow-update",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true
                     },
                     "allow-read" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "BOOLEAN"
                         },
-                        "description" : "read allowed",
-                        "required" : false
+                        "description" : "data-policies.allow-read",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true
                     },
                     "allow-execute" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "BOOLEAN"
                         },
-                        "description" : "execute allowed",
-                        "required" : false
+                        "description" : "data-policies.allow-execute",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true
                     },
                     "allow-alter" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "BOOLEAN"
                         },
-                        "description" : "alter allowed",
-                        "required" : false
+                        "description" : "data-policies.allow-alter",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true
                     },
                     "allow-language" : {
                         "type" : {
                             "TYPE_MODEL_VALUE" : "BOOLEAN"
                         },
-                        "description" : "language allowed",
-                        "required" : false
+                        "description" : "data-policies.allow-language",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true
+                    },
+                    "condition" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "data-policies.condition",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
+                    },
+                    "mask" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "data-policies.mask",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true,
+                        "min-length" : 1,
+                        "max-length" : 2147483647
+                    },
+                    "order" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "INT"
+                        },
+                        "description" : "data-policies.order",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true
+                    },
+                    "constraint" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "BOOLEAN"
+                        },
+                        "description" : "data-policies.constraint",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true
                     }
                 }
             },
@@ -412,11 +675,16 @@
                 "type" : {
                     "TYPE_MODEL_VALUE" : "LIST"
                 },
-                "description" : "Policy name to role name mapping",
+                "description" : "data-policies.mapped-role-names",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 0,
+                "max-length" : 2147483647,
                 "value-type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 }
             }
         }
     }
-}
+}}
