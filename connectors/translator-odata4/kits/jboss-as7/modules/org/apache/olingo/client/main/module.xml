@@ -18,6 +18,7 @@
         <module name="org.slf4j"/>
         <module name="org.apache.httpcomponents"/>
         <module name="org.apache.olingo.commons" export="true"/>
+        <module name="org.apache.commons.io" export="true"/>
     </dependencies>
     
 </module>
