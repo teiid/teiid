@@ -197,11 +197,6 @@ public class AdminFactory {
         }
         
         @Override
-        public ModelNode describe(ModelNode node) {
-            return null;
-        }
-        
-        @Override
         public ModelNode wrap(String obj, ModelNode node) {
             return null;
         }
@@ -407,10 +402,6 @@ public class AdminFactory {
 			}
 			@Override
 			public String unwrap(ModelNode node) {
-				return null;
-			}
-			@Override
-			public ModelNode describe(ModelNode node) {
 				return null;
 			}
 		}

@@ -18,12 +18,11 @@
 
 package org.teiid.adminapi.jboss;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.teiid.adminapi.impl.TransactionMetadata;
-import org.teiid.adminapi.jboss.VDBMetadataMapper;
 
 @SuppressWarnings("nls")
 public class TestTransactionMetadata {
@@ -46,39 +45,52 @@ public class TestTransactionMetadata {
 		assertEquals(tm.getScope(), tm1.getScope());
 	}
 
-	private static final String describe = "{\n" + 
-			"    \"session-id\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Session Identifier\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"txn-created-time\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Transaction created time\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"txn-scope\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Transaction scope (Request, Local, Global)\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"txn-id\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Transaction Identifier (XID)\",\n" + 
-			"        \"required\" : true\n" + 
-			"    }\n" + 
-			"}";
+	private static final String describe = "{\"attributes\" : {\n" + 
+	        "    \"session-id\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"session-id\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"txn-created-time\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"txn-created-time\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false\n" + 
+	        "    },\n" + 
+	        "    \"txn-scope\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"txn-scope\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false\n" + 
+	        "    },\n" + 
+	        "    \"txn-id\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"txn-id\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    }\n" + 
+	        "}}";
+	
 	@Test
 	public void testDescribe() {
-		ModelNode n = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.describe(new ModelNode());
+	    ModelNode n = TestVDBMetaData.describe(new ModelNode(), VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.getAttributeDefinitions());
 		//System.out.println(n.toJSONString(false));
 		assertEquals(describe, n.toJSONString(false));
 	}

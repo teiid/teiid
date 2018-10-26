@@ -17,12 +17,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -34,8 +29,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.concurrent.Future;
 
 import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
@@ -44,14 +37,9 @@ import org.jboss.as.connector.util.ConnectorServices;
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationDefinition;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
-import org.jboss.as.controller.descriptions.DefaultOperationDescriptionProvider;
-import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
-import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -330,26 +318,27 @@ class ListSessions extends TeiidOperationHandler{
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		String vdbName = null;
 		String version = null;
-		boolean filter = false;
+		VDBKey vdbKey = null;
 
 		if (operation.hasDefined(OperationsConstants.OPTIONAL_VDB_VERSION.getName()) && operation.hasDefined(OperationsConstants.OPTIONAL_VDB_NAME.getName())) {
 			vdbName = operation.get(OperationsConstants.OPTIONAL_VDB_NAME.getName()).asString();
 			version = operation.get(OperationsConstants.OPTIONAL_VDB_VERSION.getName()).asString();
-			checkVDB(context, vdbName, version);
-			filter = true;
+			VDBMetaData metadata = checkVDB(context, vdbName, version);
+			vdbKey = metadata.getAttachment(VDBKey.class);
+			if (vdbKey == null) {
+			    vdbKey = new VDBKey(vdbName, version);
+			}
 		}
 
 		ModelNode result = context.getResult();
-		Collection<SessionMetadata> sessions = getSessionService(context).getActiveSessions();
+		Collection<SessionMetadata> sessions = null;
+		if (vdbKey != null) {
+		    sessions = getSessionService(context).getSessionsLoggedInToVDB(vdbKey);
+		} else {
+		    sessions = getSessionService(context).getActiveSessions();
+		}
 		for (SessionMetadata session:sessions) {
-			if (filter) {
-				if (session.getVDBName().equals(vdbName) && session.getVDBVersion().equals(version)) {
-					VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
-				}
-			}
-			else {
-				VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
-			}
+			VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
 		}
 	}
 
@@ -689,7 +678,7 @@ class CacheStatistics extends BaseCachehandler {
 	@Override
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
 		builder.addParameter(OperationsConstants.CACHE_TYPE);
-		builder.setReplyType(ModelType.LIST);
+		builder.setReplyType(ModelType.OBJECT);
 		builder.setReplyParameters(VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.getAttributeDefinitions());
 	}
 }
@@ -729,7 +718,7 @@ class WorkerPoolStatistics extends TeiidOperationHandler{
 	}
 	@Override
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
-		builder.setReplyType(ModelType.LIST);
+		builder.setReplyType(ModelType.OBJECT);
 		builder.setReplyParameters(VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.getAttributeDefinitions());
 	}
 }
@@ -1626,7 +1615,7 @@ class EngineStatistics extends TeiidOperationHandler {
 
 	@Override
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
-		builder.setReplyType(ModelType.LIST);
+		builder.setReplyType(ModelType.OBJECT);
 		builder.setReplyParameters(VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE.getAttributeDefinitions());
 	}
 }

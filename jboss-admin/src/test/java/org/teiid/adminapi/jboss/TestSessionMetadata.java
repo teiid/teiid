@@ -18,12 +18,11 @@
 
 package org.teiid.adminapi.jboss;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.jboss.VDBMetadataMapper;
 
 @SuppressWarnings("nls")
 public class TestSessionMetadata {
@@ -49,81 +48,128 @@ public class TestSessionMetadata {
 		
 	}
 	
-	private static final String describe = "{\n" + 
-			"    \"application-name\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Application assosiated with Session\",\n" + 
-			"        \"required\" : false\n" + 
-			"    },\n" + 
-			"    \"created-time\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"When session created\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"client-host-address\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Host name from where the session created\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"ip-address\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"IP address from where session is created\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"last-ping-time\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Last ping time\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"session-id\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Session Identifier\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"user-name\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"User name associated with session\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"vdb-name\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"The Virtual Database Name\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"vdb-version\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"INT\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"The Virtual Database Version\",\n" + 
-			"        \"required\" : true\n" + 
-			"    },\n" + 
-			"    \"security-domain\" : {\n" + 
-			"        \"type\" : {\n" + 
-			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"        },\n" + 
-			"        \"description\" : \"Security domain that session used for login\",\n" + 
-			"        \"required\" : false\n" + 
-			"    }\n" + 
-			"}"; 
+	private static final String describe = "{\"attributes\" : {\n" + 
+	        "    \"application-name\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"application-name\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : false,\n" + 
+	        "        \"nillable\" : true,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"created-time\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"created-time\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false\n" + 
+	        "    },\n" + 
+	        "    \"client-host-address\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"client-host-address\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : false,\n" + 
+	        "        \"nillable\" : true,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"client-hardware-address\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"client-hardware-address\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : false,\n" + 
+	        "        \"nillable\" : true,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"ip-address\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"ip-address\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : false,\n" + 
+	        "        \"nillable\" : true,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"last-ping-time\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"last-ping-time\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false\n" + 
+	        "    },\n" + 
+	        "    \"session-id\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"session-id\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"user-name\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"user-name\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"vdb-name\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"vdb-name\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"vdb-version\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"vdb-version\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : true,\n" + 
+	        "        \"nillable\" : false,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    },\n" + 
+	        "    \"security-domain\" : {\n" + 
+	        "        \"type\" : {\n" + 
+	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+	        "        },\n" + 
+	        "        \"description\" : \"security-domain\",\n" + 
+	        "        \"expressions-allowed\" : false,\n" + 
+	        "        \"required\" : false,\n" + 
+	        "        \"nillable\" : true,\n" + 
+	        "        \"min-length\" : 1,\n" + 
+	        "        \"max-length\" : 2147483647\n" + 
+	        "    }\n" + 
+	        "}}"; 
 	
 	@Test public void testDescribe() {
-		ModelNode n = VDBMetadataMapper.SessionMetadataMapper.INSTANCE.describe(new ModelNode());
+		ModelNode n = TestVDBMetaData.describe(new ModelNode(), VDBMetadataMapper.SessionMetadataMapper.INSTANCE.getAttributeDefinitions());
 		//System.out.println(n.toJSONString(false));
 		assertEquals(describe, n.toJSONString(false));
 	}

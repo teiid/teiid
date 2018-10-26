@@ -23,6 +23,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 
+import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.descriptions.NonResolvingResourceDescriptionResolver;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.teiid.adminapi.impl.TestVDBUtility;
@@ -73,7 +75,7 @@ public class TestVDBMetaData {
 	
 	@Test
 	public void testVDBMetaDataDescribe() throws Exception {
-		ModelNode node = VDBMetadataMapper.INSTANCE.describe(new ModelNode());
+	    ModelNode node = TestVDBMetaData.describe(new ModelNode(), VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
 		String actual = node.toJSONString(false);
 		
 		assertEquals(ObjectConverterUtil.convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/vdb-describe.txt")), actual);
@@ -89,4 +91,12 @@ public class TestVDBMetaData {
 		assertNotSame(clone.getModelMetaDatas(), vdb.getModelMetaDatas());
 		//assertNotSame(clone.getDataPolicyMap(), vdb.getDataPolicyMap());
 	}
+
+    public static ModelNode describe(ModelNode node, AttributeDefinition[] attributes) {
+        for (AttributeDefinition ad : attributes) {
+            ad.addResourceAttributeDescription(node, NonResolvingResourceDescriptionResolver.INSTANCE,
+                    null, NonResolvingResourceDescriptionResolver.INSTANCE.getResourceBundle(null));
+        }
+        return node;
+    }
 }
