@@ -67,6 +67,9 @@
         <module name="org.jboss.as.controller-client"/> <!-- Admin -->
         <module name="org.jboss.as.controller"/> <!-- Admin -->
         
-        <module name="io.opentracing"/>
+        <module name="io.opentracing.opentracing-api"/>
+        <module name="io.opentracing.opentracing-noop"/>
+        <module name="io.opentracing.opentracing-util"/>
+        <module name="io.opentracing.contrib.opentracing-concurrent"/>
     </dependencies>
 </module>
