@@ -12,7 +12,8 @@
         <artifact name="${org.teiid:teiid-runtime}"/>
         <artifact name="${org.teiid:teiid-jboss-admin}"/>
         <artifact name="${org.teiid:teiid-data-quality}"/>
-        <resource-root path="deployments" />
+        <artifact name="${io.opentracing.contrib:opentracing-concurrent}"/>
+		<resource-root path="deployments" />
     </resources>
 
     <dependencies>
@@ -67,6 +68,7 @@
         <module name="org.jboss.as.controller-client"/> <!-- Admin -->
         <module name="org.jboss.as.controller"/> <!-- Admin -->
         
-        <module name="io.opentracing"/>
+        <module name="io.opentracing.tracer" optional="true"/>
+        <module name="io.opentracing" slot="teiid"/>
     </dependencies>
 </module>
