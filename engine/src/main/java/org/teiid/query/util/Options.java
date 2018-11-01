@@ -41,6 +41,7 @@ public class Options {
 	public static final String AGGRESSIVE_JOIN_GROUPING = "org.teiid.aggressiveJoinGrouping"; //$NON-NLS-1$
 	public static final String MAX_SESSION_BUFFER_SIZE_ESTIMATE = "org.teiid.maxSessionBufferSizeEstimate"; //$NON-NLS-1$
 	public static final String ASSUME_MATCHING_COLLATION = "org.teiid.assumeMatchingCollation"; //$NON-NLS-1$
+	public static final String ENFORCE_SINGLE_MAX_BUFFER_SIZE_ESTIMATE = "org.teiid.enforceSingleMaxBufferSizeEstimate"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault = false;
@@ -53,6 +54,7 @@ public class Options {
 	private boolean aggressiveJoinGrouping = true;
 	private long maxSessionBufferSizeEstimate = Long.MAX_VALUE;
 	private boolean assumeMatchingCollation = true;
+	private boolean enforceSingleMaxBufferSizeEstimate = false;
 	
 	public Properties getProperties() {
 		return properties;
@@ -194,5 +196,19 @@ public class Options {
 		this.assumeMatchingCollation = b;
 		return this;
 	}
-
+	
+	public boolean isEnforceSingleMaxBufferSizeEstimate() {
+        return enforceSingleMaxBufferSizeEstimate;
+    }
+	
+	public void setEnforceSingleMaxBufferSizeEstimate(
+            boolean enforceSingleMaxBufferSizeEstimate) {
+        this.enforceSingleMaxBufferSizeEstimate = enforceSingleMaxBufferSizeEstimate;
+    }
+	
+	public Options enforceSingleMaxBufferSizeEstimate(
+            boolean b) {
+        this.enforceSingleMaxBufferSizeEstimate = b;
+        return this;
+    }
 }

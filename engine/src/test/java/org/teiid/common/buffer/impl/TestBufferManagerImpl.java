@@ -99,6 +99,7 @@ public class TestBufferManagerImpl {
         });
         bufferManager.setMaxReserveKB(10);
         bufferManager.setMaxActivePlans(20);
+        bufferManager.setEnforceMaxBatchManagerSizeEstimate(true);
         bufferManager.initialize();
         TupleBuffer tb = bufferManager.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, String.class)), "x", TupleSourceType.PROCESSOR);
         //fill one batch, which should then exceed the max

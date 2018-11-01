@@ -693,6 +693,7 @@ public class TestTempTables extends TempTableTestHarness {
 	@Test public void testLargeException() throws Exception {
 	    BufferManagerImpl bm = BufferManagerFactory.getTestBufferManager(20480, 256);
 	    bm.setMaxBatchManagerSizeEstimate(100000);
+	    bm.setEnforceMaxBatchManagerSizeEstimate(true);
 	    FakeDataManager fdm = new FakeDataManager();
         TestProcessor.sampleData1(fdm);
 	    setUp(RealMetadataFactory.example1Cached(), fdm, bm);
@@ -709,6 +710,22 @@ public class TestTempTables extends TempTableTestHarness {
             }
         }
         fail();
+    }
+	
+	@Test public void testLargeNoException() throws Exception {
+        BufferManagerImpl bm = BufferManagerFactory.getTestBufferManager(20480, 256);
+        bm.setMaxBatchManagerSizeEstimate(100000);
+        bm.setEnforceMaxBatchManagerSizeEstimate(false);
+        FakeDataManager fdm = new FakeDataManager();
+        TestProcessor.sampleData1(fdm);
+        setUp(RealMetadataFactory.example1Cached(), fdm, bm);
+        
+        execute("create local temporary table x (e1 string, e2 string)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("insert into x (e2, e1) values (1, 1)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        
+        for (int i = 0; i < 10; i++) {
+            execute("insert into x (e2, e1) select * from x", new List[] {Arrays.asList(1<<i)}); //$NON-NLS-1$
+        }
     }
 	
 }
