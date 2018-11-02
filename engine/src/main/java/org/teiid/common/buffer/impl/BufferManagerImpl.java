@@ -302,7 +302,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
                     throw new TeiidComponentException(QueryPlugin.Event.TEIID31261, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31261, maxBatchManagerSizeEstimate, id));
                 }
                 if (!sizeWarning) {
-                    LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31261, maxBatchManagerSizeEstimate, id));
+                    LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31292, maxBatchManagerSizeEstimate, id));
                     sizeWarning = true;
                 }
             }
