@@ -412,10 +412,14 @@ public class SessionAwareCache<T> {
 		return this.localCache.isTransactional() || this.distributedCache.isTransactional();
 	}
 	
+	public double getCacheHitRatio() {
+	    return this.getRequestCount() == 0?0:((double)this.getCacheHitCount()/this.getRequestCount())*100;
+	}
+	
 	public CacheStatisticsMetadata buildCacheStats(String name) {
 		CacheStatisticsMetadata stats = new CacheStatisticsMetadata();
 		stats.setName(name);
-		stats.setHitRatio(this.getRequestCount() == 0?0:((double)this.getCacheHitCount()/this.getRequestCount())*100);
+		stats.setHitRatio(getCacheHitRatio());
 		stats.setTotalEntries(this.getTotalCacheEntries());
 		stats.setRequestCount(this.getRequestCount());
 		return stats;

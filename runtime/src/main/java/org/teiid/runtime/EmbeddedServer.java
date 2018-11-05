@@ -122,6 +122,7 @@ import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
+import org.teiid.runtime.jmx.JMXService;
 import org.teiid.services.AbstractEventDistributorFactoryService;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
@@ -328,6 +329,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	private ShutDownListener shutdownListener = new ShutDownListener();
 	private SimpleChannelFactory channelFactory;
 	private NodeTracker nodeTracker = null;
+    private JMXService jmxService;
 
 	public EmbeddedServer() {
 
@@ -463,6 +465,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.shutdownListener.setBootInProgress(false);
 		this.shutdownListener.started();
+		this.jmxService = new JMXService(this.dqp, this.bufferService, this.sessionService);
+		this.jmxService.registerBeans();
 		running = true;
 	}
 
@@ -945,6 +949,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		dqp = null;
 		running = false;
 		this.shutdownListener.setShutdownInProgress(false);
+		this.jmxService.unregisterBeans();
+		this.jmxService = null;
 	}
 
 	private synchronized void checkStarted() {

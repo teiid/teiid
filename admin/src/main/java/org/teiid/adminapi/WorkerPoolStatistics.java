@@ -17,53 +17,6 @@
  */
 package org.teiid.adminapi;
 
-public interface WorkerPoolStatistics extends AdminObject, DomainAware{
+public interface WorkerPoolStatistics extends WorkerPoolStatisticsBean, AdminObject, DomainAware{
  
-	/**
-	 * Current active thread count
-	 * @return
-	 */
-	public int getActiveThreads();
-	
-	/**
-	 * Highest Active threads recorded so far
-	 * @return
-	 */
-	public int getHighestActiveThreads();
-	 
-	 
-	 /**
-	  * Queue Name
-	  * @return
-	  */
-	 public String getQueueName();
-	 
-	 
-	 /**
-	  * Max number of active threads allowed
-	  * @return
-	  */
-	 public int getMaxThreads();
-	
-	/** 
-     * @return Returns the number of requests queued.
-     * @since 4.3
-     */
-    public int getQueued();
-    
-    /**
-     * @return The number of completed tasks
-     */
-    long getTotalCompleted();
-    
-   
-    /**
-     * @return The number of submitted tasks
-     */
-    long getTotalSubmitted();
-    
-    /** 
-     * @return Returns the highest queue size
-     */
-    public int getHighestQueued();
 }

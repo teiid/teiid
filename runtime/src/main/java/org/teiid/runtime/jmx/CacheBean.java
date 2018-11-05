@@ -16,14 +16,19 @@
  * limitations under the License.
  */
 
-package org.teiid.adminapi;
+package org.teiid.runtime.jmx;
 
+import javax.management.MXBean;
 
-/**
- * A Session represents a single connection between a client and the server.
- * 
- * A user is allowed to have multiple sessions active simultaneously.
- */
-public interface Session extends SessionBean, AdminObject, DomainAware {
+@MXBean
+public interface CacheBean {
     
+    double getHitRatio();
+    
+    int getTotalEntries();
+    
+    long getRequestCount();
+    
+    public void clear();
+
 }

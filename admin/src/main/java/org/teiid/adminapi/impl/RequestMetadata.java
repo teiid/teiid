@@ -153,4 +153,9 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     	
     	return str.toString();
     }
+
+    @Override
+    public boolean isSourceRequest() {
+        return sourceRequest;
+    }
 }
