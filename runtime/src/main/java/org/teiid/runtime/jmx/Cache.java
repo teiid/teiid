@@ -16,14 +16,36 @@
  * limitations under the License.
  */
 
-package org.teiid.adminapi;
+package org.teiid.runtime.jmx;
 
+import org.teiid.dqp.internal.process.SessionAwareCache;
 
-/**
- * A Session represents a single connection between a client and the server.
- * 
- * A user is allowed to have multiple sessions active simultaneously.
- */
-public interface Session extends SessionBean, AdminObject, DomainAware {
+class Cache implements CacheBean {
+    
+    private SessionAwareCache<?> cache;
+    
+    public Cache(SessionAwareCache<?> cache) {
+        this.cache = cache;
+    }
+
+    @Override
+    public double getHitRatio() {
+        return cache.getCacheHitRatio();
+    }
+
+    @Override
+    public int getTotalEntries() {
+        return cache.getTotalCacheEntries();
+    }
+
+    @Override
+    public long getRequestCount() {
+        return cache.getRequestCount();
+    }
+
+    @Override
+    public void clear() {
+        cache.clearAll();
+    }
     
 }

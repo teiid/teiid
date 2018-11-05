@@ -26,6 +26,7 @@ import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
 import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
@@ -47,6 +48,7 @@ import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.runtime.jmx.JMXService;
 import org.teiid.services.InternalEventDistributorFactory;
 
 
@@ -55,6 +57,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		
 	private transient TransactionServerImpl transactionServerImpl = new TransactionServerImpl();
 	private transient DQPCore dqpCore = new DQPCore();
+	private transient JMXService jmx;
 
 	private final InjectedValue<WorkManager> workManagerInjector = new InjectedValue<WorkManager>();
 	private final InjectedValue<XATerminator> xaTerminatorInjector = new InjectedValue<XATerminator>();
@@ -83,7 +86,11 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		this.dqpCore.setResultsetCache(getResultSetCacheInjector().getValue());
 		this.dqpCore.setPreparedPlanCache(getPreparedPlanCacheInjector().getValue());
 		this.dqpCore.start(this);
-
+		
+		final SessionService sessionService = (SessionService) context.getController().getServiceContainer().getService(TeiidServiceNames.SESSION).getValue();
+		ServiceController<?> repo = context.getController().getServiceContainer().getRequiredService(TeiidServiceNames.BUFFER_MGR);
+		this.jmx = new JMXService(this.dqpCore, BufferManagerService.class.cast(repo.getService()), sessionService);
+		this.jmx.registerBeans();
 		
     	// add vdb life cycle listeners
     	getVdbRepository().addListener(new VDBLifeCycleListener() {
@@ -91,8 +98,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			@Override
 			public void removed(String name, CompositeVDB vdb) {
 				// terminate all the previous sessions
-				SessionService sessionService = (SessionService) context.getController().getServiceContainer().getService(TeiidServiceNames.SESSION).getValue();
-    			Collection<SessionMetadata> sessions = sessionService.getSessionsLoggedInToVDB(vdb.getVDBKey());
+				Collection<SessionMetadata> sessions = sessionService.getSessionsLoggedInToVDB(vdb.getVDBKey());
 				for (SessionMetadata session:sessions) {
 					sessionService.terminateSession(session.getSessionId(), null);
 				}
@@ -140,7 +146,10 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
     	} catch(TeiidRuntimeException e) {
     		// this bean is already shutdown
     	}
-    	
+    	if (this.jmx != null) {
+    	    jmx.unregisterBeans();
+    	    jmx = null;
+    	}
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50002, new Date(System.currentTimeMillis()).toString())); 
     }
     

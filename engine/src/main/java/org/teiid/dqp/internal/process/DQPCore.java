@@ -659,6 +659,10 @@ public class DQPCore implements DQP {
 		return rsCache;
 	}
 	
+    public SessionAwareCache<CachedResults> getResltSetCache() {
+        return rsCache;
+    }
+	
 	int getProcessorTimeSlice() {
 		return this.config.getTimeSliceInMilli();
 	}	
@@ -946,7 +950,7 @@ public class DQPCore implements DQP {
 		return maxActivePlans;
 	}
 	
-	SessionAwareCache<PreparedPlan> getPrepPlanCache() {
+	public SessionAwareCache<PreparedPlan> getPrepPlanCache() {
 		return prepPlanCache;
 	}
 	
