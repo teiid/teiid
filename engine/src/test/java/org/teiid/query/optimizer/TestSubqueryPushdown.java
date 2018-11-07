@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.AntiSemiJoin;
@@ -1807,5 +1808,24 @@ public class TestSubqueryPushdown {
         dataMgr.addData("SELECT g_0.DoubleNum FROM SmallA AS g_0 WHERE g_0.StringKey = '20'");
         
         TestProcessor.helpProcess(pp, dataMgr, new List[] {});
+    }
+    
+    @Test public void testSubqueryPredicatePushdown() throws Exception {
+        String sql = "SELECT array_agg((select intkey from bqt1.smallb where stringkey = lower(a.stringkey))) from bqt1.smalla a"; //$NON-NLS-1$
+        
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+
+        HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+    
+        dataMgr.addData("SELECT g_0.StringKey FROM SmallA AS g_0", Arrays.asList("a"));
+        dataMgr.addData("SELECT g_0.IntKey FROM SmallB AS g_0 WHERE g_0.StringKey = 'a'", Arrays.asList(1));
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        CommandContext cc = TestProcessor.createCommandContext();
+        
+        ProcessorPlan pp = TestProcessor.helpGetPlan(TestOptimizer.helpGetCommand(sql, metadata), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        
+        TestProcessor.helpProcess(pp, cc, dataMgr, new List[] {Arrays.asList(new ArrayImpl(1))});
     }
 }

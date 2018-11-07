@@ -46,6 +46,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor.ValidatorOptions;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.sql.lang.*;
@@ -562,7 +563,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         Expression expr = SymbolMap.getExpression(symbol);
         
         // Do the normal checks
-        if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(expr, modelID, metadata, capFinder, record, false, inSelectClause, false)) {
+        if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(expr, modelID, metadata, capFinder, record, new ValidatorOptions(false, inSelectClause, false))) {
             return false;
         }
         
@@ -959,7 +960,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     static boolean isSupportedJoinCriteria(SupportedJoinCriteria sjc, Criteria crit, Object accessModelID, 
     		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) 
     throws QueryMetadataException, TeiidComponentException {
-    	if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder, record, true, false, false) ) { 
+    	if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder, record, new ValidatorOptions(true, false, false)) ) { 
             return false;                        
         } 
         if (sjc == SupportedJoinCriteria.ANY) {

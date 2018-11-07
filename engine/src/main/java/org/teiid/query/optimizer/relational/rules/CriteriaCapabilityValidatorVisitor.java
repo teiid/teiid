@@ -59,6 +59,29 @@ import org.teiid.translator.SourceSystemFunctions;
 /**
  */
 public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
+    
+    public static class ValidatorOptions {
+        boolean isJoin;
+        boolean isSelectClause;
+        boolean multiValuedReferences;
+        boolean pushdown;
+
+        public ValidatorOptions() {
+            
+        }
+        
+        public ValidatorOptions(boolean isJoin, boolean isSelectClause,
+                boolean multiValuedReferences) {
+            this.isJoin = isJoin;
+            this.isSelectClause = isSelectClause;
+            this.multiValuedReferences = multiValuedReferences;
+        }
+        
+        ValidatorOptions pushdown(boolean b) {
+            this.pushdown = b;
+            return this;
+        }
+    }
 
     // Initialization state
     private Object modelID;
@@ -72,10 +95,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     // Output state
     private TeiidComponentException exception;
     private boolean valid = true;
+
+    // contextual state
     private boolean isJoin;
 	private boolean isSelectClause;
-	
 	private boolean checkEvaluation = true;
+	private boolean pushdown;
 
     /**
      * @param iterator
@@ -98,7 +123,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
 
 	private boolean willBecomeConstant(LanguageObject obj) {
-		return checkEvaluation && EvaluatableVisitor.willBecomeConstant(obj, true);
+		return checkEvaluation && EvaluatableVisitor.willBecomeConstant(obj, pushdown);
 	}
     
     @Override
@@ -836,7 +861,10 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         		}
                 //TODO: this check sees as correlated references as coming from the containing scope
                 //but this is only an issue with deeply nested subqueries
-                if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(subqueryContainer.getCommand(), critNodeModelID, metadata, capFinder, analysisRecord )) {
+                //we set the extra validation option to indicate that this is a full pushdown, rather than something
+                //that will be evaluated
+                if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(subqueryContainer.getCommand(), critNodeModelID, metadata, capFinder, analysisRecord, 
+                        new ValidatorOptions().pushdown(true) )) {
                     return null;
                 }
             } else if (CapabilitiesUtil.supports(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, critNodeModelID, metadata, capFinder)) {
@@ -948,10 +976,10 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
 
     public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException {
-    	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false, false, false);
+    	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, new ValidatorOptions());
     }
     
-    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin, boolean isSelectClause, final boolean multiValuedReferences) throws QueryMetadataException, TeiidComponentException {
+    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, ValidatorOptions parameterObject) throws QueryMetadataException, TeiidComponentException {
         if(obj == null) {
             return true;
         }
@@ -969,10 +997,11 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         }
         
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
-        visitor.setCheckEvaluation(!multiValuedReferences);
+        visitor.setCheckEvaluation(!parameterObject.multiValuedReferences);
         visitor.analysisRecord = analysisRecord;
-        visitor.isJoin = isJoin;
-        visitor.isSelectClause = isSelectClause;
+        visitor.isJoin = parameterObject.isJoin;
+        visitor.isSelectClause = parameterObject.isSelectClause;
+        visitor.pushdown = parameterObject.pushdown;
         //we use an array to represent multiple comparison attributes,
         //but we don't want that to inhibit pushdown as we'll account for that later
         //in criteria processing
@@ -1025,7 +1054,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     	        		}
         			}
 	        		obj.acceptVisitor(ev);
-	        		if (!multiValuedReferences && obj instanceof Expression) {
+	        		if (!parameterObject.multiValuedReferences && obj instanceof Expression) {
 	        			if (obj instanceof Function) {
 	        				if (!(obj instanceof AggregateSymbol)) {
 		        				Function f = (Function)obj;

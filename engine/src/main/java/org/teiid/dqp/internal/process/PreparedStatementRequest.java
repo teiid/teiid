@@ -50,6 +50,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.BatchedUpdatePlanner;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
+import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor.ValidatorOptions;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -180,7 +181,7 @@ public class PreparedStatementRequest extends Request {
 	        supportPreparedBatchUpdate = caps.supportsCapability(SourceCapabilities.Capability.BULK_UPDATE);
 	        if (supportPreparedBatchUpdate
 	                //only allow the plan if the multi-valued references result in expressions that can be pushed
-	                && !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(command, metadata.getModelID(modelName), metadata, capabilitiesFinder, analysisRecord, false, false, true)) {
+	                && !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(command, metadata.getModelID(modelName), metadata, capabilitiesFinder, analysisRecord, new ValidatorOptions(false, false, true))) {
 	            supportPreparedBatchUpdate = false;
 	        }
 		}

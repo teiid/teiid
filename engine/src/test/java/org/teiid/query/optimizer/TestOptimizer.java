@@ -5833,7 +5833,7 @@ public class TestOptimizer {
      * This is taken from testPushCorrelatedSubquery1.  However this subquery is not expected to be pushed down since the correlated
      * reference expression cannot be evaluated by the source.
      */
-    @Test public void testDefect23614() {
+    @Test public void testDefect23614() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -5848,7 +5848,29 @@ public class TestOptimizer {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("SELECT intkey FROM bqt1.smalla AS n WHERE intkey = /*+ no_unnest */ (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = concat(n.stringkey, 'a') )", RealMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
+        //the correlated reference expression cannot be pre-evaluated
+        ProcessorPlan plan = helpPlan("SELECT intkey FROM bqt1.smalla AS n WHERE intkey = /*+ no_unnest */ (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = concat(n.stringkey, s.stringnum) )", RealMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
+            null, capFinder,
+            new String[] { "SELECT intkey, n.stringkey FROM bqt1.smalla AS n" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            1,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+        
+        //the correlated reference expression can be pre-evaluated - should still prevent pushdown
+        plan = helpPlan("SELECT intkey FROM bqt1.smalla AS n WHERE intkey = /*+ no_unnest */ (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = concat(n.stringkey, 'a') )", RealMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT intkey, n.stringkey FROM bqt1.smalla AS n" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
