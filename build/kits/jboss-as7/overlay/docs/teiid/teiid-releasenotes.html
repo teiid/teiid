@@ -260,6 +260,9 @@ You can use the system property org.teiid.pgVersion to control this further.</p>
 <li/>
 	<p style="margin-bottom: 0in">
 <a href='https://issues.jboss.org/browse/TEIID-5474'>TEIID-5474</a> - NPE on Complex Query with Procedure Call in SELECT (backport of the changes along with the first commit of TEIID-4449)
+<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-5532'>TEIID-5532</a> - Common table projection minimization does not account for usage in a subquery nested in an aggregate or in some view scenarios (fix for inappropriate projection minimizationi, when cte is nested in a view, narrowing narrowing the commands used to determine usage correcting the marking of columns as accessible to be localized)
 </ul>
 
 <h4 class="western">from 8.12.16.6_4</h4>  

@@ -32,6 +32,7 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.SubqueryContainer;
@@ -409,6 +410,11 @@ public class PlanNode {
 				TableFunctionReference tfr = (TableFunctionReference)this.getProperty(NodeConstants.Info.TABLE_FUNCTION);
 				if (tfr != null) {
 					toSearch = Arrays.asList(tfr);
+				} else {
+				    Command cmd = (Command) this.getProperty(Info.VIRTUAL_COMMAND);
+	                if (cmd != null) {
+	                    toSearch = Arrays.asList(cmd);
+	                }
 				}
 				break;
 			}

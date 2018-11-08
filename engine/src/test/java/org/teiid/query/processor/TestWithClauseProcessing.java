@@ -1,6 +1,10 @@
 package org.teiid.query.processor;
 
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.teiid.query.processor.TestProcessor.createCommandContext;
+import static org.teiid.query.processor.TestProcessor.helpGetPlan;
+import static org.teiid.query.processor.TestProcessor.helpParse;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
+import static org.teiid.query.processor.TestProcessor.sampleData1;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +17,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -197,11 +202,8 @@ public class TestWithClauseProcessing {
 	    String sql = "with a as (select x, y, z from (select e1 as x, e2 as y, e3 as z from pm1.g1) v), b as (select e4 from pm1.g3) SELECT count(a.x), max(a.y) from a, a z group by z.x having max(a.y) < (with b as (select e1 from pm1.g1) select a.y from a, b where a.x = z.x)"; //$NON-NLS-1$
 	    
 	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
-	    List<?>[] expected = new List[] { 
-		        Arrays.asList("a", 1, "a"),
-		    };    
 
-	    dataManager.addData("WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, NULL FROM g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1", expected);
+	    dataManager.addData("WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, NULL FROM g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1", Arrays.asList("a", 1, "a"));
 	    dataManager.addData("WITH b__1 (e1) AS (SELECT NULL FROM g1 AS g_0), a (x, y, z) AS (SELECT g_0.e1, g_0.e2, NULL FROM g1 AS g_0) SELECT g_0.y FROM a AS g_0, b__1 AS g_1 WHERE g_0.x = 'a'", 
 	    		new List[] {Arrays.asList(2)});
 	    
@@ -527,11 +529,17 @@ public class TestWithClauseProcessing {
        
 	    String sql = "SELECT (with b (x) as (select e1 from pm1.g1) select b.x || c.x from b,b b1), x from (with a (x, b, c) as (select e1, e2, e3 from pm1.g1) select * from a limit 1) as c"; //$NON-NLS-1$
 	    
-	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, b, c) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT (WITH b (x) AS (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT concat(g_1.x, v_0.c_0) FROM b AS g_1, b AS g_2), v_0.c_0 FROM (SELECT g_0.x AS c_0 FROM a AS g_0 LIMIT 1) AS v_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, b, c) AS (SELECT g_0.e1, null, UNKNOWN FROM pm1.g1 AS g_0) SELECT (WITH b (x) AS (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT concat(g_1.x, v_0.c_0) FROM b AS g_1, b AS g_2), v_0.c_0 FROM (SELECT g_0.x AS c_0 FROM a AS g_0 LIMIT 1) AS v_0"}, ComparisonMode.EXACT_COMMAND_STRING);
 	    
 	    caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, false);
 	    
-	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, b, c) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT g_0.x AS c_0 FROM a AS g_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, b, c) AS (SELECT g_0.e1, null, UNKNOWN FROM pm1.g1 AS g_0) SELECT g_0.x AS c_0 FROM a AS g_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    sql = "SELECT (with b (x) as (select e1 from pm1.g1) select b.x || c.x from b,b b1), x from (with a (x, b, c) as (select e1, e2, e3 from pm1.g1) select * from a limit 1) as c"; //$NON-NLS-1$
+	    
+	    caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+	    
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, b, c) AS (SELECT g_0.e1, null, UNKNOWN FROM pm1.g1 AS g_0) SELECT (WITH b (x) AS (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT concat(g_1.x, v_0.c_0) FROM b AS g_1, b AS g_2), v_0.c_0 FROM (SELECT g_0.x AS c_0 FROM a AS g_0 LIMIT 1) AS v_0"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testWithPushdownNestedInsert() throws Exception {
@@ -893,6 +901,61 @@ public class TestWithClauseProcessing {
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
     }
    
+    @Test public void testUseInProjectedSubquery() throws Exception {
+       CommandContext cc = TestProcessor.createCommandContext();
+       BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+
+       TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+       
+       String sql = "with CTE1 as /*+ no_inline */ (SELECT e1, e2, e3 from pm1.g1) "
+               + "select array_agg((select e3 from cte1 where e1=pm1.g2.e1 and e2=pm1.g2.e2)) from pm1.g2";
+       
+       ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+       HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+       hdm.addData("SELECT g_0.e1, g_0.e2 FROM g2 AS g_0", Arrays.asList("a", 1));
+       hdm.addData("SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0", Arrays.asList("a", 1, true));
+       TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(new ArrayImpl(true))});
+    }
+    
+    @Test public void testUseInProjectedSubqueryView() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 string, e2 integer, e3 boolean);"
+                + " create foreign table g2 (e1 string, e2 integer, e3 boolean);"
+                + " create view v as with CTE1 as /*+ no_inline */ (SELECT e1, e2, e3 from pm1.g1) select array_agg((select e3 from cte1 where e1=pm1.g2.e1 and e2=pm1.g2.e2)) from pm1.g2", "x", "pm1");
+        
+        String sql = "select * from v";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("SELECT g_0.e1, g_0.e2 FROM g2 AS g_0", Arrays.asList("a", 1));
+        hdm.addData("SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0", Arrays.asList("a", 1, true));
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(new ArrayImpl(true))});
+    }
+    
+    @Test public void testMultpleViewUsage() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 string, e2 integer, e3 boolean);"
+                + " create view v as with CTE1 as /*+ no_inline */ (SELECT e1, e2, e3 from pm1.g1) select * from cte1", "x", "pm1");
+        
+        String sql = "select * from v";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0", Arrays.asList("a", 1, true));
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, true)});
+        
+        //should reset the notion of "accessed" to local command
+        sql = "select e1 from v";
+        plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        hdm = new HardcodedDataManager(metadata);
+        hdm.addData("SELECT g_0.e1 FROM g1 AS g_0", Arrays.asList("a"));
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
+    }
+   
     @Test public void testNestedSubqueryPreeval() throws Exception {
         CommandContext cc = TestProcessor.createCommandContext();
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
@@ -1025,6 +1088,77 @@ public class TestWithClauseProcessing {
         dataManager.addData("SELECT g_0.city FROM y.address AS g_0, y.customeraddress AS g_1 WHERE g_1.addressid = g_0.addressid", Arrays.asList("baltimore"));
         dataManager.addData("EXEC logMsg('INFO', 'DEBUG.FOO.BAR', 'baltimore')", Arrays.asList(Boolean.TRUE));
         helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(Boolean.TRUE)});
+    }
+    
+    @Test public void testWithProjectionMinimizationInView() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String ddl = "CREATE foreign TABLE tab1\n" + 
+                "(\n" + 
+                "  name string(4000)\n" + 
+                ");\n" + 
+                "CREATE foreign TABLE tab2\n" + 
+                "(\n" + 
+                "  course_id integer\n" + 
+                ");\n" + 
+                "CREATE foreign TABLE tab3\n" + 
+                "(\n" + 
+                "  course_id long\n" + 
+                ");\n" 
+                + "create view instructor_statement_2_3 as\n" + 
+                "with base_data as (\n" + 
+                "    select\n" + 
+                "        instructor_payment.course_id\n" + 
+                "    from dwh.tab3 as instructor_payment\n" + 
+                ")\n" + 
+                "    ,adjustments as (\n" + 
+                "    select\n" + 
+                "        course_id\n" + 
+                "    from dwh.tab2\n" + 
+                ")\n" + 
+                "    ,union_data as (\n" + 
+                "    select\n" + 
+                "        course_id\n" + 
+                "    from base_data      \n" + 
+                "    union\n" + 
+                "    select\n" + 
+                "       course_id\n" + 
+                "    from base_data         \n" + 
+                "    union\n" + 
+                "    select\n" + 
+                "        course_id\n" + 
+                "    from adjustments    \n" + 
+                ")\n" + 
+                "    ,line_items as (\n" + 
+                "    select\n" + 
+                "         dim_playlist.name as playlist_name\n" + 
+                "    from union_data\n" + 
+                "    left join dwh.tab1 as dim_playlist on true\n" + 
+                ")\n" + 
+                "    ,sub_totals as (\n" + 
+                "    select\n" + 
+                "        playlist_name\n" + 
+                "    from line_items\n" + 
+                ")\n" + 
+                "select\n" + 
+                "         line_items.playlist_name      \n" + 
+                "from line_items\n" + 
+                "union\n" + 
+                "select\n" + 
+                "         sub_totals.playlist_name\n" + 
+                "from sub_totals";
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "dwh");
+        
+        String sql = "select * from instructor_statement_2_3";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("SELECT g_0.course_id FROM tab2 AS g_0", Arrays.asList(1));
+        hdm.addData("SELECT g_0.name FROM tab1 AS g_0", Arrays.asList("a"));
+        hdm.addData("SELECT g_0.course_id FROM tab3 AS g_0", Arrays.asList(1l));
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
     }
 
 }

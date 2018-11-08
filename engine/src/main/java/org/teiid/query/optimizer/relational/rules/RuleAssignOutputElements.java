@@ -156,7 +156,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 						if (ex instanceof ElementSymbol) {
 							Object id = ((ElementSymbol)ex).getMetadataID();
 							if (id instanceof TempMetadataID) {
-								((TempMetadataID) id).setAccessed(true);
+								context.addAccessed((TempMetadataID)id);
 							}
 						}
 					}

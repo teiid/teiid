@@ -77,6 +77,7 @@ import org.teiid.net.ServerConnection;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -214,6 +215,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private AtomicBoolean cancelled = new AtomicBoolean();
     private AtomicBoolean parentCancelled;
     
+    private Collection<TempMetadataID> accessed;
     /**
      * Construct a new context.
      */
@@ -1172,5 +1174,18 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		}
 		this.globalState.accessible.put(record, result);
 	}
-	
+
+    /**
+     * Used by the planner to track only what is accessed by the plan
+     */
+    public void addAccessed(TempMetadataID id) {
+        if (this.accessed != null) {
+            this.accessed.add(id);
+        }
+    }
+    
+    public void setAccessed(Collection<TempMetadataID> accessed) {
+        this.accessed = accessed;
+    }
+    
 }
