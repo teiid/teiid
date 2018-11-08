@@ -15,6 +15,7 @@ import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -1047,6 +1048,22 @@ public class TestWithClauseProcessing {
          
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
     }
+   
+    @Test public void testUseInProjectedSubquery() throws Exception {
+       CommandContext cc = TestProcessor.createCommandContext();
+       BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+
+       TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+       
+       String sql = "with CTE1 as /*+ no_inline */ (SELECT e1, e2, e3 from pm1.g1) "
+               + "select array_agg((select e3 from cte1 where e1=pm1.g2.e1 and e2=pm1.g2.e2)) from pm1.g2";
+       
+       ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+       HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+       hdm.addData("SELECT g_0.e1, g_0.e2 FROM g2 AS g_0", Arrays.asList("a", 1));
+       hdm.addData("SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0", Arrays.asList("a", 1, true));
+       TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(new ArrayImpl(true))});
+   }
    
     @Test public void testNestedSubqueryPreeval() throws Exception {
         CommandContext cc = TestProcessor.createCommandContext();
