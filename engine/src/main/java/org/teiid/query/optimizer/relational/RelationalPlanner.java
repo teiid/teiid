@@ -310,8 +310,30 @@ public class RelationalPlanner {
 		planner.processWith = false; //we don't want to trigger the with processing for just projection
 		planner.initialize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 		planner.executeRules(stack, plan);
-		//discover all of the usage
-		List<Command> commands = CommandCollectorVisitor.getCommands(command, true);
+		//discover all of the usage - taking the top level
+		//common tables from the user command, and everything else from the plan
+		List<Command> commands = new ArrayList<>();
+		if (command instanceof QueryCommand) {
+		    QueryCommand query = (QueryCommand)command;
+		    List<WithQueryCommand> with = query.getWith();
+		    if (with != null) {
+		        for (WithQueryCommand withQueryCommand : with) {
+                    commands.add(withQueryCommand.getCommand());
+                }
+		    }
+		}
+		for (PlanNode node : getAllPossibleSubqueryNodes(plan)) {
+            List<SubqueryContainer<?>> subqueryContainers = node.getSubqueryContainers();
+            for (SubqueryContainer<?> subqueryContainer : subqueryContainers) {
+                commands.add(subqueryContainer.getCommand());
+            }
+            if (node.getType() == NodeConstants.Types.SOURCE) {
+                Command nested = (Command) node.getProperty(Info.NESTED_COMMAND);
+                if (nested != null) {
+                    commands.add(nested);
+                }
+            }
+        }
 		while (!commands.isEmpty()) {
 			Command cmd = commands.remove(commands.size() - 1);
 			commands.addAll(CommandCollectorVisitor.getCommands(cmd, true));
@@ -331,27 +353,13 @@ public class RelationalPlanner {
 			if (tid.getTableData().getModel() != TempMetadataAdapter.TEMP_MODEL) {
 			    tid.getTableData().setModel(null);
 			}
-			List<TempMetadataID> elements = tid.getElements();
-			List<Integer> toRemove = new ArrayList<Integer>();
-			for (int i = elements.size()-1; i >= 0; i--) {
-				TempMetadataID elem = elements.get(i);
-				if (!elem.isAccessed()) {
-					toRemove.add(i);
-				}
-			}
-			//the strategy here is to replace the actual projections with null.  this keeps
-			//the definition of the with clause consistent
-			if (!toRemove.isEmpty()) {
-			    if (with.isRecursive()) {
-			        SetQuery setQuery = (SetQuery) subCommand;
-		            setQuery.setLeftQuery(removeUnusedProjection(with, setQuery.getLeftQuery(), elements, toRemove));
-		            setQuery.setRightQuery(removeUnusedProjection(with, setQuery.getRightQuery(), elements, toRemove));
-		        } else {
-		            subCommand = removeUnusedProjection(with, subCommand, elements,
-                            toRemove);
-		            with.setCommand(subCommand);
-		        }
-			}
+			
+			//TODO: we should only minimize the projection for with clauses 
+			//that are local to the current command.  
+			//cte's in views are effectively causing us to repeat this
+			//analysis every time, as the logic doesn't consider 
+			//transitive column usage
+			subCommand = minimizeWithProjection(with, subCommand, tid);
 			if (with.isRecursive()) {
 				SetQuery setQuery = (SetQuery) subCommand;
 
@@ -415,6 +423,38 @@ public class RelationalPlanner {
 			this.withPlanningState.pushdownWith.put(with.getGroupSymbol().getName(), wqc);
 		}
 	}
+
+    private List<PlanNode> getAllPossibleSubqueryNodes(PlanNode plan) {
+        return NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP | NodeConstants.Types.SORT);
+    }
+
+    private QueryCommand minimizeWithProjection(WithQueryCommand with,
+            QueryCommand subCommand, TempMetadataID tid)
+            throws QueryMetadataException, QueryResolverException,
+            TeiidComponentException {
+        List<TempMetadataID> elements = tid.getElements();
+        List<Integer> toRemove = new ArrayList<Integer>();
+        for (int i = elements.size()-1; i >= 0; i--) {
+        	TempMetadataID elem = elements.get(i);
+        	if (!elem.isAccessed()) {
+        		toRemove.add(i);
+        	}
+        }
+        //the strategy here is to replace the actual projections with null.  this keeps
+        //the definition of the with clause consistent
+        if (!toRemove.isEmpty()) {
+            if (with.isRecursive()) {
+                SetQuery setQuery = (SetQuery) subCommand;
+                setQuery.setLeftQuery(removeUnusedProjection(with, setQuery.getLeftQuery(), elements, toRemove));
+                setQuery.setRightQuery(removeUnusedProjection(with, setQuery.getRightQuery(), elements, toRemove));
+            } else {
+                subCommand = removeUnusedProjection(with, subCommand, elements,
+                        toRemove);
+                with.setCommand(subCommand);
+            }
+        }
+        return subCommand;
+    }
 
 	/**
 	 * Remove unused projects by replacing with null
@@ -724,7 +764,7 @@ public class RelationalPlanner {
 	}
 
     private void connectSubqueryContainers(PlanNode plan, boolean skipPlanning) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
-        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP | NodeConstants.Types.SORT)) {
+        for (PlanNode node : getAllPossibleSubqueryNodes(plan)) {
             Set<GroupSymbol> groupSymbols = getGroupSymbols(node);
             List<SubqueryContainer<?>> subqueryContainers = node.getSubqueryContainers();
             planSubqueries(groupSymbols, node, subqueryContainers, false, skipPlanning);
