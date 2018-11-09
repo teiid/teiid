@@ -1271,6 +1271,43 @@ public class TestWithClauseProcessing {
         assertTrue(reads < 500000);
     }
     
+    @Test public void testWithImplicitIndexingCompositeKey() throws Exception {
+        String sql = "with a (x, y, z) as /*+ no_inline */ (select e1, e2, e3 from pm1.g1) "
+                + "select (select max(x) from a where z = pm1.g2.e3 and y = pm1.g2.e2), pm1.g2.* from pm1.g2"; //$NON-NLS-1$
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+        
+        int rowCount = 10240;
+        
+        List<?>[] rows = new List<?>[rowCount];
+        for (int i = 0; i < rows.length; i++) {
+            rows[i] = Arrays.asList(String.valueOf(i), i, i%2==0);
+        }
+        
+        dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3 FROM pm1.g1", rows);
+        
+        rows = new List<?>[rowCount];
+        for (int i = 0; i < rows.length; i++) {
+            rows[i] = Arrays.asList("a", i, i%2==0, 1.1);
+        }
+        
+        dataManager.addData("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2", rows);
+        
+        List<?>[] expected = new List[rowCount];
+        for (int i = 0; i < rows.length; i++) {
+            expected[i] = Arrays.asList(String.valueOf(i), "a", i, i%2==0, 1.1);
+        }
+        
+        CommandContext cc = createCommandContext();
+        BufferManagerImpl bm = (BufferManagerImpl) cc.getBufferManager();
+        long reads = bm.getReadAttempts();
+        helpProcess(plan, cc, dataManager, expected);
+        reads = bm.getReadAttempts() - reads;
+        assertTrue(reads < 250000);
+    }
+    
     @Test public void testRecursiveWithProjectionMinimization() throws Exception {
         String sql = "WITH table3 (column5,column6,column7) AS (\n" + 
                 "SELECT column1, column2, column3 FROM table1 where column1 = 'joe'\n" + 
