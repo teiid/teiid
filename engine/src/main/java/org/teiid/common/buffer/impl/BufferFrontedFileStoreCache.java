@@ -106,7 +106,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	private static final int HEADER_BYTES = 16;
 	private static final int EVICTION_SCANS = 2;
 
-	public static final int DEFAuLT_MAX_OBJECT_SIZE = 1 << 23;
+	public static final int DEFAULT_MAX_OBJECT_SIZE = 1 << 23;
 	
 	static final int ADDRESS_BITS = 31;
 	static final int SYSTEM_MASK = 1<<ADDRESS_BITS;
@@ -351,7 +351,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	}
 
 	private StorageManager storageManager;
-	private int maxStorageObjectSize = DEFAuLT_MAX_OBJECT_SIZE;
+	private int maxStorageObjectSize = DEFAULT_MAX_OBJECT_SIZE;
 	private long memoryBufferSpace = 1 << 26; //64MB
 	private boolean direct;
 	
@@ -563,9 +563,14 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, blocks, "max blocks"); //$NON-NLS-1$
 		inodesInuse = new ConcurrentBitSet(blocks+1, BufferManagerImpl.CONCURRENCY_LEVEL);
 		blocksInuse = new ConcurrentBitSet(blocks, BufferManagerImpl.CONCURRENCY_LEVEL);
-		this.blockByteBuffer = new BlockByteBuffer(30, blocks, LOG_BLOCK_SIZE, direct);
+		int allocationBits = 30;
+		if (!direct) {
+		    //allocate in approximately 1/4 increments between 1 GB and 32 MB
+		    allocationBits = Math.min(30, Math.max(25, 63 - 2 - Long.numberOfLeadingZeros(memoryBufferSpace)));
+		}
+		this.blockByteBuffer = new BlockByteBuffer(allocationBits, blocks, LOG_BLOCK_SIZE, direct);
 		//ensure that we'll run out of blocks first
-		this.inodeByteBuffer = new BlockByteBuffer(30, blocks+1, LOG_INODE_SIZE, direct);
+		this.inodeByteBuffer = new BlockByteBuffer(allocationBits, blocks+1, LOG_INODE_SIZE, direct);
 		memoryWritePermits = new Semaphore(blocks);
 		maxMemoryBlocks = Math.min(MAX_DOUBLE_INDIRECT, blocks);
 		maxMemoryBlocks = Math.min(maxMemoryBlocks, (maxStorageObjectSize>>LOG_BLOCK_SIZE) + ((maxStorageObjectSize&BufferFrontedFileStoreCache.BLOCK_MASK)>0?1:0));

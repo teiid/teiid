@@ -128,7 +128,9 @@ public class FakeServer extends EmbeddedServer {
 	@Override
 	protected BufferService getBufferService() {
 		if (!realBufferManager) {
-			return new FakeBufferService(false);
+		    FakeBufferService fbs = new FakeBufferService(false);
+			this.bufferService.setBufferManager(fbs.getBufferManager());
+			return bufferService;
 		}
 		bufferService.setDiskDirectory(UnitTestUtil.getTestScratchPath());
 		return super.getBufferService();

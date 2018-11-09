@@ -136,7 +136,7 @@ public class EngineStatisticsMetadata extends AdminObjectImpl implements EngineS
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("EngineStatistics:"); //$NON-NLS-1$
-		sb.append("sessionCount").append(sessionCount);//$NON-NLS-1$
+		sb.append("sessionCount ").append(sessionCount);//$NON-NLS-1$
 		sb.append("; totalMemoryUsedInKB ").append(totalMemoryUsedInKB);//$NON-NLS-1$
 		sb.append("; memoryUsedByActivePlansInKB ").append(memoryUsedByActivePlansInKB);//$NON-NLS-1$
 		sb.append("; diskWriteCount ").append(diskWriteCount); //$NON-NLS-1$

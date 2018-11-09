@@ -38,14 +38,14 @@ import org.teiid.core.TeiidComponentException;
  */
 public class BufferManagerFactory {
 	
-	private static BufferManager INSTANCE;
+	private static BufferManagerImpl INSTANCE;
 	
     /**
      * Helper to get a buffer manager all set up for unmanaged standalone use.  This is
      * typically used for testing or when memory is not an issue.
      * @return BufferManager ready for use
      */
-    public static BufferManager getStandaloneBufferManager() {
+    public static BufferManagerImpl getStandaloneBufferManager() {
     	if (INSTANCE == null) {
 	        BufferManagerImpl bufferMgr = createBufferManager();
 	        INSTANCE = bufferMgr;
