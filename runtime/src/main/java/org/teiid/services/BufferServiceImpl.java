@@ -63,11 +63,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
     private boolean inlineLobs = true;
     private long memoryBufferSpace = -1;
-    private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAuLT_MAX_OBJECT_SIZE;
+    private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAULT_MAX_OBJECT_SIZE;
     private boolean memoryBufferOffHeap;
 	private FileStorageManager fsm;
 	private BufferFrontedFileStoreCache fsc;
-	private int workingMaxReserveKb;
 	
     /**
      * Clean the file storage directory on startup 
@@ -135,7 +134,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsc.setStorageManager(sm);
                 fsc.initialize();
                 this.bufferMgr.setCache(fsc);
-                this.workingMaxReserveKb = this.bufferMgr.getMaxReserveKB();
             } else {
             	MemoryStorageManager msm = new MemoryStorageManager();
             	SplittableStorageManager ssm = new SplittableStorageManager(msm);
@@ -266,7 +264,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	}
 
 	public long getHeapMemoryInUseByActivePlansKB() {
-		return workingMaxReserveKb - bufferMgr.getReserveBatchBytes()/1024;
+		return this.bufferMgr.getMaxReserveKB() - bufferMgr.getReserveBatchBytes()/1024;
 	}
 	
 	public long getDiskReadCount() {
@@ -321,4 +319,9 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public void setEncryptFiles(boolean encryptFiles) {
 		this.encryptFiles = encryptFiles;
 	}
+
+    public void setBufferManager(BufferManagerImpl bufferManager) {
+        this.bufferMgr = bufferManager;
+    }
+
 }

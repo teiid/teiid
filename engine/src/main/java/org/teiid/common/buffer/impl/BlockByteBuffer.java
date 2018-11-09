@@ -102,13 +102,7 @@ public class BlockByteBuffer {
 
 	public static ByteBuffer allocate(int size, boolean direct) {
 		if (direct) {
-			ByteBuffer newBuffer = ByteBuffer.allocateDirect(size);
-			int longsPerSegment = size>>3;
-			//manually initialize until java 7 when it's mandated (although this may already have been performed)
-			for (int j = 0; j < longsPerSegment; j++) {
-				newBuffer.putLong(0);
-			}
-			return newBuffer;
+			return ByteBuffer.allocateDirect(size);
 		}
 		return ByteBuffer.allocate(size);
 	}

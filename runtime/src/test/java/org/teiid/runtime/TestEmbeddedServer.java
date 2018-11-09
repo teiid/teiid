@@ -1848,7 +1848,7 @@ public class TestEmbeddedServer {
 		ec.setMaxFileSize(SplittableStorageManager.DEFAULT_MAX_FILESIZE);
 		ec.setEncryptFiles(false);
 		
-		ec.setMaxStorageObjectSize(BufferFrontedFileStoreCache.DEFAuLT_MAX_OBJECT_SIZE);
+		ec.setMaxStorageObjectSize(BufferFrontedFileStoreCache.DEFAULT_MAX_OBJECT_SIZE);
 		ec.setMemoryBufferOffHeap(false);
 		
 		started = false;
