@@ -2,8 +2,13 @@ package org.teiid.systemmodel;
 
 import static org.junit.Assert.*;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Random;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -17,6 +22,11 @@ import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
+import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.HardCodedExecutionFactory;
+import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestODBCSchema extends AbstractMMQueryTestCase {
@@ -30,7 +40,8 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 	}
 	
     @BeforeClass public static void oneTimeSetUp() throws Exception {
-    	server = new FakeServer(true);
+    	server = new FakeServer(false);
+    	server.start(new EmbeddedConfiguration(), true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
    	}
     
@@ -296,5 +307,68 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
     @Test public void testInformationSchemaTableConstraints() throws Exception {
         execute("select * from information_schema.table_constraints"); //$NON-NLS-1$
         TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+    }
+    
+    /**
+     * Tests the non-materialized pg_index performance with a moderate
+     * number of tables - each with an index.  The column names are repeated
+     * for each table, which requires a composite index on pg_attribute to
+     * lookup by column name / rel id. 
+     * @throws Exception
+     */
+    @Test(timeout=30000) public void testIndexQueryPerforamcne() throws Exception {
+        int TABLES = 4000;
+        int COLS = 5;
+        ModelMetaData mmm = new ModelMetaData();
+        mmm.setName("test");
+        mmm.addSourceMapping("x", "hc", null);
+        final ArrayList<String> tables = new ArrayList<>();
+        for (int i = 0; i < TABLES; i++) {
+            tables.add("x" + i);
+        }
+        Collections.shuffle(tables, new Random(1));
+        HardCodedExecutionFactory hardCodedExecutionFactory = new HardCodedExecutionFactory() {
+            @Override
+            public void getMetadata(MetadataFactory metadataFactory, Object conn)
+                    throws TranslatorException {
+                String[] colNames = new String[COLS];
+                for (int i = 0; i < colNames.length; i++) {
+                    colNames[i] = "col" + i;
+                }
+                for (int i = 0; i < TABLES; i++) {
+                    String name = tables.get(i);
+                    Table t = metadataFactory.addTable(name);
+                    for (int j = 0; j < COLS; j++) {
+                        metadataFactory.addColumn(colNames[j], "string", t);
+                    }
+                    metadataFactory.addIndex(name + "_idx", true, Arrays.asList(colNames[0]), t);
+                }
+            }
+            
+            @Override
+            public boolean isSourceRequiredForMetadata() {
+                return false;
+            }
+        };
+        server.addTranslator("hc", hardCodedExecutionFactory);
+        server.deployVDB("test", mmm);
+        
+        for (int i = 0; i < 2; i++) {
+            this.internalConnection.close();
+            this.internalConnection = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$
+            
+            Statement s = internalConnection.createStatement();
+            s.execute("set showplan debug");
+            
+            s.execute("SELECT PG_CATALOG.PG_INDEX.indexrelid, PG_CATALOG.PG_INDEX.indrelid, PG_CATALOG.PG_INDEX.indkey, PG_CATALOG.PG_INDEX.indisunique, PG_CATALOG.PG_INDEX.indisclustered, PG_CATALOG.PG_INDEX.indisprimary "
+                    + "FROM PG_CATALOG.PG_INDEX option nocache PG_CATALOG.PG_INDEX");
+            
+            ResultSet rs = s.getResultSet();
+            while (rs.next());
+            
+            rs.close();            
+        }
+        
+        server.undeployVDB("test");
     }
 }
