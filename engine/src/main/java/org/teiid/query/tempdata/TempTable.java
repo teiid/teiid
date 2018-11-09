@@ -22,15 +22,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -583,6 +575,8 @@ public class TempTable implements Cloneable, SearchableTable {
 	}
 
     private boolean createImplicitIndexIfNeeded(final Criteria condition) throws TeiidComponentException, TeiidProcessingException {
+        int operator = CompareCriteria.EQ;
+        LinkedHashSet<ElementSymbol> symbols = null;
         for (Criteria c : Criteria.separateCriteriaByAnd(condition)) {
             if (!(c instanceof CompareCriteria)) {
                 continue;
@@ -591,14 +585,22 @@ public class TempTable implements Cloneable, SearchableTable {
             if (cc.getOperator() == CompareCriteria.NE) {
                 continue;
             }
+            if (symbols == null) {
+                symbols = new LinkedHashSet<>();
+            } else {
+                if (!symbols.isEmpty()) {
+                    if (operator != cc.getOperator()) {
+                        break;
+                    }
+                }
+                operator = cc.getOperator();
+            }
             //TODO: an assumption is that only a single predicate will be bind eligible - if not we'll just take the first
             if (cc.getRightExpression() instanceof Constant && ((Constant)cc.getRightExpression()).isBindEligible()) {
                 //the left can be a array or a column
                 if (cc.getLeftExpression() instanceof ElementSymbol) {
-                    this.addIndex(Arrays.asList((ElementSymbol)cc.getLeftExpression()), false);
-                    return true;
+                    symbols.add((ElementSymbol) cc.getLeftExpression());
                 } else if (cc.getLeftExpression() instanceof Array) {
-                    List<ElementSymbol> symbols = new ArrayList<>();
                     for (Expression ex : ((Array)cc.getLeftExpression()).getExpressions()) {
                         if (ex instanceof ElementSymbol) {
                             symbols.add((ElementSymbol)ex);
@@ -606,12 +608,13 @@ public class TempTable implements Cloneable, SearchableTable {
                             break;
                         }
                     }
-                    if (!symbols.isEmpty()) {
-                        this.addIndex(symbols, false);
-                        return true;
-                    }
                 }
             }
+        }
+        if (symbols != null && !symbols.isEmpty()) {
+            //TODO: order by ndv
+            this.addIndex(new ArrayList<>(symbols), false);
+            return true;
         }
         return false;
     }
