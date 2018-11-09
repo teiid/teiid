@@ -54,9 +54,10 @@ indkey
 1 3                                                              
 2 1                                                              
 1                                                                
+3 2                                                              
 1                                                                
 2                                                                
 1                                                                
-Row Count : 57
+Row Count : 58
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 indkey         2003                           java.sql.Array      indkey          int2vector                        pg_index      2147483647            2147483647    0         false            true             false       false                 1           false       true          false     true        

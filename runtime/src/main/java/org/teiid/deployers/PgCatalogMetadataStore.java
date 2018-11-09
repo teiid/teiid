@@ -296,6 +296,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		
 		addPrimaryKey("pk_pg_attr", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
+		addIndex("idx_attr", false, Arrays.asList("attname", "attrelid"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+		
 		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, " + //$NON-NLS-1$
 				"pg_catalog.getOid(t1.TableUID) as attrelid, " + //$NON-NLS-1$
 				"t1.Name as attname, " + //$NON-NLS-1$
@@ -321,6 +323,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"FROM (SYS.KeyColumns as kc INNER JOIN SYS.Columns as t1 ON kc.SchemaName = t1.SchemaName AND kc.TableName = t1.TableName AND kc.Name = t1.Name) LEFT OUTER JOIN " + //$NON-NLS-1$
 				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name WHERE kc.keytype in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
+		t.setMaterialized(true);
+		t.setProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, "true"); //$NON-NLS-1$
 		return t;		
 	}
 	
