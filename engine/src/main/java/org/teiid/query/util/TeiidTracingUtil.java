@@ -36,13 +36,11 @@ import io.opentracing.tag.Tags;
 
 public class TeiidTracingUtil {
 
-    private Tracer tracer = GlobalTracerInjector.getTracer();
+    private Tracer tracer;
     
     private static TeiidTracingUtil INSTANCE = new TeiidTracingUtil();
 
     public static TeiidTracingUtil getInstance() {
-        //to prevent issues with initialization, get a fresh instance
-        INSTANCE.tracer = GlobalTracerInjector.getTracer();
         return INSTANCE;
     }
     
@@ -64,7 +62,7 @@ public class TeiidTracingUtil {
             return null;
         }
 
-        Tracer.SpanBuilder spanBuilder = tracer
+        Tracer.SpanBuilder spanBuilder = getTracer()
                 .buildSpan("USER COMMAND") //$NON-NLS-1$
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER);
 
@@ -102,7 +100,7 @@ public class TeiidTracingUtil {
      */
     public boolean isTracingEnabled(Options options, String spanContextJson) {
         boolean withActiveSpanOnly = options == null?true:options.isTracingWithActiveSpanOnly();
-        return !withActiveSpanOnly || tracer.activeSpan() != null || spanContextJson != null;
+        return !withActiveSpanOnly || getTracer().activeSpan() != null || spanContextJson != null;
     }
     
     /**
@@ -112,11 +110,12 @@ public class TeiidTracingUtil {
      * @return
      */
     public Span buildSourceSpan(CommandLogMessage msg, String translatorType) {
-        if (tracer.activeSpan() == null) {
+        Tracer tr = getTracer();
+        if (tr.activeSpan() == null) {
             return null;
         } 
 
-        Tracer.SpanBuilder spanBuilder = tracer
+        Tracer.SpanBuilder spanBuilder = tr
                 .buildSpan("SRC COMMAND") //$NON-NLS-1$
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
 
@@ -134,11 +133,19 @@ public class TeiidTracingUtil {
     }
     
     public Scope activateSpan(Span span) {
-        if (tracer.activeSpan() == span) {
+        Tracer tr = getTracer(); 
+        if (tr.activeSpan() == span) {
             //when a workitem adds itself to a queue the span will already be active
             return null;
         }
-        return tracer.scopeManager().activate(span, false);
+        return tr.scopeManager().activate(span, false);
+    }
+
+    private Tracer getTracer() {
+        if (tracer != null) {
+            return tracer;
+        }
+        return GlobalTracerInjector.getTracer();
     }
     
     protected SpanContext extractSpanContext(String spanContextJson) {
@@ -147,7 +154,7 @@ public class TeiidTracingUtil {
             SimpleContentHandler sch = new SimpleContentHandler();
             parser.parse(spanContextJson, sch);
             Map<String, String> result = (Map<String, String>) sch.getResult();
-            return tracer.extract(Builtin.TEXT_MAP, new TextMapExtractAdapter(result));
+            return getTracer().extract(Builtin.TEXT_MAP, new TextMapExtractAdapter(result));
         } catch (IllegalArgumentException | ClassCastException | ParseException e) {
             LogManager.logDetail(LogConstants.CTX_DQP, e, "Could not extract the span context"); //$NON-NLS-1$
             return null;

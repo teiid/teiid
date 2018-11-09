@@ -16,6 +16,7 @@
         <module name="sun.jdk"/>
         <module name="org.jboss.modules"/>
         <module name="org.hibernate"/>
-        <module name="io.opentracing"/>
+        <module name="io.opentracing.tracer" optional="true"/>
+        <module name="io.opentracing" slot="teiid"/>
     </dependencies>
 </module>
