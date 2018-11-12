@@ -2312,6 +2312,16 @@ public class QueryRewriter {
                         windowFrame.setEnd(null);
                     }
                 }
+            } else if (expression instanceof Array) {
+                Array array = (Array)expression;
+                boolean foundAny = false;
+                for (Expression ex : array.getExpressions()) {
+                    if(!isConstantConvert(ex)) {
+                        foundAny = true;
+                        break;
+                    }
+                }
+                isBindEligible = foundAny;
             }
         	rewriteExpressions(expression);
         } 

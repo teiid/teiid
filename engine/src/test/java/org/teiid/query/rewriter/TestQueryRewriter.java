@@ -1859,5 +1859,10 @@ public class TestQueryRewriter {
         helpTestRewriteCommand("SELECT max(e1) over (order by e2 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) from pm1.g1", //$NON-NLS-1$
                                 "SELECT MAX(e1) OVER (ORDER BY e2 ROWS UNBOUNDED PRECEDING) FROM pm1.g1"); //$NON-NLS-1$
     }
+    
+    @Test public void testArrayBindEligible() throws TeiidComponentException, TeiidProcessingException {
+        Constant c = (Constant)helpTestRewriteExpression("(1, 2)", null, RealMetadataFactory.example1Cached());
+        assertFalse(c.isBindEligible());
+    }
 
 }

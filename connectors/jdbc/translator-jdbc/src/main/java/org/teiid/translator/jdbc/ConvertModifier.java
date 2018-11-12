@@ -222,5 +222,14 @@ public class ConvertModifier extends FunctionModifier {
 	public boolean hasTypeMapping(int type) {
 		return this.typeMapping.containsKey(type) || this.typeModifier.containsKey(type);
 	}
+	
+	/**
+	 * Return the direct type mapping for a given type code
+	 * @param code
+	 * @return
+	 */
+	public String getSimpleTypeMapping(int code) {
+        return typeMapping.get(code);
+    }
 
 }

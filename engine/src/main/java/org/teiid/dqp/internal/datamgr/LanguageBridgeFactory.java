@@ -787,7 +787,11 @@ public class LanguageBridgeFactory {
     			if (baseType == null) {
     				baseType = c.getType();
     			} else if (!baseType.equals(c.getType())) {
-					baseType = DataTypeManager.DefaultDataClasses.OBJECT;
+    			    if (baseType == DataTypeManager.DefaultDataClasses.NULL) {
+    			        baseType = c.getType();
+    			    } else if (c.getType() != DataTypeManager.DefaultDataClasses.NULL) {
+                        baseType = DataTypeManager.DefaultDataClasses.OBJECT;
+    			    }
 				}
     		}
     		return new org.teiid.language.Array(baseType, translateExpressionList(vals));   		

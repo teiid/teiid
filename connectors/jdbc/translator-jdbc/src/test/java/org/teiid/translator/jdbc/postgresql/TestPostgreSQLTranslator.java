@@ -21,10 +21,16 @@ package org.teiid.translator.jdbc.postgresql;
 import static org.junit.Assert.*;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.core.util.SimpleMock;
+import org.teiid.language.Array;
+import org.teiid.language.Expression;
+import org.teiid.language.Literal;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
@@ -691,6 +697,42 @@ public class TestPostgreSQLTranslator {
         String input = "select stringnum FROM bqt1.SmallA where ilike(stringkey, 'a_') and not(iregexp(stringkey, '_b'))";
         String output = "SELECT SmallA.StringNum FROM SmallA WHERE (SmallA.StringKey ilike 'a_') = TRUE AND (SmallA.StringKey ~* '_b') <> TRUE"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);        
+    }
+    
+    @Test public void testArrayInsert() throws Exception {
+        String input = "insert into t (id, b) values ('a', (true,false))"; //$NON-NLS-1$
+        String output = "INSERT INTO t (id, b) VALUES ('a', ?)";  //$NON-NLS-1$
+
+        helpTestVisitor("create foreign table t (id string, b boolean[])",
+            input, 
+            output);
+    }
+    
+    @Test public void testArrayUpdate() throws Exception {
+        String input = "update t set b = (null, 'a') where id = 'b'"; //$NON-NLS-1$
+        String output = "UPDATE t SET b = ? WHERE t.id = 'b'";  //$NON-NLS-1$
+
+        helpTestVisitor("create foreign table t (id string, b string[])",
+                input, 
+                output);
+    }
+    
+    @Test public void testArrayComparison() throws Exception {
+        String input = "SELECT id from t where (id,b) = ('a', true)"; //$NON-NLS-1$
+        String output = "SELECT t.id FROM t WHERE (t.id, t.b) = ('a', TRUE)";  //$NON-NLS-1$
+
+        helpTestVisitor("create foreign table t (id string, b boolean)",
+                input, 
+                output);
+    }
+    
+    @Test public void testArrayBind() throws Exception {
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        Connection c = Mockito.mock(Connection.class);
+        Mockito.stub(ps.getConnection()).toReturn(c);
+        TRANSLATOR.bindValue(ps, new Array(String.class, 
+                Arrays.asList((Expression)new Literal("a", String.class))), String[].class, 1);
+        Mockito.verify(c, Mockito.times(1)).createArrayOf("varchar", new Object[] {"a"});
     }
     
 }

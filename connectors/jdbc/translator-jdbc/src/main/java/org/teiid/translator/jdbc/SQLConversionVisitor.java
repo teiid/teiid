@@ -261,19 +261,26 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 
 	@Override
 	public void visit(Parameter obj) {
-        buffer.append(UNDEFINED_PARAM);
-        preparedValues.add(obj);
-        usingBinding = true;
+        addBinding(obj);
 	}
+
+	/**
+	 * Add a bind ? value to the sql string and to the binding value list
+	 * @param value should be an {@link Argument}, {@link Parameter}, or {@link Argument}
+	 */
+    protected void addBinding(LanguageObject value) {
+        this.prepared = true;
+        buffer.append(UNDEFINED_PARAM);
+        preparedValues.add(value);
+        usingBinding = true;
+    }
     
     /**
      * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Literal)
      */
     public void visit(Literal obj) {
         if (this.prepared && ((replaceWithBinding && obj.isBindEligible()) || TranslatedCommand.isBindEligible(obj))) {
-            buffer.append(UNDEFINED_PARAM);
-            preparedValues.add(obj);
-            usingBinding = true;
+            addBinding(obj);
         } else {
             translateSQLType(obj.getType(), obj.getValue(), buffer);
         }
@@ -460,8 +467,8 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 	@Override
 	public void substitute(Argument arg, StringBuilder builder, int index) {
 		if (this.prepared && arg.getExpression() instanceof Literal) {
-			buffer.append('?');
-			this.preparedValues.add(arg);
+		    buffer.append(UNDEFINED_PARAM);
+		    this.preparedValues.add(arg);
 		} else {
 			visit(arg);
 		}

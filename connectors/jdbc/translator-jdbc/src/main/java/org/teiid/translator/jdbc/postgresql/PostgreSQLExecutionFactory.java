@@ -39,8 +39,15 @@ import org.teiid.GeometryInputSource;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.JsonType;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.Array;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
 import org.teiid.language.Like.MatchMode;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
@@ -221,6 +228,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 			
 			@Override
 			public List<?> translate(Function function) {
+			    //TODO: doesn't work for all array expressions
 				return Arrays.asList(function.getParameters().get(0), '[', function.getParameters().get(1), ']');
 			}
 		});
@@ -888,53 +896,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
-    	return new SQLConversionVisitor(this) {
-    		@Override
-    		protected void appendWithKeyword(With obj) {
-    			super.appendWithKeyword(obj);
-    			for (WithItem with : obj.getItems()) {
-    				if (with.isRecusive()) {
-    					buffer.append(SQLConstants.Tokens.SPACE);
-    					buffer.append(SQLConstants.Reserved.RECURSIVE);
-    					break;
-    				}
-    			}
-    		}
-    		
-    		/**
-    		 * Some literals in the select need a cast to prevent being seen as the unknown/string type
-    		 */
-    		@Override
-    		public void visit(DerivedColumn obj) {
-    			if (obj.getExpression() instanceof Literal) {
-    				String castType = null;
-	    			if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.STRING) {
-	    				castType = "bpchar"; //$NON-NLS-1$
-	    			} else if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.VARBINARY) {
-	    				castType = "bytea"; //$NON-NLS-1$
-	    			}
-	    			if (castType != null) {
-	    				obj.setExpression(getLanguageFactory().createFunction("cast", //$NON-NLS-1$ 
-	    						new Expression[] {obj.getExpression(),  getLanguageFactory().createLiteral(castType, TypeFacility.RUNTIME_TYPES.STRING)},
-	    						TypeFacility.RUNTIME_TYPES.STRING));
-	    			}
-    			} else if (obj.isProjected() && obj.getExpression() instanceof ColumnReference) {
-                    ColumnReference elem = (ColumnReference)obj.getExpression();
-                    if (elem.getMetadataObject() != null) {
-                        String nativeType = elem.getMetadataObject().getNativeType();
-                        if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType())
-                                && elem.getMetadataObject() != null
-                                && nativeType != null
-                                && nativeType.equalsIgnoreCase(UUID_TYPE)) { 
-                            obj.setExpression(getLanguageFactory().createFunction("cast", //$NON-NLS-1$ 
-                                    new Expression[] {obj.getExpression(),  getLanguageFactory().createLiteral("varchar", TypeFacility.RUNTIME_TYPES.STRING)}, //$NON-NLS-1$
-                                    TypeFacility.RUNTIME_TYPES.STRING));
-                        }
-                    }
-                }
-    			super.visit(obj);
-    		}
-    	};
+    	return new PostgreSQLConversionVisitor(this);
     }
     
     public void setPostGisVersion(String postGisVersion) {
@@ -1025,6 +987,24 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
                 || paramType == TypeFacility.RUNTIME_TYPES.GEOGRAPHY)) {
             //the blob sql type causes a failure with nulls
             paramType = TypeFacility.RUNTIME_TYPES.VARBINARY;
+        } else if (param instanceof Array) {
+            //pg allows for the direct binding of certain arrays
+            Array array = (Array)param;
+            Connection c = stmt.getConnection();
+            int code = ConvertModifier.getCode(array.getBaseType());
+            String nativeType = convertModifier.getSimpleTypeMapping(code);
+            int index = nativeType.indexOf('(');
+            if (index > 0) {
+                nativeType = nativeType.substring(0, index);
+            }
+            Object[] values = new Object[array.getExpressions().size()];
+            for (int j = 0; j < values.length; j++) {
+                Expression ex = array.getExpressions().get(j); 
+                values[j] = ((Literal)ex).getValue();
+            }
+            java.sql.Array value = c.createArrayOf(nativeType, values);
+            stmt.setArray(i, value);
+            return;
         }
         super.bindValue(stmt, param, paramType, i);
     }
