@@ -57,11 +57,11 @@ import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.jaxws.DispatchImpl;
+import org.apache.cxf.rt.security.SecurityConstants;
 import org.apache.cxf.transport.http.HTTPConduit;
 import org.apache.cxf.transport.http.HTTPConduitFactory;
 import org.apache.cxf.transport.http.asyncclient.AsyncHTTPConduitFactory;
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
-import org.apache.cxf.rt.security.SecurityConstants;
 import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
 import org.ietf.jgss.GSSCredential;
@@ -83,6 +83,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 	private static final String CONNECTION_TIMEOUT = "javax.xml.ws.client.connectionTimeout"; //$NON-NLS-1$
 	private static final String RECEIVE_TIMEOUT = "javax.xml.ws.client.receiveTimeout"; //$NON-NLS-1$
+	private static final String DUMMY_BINDING = ""; //NON-NLS-1$
 
 	private static final class HttpDataSource implements DataSource {
 		private final URL url;
@@ -276,7 +277,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		}
 		Dispatch<T> dispatch = this.wsdlService.createDispatch(this.mcf.getPortQName(), type, mode);
 		configureWSSecurity(dispatch);
-		setDispatchProperties(dispatch, "SOAP12"); //$NON-NLS-1$
+		setDispatchProperties(dispatch, DUMMY_BINDING); 
 		return dispatch;
 	}
 

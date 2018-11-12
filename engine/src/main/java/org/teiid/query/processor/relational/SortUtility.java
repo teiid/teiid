@@ -354,6 +354,7 @@ public class SortUtility {
             CommandContext cc = CommandContext.getThreadLocalContext();
             if (cc != null && cc.isParallel() && ((rowCount > (1<<21) && rowCount > (this.targetRowCount<<3)) || rowCount > (this.targetRowCount<<5))) {
                 //potentially long running sort, so let it be async
+                LogManager.logDetail(LogConstants.CTX_DQP, "conditions met to perform async sort"); //$NON-NLS-1$
                 workAsync(rowLimit, cc);
             }
         }
