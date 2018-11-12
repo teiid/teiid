@@ -247,4 +247,9 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
         visitNode(obj.getRightExpression());
     }
     
+    @Override
+    public void visit(Array array) {
+        visitNodes(array.getExpressions());
+    }
+    
 }
