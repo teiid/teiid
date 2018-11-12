@@ -49,6 +49,8 @@ public class LocalProfile implements ConnectionProfile {
 			throw TeiidSQLException.create(e);
 		} catch (TeiidException e) {
 			throw TeiidSQLException.create(e);
+		} catch (LinkageError e) {
+		    throw TeiidSQLException.create(e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20039));
 		}
     }
 
