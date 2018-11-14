@@ -299,8 +299,10 @@ public class RelationalPlanner {
 	private void planWith(PlanNode plan, Command command) throws QueryPlannerException,
 			QueryMetadataException, TeiidComponentException,
 			QueryResolverException {
-		//TODO: merge this logic inline with the main rule execution.
-		RuleStack stack = new RuleStack();
+        //TODO: merge this logic inline with the main rule execution.
+	    Set<TempMetadataID> accessed = Collections.newSetFromMap(new IdentityHashMap<TempMetadataID, Boolean>());
+        this.context.setAccessed(accessed);
+	    RuleStack stack = new RuleStack();
 		stack.push(new RuleAssignOutputElements(false));
 		if (hints.hasRowBasedSecurity) {
 			stack.push(new RuleApplySecurity());
@@ -310,18 +312,10 @@ public class RelationalPlanner {
 		planner.processWith = false; //we don't want to trigger the with processing for just projection
 		planner.initialize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 		planner.executeRules(stack, plan);
-		//discover all of the usage - taking the top level
-		//common tables from the user command, and everything else from the plan
-		List<Command> commands = new ArrayList<>();
-		if (command instanceof QueryCommand) {
-		    QueryCommand query = (QueryCommand)command;
-		    List<WithQueryCommand> with = query.getWith();
-		    if (with != null) {
-		        for (WithQueryCommand withQueryCommand : with) {
-                    commands.add(withQueryCommand.getCommand());
-                }
-		    }
-		}
+		//discover all of usage not covered in the main plan above
+		//-- that's WITH clauses and subqueries
+		LinkedHashSet<Command> commands = new LinkedHashSet<>();
+		collectWithCommands(command, commands);
 		for (PlanNode node : getAllPossibleSubqueryNodes(plan)) {
             List<SubqueryContainer<?>> subqueryContainers = node.getSubqueryContainers();
             for (SubqueryContainer<?> subqueryContainer : subqueryContainers) {
@@ -330,13 +324,18 @@ public class RelationalPlanner {
             if (node.getType() == NodeConstants.Types.SOURCE) {
                 Command nested = (Command) node.getProperty(Info.NESTED_COMMAND);
                 if (nested != null) {
-                    commands.add(nested);
+                    collectWithCommands(nested, commands);
                 }
             }
         }
-		while (!commands.isEmpty()) {
-			Command cmd = commands.remove(commands.size() - 1);
-			commands.addAll(CommandCollectorVisitor.getCommands(cmd, true));
+		List<Command> toExplore = new ArrayList<>(commands);
+		while (!toExplore.isEmpty()) {
+			Command cmd = toExplore.remove(toExplore.size() - 1);
+			for (Command subCommand : CommandCollectorVisitor.getCommands(cmd, true)) {
+			    if (commands.add(subCommand)) {
+			        toExplore.add(subCommand);
+			    }
+			}
 			try {
 				PlanNode temp = planner.generatePlan((Command) cmd.clone());
 				stack.push(new RuleAssignOutputElements(false));
@@ -354,12 +353,7 @@ public class RelationalPlanner {
 			    tid.getTableData().setModel(null);
 			}
 			
-			//TODO: we should only minimize the projection for with clauses 
-			//that are local to the current command.  
-			//cte's in views are effectively causing us to repeat this
-			//analysis every time, as the logic doesn't consider 
-			//transitive column usage
-			subCommand = minimizeWithProjection(with, subCommand, tid);
+			subCommand = minimizeWithProjection(with, subCommand, tid, accessed);
 			if (with.isRecursive()) {
 				SetQuery setQuery = (SetQuery) subCommand;
 
@@ -422,21 +416,34 @@ public class RelationalPlanner {
 			((TempMetadataID)with.getGroupSymbol().getMetadataID()).getTableData().setModel(modelID);
 			this.withPlanningState.pushdownWith.put(with.getGroupSymbol().getName(), wqc);
 		}
+		this.context.setAccessed(null);
 	}
+
+    private void collectWithCommands(Command command, Collection<Command> commands) {
+        if (command instanceof QueryCommand) {
+		    QueryCommand query = (QueryCommand)command;
+		    List<WithQueryCommand> with = query.getWith();
+		    if (with != null) {
+		        for (WithQueryCommand withQueryCommand : with) {
+                    commands.add(withQueryCommand.getCommand());
+                }
+		    }
+		}
+    }
 
     private List<PlanNode> getAllPossibleSubqueryNodes(PlanNode plan) {
         return NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP | NodeConstants.Types.SORT);
     }
 
     private QueryCommand minimizeWithProjection(WithQueryCommand with,
-            QueryCommand subCommand, TempMetadataID tid)
+            QueryCommand subCommand, TempMetadataID tid, Collection<TempMetadataID> accessed)
             throws QueryMetadataException, QueryResolverException,
             TeiidComponentException {
         List<TempMetadataID> elements = tid.getElements();
         List<Integer> toRemove = new ArrayList<Integer>();
         for (int i = elements.size()-1; i >= 0; i--) {
         	TempMetadataID elem = elements.get(i);
-        	if (!elem.isAccessed()) {
+        	if (!accessed.contains(elem)) {
         		toRemove.add(i);
         	}
         }
