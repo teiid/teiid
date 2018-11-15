@@ -61,7 +61,9 @@ import org.teiid.translator.WSConnection.Util;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.expr.ContextItemExpression;
 import net.sf.saxon.expr.Expression;
+import net.sf.saxon.expr.Operand;
 import net.sf.saxon.expr.RootExpression;
+import net.sf.saxon.expr.SystemFunctionCall;
 import net.sf.saxon.expr.parser.PathMap;
 import net.sf.saxon.expr.parser.PathMap.PathMapArc;
 import net.sf.saxon.expr.parser.PathMap.PathMapNode;
@@ -341,6 +343,12 @@ public class SaxonXQueryExpression {
 				continue;
 			}
 	    	Expression internalExpression = xmlColumn.getPathExpression().getInternalExpression();
+	    	if (containsRootFunction(internalExpression)) {
+	    	    if (record.recordAnnotations()) {
+                    record.addAnnotation(XQUERY_PLANNING, "Root function used in column path " + xmlColumn.getPath(), "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+	    	    return null;
+	    	}
 	    	PathMap subMap = new PathMap(internalExpression);
 	    	PathMapRoot subContextRoot = null;
 	    	for (PathMapRoot root : subMap.getPathMapRoots()) {
@@ -390,6 +398,21 @@ public class SaxonXQueryExpression {
 		}
 		return newMap.reduceToDownwardsAxes(newRoot);
 	}
+
+    private boolean containsRootFunction(Expression internalExpression) {
+        if (internalExpression instanceof SystemFunctionCall) {
+            SystemFunctionCall sfc = (SystemFunctionCall)internalExpression;
+            if (sfc.getDisplayName().equals("fn:root")) { //$NON-NLS-1$
+                return true;
+            }
+        } 
+        for (Operand ex : internalExpression.operands()) {
+            if (containsRootFunction(ex.getChildExpression())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 	private boolean validateColumnForStreaming(AnalysisRecord record,
 			XMLColumn xmlColumn, PathMapArc arc) {
@@ -544,6 +567,7 @@ public class SaxonXQueryExpression {
 			Arrays.fill(pad, ' ');
 			sb.append(new String(pad));
 			sb.append(AxisInfo.axisName[pathMapArc.getAxis()]);
+			sb.append(' ');
 			sb.append(pathMapArc.getNodeTest());
 			sb.append('\n');
 			node = pathMapArc.getTarget();
