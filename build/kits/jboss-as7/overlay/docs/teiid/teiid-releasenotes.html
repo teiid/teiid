@@ -265,6 +265,9 @@ You can use the system property org.teiid.pgVersion to control this further.</p>
 <a href='https://issues.jboss.org/browse/TEIID-5532'>TEIID-5532</a> - Common table projection minimization does not account for usage in a subquery nested in an aggregate or in some view scenarios (fix for inappropriate projection minimizationi, when cte is nested in a view, narrowing narrowing the commands used to determine usage correcting the marking of columns as accessible to be localized)
 <li/>
 	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-5541'>TEIID-5541</a> - Incorrect parsing of xml with XmlTable (disabling projection when root() is used, correcting the no projection, but a streaming path case)
+<li/>
+	<p style="margin-bottom: 0in">
 <a href='https://issues.jboss.org/browse/TEIID-5550'>TEIID-5550</a> - DISTINCT pushed down incorrectly in some cases (fix for inappropriate dup node removal over join)
 <li/>
 	<p style="margin-bottom: 0in">

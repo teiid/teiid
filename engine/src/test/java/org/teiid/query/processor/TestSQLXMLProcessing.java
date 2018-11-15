@@ -1000,4 +1000,44 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testRootFunction() throws Exception {
+        String xml = "'<root xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" type=\"decimal\">\n" + 
+                "        <waitSeconds xsi:type=\"decimal\">13</waitSeconds>\n" + 
+                "         </root>'";
+        
+        String sqlPrefix = "Select *\n" + 
+                        "        From \n" + 
+                        "            XmlTable(\n" + 
+                        "                '/root' \n" + 
+                        "                PASSING convert(" + xml + 
+                        "                , xml) Columns \n";
+        
+        String sql = sqlPrefix + " waitSeconds integer Path 'waitSeconds[@*:type=root()/root/@type]'\n)a";
+        
+        List<?>[] expected = new List<?>[] {
+            Arrays.asList(13),
+        };    
+    
+        process(sql, expected);
+        
+        sql = sqlPrefix + " waitSeconds integer Path 'root()/root/waitSeconds'\n)a";
+        
+        process(sql, expected);
+    }
+    
+    @Test public void testJustRoot() throws Exception {
+        String sql = "Select * From XmlTable (\n" + 
+                "        '/root/abc'\n" + 
+                "        Passing convert('<root><def><test1>10</test1><test1>20</test1></def><abc>22</abc></root>', xml)\n" + 
+                "        Columns\n" + 
+                "            b string Path 'root()'\n" + 
+                "    )xx;";
+        
+        List<?>[] expected = new List<?>[] {
+            Arrays.asList("102022"),
+        };    
+    
+        process(sql, expected);
+    }
+    
 }

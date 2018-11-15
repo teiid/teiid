@@ -40,35 +40,6 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stax.StAXSource;
 
-import net.sf.saxon.Configuration;
-import net.sf.saxon.expr.ContextItemExpression;
-import net.sf.saxon.expr.Expression;
-import net.sf.saxon.expr.RootExpression;
-import net.sf.saxon.expr.parser.PathMap;
-import net.sf.saxon.expr.parser.PathMap.PathMapArc;
-import net.sf.saxon.expr.parser.PathMap.PathMapNode;
-import net.sf.saxon.expr.parser.PathMap.PathMapNodeSet;
-import net.sf.saxon.expr.parser.PathMap.PathMapRoot;
-import net.sf.saxon.om.AxisInfo;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.pattern.AnyNodeTest;
-import net.sf.saxon.pattern.NodeKindTest;
-import net.sf.saxon.query.QueryResult;
-import net.sf.saxon.query.StaticQueryContext;
-import net.sf.saxon.query.XQueryExpression;
-import net.sf.saxon.sxpath.IndependentContext;
-import net.sf.saxon.sxpath.XPathEvaluator;
-import net.sf.saxon.sxpath.XPathExpression;
-import net.sf.saxon.trace.ExpressionPresenter;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.type.ItemType;
-import net.sf.saxon.type.TypeHierarchy;
-import net.sf.saxon.value.EmptySequence;
-import net.sf.saxon.value.SequenceType;
-
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.common.buffer.BufferManager;
@@ -90,6 +61,36 @@ import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.WSConnection.Util;
+
+import net.sf.saxon.Configuration;
+import net.sf.saxon.expr.ContextItemExpression;
+import net.sf.saxon.expr.Expression;
+import net.sf.saxon.expr.RootExpression;
+import net.sf.saxon.expr.parser.PathMap;
+import net.sf.saxon.expr.parser.PathMap.PathMapArc;
+import net.sf.saxon.expr.parser.PathMap.PathMapNode;
+import net.sf.saxon.expr.parser.PathMap.PathMapNodeSet;
+import net.sf.saxon.expr.parser.PathMap.PathMapRoot;
+import net.sf.saxon.functions.SystemFunctionCall;
+import net.sf.saxon.om.AxisInfo;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.pattern.AnyNodeTest;
+import net.sf.saxon.pattern.NodeKindTest;
+import net.sf.saxon.query.QueryResult;
+import net.sf.saxon.query.StaticQueryContext;
+import net.sf.saxon.query.XQueryExpression;
+import net.sf.saxon.sxpath.IndependentContext;
+import net.sf.saxon.sxpath.XPathEvaluator;
+import net.sf.saxon.sxpath.XPathExpression;
+import net.sf.saxon.trace.ExpressionPresenter;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.ItemType;
+import net.sf.saxon.type.TypeHierarchy;
+import net.sf.saxon.value.EmptySequence;
+import net.sf.saxon.value.SequenceType;
 
 @SuppressWarnings("serial")
 public class SaxonXQueryExpression {
@@ -346,6 +347,12 @@ public class SaxonXQueryExpression {
 				continue;
 			}
 	    	Expression internalExpression = xmlColumn.getPathExpression().getInternalExpression();
+	    	if (containsRootFunction(internalExpression)) {
+	    	    if (record.recordAnnotations()) {
+                    record.addAnnotation(XQUERY_PLANNING, "Root function used in column path " + xmlColumn.getPath(), "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+	    	    return null;
+	    	}
 	    	PathMap subMap = new PathMap(internalExpression);
 	    	PathMapRoot subContextRoot = null;
 	    	for (PathMapRoot root : subMap.getPathMapRoots()) {
@@ -395,6 +402,21 @@ public class SaxonXQueryExpression {
 		}
 		return newMap.reduceToDownwardsAxes(newRoot);
 	}
+
+    private boolean containsRootFunction(Expression internalExpression) {
+        if (internalExpression instanceof SystemFunctionCall) {
+            SystemFunctionCall sfc = (SystemFunctionCall)internalExpression;
+            if (sfc.getDisplayName().equals("root")) { //$NON-NLS-1$
+                return true;
+            }
+        } 
+        for (Iterator<Expression> iter = internalExpression.iterateSubExpressions(); iter.hasNext();) {
+            if (containsRootFunction(iter.next())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 	private boolean validateColumnForStreaming(AnalysisRecord record,
 			XMLColumn xmlColumn, PathMapArc arc) {
@@ -549,6 +571,7 @@ public class SaxonXQueryExpression {
 			Arrays.fill(pad, ' ');
 			sb.append(new String(pad));
 			sb.append(AxisInfo.axisName[pathMapArc.getAxis()]);
+			sb.append(' ');
 			sb.append(pathMapArc.getNodeTest());
 			sb.append('\n');
 			node = pathMapArc.getTarget();
@@ -556,8 +579,12 @@ public class SaxonXQueryExpression {
 		}
 	}
 	
+	/**
+	 * Streaming eligible if using document projection and
+	 * the context path is streamable.
+	 */
 	public boolean isStreaming() {
-		return streamingPath != null;
+		return streamingPath != null && contextRoot != null;
 	}
 
 }
