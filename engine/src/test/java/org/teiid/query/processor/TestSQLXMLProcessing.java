@@ -1063,4 +1063,19 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testJustRoot() throws Exception {
+        String sql = "Select * From XmlTable (\n" + 
+                "        '/root/abc'\n" + 
+                "        Passing convert('<root><def><test1>10</test1><test1>20</test1></def><abc>22</abc></root>', xml)\n" + 
+                "        Columns\n" + 
+                "            b string Path 'root()'\n" + 
+                "    )xx;";
+        
+        List<?>[] expected = new List<?>[] {
+            Arrays.asList("102022"),
+        };    
+    
+        process(sql, expected);
+    }
+    
 }
