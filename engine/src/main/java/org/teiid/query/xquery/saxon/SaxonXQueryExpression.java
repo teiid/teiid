@@ -575,8 +575,12 @@ public class SaxonXQueryExpression {
 		}
 	}
 	
+	/**
+	 * Streaming eligible if using document projection and
+	 * the context path is streamable.
+	 */
 	public boolean isStreaming() {
-		return streamingPath != null;
+		return streamingPath != null && contextRoot != null;
 	}
 
 }
