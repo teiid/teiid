@@ -628,7 +628,7 @@ public class ODataSchemaBuilder {
     
     private static void addTableAnnotations(Table table, CsdlEntityType entityType, CsdlSchema csdlSchema) {
         if (table.getAnnotation() != null) {
-            addStringAnnotation(entityType, "core.Description", table.getAnnotation());
+            addStringAnnotation(entityType, "Core.Description", table.getAnnotation());
         }
         
         if (table.getCardinality() != -1) {
@@ -679,7 +679,7 @@ public class ODataSchemaBuilder {
     private static void addColumnAnnotations(Column column,
             CsdlProperty property, CsdlSchema csdlSchema) {
         if (column.getAnnotation() != null) {
-            addStringAnnotation(property, "core.Description", column.getAnnotation());
+            addStringAnnotation(property, "Core.Description", column.getAnnotation());
         }
         
         if (column.getNameInSource() != null) {
@@ -728,7 +728,7 @@ public class ODataSchemaBuilder {
     private static void addOperationAnnotations(Procedure proc,
             CsdlOperation operation, CsdlSchema csdlSchema) {
         if (proc.getAnnotation() != null) {
-            addStringAnnotation(operation, "core.Description", proc.getAnnotation());
+            addStringAnnotation(operation, "Core.Description", proc.getAnnotation());
         }
         
         if (proc.getNameInSource() != null) {
@@ -749,7 +749,7 @@ public class ODataSchemaBuilder {
             ProcedureParameter procedure, CsdlParameter parameter,
             CsdlSchema csdlSchema) {
         if (procedure.getAnnotation() != null) {
-            addStringAnnotation(parameter, "core.Description", procedure.getAnnotation());
+            addStringAnnotation(parameter, "Core.Description", procedure.getAnnotation());
         }
         
         if (procedure.getNameInSource() != null) {
