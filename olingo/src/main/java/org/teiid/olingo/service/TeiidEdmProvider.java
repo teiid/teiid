@@ -22,8 +22,10 @@ import java.net.URI;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.CsdlAnnotation;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
+import org.apache.olingo.commons.api.edm.provider.CsdlTerm;
 import org.apache.olingo.commons.api.edm.provider.annotation.CsdlConstantExpression;
 import org.apache.olingo.commons.api.edm.provider.annotation.CsdlConstantExpression.ConstantExpressionType;
 import org.apache.olingo.commons.api.edmx.EdmxReference;
@@ -31,6 +33,7 @@ import org.apache.olingo.commons.api.edmx.EdmxReferenceInclude;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.server.core.MetadataParser;
 import org.apache.olingo.server.core.SchemaBasedEdmProvider;
+import org.teiid.core.TeiidRuntimeException;
 
 public class TeiidEdmProvider extends SchemaBasedEdmProvider {
     public TeiidEdmProvider(String baseUri, CsdlSchema schema,
@@ -59,6 +62,10 @@ public class TeiidEdmProvider extends SchemaBasedEdmProvider {
                 getClass().getClassLoader().getResourceAsStream("org.teiid.v1.xml")));
         addVocabularySchema("org.teiid.v1", provider);        
         
+        provider = parser.buildEdmProvider(new InputStreamReader(
+                getClass().getClassLoader().getResourceAsStream("Org.OData.Core.V1.xml")));
+        addVocabularySchema("Org.OData.Core.V1", provider);
+        
         // <Annotation Term="org.apache.olingo.v1.xml10-incompatible-char-replacement" String="xxx"/>
         if (invalidXmlReplacementChar != null) {
             CsdlAnnotation xmlCharReplacement = new CsdlAnnotation();
@@ -68,6 +75,15 @@ public class TeiidEdmProvider extends SchemaBasedEdmProvider {
             schema.getAnnotations().add(xmlCharReplacement);
         }
         addSchema(schema);        
+    }
+    
+    @Override
+    public CsdlTerm getTerm(FullQualifiedName fqn) throws ODataException {
+        CsdlTerm term = super.getTerm(fqn);
+        if (term == null) {
+            throw new TeiidRuntimeException(fqn.toString() + " unknown term"); //$NON-NLS-1$
+        }
+        return term;
     }
 }
 
