@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>infinispan</artifactId>
-		<version>11.0.3</version>
+		<version>11.0.4-SNAPSHOT</version>
 	</parent>
 	<artifactId>infinispan-tasks</artifactId>
 	<name>Infinispan Server Tasks</name>

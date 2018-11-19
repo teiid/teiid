@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>webservice</artifactId>
-		<version>11.0.3</version>
+		<version>11.0.4-SNAPSHOT</version>
 	</parent>
 	<artifactId>feature-pack-ws</artifactId>
 	<name>Teiid Webservice Feature Pack</name>
