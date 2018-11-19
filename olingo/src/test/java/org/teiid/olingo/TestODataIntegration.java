@@ -3148,4 +3148,29 @@ public class TestODataIntegration {
         }
     }
     
+    @Test 
+    public void testAnnotationMetadata() throws Exception {
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        teiid.addTranslator("x5", hc);
+
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("DDL", "create foreign table x (a string primary key) OPTIONS (ANNOTATION 'hello', foo 'bar');");
+            mmd.setModelType(Model.Type.PHYSICAL);
+            mmd.addSourceMapping("x5", "x5", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/$metadata")
+                    .method("GET")
+                    .send();                        
+            assertEquals(200, response.getStatus());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
 }
