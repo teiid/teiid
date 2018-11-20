@@ -25,6 +25,11 @@
             AS
             BEGIN
                 SELECT '{ "age":100, "name":test,messages:["msg1","msg2","msg3"]}' as xml_out;
+            END
+            CREATE VIRTUAL PROCEDURE producesAny(IN p1 integer) RETURNS TABLE (out_value string) OPTIONS (UPDATECOUNT 0, "REST:METHOD" 'GET', "REST:URI" 'any/{p1}', "REST:PRODUCES" '*/*')
+            AS
+            BEGIN
+                SELECT cast(p1 as string);
             END     
             CREATE VIRTUAL PROCEDURE g1TablePost(IN p1 integer, IN p2 integer default '1', IN p3 string, IN p4 xml) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "REST:METHOD" 'POST', "REST:URI" 'g1post')
             AS
