@@ -104,7 +104,10 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		String response = httpCall("http://localhost:8080/sample_1/View/g1/123?p2=test", "GET", null);
 		String expected = "<rows p1=\"123\" p2=\"test\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>";
 		assertEquals("response did not match expected", expected, response);
-
+		
+        response = httpCall("http://localhost:8080/sample_1/View/any/1", "GET", null);
+	    assertEquals("response did not match expected", "1", response);
+		
 		this.internalConnection.close();
 		
 		//try the same thing through a vdb

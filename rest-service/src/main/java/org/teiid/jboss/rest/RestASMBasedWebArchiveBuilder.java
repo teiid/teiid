@@ -427,7 +427,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 				}
 				
 				if (contentType != null) {
-					contentType = contentType.toLowerCase();
+					contentType = contentType.toLowerCase().trim();
 					if (contentType.equals("xml")) {
 						contentType = "application/xml"; 
 					}
@@ -518,10 +518,10 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     	paramSignature.append(")");
     	
     	if (useMultipart) {
-    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), "(Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;)Ljavax/ws/rs/core/StreamingOutput;", null, new String[] { "javax/ws/rs/WebApplicationException" });    	    
+    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replaceAll("[^\\w]", "_"), "(Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;)Ljavax/ws/rs/core/StreamingOutput;", null, new String[] { "javax/ws/rs/WebApplicationException" });    	    
     	}
     	else {
-    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), paramSignature+"Ljavax/ws/rs/core/StreamingOutput;", null, new String[] { "javax/ws/rs/WebApplicationException" });
+    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replaceAll("[^\\w]", "_"), paramSignature+"Ljavax/ws/rs/core/StreamingOutput;", null, new String[] { "javax/ws/rs/WebApplicationException" });
     	}
     	{
     	av0 = mv.visitAnnotation("Ljavax/ws/rs/Produces;", true);
