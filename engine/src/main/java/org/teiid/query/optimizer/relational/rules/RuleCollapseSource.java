@@ -240,7 +240,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 		if (queryCommand.getLimit() != null) {
 			return root; //TODO: could create an inline view
 		}
-		boolean requireDupPush = false;
+		boolean canRemoveParentDup = false;
 		if (queryCommand.getOrderBy() == null) {
 			/* 
 			 * we're assuming that a pushed order by implies that the cost of the distinct operation 
@@ -250,8 +250,11 @@ public final class RuleCollapseSource implements OptimizerRule {
 			 * cardinality without = c
 			 * assume cost ~ c lg c for c' cardinality and a modification for associated bandwidth savings
 			 * recompute cost of processing plan with c' and see if new cost + c lg c < original cost
+			 * 
+			 * We stop at join nodes they can alter the cardinality
+			 * - further checking could determine if the cardinality is preserved without the parent distinct
 			 */
-			PlanNode dupRemove = NodeEditor.findParent(accessNode, NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE);
+			PlanNode dupRemove = NodeEditor.findParent(accessNode, NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
 			if (dupRemove != null) { //TODO: what about when sort/dup remove have been combined
 				PlanNode project = NodeEditor.findParent(accessNode, NodeConstants.Types.PROJECT, NodeConstants.Types.DUP_REMOVE);
 				if (project != null) {
@@ -265,11 +268,18 @@ public final class RuleCollapseSource implements OptimizerRule {
 					/*
 					 * If we can simply move the dupremove below the projection, then we'll do that as well
 					 */
-					requireDupPush = true;
+					canRemoveParentDup = true;
 				}
 			}
-			if (!requireDupPush) {
-				return root;
+
+			if (accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+			    if (dupRemove == null) {
+                    return root;
+                }
+			    //if multi-source we still need to process above
+			    canRemoveParentDup = false;
+			} else if (!canRemoveParentDup) {
+			    return root;
 			}
 		}
 		// ensure that all columns are comparable - they might not be if there is an intermediate project
@@ -289,7 +299,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 			HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
 			ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
 			if (!QueryRewriter.isDistinctWithGroupBy(query) && !NewCalculateCostUtil.usesKey(query.getSelect().getProjectedSymbols(), keyPreservingGroups, metadata, true)) {
-				if (requireDupPush) { //remove the upper dup remove
+				if (canRemoveParentDup) { //remove the upper dup remove
 					PlanNode dupRemove = NodeEditor.findParent(accessNode, NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE);
 					if (dupRemove.getParent() == null) {
 						root = dupRemove.getFirstChild();

@@ -42,6 +42,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
+import org.teiid.query.processor.relational.DupRemoveNode;
 import org.teiid.query.processor.relational.LimitNode;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -522,6 +523,22 @@ public class TestSortOptimization {
         
         helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
                 new String[] {"SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+    
+    /**
+     * Ensure that the distinct operation is not inappropriately removed
+     * @throws Exception
+     */
+    @Test public void testDistinctPushdownOverJoin() throws Exception{
+        String sql = "select distinct pm2.g2.e1 from pm1.g1 left outer join pm2.g2 on pm1.g1.e2 = pm2.g2.e2";
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+                new String[] {"SELECT g_0.e2 FROM pm1.g1 AS g_0", "SELECT g_0.e2, g_0.e1 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveNode.class});        
     }
     
     @Test public void testDistinctPushdownWithGrouping() throws Exception{
