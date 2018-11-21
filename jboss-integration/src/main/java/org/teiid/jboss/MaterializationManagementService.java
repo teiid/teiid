@@ -27,7 +27,6 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.runtime.MaterializationManager;
-import org.teiid.runtime.NodeTracker;
 
 class MaterializationManagementService implements Service<MaterializationManager> {
 	private ScheduledExecutorService scheduler;

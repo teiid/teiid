@@ -25,6 +25,7 @@
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
   <li><a href="https://issues.jboss.org/browse/TEIID-5351">TEIID-5351</a> Updated to the WildFly 14.0.1 server.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5524">TEIID-5524</a> JMX support for Teiid standalone (Thorntail, Spring Boot, embedded)</li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -40,9 +41,13 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-5511">TEIID-5511</a> The AdminShell kit has been removed.  No further releases are planned.</li>
 </ul>
 
+<h4>from 11.2</h4>
+<ul>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5476">TEIID-5476</a> JGroups was removed as a direct dependency of the runtime and the associated property removed from the EmbeddedConfiguration.  If you need clustering support with embedded, please raise an issue.</li>
+</ul>
+
 <h4>from 11.1</h4>
 <ul>
-  <li><a href="https://issues.jboss.org/browse/TEIID-5497">TEIID-5497</a> MetadataRepository is again an interface.  Custom concrete classes will need to be modified to implement, rather than extend.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-5506">TEIID-5506</a> Removed the option to specify domain qualified logins.</li>
 </ul>
 

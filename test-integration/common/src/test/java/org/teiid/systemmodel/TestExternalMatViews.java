@@ -38,7 +38,6 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 import org.apache.log4j.Level;
-import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -54,8 +53,9 @@ import org.teiid.jdbc.util.ResultSetUtil;
 import org.teiid.language.Command;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.EmbeddedServer;
 import org.teiid.runtime.HardCodedExecutionFactory;
+import org.teiid.runtime.ReplicatedServer;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -150,7 +150,6 @@ public class TestExternalMatViews {
 		if (DEBUG) {
             UnitTestUtil.enableTraceLogging("org.teiid");
         }
-        System.setProperty("jgroups.bind_addr", "127.0.0.1");
 	}
 	
 	@AfterClass
@@ -608,11 +607,11 @@ public class TestExternalMatViews {
 		s1.close();
 	}
 
-	private DelayableHardCodedExectionFactory setupData(FakeServer server) throws TranslatorException {
+	private DelayableHardCodedExectionFactory setupData(EmbeddedServer server) throws TranslatorException {
 	    return setupData(false, server);
 	}
 
-	private DelayableHardCodedExectionFactory setupData(final boolean supportsEQ, FakeServer server) throws TranslatorException {
+	private DelayableHardCodedExectionFactory setupData(final boolean supportsEQ, EmbeddedServer server) throws TranslatorException {
 		H2ExecutionFactory executionFactory = new H2ExecutionFactory();
 		executionFactory.setSupportsDirectQueryProcedure(true);
 		executionFactory.start();
@@ -812,21 +811,13 @@ public class TestExternalMatViews {
         return hasRs;
     }
     
-    private FakeServer createServer(String nodeName, String ispn, String jgroups) throws Exception {
-        FakeServer server = new FakeServer(false);
-
-        EmbeddedConfiguration config = new EmbeddedConfiguration();
-        config.setInfinispanConfigFile(ispn);
-        config.setJgroupsConfigFile(jgroups);
-        config.setNodeName(nodeName);
-        config.setTransactionManager(new DummyTransactionManager());
-        server.start(config, true);
-        return server;
+    private EmbeddedServer createServer(String nodeName, String ispn, String jgroups) throws Exception {
+        return ReplicatedServer.createServer(nodeName, ispn, jgroups);
     }
     
     @Test
     public void testNodeFailure() throws Exception {
-        FakeServer server1 = createServer("server1", "infinispan-replicated-config.xml", "tcp-shared.xml");
+        EmbeddedServer server1 = createServer("server1", "infinispan-replicated-config.xml", "tcp-shared.xml");
         
         HardCodedExecutionFactory hcef = setupData(server1);
         ModelMetaData sourceModel = setupSourceModel();
@@ -848,7 +839,7 @@ public class TestExternalMatViews {
         
         Thread.sleep(1000);
         
-        FakeServer server2 = createServer("server2", "infinispan-replicated-config-1.xml", "tcp-shared.xml");
+        EmbeddedServer server2 = createServer("server2", "infinispan-replicated-config-1.xml", "tcp-shared.xml");
         setupData(server2);
         server2.deployVDB("comp", sourceModel, viewModel, matViewModel);
         Thread.sleep(5000);

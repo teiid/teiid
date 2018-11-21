@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.runtime;
+package org.teiid.jboss;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,13 +32,12 @@ import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.runtime.NodeListener;
+import org.teiid.runtime.RuntimePlugin;
+import org.teiid.runtime.RuntimePlugin.Event;
 
 public abstract class NodeTracker extends ReceiverAdapter{
     
-    public interface NodeListener {
-        void nodeJoined(String nodeName);
-        void nodeDropped(String nodeName);
-    }
     public abstract ScheduledExecutorService getScheduledExecutorService();    
     private Map<Address, String> nodes = new HashMap<>();
     private JChannel channel;

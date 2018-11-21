@@ -52,7 +52,6 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.tempdata.TempTableDataManager;
-import org.teiid.runtime.NodeTracker.NodeListener;
 import org.teiid.vdb.runtime.VDBKey;
 
 public abstract class MaterializationManager implements VDBLifeCycleListener, NodeListener {

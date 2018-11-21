@@ -24,7 +24,6 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.runtime.NodeTracker;
 import org.wildfly.clustering.jgroups.ChannelFactory;
 
 class NodeTrackerService implements Service<NodeTracker> {

@@ -23,21 +23,21 @@ import org.jgroups.fork.ForkChannel;
 import org.teiid.replication.jgroups.ChannelFactory;
 
 final class SimpleChannelFactory implements ChannelFactory {
-    private final EmbeddedConfiguration embeddedConfiguration;
+    private final String jgroupsConfigFile;
     private JChannel channel;
 
     /**
      * @param embeddedConfiguration
      */
-    SimpleChannelFactory(EmbeddedConfiguration embeddedConfiguration) {
-        this.embeddedConfiguration = embeddedConfiguration;
+    SimpleChannelFactory(String jgroupsConfigFile) {
+        this.jgroupsConfigFile = jgroupsConfigFile;
     }
 
     @Override
     public JChannel createChannel(String id) throws Exception {
     	synchronized (this) {
         	if (channel == null) {
-        		channel = new JChannel(this.getClass().getClassLoader().getResource(this.embeddedConfiguration.getJgroupsConfigFile()));
+        		channel = new JChannel(this.getClass().getClassLoader().getResource(jgroupsConfigFile));
         		channel.connect("teiid-replicator"); //$NON-NLS-1$
         	}
 		}

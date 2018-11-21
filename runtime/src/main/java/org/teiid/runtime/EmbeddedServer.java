@@ -121,7 +121,6 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
-import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.jmx.JMXService;
 import org.teiid.services.AbstractEventDistributorFactoryService;
 import org.teiid.services.BufferServiceImpl;
@@ -324,11 +323,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	private SessionAwareCache<CachedResults> rs;
 	private SessionAwareCache<PreparedPlan> ppc;
 	protected ArrayList<SocketListener> transports = new ArrayList<SocketListener>();
-	private ScheduledExecutorService scheduler;
-	private MaterializationManager materializationMgr = null;
+	protected ScheduledExecutorService scheduler;
+	protected MaterializationManager materializationMgr = null;
 	private ShutDownListener shutdownListener = new ShutDownListener();
-	private SimpleChannelFactory channelFactory;
-	private NodeTracker nodeTracker = null;
     private JMXService jmxService;
 
 	public EmbeddedServer() {
@@ -364,26 +361,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.config = config;
 		System.setProperty("jboss.node.name", config.getNodeName()==null?"localhost":config.getNodeName());
 		this.cmr.setProvider(this);
-		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
-		this.eventDistributorFactoryService.start();
-		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		this.scheduler = Executors.newScheduledThreadPool(config.getMaxAsyncThreads(), new NamedThreadFactory("Asynch Worker")); //$NON-NLS-1$
-		this.replicator = config.getObjectReplicator();
-		if (this.replicator == null && config.getJgroupsConfigFile() != null) {
-			channelFactory = new SimpleChannelFactory(config);
-			this.replicator = new JGroupsObjectReplicator(channelFactory, this.scheduler);
-			try {
-                this.nodeTracker = new NodeTracker(channelFactory.createChannel("teiid-node-tracker"), config.getNodeName()) {
-                    @Override
-                    public ScheduledExecutorService getScheduledExecutorService() {
-                        return scheduler;
-                    }
-                };
-            } catch (Exception e) {
-                LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
-            }
-		}
-		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
+        this.replicator = config.getObjectReplicator();
+        this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
 		//must be called after the replicator is set
         this.eventDistributorFactoryService.start();
         this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
@@ -441,9 +421,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.materializationMgr = getMaterializationManager();		
 		this.repo.addListener(this.materializationMgr);
 		this.repo.setAllowEnvFunction(this.config.isAllowEnvFunction());
-		if (this.nodeTracker != null) {
-		    this.nodeTracker.addNodeListener(this.materializationMgr);
-		}
 		this.logon = new LogonImpl(sessionService, null);
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
 		DQP dqpProxy = DQP.class.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {DQP.class}, new SessionCheckingProxy(dqp, LogConstants.CTX_DQP, MessageLevel.TRACE)));
@@ -923,9 +900,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public synchronized void stop() {
 		if (running == null || !running) {
 			return;
-		}
-		if (this.channelFactory != null) {
-			this.channelFactory.stop();
 		}
         this.shutdownListener.setShutdownInProgress(true);
         this.repo.removeListener(this.materializationMgr);

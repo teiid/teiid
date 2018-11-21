@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 
-import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -43,7 +42,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
-import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -52,7 +50,7 @@ import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.TableStats;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.ReplicatedObject;
-import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.ReplicatedServer;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
@@ -60,14 +58,13 @@ public class TestReplication {
 	
     private static final String MATVIEWS = "matviews";
     private static final boolean DEBUG = false;
-	private FakeServer server1;
-	private FakeServer server2;
+	private ReplicatedServer server1;
+	private ReplicatedServer server2;
     
     @BeforeClass public static void oneTimeSetup() {
     	if (DEBUG) {
     		UnitTestUtil.enableTraceLogging("org.teiid");
     	}
-    	System.setProperty("jgroups.bind_addr", "127.0.0.1");
     }
     
     @After public void tearDown() {
@@ -308,18 +305,11 @@ public class TestReplication {
         stmt.execute("select * from c");
     }
 
-	private FakeServer createServer(String ispn, String jgroups) throws Exception {
-		FakeServer server = new FakeServer(false);
-
-		EmbeddedConfiguration config = new EmbeddedConfiguration();
-		config.setInfinispanConfigFile(ispn);
-		config.setJgroupsConfigFile(jgroups);
-		config.setTransactionManager(new DummyTransactionManager());
-		server.start(config, true);
-		return server;
+	private ReplicatedServer createServer(String ispn, String jgroups) throws Exception {
+		return ReplicatedServer.createServer(null, ispn, jgroups);
 	}
 	
-	private void deployTtlVDB(FakeServer server)
+	private void deployTtlVDB(ReplicatedServer server)
             throws ConnectorManagerException, VirtualDatabaseException,
             TranslatorException {
         ModelMetaData mmd = new ModelMetaData();
@@ -334,7 +324,7 @@ public class TestReplication {
         server.deployVDB(vdb);
     }
 
-	private void deployLargeVDB(FakeServer server)
+	private void deployLargeVDB(ReplicatedServer server)
 			throws ConnectorManagerException, VirtualDatabaseException,
 			TranslatorException {
 		ModelMetaData mmd = new ModelMetaData();
@@ -345,7 +335,7 @@ public class TestReplication {
     	server.deployVDB("large", mmd);
 	}
 
-	private void deployMatViewVDB(FakeServer server) throws Exception {
+	private void deployMatViewVDB(ReplicatedServer server) throws Exception {
 		HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();
     	udfs.put("funcs", Arrays.asList(new FunctionMethod("pause", null, null, PushDown.CANNOT_PUSHDOWN, TestMatViews.class.getName(), "pause", null, new FunctionParameter("return", DataTypeManager.DefaultDataTypes.INTEGER), true, Determinism.NONDETERMINISTIC)));
     	server.deployVDB(MATVIEWS, UnitTestUtil.getTestDataPath() + "/matviews.vdb", new DeployVDBParameter(udfs, null));

@@ -111,7 +111,6 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
-import org.teiid.runtime.NodeTracker;
 import org.teiid.services.InternalEventDistributorFactory;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.ExecutionFactory;
