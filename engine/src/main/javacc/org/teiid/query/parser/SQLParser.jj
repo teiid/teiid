@@ -5239,7 +5239,7 @@ void createDatabase(DatabaseStore dbStore) :
         }
       )   
     ] 
-    [ optionsClause(database, null)
+    [ optionsClause(database, database.getNamespaceContainer())
       {
          OptionsUtil.setOptions(database);
       }
@@ -5308,7 +5308,7 @@ void createSchema(DatabaseStore dbStore) :
         schema.setPhysical(physical);
     }
     [<SERVER> readCSVString(servers)]     
-    [ optionsClause(schema, null)
+    [ optionsClause(schema, dbStore.getCurrentNamespaceContainer())
       {
          OptionsUtil.setOptions(schema);
       }
@@ -5411,7 +5411,7 @@ void createDataWrapper(DatabaseStore dbStore) :
       } 
     )
     [ <TYPE> (type = id(null) { wrapper.setType(type);}) ]      
-    [ optionsClause(wrapper, null)
+    [ optionsClause(wrapper, dbStore.getCurrentNamespaceContainer())
       {
          OptionsUtil.setOptions(wrapper);
       }
@@ -5663,7 +5663,7 @@ void createServer(DatabaseStore dbStore) :
         server.setDataWrapper(wrapperName);
       } 
     )      
-    [ optionsClause(server, null)
+    [ optionsClause(server, dbStore.getCurrentNamespaceContainer())
       {
          OptionsUtil.setOptions(server);
       }
@@ -6340,12 +6340,12 @@ name=options clause
 description=A list of statement options.
 example=[source,sql]\n----\nOPTIONS ('x' 'y', 'a' 'b')\n----\n
 */
-void optionsClause(AbstractMetadataRecord record, MetadataFactory factory) :
+void optionsClause(AbstractMetadataRecord record, NamespaceContainer namespaceContainer) :
 {
 }
 {
   <OPTIONS> <LPAREN>
-  optionPair(record, factory) (<COMMA> optionPair(record, factory))*	   
+  optionPair(record, namespaceContainer) (<COMMA> optionPair(record, namespaceContainer))*	   
   <RPAREN> 
 }
 
@@ -6354,7 +6354,7 @@ name=option pair
 description=An option key/value pair.
 example=[source,sql]\n----\n'key' 'value'\n----\n
 */
-void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
+void optionPair(AbstractMetadataRecord record, NamespaceContainer namespaceContainer) :
 {
 	Constant value = null;
 	String key = null;
@@ -6366,8 +6366,8 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 	 (value = nonNumericLiteral()
 	 | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
 	 { 
-	 	if (factory != null){
-            key = MetadataFactory.resolvePropertyKey(factory, key);
+	 	if (namespaceContainer != null){
+            key = MetadataFactory.resolvePropertyKey(namespaceContainer, key);
 	 	}
 	 	String val = null;
 	 	if (!value.isNull()) {
@@ -6817,7 +6817,7 @@ void importSchema(DatabaseStore dbStore) :
     //[(<LIMIT> <TO> <LPAREN> readCSVString(includeTables) <RPAREN>) | (<EXCEPT> <LPAREN> readCSVString(excludeTables) <RPAREN>)]
     <FROM> (<SERVER>{serverType = "native";}|<REPOSITORY>) serverName = id(null)    
     <INTO> schemaName = id(null)
-    [optionsClause(server, null)
+    [optionsClause(server, dbStore.getCurrentNamespaceContainer())
 	   {
 	      OptionsUtil.setOptions(server);
 	   }

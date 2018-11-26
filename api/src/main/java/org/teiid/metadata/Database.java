@@ -281,4 +281,8 @@ public class Database extends AbstractMetadataRecord {
         return this.namespaceContainer.getNamespaces();
     }
     
+    public NamespaceContainer getNamespaceContainer() {
+        return namespaceContainer;
+    }
+    
 }
