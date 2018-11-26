@@ -970,5 +970,13 @@ public abstract class DatabaseStore {
         Table table = (Table)getSchemaRecord(objectName, type); 
         assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
         return table;
-    }    
+    } 
+    
+    /**
+     * Get the NamespaceContainer associated with the current database
+     * - this instance should not be modified unless in an edit context.
+     */
+    public NamespaceContainer getCurrentNamespaceContainer() {
+        return getCurrentDatabase().getNamespaceContainer();
+    }
 }

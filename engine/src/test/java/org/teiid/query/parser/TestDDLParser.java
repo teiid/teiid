@@ -1762,4 +1762,15 @@ public class TestDDLParser {
         
         helpParse(ddl);
     }
+    
+    @Test
+    public void testVdbPropertyNamespace() throws Exception {
+        String ddl = "create database vdb version '1.2.0' OPTIONS (\"teiid_rest:auto-generate\" 'true'); "
+                + "USE DATABASE vdb VERSION '1.2.0';"
+                + "CREATE SCHEMA S1; SET SCHEMA S1;"
+                + "CREATE VIEW X (y varchar) as select 'a';";
+        
+        Database db = helpParse(ddl);
+        assertEquals("true", db.getProperty("{http://teiid.org/rest}auto-generate", false));
+    }
 }
