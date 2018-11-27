@@ -1038,6 +1038,17 @@ public class TestSQLXMLProcessing {
         helpProcess(plan, cc, dataManager, expected);
     }
     
+    @Test public void testPathSubtree() throws Exception {
+        String sql = "Select * From XmlTable ('/root' Passing cast('<root><def><test1>10</test1><test1>20</test1></def><abc>22</abc></root>' as xml) \n" + 
+                "Columns b string Path 'def')xx";
+        
+        List<?>[] expected = new List<?>[] {
+            Arrays.asList("1020"),
+        };    
+    
+        process(sql, expected);
+    }
+    
     @Test public void testRootFunction() throws Exception {
         String xml = "'<root xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" type=\"decimal\">\n" + 
                 "        <waitSeconds xsi:type=\"decimal\">13</waitSeconds>\n" + 

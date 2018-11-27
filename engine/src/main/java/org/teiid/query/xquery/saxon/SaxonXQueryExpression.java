@@ -42,7 +42,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
@@ -76,7 +75,6 @@ import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.pattern.AnyNodeTest;
-import net.sf.saxon.pattern.NodeKindTest;
 import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.query.StaticQueryContext;
 import net.sf.saxon.query.XQueryExpression;
@@ -364,7 +362,7 @@ public class SaxonXQueryExpression {
 			}
     		//special case for handling '.', which the pathmap logic doesn't consider as a root
     		if (internalExpression instanceof ContextItemExpression) {
-    			addReturnedArcs(xmlColumn, finalNode);
+    			addReturnedArcs(finalNode);
     		}
     		if (subContextRoot == null) {
     			continue;
@@ -378,7 +376,7 @@ public class SaxonXQueryExpression {
 	    	HashSet<PathMapNode> subFinalNodes = new HashSet<PathMapNode>();
 			getReturnableNodes(subContextRoot, subFinalNodes);
 	    	for (PathMapNode subNode : subFinalNodes) {
-		    	addReturnedArcs(xmlColumn, subNode);
+		    	addReturnedArcs(subNode);
 	        }
 		}
 		//Workaround to rerun the reduction algorithm - by making a copy of the old version
@@ -462,14 +460,8 @@ public class SaxonXQueryExpression {
 		return true;
 	}
 
-	private void addReturnedArcs(XMLColumn xmlColumn, PathMapNode subNode) {
-		if (xmlColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-			subNode.createArc(AxisInfo.DESCENDANT_OR_SELF, AnyNodeTest.getInstance());
-		} else {
-			//this may not always be needed, but it doesn't harm anything
-			subNode.createArc(AxisInfo.CHILD, NodeKindTest.TEXT);
-			subNode.setAtomized();
-		}
+	private void addReturnedArcs(PathMapNode subNode) {
+		subNode.createArc(AxisInfo.DESCENDANT_OR_SELF, AnyNodeTest.getInstance());
 	}
 
 	private void getReturnableNodes(PathMapNode node, HashSet<PathMapNode> finalNodes) {
