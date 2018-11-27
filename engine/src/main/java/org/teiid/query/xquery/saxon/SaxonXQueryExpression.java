@@ -87,8 +87,7 @@ import net.sf.saxon.type.ItemType;
 import net.sf.saxon.value.EmptySequence;
 import net.sf.saxon.value.SequenceType;
 
-@SuppressWarnings("serial")
-public class SaxonXQueryExpression {
+public class SaxonXQueryExpression implements Cloneable {
 	
 	private static final String XQUERY_PLANNING = "XQuery Planning"; //$NON-NLS-1$
 	private static final String EMPTY_STRING = ""; //$NON-NLS-1$
@@ -185,14 +184,22 @@ public class SaxonXQueryExpression {
 	Configuration config = new Configuration();
 	PathMapRoot contextRoot;
 	String streamingPath;
+	Map<String, XPathExpression> columnMap;
+	
+	boolean relativePaths = true;
 
-    public SaxonXQueryExpression(String xQueryString, XMLNamespaces namespaces, List<DerivedColumn> passing, List<XMLTable.XMLColumn> columns) 
+    public static SaxonXQueryExpression compile(String xQueryString, XMLNamespaces namespaces, List<DerivedColumn> passing, List<XMLTable.XMLColumn> columns) 
     throws QueryResolverException {
-        config.setErrorListener(ERROR_LISTENER);
-        this.xQueryString = xQueryString;
-        StaticQueryContext context = config.newStaticQueryContext();
-        IndependentContext ic = new IndependentContext(config);
-        namespaceMap.put(EMPTY_STRING, EMPTY_STRING);
+        SaxonXQueryExpression saxonXQueryExpression = new SaxonXQueryExpression();
+        CommandContext cc = CommandContext.getThreadLocalContext();
+        if (cc != null) {
+            saxonXQueryExpression.relativePaths = cc.getOptions().isRelativeXPath();
+        }
+        saxonXQueryExpression.config.setErrorListener(ERROR_LISTENER);
+        saxonXQueryExpression.xQueryString = xQueryString;
+        StaticQueryContext context = saxonXQueryExpression.config.newStaticQueryContext();
+        IndependentContext ic = new IndependentContext(saxonXQueryExpression.config);
+        saxonXQueryExpression.namespaceMap.put(EMPTY_STRING, EMPTY_STRING);
         if (namespaces != null) {
         	for (NamespaceItem item : namespaces.getNamespaceItems()) {
         		if (item.getPrefix() == null) {
@@ -202,12 +209,12 @@ public class SaxonXQueryExpression {
         			} else {
         				context.setDefaultElementNamespace(item.getUri());
         				ic.setDefaultElementNamespace(item.getUri());
-        				namespaceMap.put(EMPTY_STRING, item.getUri());
+        				saxonXQueryExpression.namespaceMap.put(EMPTY_STRING, item.getUri());
         			}
         		} else {
     				context.declareNamespace(item.getPrefix(), item.getUri());
     				ic.declareNamespace(item.getPrefix(), item.getUri());
-    				namespaceMap.put(item.getPrefix(), item.getUri());
+    				saxonXQueryExpression.namespaceMap.put(item.getPrefix(), item.getUri());
         		}
 			}
         }
@@ -223,28 +230,28 @@ public class SaxonXQueryExpression {
 			}
 		}
         
-    	processColumns(columns, ic);	    	
+        saxonXQueryExpression.processColumns(columns, ic);	    	
     
         try {
-			this.xQuery = context.compileQuery(xQueryString);
+            saxonXQueryExpression.xQuery = context.compileQuery(xQueryString);
 		} catch (XPathException e) {
 			 throw new QueryResolverException(QueryPlugin.Event.TEIID30154, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30154, xQueryString));
 		}
+        
+        return saxonXQueryExpression;
     }
     
     private SaxonXQueryExpression() {
     	
     }
     
+    @Override
     public SaxonXQueryExpression clone() {
-    	SaxonXQueryExpression clone = new SaxonXQueryExpression();
-    	clone.xQuery = xQuery;
-    	clone.xQueryString = xQueryString;
-    	clone.config = config;
-    	clone.contextRoot = contextRoot;
-    	clone.namespaceMap = namespaceMap;
-    	clone.streamingPath = streamingPath;
-    	return clone;
+    	try {
+            return (SaxonXQueryExpression) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new TeiidRuntimeException(e);
+        }
     }
     
     public boolean usesContextItem() {
@@ -340,7 +347,7 @@ public class SaxonXQueryExpression {
 			if (xmlColumn.isOrdinal()) {
 				continue;
 			}
-	    	Expression internalExpression = xmlColumn.getPathExpression().getInternalExpression();
+	    	Expression internalExpression = getXPathExpression(xmlColumn.getName()).getInternalExpression();
 	    	if (containsRootFunction(internalExpression)) {
 	    	    if (record.recordAnnotations()) {
                     record.addAnnotation(XQUERY_PLANNING, "Root function used in column path " + xmlColumn.getPath(), "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
@@ -478,6 +485,7 @@ public class SaxonXQueryExpression {
 		if (columns == null) {
 			return;
 		}
+		this.columnMap = new HashMap<>();
         XPathEvaluator eval = new XPathEvaluator(config);
     	eval.setStaticContext(ic);
 		for (XMLColumn xmlColumn : columns) {
@@ -489,7 +497,7 @@ public class SaxonXQueryExpression {
         		path = xmlColumn.getName();
         	}
         	path = path.trim();
-        	if (path.startsWith("/")) { //$NON-NLS-1$ 
+        	if (relativePaths && path.startsWith("/")) { //$NON-NLS-1$ 
         		if (path.startsWith("//")) { //$NON-NLS-1$
         			path = '.' + path;
         		} else {
@@ -502,7 +510,7 @@ public class SaxonXQueryExpression {
 			} catch (XPathException e) {
 				 throw new QueryResolverException(QueryPlugin.Event.TEIID30155, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30155, xmlColumn.getName(), xmlColumn.getPath()));
 			}	
-	    	xmlColumn.setPathExpression(exp);
+			this.columnMap.put(xmlColumn.getName(), exp);
 		}
 	}
 	
@@ -574,5 +582,12 @@ public class SaxonXQueryExpression {
 	public boolean isStreaming() {
 		return streamingPath != null && contextRoot != null;
 	}
+
+    public XPathExpression getXPathExpression(String name) {
+        if (columnMap == null) {
+            return null;
+        }
+        return columnMap.get(name);
+    }
 
 }

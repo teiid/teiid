@@ -306,7 +306,7 @@ public class TestSQLXMLProcessing {
     }
     
     @Test public void testXmlTable() throws Exception {
-        String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as x"; //$NON-NLS-1$
+        String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '.') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList(null, "first"),
@@ -317,7 +317,7 @@ public class TestSQLXMLProcessing {
     }
     
     @Test public void testXmlTableWithPeriodAlias() throws Exception {
-        String sql = "select \"x.b\".* from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as \"x.b\""; //$NON-NLS-1$
+        String sql = "select \"x.b\".* from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '.') as \"x.b\""; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
                 Arrays.asList(null, "first"),
@@ -383,7 +383,7 @@ public class TestSQLXMLProcessing {
     }
     
     @Test public void testXmlTableBinary() throws Exception {
-        String sql = "select * from xmltable('/a/b' passing convert('<a xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><b xsi:type=\"xs:hexBinary\">0FAB</b><b>1F1C</b></a>', xml) columns val varbinary path '/.') as x"; //$NON-NLS-1$
+        String sql = "select * from xmltable('/a/b' passing convert('<a xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><b xsi:type=\"xs:hexBinary\">0FAB</b><b>1F1C</b></a>', xml) columns val varbinary path '.') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList(new BinaryType(new byte[] {0xf, (byte)0xab})),
@@ -456,7 +456,7 @@ public class TestSQLXMLProcessing {
     }
     
     @Test public void testXmlTablePassingSubquery() throws Exception {
-        String sql = "select * from xmltable('/a/b' passing (SELECT xmlelement(name a, xmlAgg(xmlelement(name b, e1))) from pm1.g1) columns val string path '/.') as x"; //$NON-NLS-1$
+        String sql = "select * from xmltable('/a/b' passing (SELECT xmlelement(name a, xmlAgg(xmlelement(name b, e1))) from pm1.g1) columns val string path '.') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("a"),
@@ -482,7 +482,7 @@ public class TestSQLXMLProcessing {
 	    // Create models
 	    Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
 	
-	    QueryNode vm1g1n1 = new QueryNode("select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as x"); //$NON-NLS-1$ //$NON-NLS-2$
+	    QueryNode vm1g1n1 = new QueryNode("select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '.') as x"); //$NON-NLS-1$ //$NON-NLS-2$
 	    Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 	    
 	    RealMetadataFactory.createElements(vm1g1, 
@@ -563,7 +563,7 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("1 2 3 4 5"),
         };    
     
-        process(sql, expected);
+        process(sql, expected, true);
     }
 
     @Test public void testXmlQuery() throws Exception {
@@ -836,7 +836,7 @@ public class TestSQLXMLProcessing {
     }
     
 	@Test public void testXmlTableSubquery() throws Exception {
-		String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">c</b></a>', xml) columns x string path '@x', val string path '/.') as x where val = (select max(e1) from pm1.g1 as x)";
+		String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">c</b></a>', xml) columns x string path '@x', val string path '.') as x where val = (select max(e1) from pm1.g1 as x)";
     	
         List[] expected = new List[] {
         		Arrays.asList("attr", "c"),
@@ -856,11 +856,21 @@ public class TestSQLXMLProcessing {
     	TimestampWithTimezone.resetCalendar(null); //$NON-NLS-1$
     }
     
-	private ProcessorPlan process(String sql, List<?>[] expected) throws Exception {
-        CommandContext cc = createCommandContext();
-		ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), cc);
-        helpProcess(plan, cc, dataManager, expected);
-        return plan;
+    private ProcessorPlan process(String sql, List<?>[] expected) throws Exception {
+        return process(sql, expected, false);
+    }
+    
+	private ProcessorPlan process(String sql, List<?>[] expected, boolean relativeXPath) throws Exception {
+	    CommandContext cc = createCommandContext();
+        cc.getOptions().relativeXPath(relativeXPath);
+        CommandContext.pushThreadLocalContext(cc);
+        try {
+            ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), cc);
+            helpProcess(plan, cc, dataManager, expected);
+            return plan;
+        } finally {
+            CommandContext.popThreadLocalContext();
+        }
 	}
 	
 	public static BlobType blobFromFile(final String file) {
@@ -868,7 +878,7 @@ public class TestSQLXMLProcessing {
 	}
 	
     @Test public void testXmlTableWithDefault() throws Exception {
-        String sql = "select * from xmltable(XMLNAMESPACES(default 'http://x.y.com'), '/a/b' passing convert('<a xmlns=\"http://x.y.com\"><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as x"; //$NON-NLS-1$
+        String sql = "select * from xmltable(XMLNAMESPACES(default 'http://x.y.com'), '/a/b' passing convert('<a xmlns=\"http://x.y.com\"><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '.') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList(null, "first"),
@@ -1084,6 +1094,22 @@ public class TestSQLXMLProcessing {
         
         List<?>[] expected = new List<?>[] {
             Arrays.asList("102022"),
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testRootPath() throws Exception {
+        String sql = "Select * From XmlTable (\n" + 
+                "        '/root'\n" + 
+                "        Passing convert('<root><def><test1>10</test1><test1>20</test1></def><abc>22</abc></root>', xml)\n" + 
+                "        Columns\n" + 
+                "            b integer Path '//root',\n" + 
+                "            c string Path '/root'\n" +
+                "    )xx;";
+        
+        List<?>[] expected = new List<?>[] {
+            Arrays.asList(102022, "102022"),
         };    
     
         process(sql, expected);

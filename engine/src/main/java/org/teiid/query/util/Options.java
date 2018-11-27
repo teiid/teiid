@@ -53,6 +53,7 @@ public class Options {
 	private long maxSessionBufferSizeEstimate = Long.MAX_VALUE;
 	private boolean tracingWithActiveSpanOnly = true;
 	private boolean enforceSingleMaxBufferSizeEstimate = true;
+	private boolean relativeXPath = true;
 	
 	public Properties getProperties() {
 		return properties;
@@ -222,4 +223,19 @@ public class Options {
         this.enforceSingleMaxBufferSizeEstimate = b;
         return this;
     }
+	
+	public boolean isRelativeXPath() {
+        return relativeXPath;
+    }
+	
+	public void setRelativeXPath(boolean relativeXPath) {
+        this.relativeXPath = relativeXPath;
+    }
+    
+    public Options relativeXPath(
+            boolean b) {
+        this.relativeXPath = b;
+        return this;
+    }
+
 }

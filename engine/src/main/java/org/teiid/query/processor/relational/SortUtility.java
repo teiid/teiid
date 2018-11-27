@@ -302,7 +302,7 @@ public class SortUtility {
         if (!nonBlocking) {
             //obey the timeslice
             CommandContext cc = CommandContext.getThreadLocalContext();
-            if (cc != null) {
+            if (cc != null && cc.getWorkItem() != null) {
                 end = System.nanoTime() + (cc.getTimeSliceEnd()-System.currentTimeMillis())*1000000;
             }
         }

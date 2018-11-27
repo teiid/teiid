@@ -306,7 +306,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				tuple.add((int)rowCount);
 			} else {
 				try {
-					XPathExpression path = proColumn.getPathExpression();
+					XPathExpression path = table.getXQueryExpression().getXPathExpression(proColumn.getName());
 					XPathDynamicContext dynamicContext = path.createDynamicContext(item);
 					final SequenceIterator pathIter = path.iterate(dynamicContext);
 					Item colItem = pathIter.next();

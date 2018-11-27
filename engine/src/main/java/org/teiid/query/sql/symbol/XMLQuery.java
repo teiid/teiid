@@ -39,7 +39,7 @@ public class XMLQuery implements Expression {
     
     //TODO: display the analysis record info
     public void compileXqueryExpression() throws QueryResolverException {
-    	this.xqueryExpression = new SaxonXQueryExpression(xquery, namespaces, passing, null);
+    	this.xqueryExpression = SaxonXQueryExpression.compile(xquery, namespaces, passing, null);
     	this.xqueryExpression.useDocumentProjection(null, new AnalysisRecord(false, false));
     }
     

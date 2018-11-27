@@ -3,8 +3,6 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.saxon.sxpath.XPathExpression;
-
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
@@ -20,8 +18,6 @@ public class XMLTable extends TableFunctionReference {
 		private boolean ordinal;
 		private String path;
 		private Expression defaultExpression;
-		
-		private XPathExpression pathExpression;
 		
 		public XMLColumn(String name) {
 			super(name, DataTypeManager.DefaultDataTypes.INTEGER);
@@ -62,14 +58,6 @@ public class XMLTable extends TableFunctionReference {
 			this.ordinal = ordinal;
 		}
 		
-		public void setPathExpression(XPathExpression pathExpression) {
-			this.pathExpression = pathExpression;
-		}
-		
-		public XPathExpression getPathExpression() {
-			return pathExpression;
-		}
-		
 		@Override
 		public boolean equals(Object obj) {
 			if (obj == this) {
@@ -93,7 +81,6 @@ public class XMLTable extends TableFunctionReference {
 			if (this.defaultExpression != null) {
 				clone.defaultExpression = (Expression)this.defaultExpression.clone();
 			}
-			clone.pathExpression = this.pathExpression;
 			return clone;
 		}
 	}
@@ -111,7 +98,7 @@ public class XMLTable extends TableFunctionReference {
 	}
     
     public void compileXqueryExpression() throws TeiidProcessingException {
-    	this.xqueryExpression = new SaxonXQueryExpression(xquery, namespaces, passing, this.columns);
+    	this.xqueryExpression = SaxonXQueryExpression.compile(xquery, namespaces, passing, this.columns);
     }
     
     public SaxonXQueryExpression getXQueryExpression() {
