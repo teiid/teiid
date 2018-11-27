@@ -143,6 +143,21 @@ public class TestMaterialization {
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0 WHERE g_0.x = '1'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
+    @Test public void testNoCacheCascadeSubquery() throws Exception {
+        String userSql = "SELECT (select MATVIEW1.E1 FROM MATVIEW1) from MatSrc option nocache"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+        
+        Command command = helpGetCommand(userSql, metadata);
+        
+        TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT (SELECT g_0.x FROM MatSrc.MatSrc AS g_0 WHERE g_0.x = '1') FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        Collection<Annotation> annotations = analysis.getAnnotations();
+        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
+        assertEquals("Expected one annotation",3, annotations.size()); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+    }
+    
     @Test public void testDefaultMaterialization() throws Exception {
         String userSql = "SELECT * from vgroup2"; //$NON-NLS-1$
         

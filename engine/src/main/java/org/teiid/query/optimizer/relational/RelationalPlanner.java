@@ -823,6 +823,12 @@ public class RelationalPlanner {
 			        if (!containers.isEmpty()) {
 		                cloneContainers = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(subCommand);
 		            }
+			        Option mergedOption = mergeOptions(parentCommand.getOption(), subCommand.getOption());
+			        if (mergedOption != null && mergedOption == parentCommand.getOption()) {
+			            //clone for safety to prevent any unintended modifications
+			            mergedOption = (Option) mergedOption.clone();
+			        }
+                    subCommand.setOption(mergedOption);
     			    ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
     			    container.getCommand().setProcessorPlan(procPlan);
 			    }
@@ -1095,23 +1101,7 @@ public class RelationalPlanner {
 	public PlanNode generatePlan(Command cmd) throws TeiidComponentException, TeiidProcessingException {
 		//cascade the option clause nocache
 		Option savedOption = option;
-		option = cmd.getOption();
-        if (option == null) {
-        	if (savedOption != null) {
-        		option = savedOption;
-        	} 
-        } else if (savedOption != null && savedOption.isNoCache() && savedOption != option) { //merge no cache settings
-    		if (savedOption.getNoCacheGroups() == null || savedOption.getNoCacheGroups().isEmpty()) {
-    			if (option.getNoCacheGroups() != null) {
-    				option.getNoCacheGroups().clear(); // full no cache
-    			}
-    		} else if (option.getNoCacheGroups() != null && !option.getNoCacheGroups().isEmpty()) {
-    			for (String noCache : savedOption.getNoCacheGroups()) {
-					option.addNoCacheGroup(noCache); // only groups
-				}
-    		}
-    		option.setNoCache(true);
-        }
+		option = mergeOptions(savedOption, cmd.getOption());
 		
 		PlanNode result = null;
 		switch (cmd.getType()) {
@@ -1143,6 +1133,25 @@ public class RelationalPlanner {
         this.option = savedOption;
         return result;
 	}
+
+    static Option mergeOptions(Option parent, Option child) {
+        if (child == null) {
+        	return parent; 
+        } 
+        if (parent != null && parent.isNoCache() && parent != child) { //merge no cache settings
+    		if (parent.getNoCacheGroups() == null || parent.getNoCacheGroups().isEmpty()) {
+    			if (child.getNoCacheGroups() != null) {
+    			    child.getNoCacheGroups().clear(); // full no cache
+    			}
+    		} else if (child.getNoCacheGroups() != null && !child.getNoCacheGroups().isEmpty()) {
+    			for (String noCache : parent.getNoCacheGroups()) {
+    			    child.addNoCacheGroup(noCache); // only groups
+				}
+    		}
+    		child.setNoCache(true);
+        }
+        return child;
+    }
 
 	PlanNode createUpdatePlan(Command command) throws TeiidComponentException, TeiidProcessingException {
         // Create top project node - define output columns for stored query / procedure
