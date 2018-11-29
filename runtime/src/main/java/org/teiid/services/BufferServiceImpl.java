@@ -67,6 +67,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private boolean memoryBufferOffHeap;
 	private FileStorageManager fsm;
 	private BufferFrontedFileStoreCache fsc;
+	private long vmMaxMemory = Runtime.getRuntime().maxMemory();
 	
     /**
      * Clean the file storage directory on startup 
@@ -111,15 +112,20 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsc.setBufferManager(this.bufferMgr);
                 fsc.setMaxStorageObjectSize(maxStorageObjectSize);
                 fsc.setDirect(memoryBufferOffHeap);
-                //use approximately 40% of what's set aside for the reserved accounting for conversion from kb to bytes
-                long autoMaxBufferSpace = 4*(((long)this.bufferMgr.getMaxReserveKB())<<10)/10; 
-                //estimate inode/batch overhead
-				if (memoryBufferSpace < 0) {
-                	fsc.setMemoryBufferSpace(autoMaxBufferSpace);
+                if (memoryBufferSpace < 0) {
+                    //use approximately 40% of what's set aside for the reserved accounting for conversion from kb to bytes
+                    long autoMaxBufferSpace = 4*(((long)this.bufferMgr.getMaxReserveKB())<<10)/10; 
+				    if (this.maxReserveKb >= 0) {
+				        //if the max reserve has been - it may be too high
+				        //across most vm sizes we use about 1/4 of the remaining memory for the fixed buffer
+				        autoMaxBufferSpace = Math.min(autoMaxBufferSpace, (vmMaxMemory - (((long)this.bufferMgr.getMaxReserveKB())<<10))/4);
+				    }
+				    fsc.setMemoryBufferSpace(autoMaxBufferSpace);
                 } else {
                 	//scale from MB to bytes
                 	fsc.setMemoryBufferSpace(memoryBufferSpace << 20);
                 }
+                //estimate inode/batch overhead
 				long batchAndInodeOverheadKB = fsc.getMemoryBufferSpace()>>(memoryBufferOffHeap?19:17);
         		this.bufferMgr.setMaxReserveKB((int)Math.max(0, this.bufferMgr.getMaxReserveKB() - batchAndInodeOverheadKB));
                 if (this.maxReserveKb < 0) {
@@ -322,6 +328,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     public void setBufferManager(BufferManagerImpl bufferManager) {
         this.bufferMgr = bufferManager;
+    }
+    
+    public void setVmMaxMemory(long vmMaxMemory) {
+        this.vmMaxMemory = vmMaxMemory;
     }
 
 }

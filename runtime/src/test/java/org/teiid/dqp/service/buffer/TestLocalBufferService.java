@@ -173,4 +173,15 @@ public class TestLocalBufferService {
         FileStore f = mgr.getCache().createFileStore("x");
         f.write(new byte[1234], 0, 1234);
     }
+    
+    @Test public void testFixedSizing() throws Exception {
+        BufferServiceImpl svc = new BufferServiceImpl();
+        svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
+        svc.setVmMaxMemory(14l<<30);
+        svc.setMaxReserveKb(10<<20);
+        svc.start();
+        BufferManagerImpl impl = svc.getBufferManager();
+        BufferFrontedFileStoreCache cache = (BufferFrontedFileStoreCache)impl.getCache();
+        assertEquals(1073741824, cache.getMemoryBufferSpace());
+    }
 }
