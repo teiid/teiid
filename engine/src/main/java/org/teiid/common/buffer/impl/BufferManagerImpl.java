@@ -715,7 +715,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			this.maxReserveBytes = 0;
 			int one_gig = 1 << 30;
 			if (maxMemory > one_gig) {
-				//assume 70% of the memory over the first gig
+				//assume 50% of the memory over the first gig
 				this.maxReserveBytes = (long)Math.max(0, (maxMemory - one_gig) * .5);
 			}
 			this.maxReserveBytes += Math.max(0, Math.min(one_gig, maxMemory) * .4);
