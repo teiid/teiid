@@ -62,7 +62,7 @@
 		</dependency>
         <dependency>
             <groupId>org.teiid</groupId>
-            <artifactId>teiid-adminshell</artifactId>
+            <artifactId>teiid-admin</artifactId>
         </dependency>
         <dependency>
 			<groupId>org.teiid</groupId>

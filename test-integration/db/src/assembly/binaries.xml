@@ -47,7 +47,6 @@
 		<include>org.slf4j:slf4j-api</include>
 		<include>org.jboss.teiid:test-integration-common</include>
 		<include>org.jboss.teiid:teiid-common-core</include>
-		<include>org.jboss.teiid:teiid-adminshell</include>
 		<include>org.jboss.teiid:teiid-engine</include>
 		<include>org.jboss.teiid:teiid-client</include>
 		<include>log4j:log4j</include>
