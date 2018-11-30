@@ -47,7 +47,9 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.unittest.TimestampUtil;
 
+import net.jcip.annotations.NotThreadSafe;
 
+@NotThreadSafe
 public class TestAllResultsImpl {
 
 	static final long REQUEST_ID = 0;
@@ -237,7 +239,7 @@ public class TestAllResultsImpl {
 		// walk reversely;
 		int i = results.length - 1;
 		while (rs.previous()) {
-			List expected = new ArrayList();
+			List expected = new ArrayList(1);
 			expected.add(new Integer(i + 1));
 			assertEquals(expected, rs.getCurrentRecord()); 
 			i--;
@@ -757,7 +759,7 @@ public class TestAllResultsImpl {
 		List<Object>[] results = new List[length];
 
 		for (int i = 0; i < results.length; i++) {
-			results[i] = new ArrayList<Object>();
+			results[i] = new ArrayList<Object>(1);
 			results[i].add(new Integer(begin + i));
 		}
 
@@ -768,7 +770,7 @@ public class TestAllResultsImpl {
 		List[] results = new List[5];
 
 		for (int i = 0; i < results.length; i++) {
-			results[i] = new ArrayList();
+			results[i] = new ArrayList(2);
 			results[i].add(new Integer(i));
 			results[i].add(new String("a" + i)); //$NON-NLS-1$
 		}

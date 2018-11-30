@@ -16,9 +16,6 @@
 	<description>Federated SQL and XML query engine.</description>
 	<properties>		
 	    <site.url>http://www.jboss.org/teiid</site.url>
-	    <!--jdk.min.version>1.8</jdk.min.version-->
-	    <!--maven.compiler.source>1.8</maven.compiler.source>
-	    <maven.compiler.target>1.8</maven.compiler.target-->
 	    <illegaltransitivereportonly>true</illegaltransitivereportonly>
 	    <!-- Overrides to allow the release process to commit: https://jira.codehaus.org/browse/MRELEASE-812 -->
 	    <version.release.plugin>2.5</version.release.plugin>
@@ -173,11 +170,6 @@
 		<plugins>
 			<!-- Fixes how test resources of a project can be used in projects dependent on it -->
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>${version.jar.plugin}</version>
-			</plugin>
-			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.4</version>
 			</plugin>
@@ -195,17 +187,6 @@
 	</pluginManagement>
 	<plugins>
 		<!-- Specify the compiler options and settings -->
-		<plugin>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-compiler-plugin</artifactId>
-			<version>${version.compiler.plugin}</version>
-			<configuration>
-				<source>${maven.compiler.source}</source>
-				<target>${maven.compiler.target}</target>
-				<showDeprecation>false</showDeprecation>
-				<showWarnings>false</showWarnings>
-			</configuration>
-		</plugin>
 		<plugin>
 			<groupId>org.apache.maven.plugins</groupId>
 			<artifactId>maven-checkstyle-plugin</artifactId>
@@ -230,7 +211,6 @@
 		</plugin>
 		<plugin>
 			<artifactId>maven-surefire-plugin</artifactId>
-			<version>${version.surefire.plugin}</version>
 			<configuration>
 				<enableAssertions>true</enableAssertions>
 				<includes>
@@ -304,11 +284,21 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
+			<artifactId>mockito-core</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+		<dependency>
+            <groupId>com.github.stephenc.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+            <scope>test</scope>
+         </dependency>
+   </dependencies>
 	<dependencyManagement>
 		<dependencies>
             <dependency>

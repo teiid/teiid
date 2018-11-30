@@ -19,17 +19,21 @@
 package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.*;
 
 import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
+import java.util.TimeZone;
 
 import org.junit.Test;
+import org.mockito.MockSettings;
 import org.mockito.Mockito;
 import org.teiid.client.DQP;
 import org.teiid.client.ResultsMessage;
@@ -751,12 +755,16 @@ public class TestResultSet {
     }
     
     private ResultSetImpl helpExecuteQuery(int fetchSize, int totalResults, int cursorType) throws SQLException, TeiidProcessingException {
-        StatementImpl statement = createMockStatement(cursorType);
+        StatementImpl statement = createMockStatement(cursorType, withSettings().stubOnly());
 		return TestAllResultsImpl.helpTestBatching(statement, fetchSize, Math.min(fetchSize, totalResults), totalResults);
     }
 
-	static StatementImpl createMockStatement(int cursorType) throws SQLException {
-		StatementImpl statement = mock(StatementImpl.class);
+    static StatementImpl createMockStatement(int cursorType) throws SQLException {
+        return createMockStatement(cursorType, withSettings());
+    }
+    
+	static StatementImpl createMockStatement(int cursorType, MockSettings mockSetting) throws SQLException {
+		StatementImpl statement = mock(StatementImpl.class, mockSetting);
 		DQP dqp = mock(DQP.class);
 		stub(statement.getDQP()).toReturn(dqp);
 		stub(statement.getResultSetType()).toReturn(cursorType);

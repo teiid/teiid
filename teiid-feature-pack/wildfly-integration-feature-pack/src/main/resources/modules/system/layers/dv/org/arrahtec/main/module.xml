@@ -4,12 +4,8 @@
 		<property name="jboss.api" value="public" />
 	</properties>
 	<resources>
-		<artifact name="${com.itextpdf:itextpdf}"/>
 		<artifact name="${org.arrahtec:osdq-core}"/>
 		<artifact name="${com.github.mpkorstanje:simmetrics-core}"/>
-		<artifact name="${info.debatty:java-string-similarity}"/>
-		<artifact name="${net.sourceforge.jexcelapi:jxl}"/>
-		<artifact name="${net.sourceforge.jeval:jeval}"/>
 	</resources>
 
 	<dependencies>
