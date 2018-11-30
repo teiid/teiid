@@ -3,6 +3,7 @@ package org.teiid.query.processor;
 import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -1488,6 +1489,43 @@ public class TestWithClauseProcessing {
         hdm.addData("SELECT g_0.course_id FROM tab3 AS g_0", Arrays.asList(1l));
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
     }
+    
+    @Test public void testSubqueryAsCommonTable() throws Exception {
+        String sql = "with "
+                + "base as /*+ no_inline */ (SELECT intkey from bqt1.smalla), "
+                + "sub1 as (select intkey from bqt1.smallb where intkey > (select min(intkey) from base)) "
+                + "select (select avg(intkey) from sub1 where intkey > base.intkey) from base"; //$NON-NLS-1$
+        
+        helpTestReResolved(sql);
+    }
+    
+    @Test public void testSubqueryAsCommonTable1() throws Exception {
+        String sql = "with "
+                + "base as (SELECT intkey from bqt1.smalla), "
+                + "sub1 as /*+ no_inline */ (select intkey from bqt1.smallb where intkey > (select min(intkey) from base)) "
+                + "select (select avg(intkey) from sub1 where intkey > base.intkey) from base"; //$NON-NLS-1$
+        
+        helpTestReResolved(sql);
+    }
 
+    private void helpTestReResolved(String sql) throws TeiidComponentException,
+            TeiidProcessingException, TeiidException, Exception {
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+
+        HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+    
+        dataMgr.addData("SELECT g_0.IntKey FROM SmallA AS g_0", Arrays.asList(1));
+        dataMgr.addData("SELECT g_0.IntKey FROM SmallB AS g_0 WHERE g_0.IntKey > 1", Arrays.asList(2));
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        CommandContext cc = TestProcessor.createCommandContext();
+        
+        Command command = TestOptimizer.helpGetCommand(sql, metadata);
+        ProcessorPlan pp = TestProcessor.helpGetPlan(command, metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        
+        TestProcessor.helpProcess(pp, cc, dataMgr, new List[] {Arrays.asList(BigDecimal.valueOf(2))});
+    }
+    
 }
 

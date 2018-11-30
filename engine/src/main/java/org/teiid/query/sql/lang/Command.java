@@ -181,37 +181,16 @@ public abstract class Command implements LanguageObject {
         return externalGroups.getAllGroups();
     }
 
-    /**
-     * Indicates whether this command has been resolved or not - 
-     * attempting to resolve a command that has already been resolved
-     * has undefined results.  Also, caution should be taken in modifying
-     * a command which has already been resolved, as it could result in
-     * adding unresolved components to a supposedly resolved command.
-     * @return whether this command is resolved or not.
-     */
-    public boolean isResolved() {
-        return this.isResolved;
-    }
-
-    /**
-     * This command is intended to only be used by the QueryResolver.
-     * @param isResolved whether this command is resolved or not
-     */
-    public void setIsResolved(boolean isResolved) {
-        this.isResolved = isResolved;
-    }
-        
     public abstract Object clone();
     
     protected void copyMetadataState(Command copy) {
         if(this.getExternalGroupContexts() != null) {
-            copy.externalGroups = (GroupContext)this.externalGroups.clone();
+            copy.externalGroups = this.externalGroups.clone();
         }
         if(this.tempGroupIDs != null) {
             copy.setTemporaryMetadata(this.tempGroupIDs.clone());
         }
         
-        copy.setIsResolved(this.isResolved());
         copy.plan = this.plan;
         if (this.correlatedReferences != null) {
         	copy.correlatedReferences = this.correlatedReferences.clone();

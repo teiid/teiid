@@ -72,7 +72,6 @@ import org.teiid.query.validator.ValidationVisitor;
  */
 public class QueryResolver {
 
-    private static final String BINDING_GROUP = "INPUTS"; //$NON-NLS-1$
 	private static final CommandResolver SIMPLE_QUERY_RESOLVER = new SimpleQueryResolver();
     private static final CommandResolver SET_QUERY_RESOLVER = new SetQueryResolver();
     private static final CommandResolver EXEC_RESOLVER = new ExecResolver();
@@ -129,10 +128,6 @@ public class QueryResolver {
     public static TempMetadataStore resolveCommand(Command currentCommand, GroupSymbol container, int type, QueryMetadataInterface metadata, boolean inferProcedureResultSetColumns) throws QueryResolverException, TeiidComponentException {
     	ResolverUtil.resolveGroup(container, metadata);
     	switch (type) {
-	    case Command.TYPE_QUERY:
-	        QueryNode queryNode = metadata.getVirtualPlan(container.getMetadataID());
-            
-	        return resolveCommand(currentCommand, metadata, false);
     	case Command.TYPE_INSERT:
     	case Command.TYPE_UPDATE:
     	case Command.TYPE_DELETE:
@@ -185,9 +180,6 @@ public class QueryResolver {
              throw new QueryResolverException(e);
         }
 
-        // Flag that this command has been resolved.
-        currentCommand.setIsResolved(true);
-        
         return resolverMetadata.getMetadataStore();
     }
 
@@ -197,8 +189,7 @@ public class QueryResolver {
      * @param metadata
      * @return CommandResolver
      */
-    private static CommandResolver chooseResolver(Command command, QueryMetadataInterface metadata)
-        throws QueryResolverException, QueryMetadataException, TeiidComponentException {
+    private static CommandResolver chooseResolver(Command command, QueryMetadataInterface metadata) {
 
         switch(command.getType()) {
             case Command.TYPE_QUERY:
@@ -268,7 +259,7 @@ public class QueryResolver {
 	public static void resolveSubqueries(Command command,
 			TempMetadataAdapter metadata, Collection<GroupSymbol> externalGroups)
 			throws QueryResolverException, TeiidComponentException {
-		for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(command)) {
+		for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(command)) {
             QueryResolver.setChildMetadata(container.getCommand(), command);
             if (externalGroups != null) {
             	container.getCommand().pushNewResolvingContext(externalGroups);

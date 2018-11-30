@@ -99,7 +99,7 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
 		execute("SELECT * FROM Stock"); //$NON-NLS-1$
 		
-		//ensure the importinv vdb came back up
+		//ensure the importing vdb came back up
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:reuse@mm://localhost:31000;user=user;password=user", null);
 		
 		execute("SELECT count(*) FROM Sys.Columns"); //$NON-NLS-1$

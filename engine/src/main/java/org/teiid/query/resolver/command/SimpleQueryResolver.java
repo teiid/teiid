@@ -158,7 +158,18 @@ public class SimpleQueryResolver implements CommandResolver {
 				}
             	projectedSymbols = obj.getColumns();
             } 
-            TempMetadataID id = ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), projectedSymbols, true);
+            TempMetadataID id = (TempMetadataID) obj.getGroupSymbol().getMetadataID();
+            TempMetadataID newId = ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), projectedSymbols, true);
+            if (id == null) {
+                id = newId;
+            } else {
+                //we track with clause groups by identity, so create a new id only when it doesn't exist
+                //we purposely in rewrite keep the definition of the with group consistent
+                if (!newId.getElements().equals(id.getElements())) {
+                    throw new TeiidRuntimeException("Planning error with common table " + newId); //$NON-NLS-1$
+                }
+                metadata.getMetadataStore().getData().put(id.getID(), id);
+            }
             obj.getGroupSymbol().setMetadataID(metadata.getMetadataStore().getTempGroupID(obj.getGroupSymbol().getName()));
             obj.getGroupSymbol().setIsTempTable(true);
             List<GroupSymbol> groups = Collections.singletonList(obj.getGroupSymbol());
