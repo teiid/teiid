@@ -3173,4 +3173,111 @@ public class TestODataIntegration {
         }
     }
     
+    @Test public void testCrossSchemaFk() throws Exception {
+        String ddl = "CREATE VIEW pktable (\n" + 
+                "id integer,\n" + 
+                "keyvalue string,\n" + 
+                "CONSTRAINT pkid PRIMARY KEY(id)\n" + 
+                ") OPTIONS (UPDATABLE 'TRUE') \n" + 
+                "AS \n" + 
+                "SELECT 1 as id, 'a' as keyvalue\n";
+                
+        String fkddl = "CREATE VIEW fktable (\n" + 
+                "id integer,\n" + 
+                "fkvalue integer,\n" + 
+                "CONSTRAINT pkid PRIMARY KEY(id),\n" + 
+                "CONSTRAINT fkid FOREIGN KEY(fkvalue) REFERENCES pkmodel.pktable(id)\n" + 
+                ") OPTIONS(UPDATABLE 'TRUE') \n" + 
+                "AS\n" + 
+                "SELECT 1 as id, 1 as fkvalue";
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("pkmodel");
+            mmd.addSourceMetadata("DDL", ddl);
+            mmd.setModelType(Model.Type.VIRTUAL);
+            ModelMetaData mmd1 = new ModelMetaData();
+            mmd1.setName("fkmodel");
+            mmd1.addSourceMetadata("DDL", fkddl);
+            mmd1.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd, mmd1);
+
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/fkmodel/$metadata")
+                    .method("GET")
+                    .send();                        
+            assertEquals(200, response.getStatus());
+            String content = response.getContentAsString();
+            assertTrue(content.contains("Namespace=\"northwind.1.fkmodel\""));
+            assertTrue(content.contains("Namespace=\"northwind.1.pkmodel\""));
+            
+            response = http.newRequest(baseURL + "/northwind/pkmodel/$metadata")
+                    .method("GET")
+                    .send();                        
+            assertEquals(200, response.getStatus());
+            
+            content = response.getContentAsString();
+            assertTrue(content.contains("Namespace=\"northwind.1.pkmodel\""));
+            assertTrue(content.contains("Namespace=\"northwind.1.pkmodel\""));
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test public void testCicularCrossSchemaFk() throws Exception {
+        String ddl = "CREATE VIEW pktable (\n" + 
+                "id integer,\n" + 
+                "keyvalue string,\n" + 
+                "CONSTRAINT pkid PRIMARY KEY(id),\n" +
+                "CONSTRAINT fkid FOREIGN KEY(keyvalue) REFERENCES fkmodel.fktable(id)\n" +
+                ") OPTIONS (UPDATABLE 'TRUE') \n" + 
+                "AS \n" + 
+                "SELECT 1 as id, 'a' as keyvalue\n";
+                
+        String fkddl = "CREATE VIEW fktable (\n" + 
+                "id integer,\n" + 
+                "fkvalue integer,\n" + 
+                "CONSTRAINT pkid PRIMARY KEY(id),\n" + 
+                "CONSTRAINT fkid FOREIGN KEY(fkvalue) REFERENCES pkmodel.pktable(id)\n" + 
+                ") OPTIONS(UPDATABLE 'TRUE') \n" + 
+                "AS\n" + 
+                "SELECT 1 as id, 1 as fkvalue";
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("pkmodel");
+            mmd.addSourceMetadata("DDL", ddl);
+            mmd.setModelType(Model.Type.VIRTUAL);
+            ModelMetaData mmd1 = new ModelMetaData();
+            mmd1.setName("fkmodel");
+            mmd1.addSourceMetadata("DDL", fkddl);
+            mmd1.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd, mmd1);
+
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/fkmodel/$metadata")
+                    .method("GET")
+                    .send();                        
+            assertEquals(200, response.getStatus());
+            String content = response.getContentAsString();
+            System.out.println(content);
+            assertTrue(content.contains("Namespace=\"northwind.1.fkmodel\""));
+            assertTrue(content.contains("Namespace=\"northwind.1.pkmodel\""));
+            
+            response = http.newRequest(baseURL + "/northwind/pkmodel/$metadata")
+                    .method("GET")
+                    .send();                        
+            assertEquals(200, response.getStatus());
+            content = response.getContentAsString();
+            assertTrue(content.contains("Namespace=\"northwind.1.fkmodel\""));
+            assertTrue(content.contains("Namespace=\"northwind.1.pkmodel\""));
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
 }
