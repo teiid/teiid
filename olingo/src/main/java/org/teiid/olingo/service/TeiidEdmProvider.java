@@ -37,9 +37,13 @@ import org.apache.olingo.server.core.MetadataParser;
 import org.apache.olingo.server.core.SchemaBasedEdmProvider;
 
 public class TeiidEdmProvider extends SchemaBasedEdmProvider {
+    
+    private String baseUri;
+    
     public TeiidEdmProvider(String baseUri, CsdlSchema schema,
-            String invalidXmlReplacementChar) throws XMLStreamException,
-            ODataException {
+            String invalidXmlReplacementChar) throws XMLStreamException {
+        
+        this.baseUri = baseUri;
         
         EdmxReference olingoRef = new EdmxReference(URI.create(baseUri+"/static/org.apache.olingo.v1.xml"));
         EdmxReferenceInclude include = new EdmxReferenceInclude("org.apache.olingo.v1", "olingo-extensions");
@@ -64,5 +68,13 @@ public class TeiidEdmProvider extends SchemaBasedEdmProvider {
         }
         addSchema(schema);        
     }
+        
+    public void addReferenceSchema(String vdbName, String ns, String alias, SchemaBasedEdmProvider provider) {
+        super.addReferenceSchema(ns, provider);
+        String uri = baseUri + "/" + vdbName + "/" + alias + "/$metadata";
+        super.addReference(new EdmxReference(URI.create(uri))
+                .addInclude(new EdmxReferenceInclude(ns, alias)));
+    }
+    
 }
 

@@ -47,13 +47,43 @@ import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.common.ODataTypeManager;
 
 public class ODataSchemaBuilder {
+    
+    public interface SchemaResolver {
+        /**
+         * Return the schema info or null if it is not visible
+         * @param schemaName
+         * @return
+         */
+        ODataSchemaInfo getSchemaInfo(String schemaName);
+    }
+    
+    public final static class ODataSchemaInfo {
+        public CsdlSchema schema = new CsdlSchema();
+        public Map<String, CsdlEntitySet> entitySets = new LinkedHashMap<String, CsdlEntitySet>();
+        public Map<String, CsdlEntityType> entityTypes = new LinkedHashMap<String, CsdlEntityType>();
+        public TeiidEdmProvider edmProvider;
+    }
 
+    /**
+     * Helper method for tests
+     * @param namespace
+     * @param teiidSchema
+     * @return
+     */
     public static CsdlSchema buildMetadata(String namespace, org.teiid.metadata.Schema teiidSchema) {
+        ODataSchemaInfo info = buildStructuralMetadata(namespace, teiidSchema);
+        buildNavigationProperties(teiidSchema, info.entityTypes, info.entitySets, null);
+        return info.schema;
+    }
+    
+    public static ODataSchemaInfo buildStructuralMetadata(String namespace, org.teiid.metadata.Schema teiidSchema) {
         try {
-            CsdlSchema edmSchema = new CsdlSchema();
-            buildEntityTypes(namespace, teiidSchema, edmSchema);
-            buildProcedures(teiidSchema, edmSchema);
-            return edmSchema;
+            ODataSchemaInfo info = new ODataSchemaInfo();
+            String fullSchemaName = namespace+"."+teiidSchema.getName();
+            info.schema.setNamespace(fullSchemaName).setAlias(teiidSchema.getName());
+            buildEntityTypes(namespace, teiidSchema, info.schema, info.entitySets, info.entityTypes);
+            buildProcedures(teiidSchema, info.schema);
+            return info;
         } catch (Exception e) {
             throw new TeiidRuntimeException(e);
         }
@@ -91,10 +121,8 @@ public class ODataSchemaBuilder {
         return schema.getEntityContainer();
     }
 
-    static void buildEntityTypes(String namespace, org.teiid.metadata.Schema schema, CsdlSchema edmSchema) {
-        Map<String, CsdlEntitySet> entitySets = new LinkedHashMap<String, CsdlEntitySet>();
-        Map<String, CsdlEntityType> entityTypes = new LinkedHashMap<String, CsdlEntityType>();
-        
+    static void buildEntityTypes(String namespace, org.teiid.metadata.Schema schema, CsdlSchema csdlSchema, Map<String, 
+            CsdlEntitySet> entitySets, Map<String, CsdlEntityType> entityTypes) {
         String fullSchemaName = namespace+"."+schema.getName();
 
         for (Table table : schema.getTables().values()) {
@@ -140,10 +168,6 @@ public class ODataSchemaBuilder {
             entitySets.put(entityTypeName, entitySet);
         }
         
-
-        buildNavigationProperties(schema, entityTypes, entitySets);
-
-
         // entity container is holder entity sets, association sets, function
         // imports
         CsdlEntityContainer entityContainer = new CsdlEntityContainer().setName(
@@ -151,7 +175,7 @@ public class ODataSchemaBuilder {
                 new ArrayList<CsdlEntitySet>(entitySets.values()));
 
         // build entity schema
-        edmSchema.setNamespace(fullSchemaName).setAlias(schema.getName()) 
+        csdlSchema.setNamespace(fullSchemaName).setAlias(schema.getName()) 
                 .setEntityTypes(new ArrayList<CsdlEntityType>(entityTypes.values()))
                 .setEntityContainer(entityContainer);
     }
@@ -231,8 +255,8 @@ public class ODataSchemaBuilder {
         return null;
     }
     
-    private static void buildNavigationProperties(org.teiid.metadata.Schema schema, 
-            Map<String, CsdlEntityType> entityTypes, Map<String, CsdlEntitySet> entitySets) {
+    static void buildNavigationProperties(org.teiid.metadata.Schema schema, 
+            Map<String, CsdlEntityType> entityTypes, Map<String, CsdlEntitySet> entitySets, SchemaResolver resolver) {
     
         for (Table table : schema.getTables().values()) {
 
@@ -247,19 +271,20 @@ public class ODataSchemaBuilder {
                 // check to see if fk is part of this table's pk, then it is 1 to 1 relation
                 boolean fkPKSame = sameColumnSet(getIdentifier(table), fk);
                 
-                addForwardNavigation(entityTypes, entitySets, table, fk, fkPKSame);
-                addReverseNavigation(entityTypes, entitySets, table, fk, fkPKSame);
+                addForwardNavigation(entityTypes, entitySets, table, fk, fkPKSame, resolver);
+                addReverseNavigation(entityTypes, entitySets, table, fk, fkPKSame, resolver);
             }
         }
     }
 
     private static void addForwardNavigation(Map<String, CsdlEntityType> entityTypes,
-            Map<String, CsdlEntitySet> entitySets, Table table, ForeignKey fk, boolean onetoone) {
-        CsdlNavigationProperty navigaton = null;
-        CsdlNavigationPropertyBinding navigationBinding = null;
+            Map<String, CsdlEntitySet> entitySets, Table table, ForeignKey fk, boolean onetoone, SchemaResolver resolver) {
+        CsdlNavigationPropertyBinding navigationBinding = buildNavigationBinding(fk, resolver);
+        if (navigationBinding == null) {
+            return;
+        }
+        CsdlNavigationProperty navigaton = buildNavigation(fk);
         String entityTypeName = table.getName();
-        navigaton = buildNavigation(fk);                
-        navigationBinding = buildNavigationBinding(fk);                    
         
         if (onetoone) {
             navigaton.setNullable(false);
@@ -288,40 +313,64 @@ public class ODataSchemaBuilder {
     }
 
     private static void addReverseNavigation(Map<String, CsdlEntityType> entityTypes,
-            Map<String, CsdlEntitySet> entitySets, Table table, ForeignKey fk, boolean onetoone) {
-        CsdlNavigationProperty navigaton = null;
-        CsdlNavigationPropertyBinding navigationBinding = null;
-        String entityTypeName = null;
-
-        entityTypeName = fk.getReferenceTableName();
-        navigaton = buildReverseNavigation(table, fk);                
-        navigationBinding = buildReverseNavigationBinding(table,fk);                                        
+            Map<String, CsdlEntitySet> entitySets, Table table, ForeignKey fk, boolean onetoone, SchemaResolver resolver) {
+        CsdlNavigationPropertyBinding navigationBinding = buildReverseNavigationBinding(table,fk, resolver);
+        if (navigationBinding == null) {
+            return;
+        }
+        CsdlNavigationProperty navigaton = buildReverseNavigation(table, fk);
+        String entityTypeName = fk.getReferenceTableName();
+        String entitySchema = fk.getReferenceKey().getParent().getParent().getName();
         
         if (onetoone) {
             navigaton.setNullable(false);
         } else {
             navigaton.setCollection(true);
         }                
-   
-        
-        CsdlEntityType entityType = entityTypes.get(entityTypeName);
+        CsdlEntityType entityType = null;
+        CsdlEntitySet entitySet = null;
+        if (entitySchema.equals(table.getParent().getName())) {
+            entityType = entityTypes.get(entityTypeName);
+            entitySet = entitySets.get(entityTypeName);
+        } else {
+            ODataSchemaInfo schema = resolver.getSchemaInfo(entitySchema);
+            if (schema == null) {
+                return;
+            }
+            entityType = schema.entityTypes.get(entityTypeName);
+            entitySet = schema.entitySets.get(entityTypeName);
+        }
         entityType.getNavigationProperties().add(navigaton);
-        
-        CsdlEntitySet entitySet = entitySets.get(entityTypeName);
         entitySet.getNavigationPropertyBindings().add(navigationBinding);
     }
     
-    private static CsdlNavigationPropertyBinding buildNavigationBinding(ForeignKey fk) {
+    private static CsdlNavigationPropertyBinding buildNavigationBinding(ForeignKey fk, SchemaResolver resolver) {
         CsdlNavigationPropertyBinding navigationBinding = new CsdlNavigationPropertyBinding();
         navigationBinding.setPath(fk.getName());
-        navigationBinding.setTarget(fk.getReferenceTableName());
+        if (!fk.getParent().getParent().equals(fk.getReferenceKey().getParent().getParent())) {
+            ODataSchemaInfo schema = resolver.getSchemaInfo(fk.getReferenceKey().getParent().getParent().getName());
+            if (schema == null) {
+                return null;
+            }
+            navigationBinding.setTarget(fk.getReferenceKey().getParent().getFullName());
+        } else {
+            navigationBinding.setTarget(fk.getReferenceKey().getParent().getName());
+        }
         return navigationBinding;
     }
     
-    private static CsdlNavigationPropertyBinding buildReverseNavigationBinding(Table table, ForeignKey fk) {
+    private static CsdlNavigationPropertyBinding buildReverseNavigationBinding(Table table, ForeignKey fk, SchemaResolver resolver) {
         CsdlNavigationPropertyBinding navigationBinding = new CsdlNavigationPropertyBinding();
         navigationBinding.setPath(table.getName()+"_"+fk.getName());
-        navigationBinding.setTarget(table.getName());
+        if (!table.getParent().equals(fk.getReferenceKey().getParent().getParent())) {
+            ODataSchemaInfo schema = resolver.getSchemaInfo(fk.getReferenceKey().getParent().getParent().getName());
+            if (schema == null) {
+                return null;
+            }
+            navigationBinding.setTarget(table.getFullName());
+        } else {
+            navigationBinding.setTarget(table.getName());
+        }
         return navigationBinding;
     }
 
