@@ -34,6 +34,7 @@ import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.impl.BufferManagerImpl.BatchManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -184,6 +185,20 @@ public class TestBufferManagerImpl {
 		elements.addAll(Collections.nCopies(375, b));
 		//extreme
 		assertEquals(processorBatchSize/8, bm.getProcessorBatchSize(elements));
+    }
+    
+    @Test public void testRemovedException() throws TeiidComponentException {
+        BufferManagerImpl bufferManager = new BufferManagerImpl();
+        bufferManager.setCache(new MemoryStorageManager());
+        bufferManager.initialize();
+        BatchManagerImpl batchManager = bufferManager.createBatchManager(1l, new Class<?>[] {Integer.class});
+        batchManager.remove();
+        try {
+            batchManager.getBatch(1l, false);
+            fail();
+        } catch (TeiidComponentException e) {
+            
+        }
     }
 
 }
