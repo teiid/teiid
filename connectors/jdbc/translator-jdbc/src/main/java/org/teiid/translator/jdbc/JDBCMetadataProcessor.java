@@ -24,15 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.teiid.core.types.AbstractGeospatialType;
@@ -91,6 +83,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	private String procedureNamePattern;
 	private String sequenceNamePattern;
 	protected boolean useFullSchemaName = true;	
+	private boolean useFullSchemaNameSet;
 	private String[] tableTypes;
 	private String tableNamePattern;
 	private String catalog;
@@ -148,6 +141,11 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException {
+	    
+	    if (this.useFullSchemaName && !useFullSchemaNameSet) {
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11028));
+        }
+	    
 		DatabaseMetaData metadata = conn.getMetaData();
 		
 		this.startQuoteString = getDefaultQuoteStr(metadata, startQuoteString);
@@ -184,6 +182,16 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		
 		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata, conn);
 		HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
+		
+        if (tables.stream().map((t) -> {
+            return Arrays.asList(t.catalog, t.schema);
+        }).distinct().count() > 0) {
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR,
+                    JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11029));
+        } else if (this.schemaPattern == null) {
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11027));
+        }
+		
 		if (importKeys) {
 			getPrimaryKeys(metadataFactory, metadata, tables);
 			getIndexes(metadataFactory, metadata, tables, !importIndexes);
@@ -972,6 +980,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 
 	public void setUseFullSchemaName(boolean useFullSchemaName) {
 		this.useFullSchemaName = useFullSchemaName;
+		this.useFullSchemaNameSet = true;
 	}
 
 	public void setProcedureNamePattern(String procedureNamePattern) {

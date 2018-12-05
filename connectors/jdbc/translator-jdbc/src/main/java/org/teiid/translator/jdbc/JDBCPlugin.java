@@ -57,5 +57,8 @@ public class JDBCPlugin {
 		TEIID11024,
 		TEIID11025, 
 		TEIID11026,
+		TEIID11027,
+		TEIID11028,
+		TEIID11029,
 	}
 }
