@@ -58,10 +58,6 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	
 	private static final long DEFAULT_HALF_LIFE = 1<<16;
 	static final long MIN_INTERVAL = 1<<9;
-	//TODO: until Java 7 ConcurrentSkipListMap has a scaling bug in that
-	//the level function limits the effective map size to ~ 2^16
-	//above which it performs comparably under multi-threaded load to a synchronized LinkedHashMap
-	//just with more CPU overhead vs. wait time.
 	protected ConcurrentSkipListMap<CacheKey, V> evictionQueue = new ConcurrentSkipListMap<CacheKey, V>();
 	protected AtomicLong clock;
 	protected long maxInterval;
