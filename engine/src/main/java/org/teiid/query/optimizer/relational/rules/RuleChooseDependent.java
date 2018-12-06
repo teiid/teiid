@@ -123,7 +123,7 @@ public final class RuleChooseDependent implements OptimizerRule {
             
             boolean bothCandidates = entry.leftCandidate&&entry.rightCandidate;
             
-            PlanNode chosenNode = chooseDepWithoutCosting(sourceNode, bothCandidates?siblingNode:null, analysisRecord);
+            PlanNode chosenNode = chooseDepWithoutCosting(sourceNode, siblingNode, analysisRecord, bothCandidates);
             if(chosenNode != null) {
                 pushCriteria |= markDependent(chosenNode, joinNode, metadata, null, false, capFinder, context, rules, analysisRecord);
                 continue;
@@ -267,31 +267,29 @@ public final class RuleChooseDependent implements OptimizerRule {
         return true;        
     }
     
-    PlanNode chooseDepWithoutCosting(PlanNode rootNode1, PlanNode rootNode2, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException  {
+    PlanNode chooseDepWithoutCosting(PlanNode rootNode1, PlanNode rootNode2, AnalysisRecord analysisRecord, boolean bothCandidates) throws QueryMetadataException, TeiidComponentException  {
     	PlanNode sourceNode1 = FrameUtil.findJoinSourceNode(rootNode1);
     	if (sourceNode1.getType() == NodeConstants.Types.GROUP) {
     		//after push aggregates it's possible that the source is a grouping node
     		sourceNode1 = FrameUtil.findJoinSourceNode(sourceNode1.getFirstChild());
     	}
-        PlanNode sourceNode2 = null;
-        
-        if (rootNode2 != null) {
-            sourceNode2 = FrameUtil.findJoinSourceNode(rootNode2);
-        	if (sourceNode2.getType() == NodeConstants.Types.GROUP) {
-        		//after push aggregates it's possible that the source is a grouping node
-        		sourceNode2 = FrameUtil.findJoinSourceNode(sourceNode2.getFirstChild());
-        	}
-        }
-        if(sourceNode1.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
-            if (sourceNode2 != null && sourceNode2.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
+        PlanNode sourceNode2 = FrameUtil.findJoinSourceNode(rootNode2);
+    	if (sourceNode2.getType() == NodeConstants.Types.GROUP) {
+    		//after push aggregates it's possible that the source is a grouping node
+    		sourceNode2 = FrameUtil.findJoinSourceNode(sourceNode2.getFirstChild());
+    	}
+
+    	if(sourceNode1.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
+            if (sourceNode2.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
                 //Return null - query planning should fail because both access nodes
                 //have unsatisfied access patterns
             	rootNode1.getParent().recordDebugAnnotation("both children have unsatisfied access patterns", null, "Neither node can be made dependent", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
                 return null;
-            }  
+            } 
             rootNode1.recordDebugAnnotation("unsatisfied access pattern detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
             return rootNode1;
-        } else if (sourceNode2 != null && sourceNode2.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
+        } 
+        if (bothCandidates && sourceNode2.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
             //Access node 2 has unsatisfied access pattern,
             //so try to make node 2 dependent
         	sourceNode2.recordDebugAnnotation("unsatisfied access pattern detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
@@ -303,15 +301,18 @@ public final class RuleChooseDependent implements OptimizerRule {
         	sourceNode1.recordDebugAnnotation("MAKE_DEP hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
         	rootNode1.setProperty(Info.MAKE_DEP, sourceNode1.getProperty(Info.MAKE_DEP));
             return rootNode1;
-        } else if(sourceNode2 != null && sourceNode2.hasProperty(NodeConstants.Info.MAKE_DEP)) {
+        }
+        if(bothCandidates && sourceNode2.hasProperty(NodeConstants.Info.MAKE_DEP)) {
         	sourceNode2.recordDebugAnnotation("MAKE_DEP hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
         	rootNode2.setProperty(Info.MAKE_DEP, sourceNode2.getProperty(Info.MAKE_DEP));
             return rootNode2;
-        } else if (sourceNode1.hasProperty(NodeConstants.Info.MAKE_IND) && sourceNode2 != null) {
+        } 
+        if (bothCandidates && sourceNode1.hasProperty(NodeConstants.Info.MAKE_IND)) {
         	sourceNode2.recordDebugAnnotation("MAKE_IND hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
         	rootNode2.setProperty(Info.MAKE_DEP, sourceNode1.getProperty(Info.MAKE_IND));
         	return rootNode2;
-        } else if (sourceNode2 != null && sourceNode2.hasProperty(NodeConstants.Info.MAKE_IND)) {
+        }
+        if (sourceNode2.hasProperty(NodeConstants.Info.MAKE_IND)) {
         	sourceNode1.recordDebugAnnotation("MAKE_IND hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
         	rootNode1.setProperty(Info.MAKE_DEP, sourceNode2.getProperty(Info.MAKE_IND));
         	return rootNode1;
