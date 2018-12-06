@@ -32,8 +32,7 @@
 	    <maven.compiler.target>1.8</maven.compiler.target>
 
         <!-- Teiid Version -->
-        <version.org.teiid>12.0.0-SNAPSHOT</version.org.teiid>
-
+        <version.org.teiid>${project.version}</version.org.teiid>
 
         <derby.version>10.2.1.6</derby.version>
 	    <mysql.connector.version>5.1.5</mysql.connector.version>
@@ -73,7 +72,8 @@
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.8.0</version.jts2geojson>
         <version.junit>4.12</version.junit>
-
+        <version.hamcrest>1.3</version.hamcrest>
+        <version.jcip-annotations>1.0-1</version.jcip-annotations>
         
         <version.olap4j>1.1.0</version.olap4j>
 
@@ -146,7 +146,6 @@
             <url>https://www.apache.org/licenses/LICENSE-2.0</url>
 		</license>
 	</licenses>
-	<url>${site.url}</url>
     
     <distributionManagement>
         <repository>
