@@ -2,8 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <groupId>org.teiid</groupId>
-        <artifactId>project-bom-parent</artifactId>
-        <version>1.1.2</version>
+        <artifactId>teiid-build-configuration-parent</artifactId>
+        <version>12.0.0-SNAPSHOT</version>
+        <relativePath>build-configuration/pom.xml</relativePath>
     </parent>  
     
     <modelVersion>4.0.0</modelVersion>
@@ -23,15 +24,6 @@
 	    <!-- Overrides to allow the release process to commit: https://jira.codehaus.org/browse/MRELEASE-812 -->
 	    <version.release.plugin>2.5</version.release.plugin>
         <version.teiid.console>3.1.0</version.teiid.console>
-        
-        <version.teiid.bom>1.1.2</version.teiid.bom>
-        
-        <!-- project version property overrides go here
-             this should only be utilized when there is a conflict
-             with the bom. In most cases that will will need migrated
-             into a new release of the bom.   
-        -->
-        
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -96,6 +88,7 @@
 			<module>build</module>
 		</modules>
 	</profile>
+      
 	<profile>		
 		<id>final-release</id>
 		<modules>
@@ -191,10 +184,126 @@
 				<artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
 				<version>${version.org.wildfly.build-tools}</version>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+            </plugin>
+                
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>gwt-maven-plugin</artifactId>
+                <version>${version.com.google.gwt}</version>
+            </plugin>
+            <plugin>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <configuration>
+                        <!-- During release:perform, enable the "final-release" profile -->
+                        <releaseProfiles>final-release</releaseProfiles>
+                        <goals>deploy</goals>
+                    </configuration>
+            </plugin>
+            
 		</plugins>
 	</pluginManagement>
 	<plugins>
 		<!-- Specify the compiler options and settings -->
+     <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>de.is24.maven.enforcer.rules</groupId>
+            <artifactId>illegal-transitive-dependency-check</artifactId>
+            <version>1.7.4</version>
+          </dependency>
+          <dependency>
+            <groupId>com.redhat.victims</groupId>
+            <artifactId>enforce-victims-rule</artifactId>
+            <version>1.3.4</version>
+          </dependency>
+          <dependency>
+            <groupId>org.commonjava.maven.enforcer</groupId>
+            <artifactId>enforce-managed-deps-rule</artifactId>
+            <version>1.1</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>enforce-plugin-versions</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requirePluginVersions>
+                  <level>WARN</level>
+                  <message>One or more plugins do not have valid version! The version needs to be explicitly specified, can not be a -SNAPSHOT version and can not be one of the special (and buggy) Maven versions (LATEST, RELEASE).</message>
+                </requirePluginVersions>
+              </rules>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>no-managed-deps</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <phase>initialize</phase>
+            <configuration>
+              <rules>
+                <requireManagedDeps implementation="org.commonjava.maven.enforcer.rule.EnforceManagedDepsRule">
+                  <checkProfiles>true</checkProfiles>
+                  <failOnViolation>false</failOnViolation>
+                </requireManagedDeps>
+              </rules>
+            </configuration>
+          </execution>
+
+          <!--execution>
+            <id>enforce-direct-dependencies</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <illegalTransitiveDependencyCheck implementation="de.is24.maven.enforcer.rules.IllegalTransitiveDependencyCheck">
+                  <reportOnly>${illegaltransitivereportonly}</reportOnly>
+                  <regexIgnoredClasses>
+                    <regexIgnoredClass>com\.sun\.net\.httpserver\..+</regexIgnoredClass>
+                    <regexIgnoredClass>javax\..+</regexIgnoredClass>
+                    <regexIgnoredClass>org\.w3c\.dom\..+</regexIgnoredClass>
+                    <regexIgnoredClass>org\.xml\.sax\..+</regexIgnoredClass>
+                  </regexIgnoredClasses>
+                  <useClassesFromLastBuild>true</useClassesFromLastBuild>
+                </illegalTransitiveDependencyCheck>
+              </rules>
+            </configuration>
+          </execution-->
+
+          <execution>
+            <id>ban-blacklisted-dependencies</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <phase>validate</phase>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>org.apache.cxf:cxf-bundle-jaxrs</exclude>
+                    <exclude>org.jboss.weld.se:weld-se</exclude><!-- Use weld-se-core instead -->
+                    <exclude>org.jboss.weld.servlet:weld-servlet</exclude><!-- Use weld-servlet-core instead -->
+                    <!--exclude>org.mockito:mockito-all</exclude--><!-- Use mockito-core instead -->
+                  </excludes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+        
 		<plugin>
 			<groupId>org.apache.maven.plugins</groupId>
 			<artifactId>maven-compiler-plugin</artifactId>
@@ -220,7 +329,7 @@
 				</execution>
 			</executions>
 			<configuration>
-				<logViolationsToConsole>true</logViolationsToConsole>
+				<logViolationsToConsole>true</logViolationsToConsole>enforce-plugin-versions
 				<failOnViolation>false</failOnViolation>
 				<checkstyleRules>
 					<module name="Checker">
@@ -317,13 +426,16 @@
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
+            <!-- import infinispan bom -->
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>teiid-bom</artifactId>
-                <version>${version.teiid.bom}</version>
+                <version>${version.org.teiid}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- ====== -->            
             <!-- Import the core parent to get all the managed dependencies from core -->
             <dependency>
                 <groupId>org.wildfly.core</groupId>
@@ -611,10 +723,23 @@
                <artifactId>teiid-data-quality</artifactId>
                <version>${project.version}</version>
            </dependency>
+           <dependency>
+               <groupId>org.hamcrest</groupId>
+               <artifactId>hamcrest-core</artifactId>
+               <version>${version.hamcrest}</version>
+               <scope>test</scope>
+           </dependency>
+		   <dependency>
+               <groupId>com.github.stephenc.jcip</groupId>
+               <artifactId>jcip-annotations</artifactId>
+               <version>${version.jcip-annotations}</version>
+               <scope>test</scope>
+           </dependency>
            
         </dependencies>
 	</dependencyManagement>
 	<modules>
+        <module>build-configuration</module>
 		<module>common-core</module>
 		<module>api</module>
 		<module>client</module>
@@ -634,7 +759,7 @@
 		<module>jboss-security</module>
 		<module>rest-service</module>
 		<module>teiid-feature-pack</module>
-	        <module>connectors</module>
+        <module>connectors</module>
 		<module>test-integration</module>
 		<module>saxon-xom</module>
 	</modules>
