@@ -1097,6 +1097,29 @@ public class TestDependentJoins {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testMakeIndHintLeftOuterJoin() { 
+        String sql = "SELECT pm1.g1.e1, pm2.g1.e3 FROM /*+ MAKEIND */ pm1.g1 left outer join pm2.g1 on (pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2) order by pm1.g1.e1"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { null, null }), 
+            Arrays.asList(new Object[] { "a", false }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a", false }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a", false }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a", false }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a", true }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b", false }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "c", true }) //$NON-NLS-1$
+        };    
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        TestOptimizer.checkDependentJoinCount(plan, 1);
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
     @Test public void testMakeIndHintPushdown() { 
     	helpTestPushdown(true);
     	helpTestPushdown(false);
