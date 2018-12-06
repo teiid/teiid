@@ -70,6 +70,12 @@
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-mock</artifactId>
             <scope>test</scope>
-        </dependency>         
+        </dependency>  
+	    <dependency>
+            <groupId>com.github.stephenc.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+            <scope>test</scope>
+         </dependency>
+        
 	</dependencies>
 </project>
