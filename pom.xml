@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.teiid</groupId>
         <artifactId>teiid-build-configuration-parent</artifactId>
-        <version>12.0.0-SNAPSHOT</version>
+        <version>11.2.2-SNAPSHOT</version>
         <relativePath>build-configuration/pom.xml</relativePath>
     </parent>  
     
@@ -16,14 +16,9 @@
     <version>11.2.2-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>		
-	    <site.url>http://www.jboss.org/teiid</site.url>
-	    <!--jdk.min.version>1.8</jdk.min.version-->
-	    <!--maven.compiler.source>1.8</maven.compiler.source>
-	    <maven.compiler.target>1.8</maven.compiler.target-->
+	    <site.url>http://teiid.io</site.url>
 	    <illegaltransitivereportonly>true</illegaltransitivereportonly>
-	    <!-- Overrides to allow the release process to commit: https://jira.codehaus.org/browse/MRELEASE-812 -->
-	    <version.release.plugin>2.5</version.release.plugin>
-        <version.teiid.console>3.1.0</version.teiid.console>
+	    <version.teiid.console>3.1.0</version.teiid.console>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -31,12 +26,6 @@
         <url>http://github.com/teiid/teiid</url>
 		<tag>HEAD</tag>
     </scm>
-	<licenses>
-		<license>
-            <name>Apache License, Version 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
-		</license>
-	</licenses>
 	<url>${site.url}</url>
 	<developers>
 		<developer>
@@ -74,13 +63,13 @@
 			<id>ted</id>
 			<email>tejones@redhat.com</email>
 			<organization>Red Hat</organization>
-			<roles>
+            <roles>
 				<role>Developer</role>
 			</roles>
 			<timezone>-6</timezone>
-		</developer>
-	</developers>
-	<profiles>
+		</developer>   
+    </developers>
+<profiles>
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
 	<profile>
 		<id>release</id>
@@ -88,7 +77,6 @@
 			<module>build</module>
 		</modules>
 	</profile>
-      
 	<profile>		
 		<id>final-release</id>
 		<modules>
@@ -196,19 +184,17 @@
                 <version>${version.com.google.gwt}</version>
             </plugin>
             <plugin>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <configuration>
-                        <!-- During release:perform, enable the "final-release" profile -->
-                        <releaseProfiles>final-release</releaseProfiles>
-                        <goals>deploy</goals>
-                    </configuration>
-            </plugin>
-            
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <!-- During release:perform, enable the "final-release" profile -->
+                    <releaseProfiles>final-release</releaseProfiles>
+                    <goals>deploy</goals>
+                </configuration>
+            </plugin>            
 		</plugins>
 	</pluginManagement>
 	<plugins>
-		<!-- Specify the compiler options and settings -->
-     <plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <dependencies>
@@ -302,8 +288,8 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-        
+    </plugin>        
+		<!-- Specify the compiler options and settings -->
 		<plugin>
 			<groupId>org.apache.maven.plugins</groupId>
 			<artifactId>maven-compiler-plugin</artifactId>
@@ -318,7 +304,6 @@
 		<plugin>
 			<groupId>org.apache.maven.plugins</groupId>
 			<artifactId>maven-checkstyle-plugin</artifactId>
-			<version>2.13</version>
 			<executions>
 				<execution>
 					<id>verify-style</id>
@@ -329,7 +314,7 @@
 				</execution>
 			</executions>
 			<configuration>
-				<logViolationsToConsole>true</logViolationsToConsole>enforce-plugin-versions
+				<logViolationsToConsole>true</logViolationsToConsole>
 				<failOnViolation>false</failOnViolation>
 				<checkstyleRules>
 					<module name="Checker">
@@ -420,10 +405,15 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
+			<artifactId>mockito-all</artifactId> 
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+		<dependency>
+            <groupId>com.github.stephenc.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+            <scope>test</scope>
+        </dependency>
+   </dependencies>
 	<dependencyManagement>
 		<dependencies>
             <!-- import infinispan bom -->
@@ -451,291 +441,6 @@
                 <version>${version.org.wildfly}</version>
                 <scope>import</scope>			    
             </dependency>
-	      <!--
-	      Declare all dependency versions and default scopes here, but not optional.
-	      Each module should declare it's direct dependency and possibily overwrite scope/optional.
-	      -->
-      
-          <!-- Internal dependencies -->
-			<dependency>
-			  <groupId>org.teiid.connectors</groupId>
-			  <artifactId>translator-odata</artifactId>
-			  <version>${project.version}</version>
-			</dependency>
-			<dependency>
-              <groupId>org.teiid</groupId>
-              <artifactId>teiid-olingo-common</artifactId>
-              <version>${project.version}</version>
-            </dependency>
-           <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-olingo-patches</artifactId>
-                <version>${project.version}</version>
-           </dependency>                  
-        	<dependency>
-            	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>translator-loopback</artifactId>
-            	<version>${project.version}</version>
-        	</dependency>       
-        	<dependency>
-            	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>translator-solr</artifactId>
-            	<version>${project.version}</version>
-        	</dependency>         
-        	<dependency>
-            	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>translator-accumulo</artifactId>
-            	<version>${project.version}</version>
-        	</dependency>      
-			<dependency>
-            	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>translator-cassandra</artifactId>
-            	<version>${project.version}</version>
-       		</dependency>      
-        	<dependency>
-            	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>translator-object</artifactId>
-            	<version>${project.version}</version>
-        	</dependency>      
-       		<dependency>
-            	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>translator-object</artifactId>
-            	<version>${project.version}</version>
-            	<type>test-jar</type>
-        	</dependency>  
-        	<dependency>
-          		<groupId>org.teiid.connectors</groupId>
-          		<artifactId>translator-ws</artifactId>
-          		<version>${project.version}</version>
-        	</dependency>    
-       		<dependency>
-            	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>translator-salesforce</artifactId>
-            	<version>${project.version}</version>
-        	</dependency>
-            <dependency>
-                <groupId>org.teiid.connectors</groupId>
-                <artifactId>translator-salesforce-34</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.teiid.connectors</groupId>
-                <artifactId>translator-salesforce-41</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-	        <dependency>
-	            <groupId>org.teiid.connectors</groupId>
-	            <artifactId>connector-salesforce</artifactId>
-	            <version>${project.version}</version>
-	        </dependency>
-            <dependency>
-                <groupId>org.teiid.connectors</groupId>
-                <artifactId>connector-salesforce-34</artifactId>
-                <version>${project.version}</version>
-            </dependency>           	                	
-            <dependency>
-                <groupId>org.teiid.connectors</groupId>
-                <artifactId>connector-salesforce-41</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-      		<dependency>
-            	<groupId>org.teiid.connectors</groupId>
-           		<artifactId>translator-jdbc</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-      		<dependency>
-            	<groupId>org.teiid</groupId>
-           		<artifactId>teiid-hibernate-dialect</artifactId>
-				<version>${project.version}</version>
-			</dependency>        	      	   			        	      	   
-            <dependency>
-      	    	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>google-api</artifactId>
-  	        	<version>${project.version}</version>
-        	</dependency>
-            <dependency>
-      	    	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>mongodb-api</artifactId>
-  	        	<version>${project.version}</version>
-        	</dependency>
-            <dependency>
-                <groupId>org.teiid.connectors</groupId>
-                <artifactId>couchbase-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-      	    	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>simpledb-api</artifactId>
-  	        	<version>${project.version}</version>
-        	</dependency>         	       	
-            <dependency>
-                <groupId>org.teiid.connectors</groupId>
-                <artifactId>document-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.teiid.connectors</groupId>
-                <artifactId>file-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        	<dependency>
-           	 	<groupId>org.teiid.connectors</groupId>
-            	<artifactId>translator-jdbc</artifactId>    
-            	<version>${project.version}</version>  
-            	<type>test-jar</type>
-        	</dependency>			
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-common-core</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-common-core</artifactId>
-				<type>test-jar</type>
-				<version>${project.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-api</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-api</artifactId>
-				<type>test-jar</type>
-				<version>${project.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-client</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-            <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-admin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-admin</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>                                                      
-            <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-jboss-admin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-	        <dependency>
-	            <groupId>org.teiid</groupId>
-	            <artifactId>teiid-jboss-security</artifactId>
-	            <version>${project.version}</version>
-	        </dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-adminshell</artifactId>
-                <version>${project.version}</version>
-			</dependency>                      
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-client</artifactId>
-				<type>test-jar</type>
-				<version>${project.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-engine</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>saxon-xom</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-engine</artifactId>
-				<type>test-jar</type>
-				<version>${project.version}</version>
-				<scope>test</scope>
-			</dependency>
-	        <dependency>
-	            <groupId>org.teiid</groupId>
-	            <artifactId>rest-service</artifactId>
-	            <version>${project.version}</version>
-	        </dependency>			
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-metadata</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-metadata</artifactId>
-				<type>test-jar</type>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-txn-jbossts</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-            <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-jboss-integration</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-runtime</artifactId>
-                <version>${project.version}</version>
-            </dependency>    
-              <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-runtime</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-			<dependency>
-			  <groupId>org.teiid</groupId>
-			  <artifactId>test-integration-common</artifactId>
-			  <version>${project.version}</version>
-			  <type>test-jar</type>
-			</dependency>
-			
-	       <dependency>
-               <groupId>org.teiid.connectors</groupId>
-               <artifactId>translator-file</artifactId>
-               <version>${project.version}</version>
-           </dependency>
-           <dependency>
-               <groupId>org.teiid.connectors</groupId>
-               <artifactId>connector-file</artifactId>
-               <version>${project.version}</version>
-           </dependency>
-           <dependency>
-               <groupId>org.teiid</groupId>
-               <artifactId>teiid-data-quality</artifactId>
-               <version>${project.version}</version>
-           </dependency>
-           <dependency>
-               <groupId>org.hamcrest</groupId>
-               <artifactId>hamcrest-core</artifactId>
-               <version>${version.hamcrest}</version>
-               <scope>test</scope>
-           </dependency>
-		   <dependency>
-               <groupId>com.github.stephenc.jcip</groupId>
-               <artifactId>jcip-annotations</artifactId>
-               <version>${version.jcip-annotations}</version>
-               <scope>test</scope>
-           </dependency>
-           
         </dependencies>
 	</dependencyManagement>
 	<modules>
