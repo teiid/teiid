@@ -77,8 +77,8 @@
         <version.jta>1.1</version.jta>
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.8.0</version.jts2geojson>
-        <version.junit>4.12</version.junit>	   
-        <!--version.hamcrest>1.3</version.hamcrest-->
+        <version.junit>4.12</version.junit>
+        <version.hamcrest>1.3</version.hamcrest>
         <version.jcip-annotations>1.0-1</version.jcip-annotations>
         
         <version.olap4j>1.1.0</version.olap4j>
@@ -142,17 +142,13 @@
         
         <!--  Data Quality -->
         <version.com.github.mpkorstanje>3.0.0</version.com.github.mpkorstanje>
-        <version.com.itextpdf>5.4.0</version.com.itextpdf>
-        <version.com.opencsv>3.5</version.com.opencsv>
-        <version.info.debatty>0.13</version.info.debatty>
-        <version.net.sourceforge.jexcelapi>2.6.12</version.net.sourceforge.jexcelapi>
-        <version.net.sourceforge.jeval>0.9.4</version.net.sourceforge.jeval>
         <version.org.arrahtec>6.1.9</version.org.arrahtec>
         
         <!-- OpenTracing -->
         <version.opentracing.concurrent>0.1.0</version.opentracing.concurrent>
         <version.opentracing>0.31.0</version.opentracing>
-    </properties>
+	</properties>
+
 	<licenses>
 		<license>
             <name>Apache License, Version 2.0</name>
