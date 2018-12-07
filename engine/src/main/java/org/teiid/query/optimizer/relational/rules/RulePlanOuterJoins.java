@@ -134,7 +134,12 @@ public class RulePlanOuterJoins implements OptimizerRule {
     			joins.remove(childJoin);
     			if (childJoin == left) {
     				//a (b c)
+    			    //TODO: this case can probably be eliminated as it will be handled
+    			    //in BeforePlanning or during general join planning
     				newChild.addFirstChild(childJoin.getLastChild());
+                    //promote the hints to the new parent
+                    //so that makedep b can be honored
+                    RulePlaceAccess.copyProperties(newChild.getFirstChild(), newChild);
     				newChild.addLastChild(other);
     				newChild.setProperty(Info.JOIN_CRITERIA, joinCriteria);
     				newParent.addFirstChild(childJoin.getFirstChild());
@@ -291,6 +296,9 @@ public class RulePlanOuterJoins implements OptimizerRule {
                 joins.remove(childJoin);
                 //a (b c)
                 newChild.addFirstChild(childJoin.getLastChild());
+                //promote the hints to the new parent
+                //so that makedep b can be honored
+                RulePlaceAccess.copyProperties(newChild.getFirstChild(), newChild);
                 newChild.addLastChild(other);
                 newChild.setProperty(Info.JOIN_CRITERIA, joinCriteria);
                 newParent.addFirstChild(childJoin.getFirstChild());
