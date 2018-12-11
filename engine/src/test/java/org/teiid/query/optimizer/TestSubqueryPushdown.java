@@ -29,6 +29,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.AntiSemiJoin;
@@ -1096,8 +1097,10 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testAntiSemiJoinInHint() throws Exception {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where e2 NOT IN /*+ MJ */ (select count(e2) from pm3.g1 where e1 = o.e1)", RealMetadataFactory.example4(),  //$NON-NLS-1$
-            new String[] { "SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 ORDER BY c_1, c_0" }); //$NON-NLS-1$
+        TransformationMetadata example4 = RealMetadataFactory.example4();
+        example4.getElementID("pm3.g1.e2").setNullType(NullType.No_Nulls);
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where e2 NOT IN /*+ MJ */ (select e2 from pm3.g1 where e1 = o.e1)", example4,  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 ORDER BY c_1, c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
             0,      // DependentAccess
@@ -1115,6 +1118,29 @@ public class TestSubqueryPushdown {
             0       // UnionAll
         }); 
         checkJoinCounts(plan, 0, 1);
+    }
+    
+    @Test public void testAntiSemiJoinInHint1() throws Exception {
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where e2 <> /*+ MJ */ (select max(e2) from pm3.g1 where e1 = o.e1)", RealMetadataFactory.example4(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 ORDER BY c_1", "SELECT g_0.e1, g_0.e2 FROM pm3.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            2,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+        //can be just a join as only one row from the right is possible for each row on the left
+        checkJoinCounts(plan, 0, 0);
     }
     
     void checkJoinCounts(ProcessorPlan plan, int semi, int antiSemi) {
@@ -1783,6 +1809,30 @@ public class TestSubqueryPushdown {
                 "SELECT A.INTKEY, C.LONGNUM, X__1.expr1 AS expr3, X__2.expr1 AS expr4 FROM ((BQT1.SMALLA AS A CROSS JOIN BQT2.SMALLA AS C) LEFT OUTER JOIN (SELECT SUM(LONGNUM) AS expr1, B.INTKEY FROM BQT1.SMALLB AS B GROUP BY B.INTKEY) AS X__1 ON A.INTKEY = X__1.IntKey) LEFT OUTER JOIN (SELECT MIN(LONGNUM) AS expr1, B.INTKEY FROM BQT1.SMALLB AS B GROUP BY B.INTKEY) AS X__2 ON A.INTKEY = X__2.IntKey WHERE A.INTNUM = C.INTNUM ORDER BY A.INTKEY", RealMetadataFactory.exampleBQTCached());
     }
     
+    /*
+     * Not yet implemented per TEIID-5569
+     */
+    @Test public void testProjectSubqueryRewriteToJoinCountStar() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("SELECT pm1.g1.e1, pm1.g1.e2, /*+ MJ */ (select count(*) from pm1.g2 where e1 = pm1.g1.e1) FROM pm1.g1", 
+                "SELECT pm1.g1.e1, pm1.g1.e2, /*+ MJ */ (SELECT COUNT(*) FROM pm1.g2 WHERE e1 = pm1.g1.e1) FROM pm1.g1", RealMetadataFactory.example1Cached());
+    }
+    
+    /*
+     * Not yet implemented per TEIID-5569
+     */
+    @Test public void testWhereSubqueryRewriteToJoinCountStar() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 where e2 = /*+ MJ */ (select count(*) from pm1.g2 where e1 = pm1.g1.e1)", 
+                "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE e2 = /*+ MJ */ (SELECT COUNT(*) FROM pm1.g2 WHERE e1 = pm1.g1.e1)", RealMetadataFactory.example1Cached());
+    }
+    
+    /*
+     * Not yet implemented per TEIID-5569 - should be optimized to just a true predicate
+     */
+    @Test public void testWhereSubqueryRewriteToJoinCountStar1() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 where exists /*+ MJ */ (select count(*) from pm1.g2 where e1 = pm1.g1.e1)", 
+                "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE EXISTS /*+ MJ */ (SELECT COUNT(*) FROM pm1.g2 WHERE e1 = pm1.g1.e1)", RealMetadataFactory.example1Cached());
+    }
+    
     @Test public void testNManySubqueryProcessingFalsePredicate() throws Exception {
         String sql = "SELECT INTKEY, FLOATNUM FROM BQT1.SMALLA AS A WHERE FLOATNUM = /*+ NO_UNNEST */ (SELECT MIN(FLOATNUM) FROM BQT1.SMALLA AS B WHERE (INTKEY >= 9) AND (A.INTKEY = B.INTKEY))"; //$NON-NLS-1$
         
@@ -1828,4 +1878,5 @@ public class TestSubqueryPushdown {
         
         TestProcessor.helpProcess(pp, cc, dataMgr, new List[] {Arrays.asList(new ArrayImpl(1))});
     }
+    
 }

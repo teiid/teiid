@@ -54,6 +54,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -466,6 +467,8 @@ public final class RuleMergeCriteria implements OptimizerRule {
 						((SubqueryCompareCriteria)crit).setSubqueryHint(ss.getSubqueryHint());
 					}
 				}
+			} else if (cc.getLeftExpression() instanceof ScalarSubquery) {
+			    //TODO: handle the left case
 			}
 		}
 		if (crit instanceof SubqueryCompareCriteria) {
@@ -594,6 +597,20 @@ public final class RuleMergeCriteria implements OptimizerRule {
 						return false;
 					}
 					addGroupBy = true;
+					if (!canAddGrouping(plannedResult.query.getSelect())) {
+	                    return false;
+	                }
+					if (!canAddGrouping(having)) {
+					    boolean okToAdd = false;
+					    for (Expression ex : (List<Expression>)plannedResult.rightExpressions) {
+					        if (canAddGrouping(ex)) {
+					            okToAdd = true;
+					        }
+					    }
+					    if (!okToAdd) {
+					        return false;
+					    }
+					}
 				}
 			}
 			processCriteria(leftGroups, plannedResult, rightGroups, requiredExpressions, refs, having, plannedResult.query.getGroupBy(), false);
@@ -660,6 +677,17 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		return true;
 	}
+
+    private boolean canAddGrouping(LanguageObject lo) {
+        for (AggregateSymbol as : AggregateSymbolCollectorVisitor.getAggregates(lo, false)) {
+            if (as.isCount() || as.getAggregateFunction() == Type.TEXTAGG) {
+                //these can be non-null for no rows.
+                //TODO: could include udaf as well
+                return false;
+            }
+        }
+        return true;
+    }
 
 	private void processCriteria(Collection<GroupSymbol> leftGroups,
 			PlannedResult plannedResult, List<GroupSymbol> rightGroups,
