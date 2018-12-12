@@ -1,4 +1,6 @@
-<assembly>
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
   
   <id>adminshell-dist</id>
   
@@ -8,32 +10,15 @@
   
   <includeBaseDirectory>true</includeBaseDirectory>
   <baseDirectory>teiid-adminshell-${project.version}</baseDirectory>
-
-  <moduleSets>
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-               
-        <includes>
-            <include>org.teiid:teiid-adminshell</include>
-        </includes>
-                        
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-                                    
-          <dependencySets>
-            <dependencySet>
-              <useProjectArtifact>true</useProjectArtifact>
-              <unpack>false</unpack>
-              <useTransitiveDependencies>true</useTransitiveDependencies>
-            </dependencySet>
-          </dependencySets>
-          <outputDirectory>lib</outputDirectory>
-        </binaries>
-      
-    </moduleSet>
-  </moduleSets>
+  
+  <dependencySets>
+    <dependencySet>
+      <unpack>false</unpack>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
+      <outputDirectory>lib</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+  </dependencySets>
   
   <fileSets>
       

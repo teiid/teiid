@@ -1,5 +1,7 @@
 <!--This script builds a JAR for the JDBC Client -->
-<assembly>
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
   
   <id>jdbc</id>
   
@@ -10,26 +12,17 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <baseDirectory>teiid-client</baseDirectory>
     
-  <moduleSets>
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.teiid:teiid-client</include>
-            <include>org.teiid:teiid-common-core</include>	
-        </includes>
-        
-        <binaries>
-          <includeDependencies>false</includeDependencies>
-          <unpack>true</unpack>
-          <outputDirectory></outputDirectory>
-          <includes>
-            <include>:jar:*</include>
-          </includes>
-        </binaries>
-      
-    </moduleSet>
-  </moduleSets>
-
+  <dependencySets>
+    <dependencySet>
+      <includes>
+        <include>org.teiid:teiid-client</include>
+        <include>org.teiid:teiid-common-core</include>
+      </includes>
+      <unpack>true</unpack>
+      <outputDirectory></outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+  </dependencySets>
+    
 </assembly>
