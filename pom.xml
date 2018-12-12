@@ -435,6 +435,7 @@
 		<module>olingo-patches</module>
 		<module>olingo</module>
 		<module>jboss-admin</module>
+		<module>jboss-client</module>
 		<module>jboss-integration</module>
 		<module>jboss-security</module>
 		<module>rest-service</module>

@@ -24,8 +24,7 @@ import java.util.Properties;
 public interface ConnectionProfile {
 
 	/**
-	 * This method tries to make a connection to the given URL. This class
-	 * will return a null if this is not the right driver to connect to the given URL.
+	 * This method tries to make a connection to the given URL.
 	 * @param The URL used to establish a connection.
 	 * @return Connection object created
 	 * @throws SQLException if it is unable to establish a connection
