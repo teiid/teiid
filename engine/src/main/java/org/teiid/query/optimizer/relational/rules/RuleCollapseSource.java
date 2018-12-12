@@ -707,7 +707,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                     
                     SymbolMap map = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
                     if (map != null) {
-            			ExpressionMappingVisitor visitor = new RuleMergeCriteria.ReferenceReplacementVisitor(map);
+            			ExpressionMappingVisitor visitor = new RulePlanSubqueries.ReferenceReplacementVisitor(map);
             			DeepPostOrderNavigator.doVisit(newQuery, visitor);
                     	sfc.setLateral(true);
                     }
@@ -883,7 +883,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 		}
 		final SymbolMap map = container.getCommand().getCorrelatedReferences();
 		if (map != null) {
-			ExpressionMappingVisitor visitor = new RuleMergeCriteria.ReferenceReplacementVisitor(map);
+			ExpressionMappingVisitor visitor = new RulePlanSubqueries.ReferenceReplacementVisitor(map);
 			DeepPostOrderNavigator.doVisit(command, visitor);
 		}
 		command.setProcessorPlan(container.getCommand().getProcessorPlan());

@@ -49,4 +49,5 @@ public final class RuleConstants {
     public static final OptimizerRule SUBSTITUTE_EXPRESSIONS = new RuleSubstituteExpressions();
     public static final OptimizerRule PLAN_OUTER_JOINS = new RulePlanOuterJoins();
     public static final OptimizerRule PUSH_LARGE_IN = new RulePushLargeIn();
+    public static final OptimizerRule MERGE_CRITERIA = new RuleMergeCriteria();
 }

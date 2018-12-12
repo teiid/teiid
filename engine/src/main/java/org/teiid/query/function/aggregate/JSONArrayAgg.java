@@ -27,7 +27,7 @@ import org.teiid.query.function.JSONFunctionMethods.JSONBuilder;
 import org.teiid.query.util.CommandContext;
 
 /**
- * Aggregates XML entries
+ * Aggregates Json entries
  */
 public class JSONArrayAgg extends SingleArgumentAggregateFunction {
 

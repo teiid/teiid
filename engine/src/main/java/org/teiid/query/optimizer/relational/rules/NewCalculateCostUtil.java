@@ -443,7 +443,7 @@ public class NewCalculateCostUtil {
         		nonEquiJoinCriteria = joinCriteria;
         	}
         	
-        	if (!nonEquiJoinCriteria.isEmpty()) {
+        	if (nonEquiJoinCriteria != null && !nonEquiJoinCriteria.isEmpty()) {
             	Criteria crit = Criteria.combineCriteria(nonEquiJoinCriteria);
         		//TODO: we may be able to get a fairly accurate join estimate if the
         		//unknown side is being joined with a key
@@ -1575,7 +1575,10 @@ public class NewCalculateCostUtil {
 			throws QueryPlannerException, TeiidComponentException {
 		LinkedList<PlanNode> targets = new LinkedList<PlanNode>();
 		LinkedList<PlanNode> critNodes = new LinkedList<PlanNode>();
-		critNodes.add(RelationalPlanner.createSelectNode(new DependentSetCriteria(depExpr, null), false));
+		PlanNode select = RelationalPlanner.createSelectNode(new DependentSetCriteria(depExpr, null), false);
+		// mark as not a dependent set so that the flag doesn't inadvertently change anything
+		select.setProperty(Info.IS_DEPENDENT_SET, false); 
+        critNodes.add(select);
 		LinkedList<PlanNode> initialTargets = new LinkedList<PlanNode>();
 		initialTargets.add(dependentNode);
 		while (!critNodes.isEmpty()) {

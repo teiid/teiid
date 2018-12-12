@@ -311,8 +311,7 @@ public class PlanNode {
     }
     
     /**
-     * Add the node as this node's parent.  NOTE: This node 
-     * must already have a parent.
+     * Add the node as this node's parent.
      * @param node
      */
     public void addAsParent(PlanNode node) {

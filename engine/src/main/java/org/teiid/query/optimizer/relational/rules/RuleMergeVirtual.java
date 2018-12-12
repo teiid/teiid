@@ -218,7 +218,7 @@ public final class RuleMergeVirtual implements
         	groups = FrameUtil.findJoinSourceNode(projectNode).getGroups();
         } else if (references != null) {
         	//convert from correlated form to regular references
-        	RuleMergeCriteria.ReferenceReplacementVisitor rrv = new RuleMergeCriteria.ReferenceReplacementVisitor(references);
+            RulePlanSubqueries.ReferenceReplacementVisitor rrv = new RulePlanSubqueries.ReferenceReplacementVisitor(references);
         	for (Map.Entry<ElementSymbol, Expression> entry : symbolMap.asUpdatableMap().entrySet()) {
         		if (entry.getValue() instanceof Reference) {
         			Expression ex = rrv.replaceExpression(entry.getValue());

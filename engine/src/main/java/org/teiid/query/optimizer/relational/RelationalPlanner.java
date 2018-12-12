@@ -991,8 +991,10 @@ public class RelationalPlanner {
         
         //TODO: update plan sorts to take advantage of semi-join ordering
         if (hints.hasJoin || hints.hasCriteria || hints.hasRowBasedSecurity) {
-            rules.push(new RuleMergeCriteria(idGenerator, capFinder, analysisRecord, context, metadata));
+            rules.push(RuleConstants.MERGE_CRITERIA);
         }
+        
+        rules.push(new RulePlanSubqueries(idGenerator, capFinder, analysisRecord, context, metadata));
 
         if(hints.hasJoin) {
             rules.push(RuleConstants.IMPLEMENT_JOIN_STRATEGY);
@@ -1681,7 +1683,7 @@ public class RelationalPlanner {
 		            		//insert is null criteria
 		            		IsNullCriteria criteria = new IsNullCriteria((Expression) at.getArrayValue().clone());
 		            		if (sfc.getCommand().getCorrelatedReferences() != null) {
-			            		RuleMergeCriteria.ReferenceReplacementVisitor rrv = new RuleMergeCriteria.ReferenceReplacementVisitor(sfc.getCommand().getCorrelatedReferences());
+			            		RulePlanSubqueries.ReferenceReplacementVisitor rrv = new RulePlanSubqueries.ReferenceReplacementVisitor(sfc.getCommand().getCorrelatedReferences());
 			            		PreOrPostOrderNavigator.doVisit(criteria, rrv, PreOrPostOrderNavigator.PRE_ORDER);
 		            		}
 			            	criteria.setNegated(true);
@@ -1892,6 +1894,9 @@ public class RelationalPlanner {
             //it's not needed to check for correlated grouping expression as those will be replaced as expected when needed
                 /*|| !ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty()*/)) {
             critNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
+        }
+        if (crit instanceof DependentSetCriteria) {
+            critNode.setProperty(Info.IS_DEPENDENT_SET, true);
         }
         // Add groups to crit node
         critNode.addGroups(GroupsUsedByElementsVisitor.getGroups(crit));

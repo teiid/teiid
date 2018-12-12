@@ -36,7 +36,7 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
-import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
+import org.teiid.query.optimizer.relational.rules.RulePlanSubqueries;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.ForEachRowPlan;
 import org.teiid.query.processor.proc.ProcedurePlan;
@@ -171,7 +171,7 @@ public final class TriggerActionPlanner {
 			//map to the query form - changes references back to element form
 			SymbolMap queryMapping = new SymbolMap();
 			queryMapping.asUpdatableMap().putAll(mapping);
-			ExpressionMappingVisitor visitor = new RuleMergeCriteria.ReferenceReplacementVisitor(queryMapping);
+			ExpressionMappingVisitor visitor = new RulePlanSubqueries.ReferenceReplacementVisitor(queryMapping);
 			DeepPostOrderNavigator.doVisit(queryExpression.getSelect(), visitor);
 			
 			//now we can return a plan based off a single insert statement
@@ -181,7 +181,7 @@ public final class TriggerActionPlanner {
 		List<Expression> values = mapped.getValues();
 		SymbolMap queryMapping = new SymbolMap();
 		queryMapping.asUpdatableMap().putAll(mapping);
-		ExpressionMappingVisitor visitor = new RuleMergeCriteria.ReferenceReplacementVisitor(queryMapping);
+		ExpressionMappingVisitor visitor = new RulePlanSubqueries.ReferenceReplacementVisitor(queryMapping);
 		Select select = new Select();
 		select.addSymbols(values);
 		DeepPostOrderNavigator.doVisit(select, visitor);

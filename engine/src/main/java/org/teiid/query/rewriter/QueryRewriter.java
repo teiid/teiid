@@ -61,9 +61,9 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.AliasGenerator;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
-import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
-import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
+import org.teiid.query.optimizer.relational.rules.RulePlanSubqueries;
+import org.teiid.query.optimizer.relational.rules.RulePlanSubqueries.PlannedResult;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
@@ -85,7 +85,6 @@ import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.WindowFrame.FrameBound;
 import org.teiid.query.sql.util.SymbolMap;
-import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
@@ -93,7 +92,6 @@ import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.validator.UpdateValidator.UpdateMapping;
@@ -575,7 +573,7 @@ public class QueryRewriter {
         
         if (from != null) {
             List<Expression> symbols = query.getSelect().getSymbols();
-            RuleMergeCriteria rmc = new RuleMergeCriteria(null, null, null, this.context, this.metadata);
+            RulePlanSubqueries rmc = new RulePlanSubqueries(null, null, null, this.context, this.metadata);
             TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
             List<GroupSymbol> groups = query.getFrom().getGroups();
             for (GroupSymbol gs : groups) {
@@ -591,7 +589,7 @@ public class QueryRewriter {
                     continue;
                 }
                 determineCorrelatedReferences(groups, plannedResult);
-                boolean requiresDistinct = requiresDistinctRows(query);
+                boolean requiresDistinct = RulePlanSubqueries.requiresDistinctRows(query);
                 if (!rmc.planQuery(groups, requiresDistinct, plannedResult)) {
                     continue;
                 }
@@ -620,7 +618,7 @@ public class QueryRewriter {
 		if (query.getCriteria() == null) {
 			return;
 		}
-		RuleMergeCriteria rmc = new RuleMergeCriteria(null, null, null, this.context, this.metadata);
+		RulePlanSubqueries rmc = new RulePlanSubqueries(null, null, null, this.context, this.metadata);
 		List<Criteria> current = Criteria.separateCriteriaByAnd(query.getCriteria());
 		query.setCriteria(null);
 		List<GroupSymbol> groups = query.getFrom().getGroups();
@@ -635,7 +633,7 @@ public class QueryRewriter {
 				continue;
 			}
 			determineCorrelatedReferences(groups, plannedResult);
-			boolean requiresDistinct = requiresDistinctRows(query);
+			boolean requiresDistinct = RulePlanSubqueries.requiresDistinctRows(query);
 			if (!rmc.planQuery(groups, requiresDistinct, plannedResult)) {
 				continue;
 			}
@@ -706,29 +704,6 @@ public class QueryRewriter {
             }	
         }
     }
-
-	private boolean requiresDistinctRows(Query query) {
-		Set<AggregateSymbol> aggs = new HashSet<AggregateSymbol>();
-		aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(query.getSelect(), false));
-		aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(query.getHaving(), false));
-		if (!aggs.isEmpty() || query.getGroupBy() != null) {
-			if (!AggregateSymbol.areAggregatesCardinalityDependent(aggs)) {
-				return false;
-			}
-		} else if (query.getSelect().isDistinct()) {
-			for (Expression projectSymbol : query.getSelect().getProjectedSymbols()) {
-				Expression ex = SymbolMap.getExpression(projectSymbol);
-	            if (FunctionCollectorVisitor.isNonDeterministic(ex)) {
-	            	return true;
-	            }
-	           	if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex).isEmpty()) {
-	           		return true;
-	           	}
-			}
-			return false;
-		}
-		return true;
-	}
 
 	private Query rewriteGroupBy(Query query) throws TeiidComponentException, TeiidProcessingException {
 		if (query.getGroupBy() == null) {
