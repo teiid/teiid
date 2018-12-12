@@ -10,6 +10,8 @@
   <name>Build</name>
   <description>Teiid Build</description>
   
+  <packaging>pom</packaging>
+  
   <properties>
       <!-- Directory name from upstream Wildfly server dist. -->
       <dir.wildfly>wildfly-${version.org.wildfly}</dir.wildfly>
@@ -46,16 +48,6 @@
                 </excludes>
             </resource>
         </resources>
-        
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <artifactId>maven-assembly-plugin</artifactId>
-              <configuration>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
         
         <plugins>                        
             <plugin>
@@ -134,4 +126,14 @@
         </plugins>
     </build>
     
+    <dependencies>
+    	<dependency>
+    		<groupId>org.teiid</groupId>
+    		<artifactId>teiid-client</artifactId>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.teiid</groupId>
+    		<artifactId>teiid-common-core</artifactId>
+    	</dependency>
+    </dependencies>
 </project>
