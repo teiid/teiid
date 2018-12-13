@@ -583,7 +583,7 @@ public class QueryRewriter {
             for (int i = 0; i < symbols.size(); i++) {
                 Expression symbol = symbols.get(i);
                 plannedResult.reset();
-                rmc.findSubquery(SymbolMap.getExpression(symbol), context!=null?context.getOptions().isSubqueryUnnestDefault():false, plannedResult);
+                rmc.findSubquery(SymbolMap.getExpression(symbol), context!=null?context.getOptions().isSubqueryUnnestDefault():false, plannedResult, true);
                 if (plannedResult.query == null || plannedResult.query.getProcessorPlan() != null 
                         || plannedResult.query.getFrom() == null) {
                     continue;
@@ -1433,12 +1433,7 @@ public class QueryRewriter {
             criteria.setRightExpression(leftExpr);
 
             // Check for < or > operator as we have to switch it
-            switch(criteria.getOperator()) {
-                case CompareCriteria.LT:    criteria.setOperator(CompareCriteria.GT);   break;
-                case CompareCriteria.LE:    criteria.setOperator(CompareCriteria.GE);   break;
-                case CompareCriteria.GT:    criteria.setOperator(CompareCriteria.LT);   break;
-                case CompareCriteria.GE:    criteria.setOperator(CompareCriteria.LE);   break;
-            }
+            criteria.setOperator(criteria.getReverseOperator());
             rightConstant = true;
 		} 
         

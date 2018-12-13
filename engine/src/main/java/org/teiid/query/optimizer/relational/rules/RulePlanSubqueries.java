@@ -125,6 +125,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 		public boolean mergeJoin;
 		public boolean madeDistinct;
 		public boolean makeInd;
+        public boolean multiRow;
         public void reset() {
             this.leftExpressions.clear();
             this.rightExpressions.clear();
@@ -136,6 +137,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
             this.mergeJoin = false;
             this.madeDistinct = false;
             this.makeInd = false;
+            this.multiRow = false;
         }
 	}
 	
@@ -221,7 +223,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
             for (int i = 0; i < symbols.size(); i++) {
                 Expression symbol = symbols.get(i);
                 plannedResult.reset();
-                findSubquery(SymbolMap.getExpression(symbol), true, plannedResult);
+                findSubquery(SymbolMap.getExpression(symbol), true, plannedResult, false);
                 if (plannedResult.query == null 
                         || plannedResult.query.getFrom() == null
                         || plannedResult.not) {
@@ -268,6 +270,10 @@ public final class RulePlanSubqueries implements OptimizerRule {
     private PlanNode planMergeJoin(PlanNode current, PlanNode root,
             LanguageObject obj, PlannedResult plannedResult, boolean isProjection)
             throws QueryMetadataException, TeiidComponentException {
+        if (current.getFirstChild() == null) {
+            //select subquery over just a source node representing a table function
+            return current;
+        }
         float sourceCost = NewCalculateCostUtil.computeCostForTree(current.getFirstChild(), metadata);
         if (!isProjection && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE 
 				&& sourceCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY && !plannedResult.mergeJoin) {
@@ -283,7 +289,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
         	return current;
         }
         Collection<GroupSymbol> leftGroups = FrameUtil.findJoinSourceNode(current).getGroups();
-		if (!planQuery(leftGroups, false, plannedResult)) {
+		if (!planQuery(leftGroups, isProjection && plannedResult.multiRow, plannedResult)) {
 			if (plannedResult.mergeJoin && analysisRecord != null && analysisRecord.recordAnnotations()) {
 				this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, "Could not plan as a merge join: " + obj, "ignoring MJ hint", Priority.HIGH)); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -522,7 +528,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
         	&& indSide < depSide / 8) || (depSide == NewCalculateCostUtil.UNKNOWN_VALUE && indSide <= 1000);
     }
 
-	public PlannedResult findSubquery(Expression expr, boolean unnest, PlannedResult result) {
+	public PlannedResult findSubquery(Expression expr, boolean unnest, PlannedResult result, boolean requireSingleRow) throws QueryMetadataException, TeiidComponentException {
 	    if (expr instanceof ScalarSubquery) {
     	    ScalarSubquery scc = (ScalarSubquery)expr;
             if (scc.getSubqueryHint().isNoUnnest()) {
@@ -531,9 +537,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
     
             Query query = (Query)scc.getCommand();
             
-            if (!isSingleRow(query)) {
-                return result;
-            }
+            result.multiRow = !isSingleRow(query);
             
             result.type = scc.getClass();
             result.mergeJoin = scc.getSubqueryHint().isMergeJoin();
@@ -551,7 +555,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
             return true;
         }
         return false;
-        //todo: unique key
+        //unique key is looked at in planQuery
     }
 	
 	public PlannedResult findSubquery(Criteria crit, boolean unnest) throws TeiidComponentException, QueryMetadataException {
@@ -577,11 +581,23 @@ public final class RulePlanSubqueries implements OptimizerRule {
 				//we can only use a semi-join if we know that 1 row will be present
 				if (ss.getCommand() instanceof Query) {
 					Query query = (Query)ss.getCommand();
-					if (query.getGroupBy() == null && query.hasAggregates()) {
-						crit = new SubqueryCompareCriteria(cc.getLeftExpression(), ss.getCommand(), cc.getOperator(), SubqueryCompareCriteria.SOME);
-						((SubqueryCompareCriteria)crit).setSubqueryHint(ss.getSubqueryHint());
-					}
+					result.multiRow = !isSingleRow(query);
+					crit = new SubqueryCompareCriteria(cc.getLeftExpression(), ss.getCommand(), cc.getOperator(), SubqueryCompareCriteria.SOME);
+					((SubqueryCompareCriteria)crit).setSubqueryHint(ss.getSubqueryHint());
 				}
+			} else if (cc.getLeftExpression() instanceof ScalarSubquery) {
+			    ScalarSubquery ss = (ScalarSubquery)cc.getLeftExpression();
+                if (ss.getSubqueryHint().isNoUnnest()) {
+                    return result;
+                }
+                result.type = ss.getClass();
+                //we can only use a semi-join if we know that 1 row will be present
+                if (ss.getCommand() instanceof Query) {
+                    Query query = (Query)ss.getCommand();
+                    result.multiRow = !isSingleRow(query);
+                    crit = new SubqueryCompareCriteria(cc.getRightExpression(), ss.getCommand(), cc.getReverseOperator(), SubqueryCompareCriteria.SOME);
+                    ((SubqueryCompareCriteria)crit).setSubqueryHint(ss.getSubqueryHint());
+                }
 			}
 		}
 		if (crit instanceof SubqueryCompareCriteria) {
@@ -669,8 +685,6 @@ public final class RulePlanSubqueries implements OptimizerRule {
 		return true;
 	}
 	
-	static int count = 0;
-	
 	public boolean planQuery(Collection<GroupSymbol> leftGroups, boolean requireDistinct, PlannedResult plannedResult) throws QueryMetadataException, TeiidComponentException {
 		if ((plannedResult.query.getLimit() != null && !plannedResult.query.getLimit().isImplicit()) || plannedResult.query.getFrom() == null) {
 			return false;
@@ -750,6 +764,11 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			}
 			
 			if (!isDistinct(plannedResult.query, plannedResult.rightExpressions, metadata)) {
+			    if (plannedResult.multiRow) {
+			        //simply making the select distinct won't help
+			        //there could still be multiple rows per outer row
+                    return false; 
+                }
 				if (plannedResult.type == ExistsCriteria.class) {
 					if (requiredExpressions.size() > plannedResult.leftExpressions.size()) {
 						return false; //not an equi join

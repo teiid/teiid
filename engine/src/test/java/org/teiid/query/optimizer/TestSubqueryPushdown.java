@@ -25,6 +25,7 @@ import static org.teiid.query.processor.TestProcessor.*;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
@@ -1964,6 +1965,89 @@ public class TestSubqueryPushdown {
         manager.addData("SELECT g_0.e2 FROM g2 AS g_0 WHERE g_0.e1 = 'c'", new List[] {});
         
         helpProcess(pp, manager, expected);
+    }
+    
+    /**
+     * We're allowed to use a join instead as there will only be 1 row from the subquery for every outer row
+     */
+    @Test public void testSelectSubqueryKeyJoin() throws Exception {
+        String sql = "SELECT g2.e1, g2.e2, /*+ MJ */ (select e2 from g1 where e1 = g2.e1) FROM g2"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 integer primary key, e2 integer);"
+                + " create foreign table g2 (e1 integer, e2 integer, foreign key (e1) references g1);", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan pp = TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1, g_0.e2, g_1.e2 FROM y.g2 AS g_0 LEFT OUTER JOIN y.g1 AS g_1 ON g_0.e1 = g_1.e1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.checkNodeTypes(pp, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
+    /**
+     * Not allowed to optimize via rewrite as the key is on e1, but the predicate is on e2
+     */
+    @Test public void testSelectSubqueryKeyJoin1() throws Exception {
+        String sql = "SELECT g2.e1, g2.e2, /*+ MJ */ (select e1 from g1 where e2 = g2.e2) FROM g2"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 integer primary key, e2 integer);"
+                + " create foreign table g2 (e1 integer, e2 integer, foreign key (e1) references g1);", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1, g_0.e2 FROM y.g2 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    /**
+     * TODO this should detect the usage of the primary key, but does not due to the simplifying assumption of looking only for a single
+     * correlation - and in the case we effectively have two
+     */
+    @Test public void testWhereSubqueryKeyJoin() throws Exception {
+        String sql = "SELECT e1, e2 FROM g2 where e2 = /*+ MJ */ (select e2 from g1 where e1 = g2.e1)"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 integer primary key, e2 integer);"
+                + " create foreign table g2 (e1 integer, e2 integer, foreign key (e1) references g1);", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan pp = TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM y.g2 AS g_0 WHERE (g_0.e1 IN (<dependent values>)) AND (g_0.e2 IN (<dependent values>)) ORDER BY c_1, c_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        checkJoinCounts(pp, 1, 0);
+    }
+    
+    /**
+     * We're allowed to use a join instead as there will only be 1 row from the subquery for every outer row
+     */
+    @Test public void testWhereSubqueryKeyJoin1() throws Exception {
+        String sql = "SELECT e1, e2 FROM g2 where 0 = /*+ MJ */ (select e2 from g1 where e1 = g2.e1)"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 integer primary key, e2 integer);"
+                + " create foreign table g2 (e1 integer, e2 integer);", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan pp = TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1, g_0.e2 FROM y.g2 AS g_0, y.g1 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e2 = 0)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.checkNodeTypes(pp, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
+    /**
+     * Control test for 1 - with the key reversed - not allowed to optimize via rewrite
+     */
+    @Test public void testWhereSubqueryKeyJoin1a() throws Exception {
+        String sql = "SELECT e1, e2 FROM g2 where 0 = /*+ MJ */ (select e2 from g1 where e1 = g2.e1)"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table g2 (e1 integer primary key, e2 integer);"
+                + " create foreign table g1 (e1 integer, e2 integer, foreign key (e1) references g2);", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM y.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+
+    
+    //multi-row case not yet implemented
+    @Ignore
+    @Test public void testWhereSubqueryKeyJoin2() throws Exception {
+        String sql = "SELECT e1, e2 FROM g2 where 0 = /*+ MJ */ (select e2 from g1 where e1 = g2.e1)"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 integer, e2 integer);"
+                + " create foreign table g2 (e1 integer, e2 integer);", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan pp = TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1, g_0.e2, g_1.e2 FROM y.g2 AS g_0 LEFT OUTER JOIN y.g1 AS g_1 ON g_0.e1 = g_1.e1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.checkNodeTypes(pp, TestOptimizer.FULL_PUSHDOWN);
     }
     
 }

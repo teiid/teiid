@@ -183,4 +183,15 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
 		return result;
 	}
 	
+	public int getReverseOperator() {
+	    int operator = getOperator();
+        switch(operator) {
+        case CompareCriteria.LT:    return CompareCriteria.GT;
+        case CompareCriteria.LE:    return CompareCriteria.GE;
+        case CompareCriteria.GT:    return CompareCriteria.LT;
+        case CompareCriteria.GE:    return CompareCriteria.LE;
+	    }
+	    return operator;
+	}
+	
 }  // END CLASS

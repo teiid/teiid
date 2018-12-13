@@ -193,6 +193,8 @@ public class TestWithClauseProcessing {
 	
 	/**
 	 * This tests both an intervening parent plan construct (count) and a reference to a parent with in a subquery
+	 * 
+	 * TODO: flatten the source query
 	 */
 	@Test public void testWithPushdownNotFullyPushed() throws TeiidException {
 		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -207,7 +209,7 @@ public class TestWithClauseProcessing {
 	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
 
 	    dataManager.addData("SELECT g_0.e1, g_0.e2 FROM g1 AS g_0", Arrays.asList("a", 1));
-	    dataManager.addData("WITH b__3 (e1) AS (SELECT NULL FROM g1 AS g_0) SELECT 1 FROM b__3 AS g_0", Arrays.asList(1));
+	    dataManager.addData("WITH b__5 (e1) AS (SELECT NULL FROM g1 AS g_0) SELECT 1 FROM b__5 AS g_0", Arrays.asList(1));
 	    
 	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT a.x FROM a", "SELECT a.y, a.x FROM a"}, ComparisonMode.EXACT_COMMAND_STRING);
 	    
