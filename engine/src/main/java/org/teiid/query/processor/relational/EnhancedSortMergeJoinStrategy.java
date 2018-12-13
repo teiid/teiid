@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.STree;
@@ -36,6 +37,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
@@ -469,6 +471,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 			boolean matches = this.joinNode.matchesCriteria(outputTuple);
 	        this.sortedTuple = null;
 	        if (matches) {
+	            if (singleMatch && matched) {
+                    throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID31293, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31293));
+	            }
 	        	matched = true;
 	        	this.joinNode.addBatchRow(outputTuple);
 	        }
@@ -488,6 +493,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	EnhancedSortMergeJoinStrategy clone = new EnhancedSortMergeJoinStrategy(this.sortLeft, this.sortRight);
     	clone.semiDep = this.semiDep;
     	clone.preferMemCutoff = this.preferMemCutoff;
+    	clone.singleMatch = this.singleMatch;
     	return clone;
     }
     

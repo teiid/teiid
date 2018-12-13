@@ -25,8 +25,8 @@ import static org.teiid.query.processor.TestProcessor.*;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -1991,7 +1991,7 @@ public class TestSubqueryPushdown {
                 + " create foreign table g2 (e1 integer, e2 integer, foreign key (e1) references g1);", "x", "y");
         
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-        TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1, g_0.e2 FROM y.g2 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM y.g2 AS g_0 ORDER BY c_1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
     /**
@@ -2023,31 +2023,67 @@ public class TestSubqueryPushdown {
         TestOptimizer.checkNodeTypes(pp, TestOptimizer.FULL_PUSHDOWN);
     }
     
-    /**
-     * Control test for 1 - with the key reversed - not allowed to optimize via rewrite
-     */
     @Test public void testWhereSubqueryKeyJoin1a() throws Exception {
         String sql = "SELECT e1, e2 FROM g2 where 0 = /*+ MJ */ (select e2 from g1 where e1 = g2.e1)"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table g2 (e1 integer primary key, e2 integer);"
-                + " create foreign table g1 (e1 integer, e2 integer, foreign key (e1) references g2);", "x", "y");
+                + " create foreign table g1 (e1 integer, e2 integer, foreign key (e1) references g2) options (cardinality 100);", "x", "y");
         
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-        TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM y.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1, g_0.e2 FROM y.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT DISTINCT g_0.e1 FROM y.g1 AS g_0 WHERE g_0.e2 = 0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
 
-    
-    //multi-row case not yet implemented
-    @Ignore
-    @Test public void testWhereSubqueryKeyJoin2() throws Exception {
-        String sql = "SELECT e1, e2 FROM g2 where 0 = /*+ MJ */ (select e2 from g1 where e1 = g2.e1)"; //$NON-NLS-1$
+    @Test public void testWhereSubqueryJoin2() throws Exception {
+        String sql = "SELECT e1, e2 FROM g2 where 0 < /*+ MJ */ (select e2 from g1 where e1 = g2.e1)"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 integer, e2 integer);"
                 + " create foreign table g2 (e1 integer, e2 integer);", "x", "y");
         
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-        ProcessorPlan pp = TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1, g_0.e2, g_1.e2 FROM y.g2 AS g_0 LEFT OUTER JOIN y.g1 AS g_1 ON g_0.e1 = g_1.e1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
-        TestOptimizer.checkNodeTypes(pp, TestOptimizer.FULL_PUSHDOWN);
+        
+        TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM y.g2 AS g_0 ORDER BY c_0", "SELECT DISTINCT g_0.e1 FROM y.g1 AS g_0 WHERE g_0.e2 > 0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    /**
+     * Test the enforcement of the semi join single row
+     * @throws Exception
+     */
+    @Test public void testSelectSubqueryKeyJoin2() throws Exception {
+        String sql = "SELECT e1, e2, /*+ MJ */ (select e2 from g1 where e1 = g2.e1) FROM g2"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 integer, e2 integer);"
+                + " create foreign table g2 (e1 integer, e2 integer);", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        CommandContext cc = TestProcessor.createCommandContext();
+        ProcessorPlan pp = TestProcessor.helpGetPlan(TestOptimizer.helpGetCommand(sql, metadata), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        
+        List[] expected = new List[] { Arrays.asList("a", 1, 1), Arrays.asList("b", 2, 2), Arrays.asList("c", 3, null) };
+        
+        //first without duplicates, succeeds
+        try {
+            HardcodedDataManager manager = new HardcodedDataManager(metadata);
+            manager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g2 AS g_0 ORDER BY c_0", new List[] {Arrays.asList("a", 1), Arrays.asList("b", 2), Arrays.asList("c", 3)});
+            manager.addData("SELECT g_0.e2, g_0.e1 FROM g1 AS g_0 WHERE g_0.e1 IN (a, b, c)", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "b")});
+            
+            helpProcess(pp, cc, manager, expected);
+        } catch (TeiidProcessingException e) {
+            fail(e.getMessage());
+        }
+
+        pp.close();
+        pp.reset();
+
+        HardcodedDataManager manager = new HardcodedDataManager(metadata);
+        manager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g2 AS g_0 ORDER BY c_0", new List[] {Arrays.asList("a", 1), Arrays.asList("b", 2), Arrays.asList("c", 3)});
+        manager.addData("SELECT g_0.e2, g_0.e1 FROM g1 AS g_0 WHERE g_0.e1 IN (a, b, c)", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
+
+        try {
+            helpProcess(pp, cc, manager, expected);
+            fail();
+        } catch (ExpressionEvaluationException e) {
+            assertTrue(e.getMessage().contains("TEIID31293"));
+        }
     }
     
 }

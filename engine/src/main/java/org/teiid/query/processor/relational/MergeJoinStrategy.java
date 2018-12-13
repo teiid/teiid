@@ -20,6 +20,7 @@ package org.teiid.query.processor.relational;
 
 import java.util.List;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
@@ -80,6 +81,8 @@ public class MergeJoinStrategy extends JoinStrategy {
         
     /** false if three-level comparison, true if grouping comparison (null == null) */
     private boolean grouping;
+    /** false if default processing, true if only a single outer match is allowed */
+    protected boolean singleMatch;
     
     //load time state
     protected SortOption processingSortLeft;
@@ -102,7 +105,7 @@ public class MergeJoinStrategy extends JoinStrategy {
      */
     @Override
     public MergeJoinStrategy clone() {
-        return new MergeJoinStrategy(sortLeft, sortRight, grouping);
+        return new MergeJoinStrategy(sortLeft, sortRight, grouping).singleMatch(singleMatch);
     }
 
     /**
@@ -246,12 +249,16 @@ public class MergeJoinStrategy extends JoinStrategy {
                         loopState = LoopState.LOAD_INNER; // now that the criteria has been evaluated, try the next inner value
 
                         if (match) {
+                            boolean wasMatched = outerMatched;
                             outerMatched = true;
                             if (matchState == MatchState.MATCH_LEFT && this.joinNode.getJoinType() != JoinType.JOIN_ANTI_SEMI) {
                                 if (this.joinNode.getJoinType() == JoinType.JOIN_SEMI) {
                                     this.loopState = LoopState.LOAD_OUTER; //only one match is needed for semi join
                                 } 
                                 this.joinNode.addBatchRow(outputTuple);
+                                if (singleMatch && wasMatched) {
+                                    throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID31293, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31293));
+                                }
                                 continue;
                             }
                             //right outer join || anti semi join can skip to the next outer value
@@ -416,9 +423,21 @@ public class MergeJoinStrategy extends JoinStrategy {
     @Override
     public String toString() {
 		StringBuffer sb = new StringBuffer();
-		return sb
-				.append(getName())
-				.append(" (").append(sortLeft).append("/").append(sortRight).append(")").toString(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		sb.append(getName())
+				.append(" (").append(sortLeft).append("/").append(sortRight).append(")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		if (singleMatch) {
+		    sb.append(" subquery"); //$NON-NLS-1$
+		}
+		return sb.toString();
 	}
+
+    /**
+     * Optional flag for a left outer join to enforce the single
+     * row restriction of a scalar subquery
+     */
+    public MergeJoinStrategy singleMatch(boolean b) {
+        this.singleMatch = b;
+        return this;
+    }
 
 }

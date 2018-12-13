@@ -284,6 +284,10 @@ public class PlanToProcessConverter {
                 	} else {
                 		mjStrategy = new MergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT), false);
                 	}
+                	if (node.hasBooleanProperty(Info.SINGLE_MATCH)) {
+                	    Assertion.assertTrue(jtype == JoinType.JOIN_LEFT_OUTER);
+                	    mjStrategy.singleMatch(true);
+                	}
                     jnode.setJoinStrategy(mjStrategy);
                     List leftExpressions = (List) node.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
                     List rightExpressions = (List) node.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);

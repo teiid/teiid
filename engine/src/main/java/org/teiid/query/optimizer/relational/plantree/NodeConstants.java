@@ -83,6 +83,7 @@ public final class NodeConstants {
         // Join node properties
         JOIN_CRITERIA,      // List <CompareCriteria>
         JOIN_TYPE,          // JoinType
+        SINGLE_MATCH,       // Boolean
         JOIN_STRATEGY,      // JoinStrategyType
         LEFT_EXPRESSIONS,   // List <SingleElementSymbol> 
         RIGHT_EXPRESSIONS,  // List <SingleElementSymbol> 

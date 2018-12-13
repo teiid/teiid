@@ -71,6 +71,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
@@ -120,7 +121,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 		public Query query;
 		public boolean not;
 		public List<Criteria> nonEquiJoinCriteria = new LinkedList<Criteria>();
-		public Criteria additionalCritieria;
+		public CompareCriteria additionalCritieria;
 		public Class<?> type;
 		public boolean mergeJoin;
 		public boolean madeDistinct;
@@ -289,7 +290,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
         	return current;
         }
         Collection<GroupSymbol> leftGroups = FrameUtil.findJoinSourceNode(current).getGroups();
-		if (!planQuery(leftGroups, isProjection && plannedResult.multiRow, plannedResult)) {
+		if (!planQuery(leftGroups, false, plannedResult)) {
 			if (plannedResult.mergeJoin && analysisRecord != null && analysisRecord.recordAnnotations()) {
 				this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, "Could not plan as a merge join: " + obj, "ignoring MJ hint", Priority.HIGH)); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -418,7 +419,9 @@ public final class RulePlanSubqueries implements OptimizerRule {
             semiJoin.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
             if (isProjection) {
                 semiJoin.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_LEFT_OUTER);
-                //TODO: account for multi-row case
+                if (plannedResult.multiRow) {
+                    semiJoin.setProperty(NodeConstants.Info.SINGLE_MATCH, true);
+                }
             } else {
                 semiJoin.setProperty(NodeConstants.Info.JOIN_TYPE, plannedResult.not?JoinType.JOIN_ANTI_SEMI:JoinType.JOIN_SEMI);
             }
@@ -578,7 +581,6 @@ public final class RulePlanSubqueries implements OptimizerRule {
 					return result;
 				}
 				result.type = ss.getClass();
-				//we can only use a semi-join if we know that 1 row will be present
 				if (ss.getCommand() instanceof Query) {
 					Query query = (Query)ss.getCommand();
 					result.multiRow = !isSingleRow(query);
@@ -591,7 +593,6 @@ public final class RulePlanSubqueries implements OptimizerRule {
                     return result;
                 }
                 result.type = ss.getClass();
-                //we can only use a semi-join if we know that 1 row will be present
                 if (ss.getCommand() instanceof Query) {
                     Query query = (Query)ss.getCommand();
                     result.multiRow = !isSingleRow(query);
@@ -626,7 +627,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			}
 			result.makeInd = scc.getSubqueryHint().isDepJoin();
 			result.query = query;
-			result.additionalCritieria = (Criteria)new CompareCriteria(scc.getLeftExpression(), scc.getOperator(), rightExpr).clone();
+		    result.additionalCritieria = (CompareCriteria)new CompareCriteria(scc.getLeftExpression(), scc.getOperator(), rightExpr).clone();
 		}
 		if (crit instanceof ExistsCriteria) {
 			ExistsCriteria exists = (ExistsCriteria)crit;
@@ -705,11 +706,13 @@ public final class RulePlanSubqueries implements OptimizerRule {
 		plannedResult.query.setLimit(null);
 		
 		List<GroupSymbol> rightGroups = plannedResult.query.getFrom().getGroups();
+        
+		boolean hasAggregates = plannedResult.query.hasAggregates();
+		
 		Set<Expression> requiredExpressions = new LinkedHashSet<Expression>();
 		final SymbolMap refs = plannedResult.query.getCorrelatedReferences();
 		boolean addGroupBy = false;
 		if (refs != null) {
-			boolean hasAggregates = plannedResult.query.hasAggregates();
 			Criteria where = plannedResult.query.getCriteria();
 			if (plannedResult.query.getGroupBy() == null) {
 				plannedResult.query.setCriteria(null);
@@ -746,8 +749,21 @@ public final class RulePlanSubqueries implements OptimizerRule {
 		}
 		
 		if (plannedResult.additionalCritieria != null) {
-			RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, plannedResult.leftExpressions, plannedResult.rightExpressions, Criteria.separateCriteriaByAnd(plannedResult.additionalCritieria), plannedResult.nonEquiJoinCriteria);
-		}
+		    //move the additional subquery compare criteria onto the query
+		    //which effectively makes this an exists predicate
+		    if (EvaluatableVisitor.isFullyEvaluatable(plannedResult.additionalCritieria.getLeftExpression(), false)) {
+		        plannedResult.type = ExistsCriteria.class;
+		        //rewrite back to the other direction
+		        CompareCriteria cc = new CompareCriteria(plannedResult.additionalCritieria.getRightExpression(), plannedResult.additionalCritieria.getReverseOperator(), plannedResult.additionalCritieria.getLeftExpression());
+                if (hasAggregates) {
+                    plannedResult.query.setHaving(Criteria.combineCriteria(plannedResult.query.getHaving(), cc));
+                } else {
+                    plannedResult.query.setCriteria(Criteria.combineCriteria(plannedResult.query.getCriteria(), cc));
+                }
+            } else {
+                RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, plannedResult.leftExpressions, plannedResult.rightExpressions, Criteria.separateCriteriaByAnd(plannedResult.additionalCritieria), plannedResult.nonEquiJoinCriteria);
+            }
+        }
 		
 		if (plannedResult.leftExpressions.isEmpty()) {
 			return false;
@@ -764,11 +780,6 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			}
 			
 			if (!isDistinct(plannedResult.query, plannedResult.rightExpressions, metadata)) {
-			    if (plannedResult.multiRow) {
-			        //simply making the select distinct won't help
-			        //there could still be multiple rows per outer row
-                    return false; 
-                }
 				if (plannedResult.type == ExistsCriteria.class) {
 					if (requiredExpressions.size() > plannedResult.leftExpressions.size()) {
 						return false; //not an equi join
@@ -808,6 +819,11 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			if (projectedSymbols.add(SymbolMap.getExpression(ses))) {
 				plannedResult.query.getSelect().addSymbol((Expression)ses.clone());
 			}
+		}
+		if (plannedResult.madeDistinct 
+		        && plannedResult.multiRow 
+		        && plannedResult.query.getSelect().getProjectedSymbols().size() > 1) {
+		    return false;
 		}
 		return true;
 	}
