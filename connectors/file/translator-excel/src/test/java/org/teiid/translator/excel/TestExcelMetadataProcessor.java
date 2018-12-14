@@ -22,11 +22,11 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.util.Properties;
 
-import javax.resource.ResourceException;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.file.JavaVirtualFile;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.UDFSource;
@@ -36,31 +36,19 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestExcelMetadataProcessor {
 
-    static String getDDL(Properties props) throws TranslatorException, ResourceException {
-        return getDDL(props, null);
-    }
-	static String getDDL(Properties props, String filename) throws TranslatorException, ResourceException {
+	static String getDDL(Properties props) throws TranslatorException {
 		ExcelExecutionFactory translator = new ExcelExecutionFactory();
     	translator.start();
     	
     	String xlsName = props.getProperty("importer.excelFileName");
     	MetadataFactory mf = new MetadataFactory("vdb", 1, "people", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);    	
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	if (xlsName.contains("*.")) {
-    	    Mockito.stub(connection.getFile(xlsName)).toReturn(UnitTestUtil.getTestDataFile(xlsName));
-    	    File f = Mockito.mock(File.class);
-    	    Mockito.stub(f.isDirectory()).toReturn(true);
-            Mockito.stub(f.listFiles()).toReturn(new File[] {UnitTestUtil.getTestDataFile(filename)});
-            Mockito.stub(connection.getFile(xlsName)).toReturn(f);
-    	} else {
-    	    Mockito.stub(connection.getFile(xlsName)).toReturn(UnitTestUtil.getTestDataFile(xlsName));
-    	}
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+	    Mockito.stub(connection.getFiles(xlsName)).toReturn(JavaVirtualFile.getFiles(xlsName, new File(UnitTestUtil.getTestDataPath(), xlsName)));
 		translator.getMetadata(mf, connection);
 		
 		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
@@ -350,24 +338,4 @@ public class TestExcelMetadataProcessor {
         assertEquals(expectedDDL, ddl);
     }
     
-    @Test
-    public void testFileGlob() throws Exception {
-        Properties props = new Properties();
-        props.setProperty("importer.excelFileName", "*.xlsx");
-        props.setProperty("importer.headerRowNumber", "1");
-        props.setProperty("importer.dataRowNumber", "2");
-        String ddl = getDDL(props, "names.xlsx"); 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n" + 
-                "\n" + 
-                "CREATE FOREIGN TABLE Sheet1 (\n" + 
-                "\tROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" + 
-                "\tFirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
-                "\tLastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
-                "\tAge double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
-                "\t\"time\" timestamp OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n"+
-                "\tCONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-                ") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" '*.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
-        
-        assertEquals(expectedDDL, ddl);
-    }     
 }

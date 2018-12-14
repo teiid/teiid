@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.resource.ResourceException;
-
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ExtensionMetadataProperty;
@@ -53,7 +51,7 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
     		for (TableMetadata columnFamily : connection.keyspaceInfo().getTables()){
     			addTable(factory, columnFamily);
     		}
-        } catch (ResourceException e) {
+        } catch (TranslatorException e) {
             throw new TranslatorException(Event.TEIID22000, e, CassandraExecutionFactory.UTIL.gs(Event.TEIID22000));
         }
 	}

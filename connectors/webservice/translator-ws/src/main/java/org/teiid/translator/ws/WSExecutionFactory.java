@@ -21,7 +21,7 @@ package org.teiid.translator.ws;
 import java.util.Collections;
 import java.util.List;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 import javax.xml.ws.Service.Mode;
 import javax.xml.ws.http.HTTPBinding;
 import javax.xml.ws.soap.SOAPBinding;

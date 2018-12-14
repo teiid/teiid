@@ -10,7 +10,6 @@ import javax.resource.ResourceException;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.couchbase.CouchbaseConnection;
 
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.N1qlQueryResult;
@@ -19,7 +18,7 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 @Ignore("Ignore due to this test depend on remote Couchbase server")
 public class TestCouchbaseConnection {
 
-    private CouchbaseConnection sample() throws ResourceException {
+    private CouchbaseConnectionImpl sample() throws ResourceException {
         
         CouchbaseManagedConnectionFactory mcf = new CouchbaseManagedConnectionFactory();
         mcf.setConnectionString("10.66.192.120"); //$NON-NLS-1$
@@ -28,8 +27,8 @@ public class TestCouchbaseConnection {
     }
     
     @Test
-    public void testKeyspaces () throws ResourceException {
-        CouchbaseConnection conn = sample();
+    public void testKeyspaces () throws Exception {
+        CouchbaseConnectionImpl conn = sample();
         Set<String> keyspaces = new HashSet<>();
         N1qlQueryResult result = conn.execute("SELECT * FROM system:keyspaces"); //$NON-NLS-1$
         Iterator<N1qlQueryRow> rows = result.rows();

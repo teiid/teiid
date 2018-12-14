@@ -21,7 +21,7 @@ package org.teiid.translator.google;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
 import org.teiid.language.Argument;

@@ -75,7 +75,7 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.TeiidTracingUtil;
-import org.teiid.resource.spi.WrappedConnection;
+import org.teiid.resource.api.WrappedConnection;
 import org.teiid.translator.*;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.TransactionSupport;

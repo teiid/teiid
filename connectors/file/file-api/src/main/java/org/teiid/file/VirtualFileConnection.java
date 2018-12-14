@@ -19,46 +19,55 @@ package org.teiid.file;
 
 import java.io.InputStream;
 
-import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
-
-import org.jboss.vfs.VirtualFile;
+import org.teiid.connector.DataPlugin;
+import org.teiid.translator.TranslatorException;
 
 /**
- * Common abstraction for a VirtualFileConnection with a JBoss Virtual File System(JBoss VFS).
- * @author kylin
- *
+ * Simple interface for the filesystem
  */
-public interface VirtualFileConnection extends Connection {
-
+public interface VirtualFileConnection {
+	
     /**
      * Return a list of files by a given file pattern
      * @param namePattern - the syntax and pattern
      * @return
-     * @throws ResourceException
+     * @throws TranslatorException
      */
-    VirtualFile[] getFiles(String namePattern) throws ResourceException;
+    VirtualFile[] getFiles(String namePattern) throws TranslatorException;
     
     /**
-     * Return a file by a given file name 
-     * @param name
-     * @return
-     * @throws ResourceException
-     */
-    VirtualFile getFile(String path) throws ResourceException;
-    
-    /**
-     * Add a file to JBoss VFS
+     * Add a file
      * @param file
-     * @throws ResourceException
+     * @throws TranslatorException
      */
-    boolean add(InputStream in, VirtualFile file) throws ResourceException;
+    void add(InputStream in, String path) throws TranslatorException;
     
     /**
-     * Remove a file from JBoss VFS by given path
+     * Remove a file
      * @param path
      * @return
-     * @throws ResourceException
+     * @throws TranslatorException
      */
-    boolean remove(String path) throws ResourceException;
+    boolean remove(String path) throws TranslatorException;
+	
+	public static class Util {
+		
+		/**
+		 * Gets the file or files, if the path is a directory, at the given path.  
+		 * Note the path can only refer to a single directory - directories are not recursively scanned.
+		 * @param exceptionIfFileNotFound 
+		 * @param path
+		 * @return
+		 */
+		public static VirtualFile[] getFiles(String location, VirtualFileConnection fc, boolean exceptionIfFileNotFound) throws TranslatorException {
+			VirtualFile[] files = fc.getFiles(location);
+			if (files == null && exceptionIfFileNotFound) {
+                throw new TranslatorException(DataPlugin.Util.gs("file_not_found", location)); //$NON-NLS-1$
+			}
+	        
+	        return files;
+		}
+		
+	}
+	
 }

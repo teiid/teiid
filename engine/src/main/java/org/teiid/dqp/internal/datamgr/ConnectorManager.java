@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.InitialContext;
-import javax.resource.ResourceException;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
@@ -49,7 +48,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.TeiidTracingUtil;
 import org.teiid.query.validator.ValidatorReport;
-import org.teiid.resource.spi.WrappedConnection;
+import org.teiid.resource.api.WrappedConnection;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
@@ -195,7 +194,7 @@ public class ConnectorManager  {
         		if (connection instanceof WrappedConnection) {
                     try {
                         connection = ((WrappedConnection)connection).unwrap();
-                    } catch (ResourceException e) {
+                    } catch (Exception e) {
                         throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477, getConnectionName()));
                     }   
                 }

@@ -23,7 +23,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import javax.resource.cci.Connection;
 import javax.xml.namespace.QName;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
@@ -31,9 +30,9 @@ import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
 
 /**
- * Simple {@link Connection} interface for web services
+ * Simple interface for web services
  */
-public interface WSConnection extends Connection {
+public interface WSConnection {
 	
 	public static final String STATUS_CODE = "status-code"; //$NON-NLS-1$
 

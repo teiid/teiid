@@ -17,8 +17,6 @@
  */
 package org.teiid.translator.couchbase;
 
-import javax.resource.ResourceException;
-
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
@@ -73,11 +71,7 @@ public class CouchbaseUpdateExecution extends CouchbaseExecution implements Upda
     private N1qlQueryResult executeDirect(String n1ql) throws TranslatorException {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29004, n1ql));        
         executionContext.logCommand(n1ql);
-        try {
-            return this.connection.execute(n1ql);
-        } catch (ResourceException e) {
-            throw new TranslatorException(e);
-        }
+        return this.connection.execute(n1ql);
     }
 
     @Override

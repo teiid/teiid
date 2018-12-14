@@ -20,7 +20,7 @@ package org.teiid.translator.ldap;
 import java.util.List;
 
 import javax.naming.ldap.LdapContext;
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Call;

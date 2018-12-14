@@ -23,8 +23,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
-import javax.resource.ResourceException;
-
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.AccessibleByteArrayOutputStream;
 import org.teiid.logging.LogConstants;
@@ -33,7 +31,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
-import org.teiid.resource.spi.WrappedConnection;
+import org.teiid.resource.api.WrappedConnection;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
@@ -78,7 +76,7 @@ public class NativeMetadataRepository implements MetadataRepository {
 		if (connection instanceof WrappedConnection) {
 			try {
 				unwrapped = ((WrappedConnection)connection).unwrap();
-			} catch (ResourceException e) {
+			} catch (Exception e) {
 				if (executionFactory.isSourceRequiredForMetadata()) {
 					throw new TranslatorException(QueryPlugin.Event.TEIID30477, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477, factory.getName()));
 				}

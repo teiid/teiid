@@ -22,9 +22,7 @@ import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
-
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
@@ -38,7 +36,7 @@ import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.QueryResult;
 
-public interface SalesforceConnection extends Connection {
+public interface SalesforceConnection {
 	
 	public static class BatchResultInfo {
 		private String batchId;
@@ -101,47 +99,47 @@ public interface SalesforceConnection extends Connection {
 	    
 	}
 
-	public QueryResult query(String queryString, int maxBatchSize, boolean queryAll) throws ResourceException;
+	public QueryResult query(String queryString, int maxBatchSize, boolean queryAll) throws TranslatorException;
 
-	public QueryResult queryMore(String queryLocator, int batchSize) throws ResourceException;
+	public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException;
 	
 	public boolean isValid();
 	
-	public int delete(String[] ids) throws ResourceException ;
+	public int delete(String[] ids) throws TranslatorException ;
 
-	public int create(DataPayload data) throws ResourceException;
+	public int create(DataPayload data) throws TranslatorException;
 	
-	public int upsert(DataPayload data) throws ResourceException;
+	public int upsert(DataPayload data) throws TranslatorException;
 
-	public int update(List<DataPayload> updateDataList) throws ResourceException;
+	public int update(List<DataPayload> updateDataList) throws TranslatorException;
 
-	public UpdatedResult getUpdated(String objectName, Calendar startCalendar, Calendar endCalendar) throws ResourceException;
+	public UpdatedResult getUpdated(String objectName, Calendar startCalendar, Calendar endCalendar) throws TranslatorException;
 
-	public DeletedResult getDeleted(String objectName, Calendar startCalendar, Calendar endCalendar) throws ResourceException;
+	public DeletedResult getDeleted(String objectName, Calendar startCalendar, Calendar endCalendar) throws TranslatorException;
 	
-	public com.sforce.soap.partner.sobject.SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException;
+	public com.sforce.soap.partner.sobject.SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException;
 	
-	public DescribeGlobalResult getObjects() throws ResourceException;
+	public DescribeGlobalResult getObjects() throws TranslatorException;
 	
-	public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws ResourceException;
+	public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws TranslatorException;
 	
-	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws ResourceException;
+	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws TranslatorException;
 
-	public void cancelBulkJob(JobInfo job) throws ResourceException;
+	public void cancelBulkJob(JobInfo job) throws TranslatorException;
 
-	JobInfo closeJob(String jobId) throws ResourceException;
+	JobInfo closeJob(String jobId) throws TranslatorException;
 
 	String addBatch(List<SObject> payload, JobInfo job)
-			throws ResourceException;
+			throws TranslatorException;
 
-	JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws ResourceException;
+	JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws TranslatorException;
 
-	Long getCardinality(String sobject) throws ResourceException;
+	Long getCardinality(String sobject) throws TranslatorException;
 	
 	String getVersion();
 
-	BatchResultInfo addBatch(String query, JobInfo job) throws ResourceException;
+	BatchResultInfo addBatch(String query, JobInfo job) throws TranslatorException;
 
-	BulkBatchResult getBatchQueryResults(String id, BatchResultInfo info) throws ResourceException;
+	BulkBatchResult getBatchQueryResults(String id, BatchResultInfo info) throws TranslatorException;
 
 }

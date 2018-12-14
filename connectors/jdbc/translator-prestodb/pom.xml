@@ -29,10 +29,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>        
-        <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
-        </dependency>
     </dependencies>
 
     <build>

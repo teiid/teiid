@@ -720,6 +720,11 @@
 				<version>${version.org.teiid}</version>
 			</dependency>
 			<dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-resource-spi</artifactId>
+                <version>${version.org.teiid}</version>
+            </dependency>
+			<dependency>
 				<groupId>org.teiid</groupId>
 				<artifactId>teiid-api</artifactId>
 				<type>test-jar</type>

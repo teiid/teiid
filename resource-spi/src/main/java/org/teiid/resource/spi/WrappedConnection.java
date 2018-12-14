@@ -23,7 +23,7 @@ import javax.resource.cci.ConnectionMetaData;
 import javax.resource.cci.Interaction;
 import javax.resource.cci.ResultSetInfo;
 
-public class WrappedConnection implements Connection {
+public class WrappedConnection implements Connection, org.teiid.resource.api.WrappedConnection {
 
 	private BasicManagedConnection mc;
 	boolean closed = false;

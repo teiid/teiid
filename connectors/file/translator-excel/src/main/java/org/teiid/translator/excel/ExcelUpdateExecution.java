@@ -18,9 +18,8 @@
 
 package org.teiid.translator.excel;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -29,6 +28,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.teiid.GeneratedKeys;
+import org.teiid.file.VirtualFile;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Delete;
 import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Insert;
@@ -39,7 +40,6 @@ import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
@@ -48,11 +48,11 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
 
     private LanguageObject command;
     private int result;
-    private File writeTo;
+    private VirtualFile writeTo;
     private boolean modified;
     
     public ExcelUpdateExecution(LanguageObject command, ExecutionContext executionContext,
-            RuntimeMetadata metadata, FileConnection connection) throws TranslatorException {
+            RuntimeMetadata metadata, VirtualFileConnection connection) throws TranslatorException {
         super(executionContext, metadata, connection);
         visit(command);
         this.command = command;
@@ -171,7 +171,7 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
     }
     
     @Override
-    protected File getNextXLSFile() throws TranslatorException {
+    protected VirtualFile getNextXLSFile() throws TranslatorException {
         if (modified) {
             writeXLSFile();
         }
@@ -179,15 +179,14 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
     }
     
     private void writeXLSFile() throws TranslatorException {
-        try (FileOutputStream fos = new FileOutputStream(writeTo==null?getCurrentXLSFile():writeTo);) {
-            fos.getChannel().lock();
+        try (OutputStream fos = (writeTo==null?getCurrentXLSFile():writeTo).openOutputStream(true)) {
             workbook.write(fos);
         } catch (IOException e) {
             throw new TranslatorException(e);
         }
     }
     
-    public void setWriteTo(File writeTo) {
+    public void setWriteTo(VirtualFile writeTo) {
         this.writeTo = writeTo;
     }
 

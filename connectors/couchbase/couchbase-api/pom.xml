@@ -11,8 +11,12 @@
     <description>The java API for the Couchbase</description>
     <dependencies>
         <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
         </dependency>    
         <dependency>
           <groupId>com.couchbase.client</groupId>

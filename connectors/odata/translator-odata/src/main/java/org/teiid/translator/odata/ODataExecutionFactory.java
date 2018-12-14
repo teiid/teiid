@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

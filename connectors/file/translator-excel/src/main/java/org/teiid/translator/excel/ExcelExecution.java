@@ -24,11 +24,11 @@ import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
@@ -38,7 +38,7 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
     private Class<?>[] expectedColumnTypes;
 
 	public ExcelExecution(Select query, ExecutionContext executionContext,
-			RuntimeMetadata metadata, FileConnection connection)
+			RuntimeMetadata metadata, VirtualFileConnection connection)
 			throws TranslatorException {
 	    super(executionContext, metadata, connection);
         this.expectedColumnTypes = query.getColumnTypes();

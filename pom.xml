@@ -423,6 +423,7 @@
         <module>build-configuration</module>
 		<module>common-core</module>
 		<module>api</module>
+		<module>resource-spi</module>
 		<module>client</module>
 		<module>admin</module>
 		<module>data-quality</module>

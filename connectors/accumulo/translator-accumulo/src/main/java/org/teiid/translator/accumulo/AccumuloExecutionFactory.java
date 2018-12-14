@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.accumulo;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;

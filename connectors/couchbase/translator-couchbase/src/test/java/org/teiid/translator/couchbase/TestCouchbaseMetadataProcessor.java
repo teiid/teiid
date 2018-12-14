@@ -22,7 +22,6 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.*;
 import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.file.Files;
@@ -37,8 +36,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.resource.ResourceException;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -61,7 +58,7 @@ public class TestCouchbaseMetadataProcessor {
     static final String KEYSPACE_SOURCE = "`test`";
     
     @Test
-    public void testCustomerOrder() throws ResourceException {
+    public void testCustomerOrder() throws Exception {
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
         Table table = createTable(mf, KEYSPACE, KEYSPACE);
@@ -71,7 +68,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testCustomerOrderMultiple() throws ResourceException {
+    public void testCustomerOrderMultiple() throws Exception {
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
         Table table = createTable(mf, KEYSPACE, KEYSPACE);
@@ -83,7 +80,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testCustomerOrderWithTypedName() throws ResourceException {
+    public void testCustomerOrderWithTypedName() throws Exception {
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         mp.setTypeNameList("`test`:`type`,`beer-sample`:`type`,` travel-sample`:`type`");
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
@@ -95,7 +92,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testCustomerWithDuplicatedTypedName() throws ResourceException {
+    public void testCustomerWithDuplicatedTypedName() throws Exception {
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         mp.setTypeNameList("`test`:`type`,`test2`:`type`");
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
@@ -110,7 +107,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testMoreTypedNameInOneKeyspace() throws ResourceException {
+    public void testMoreTypedNameInOneKeyspace() throws Exception {
         
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor(); 
         mp.setTypeNameList("`test`:`type`,`test`:`name`,`test`:`category`");
@@ -131,7 +128,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testNullValue() throws ResourceException {
+    public void testNullValue() throws Exception {
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
         Table table = createTable(mf, KEYSPACE, KEYSPACE);
@@ -141,7 +138,7 @@ public class TestCouchbaseMetadataProcessor {
     
 
     @Test
-    public void testDataType() throws ResourceException {
+    public void testDataType() throws Exception {
         
         /* 10 potential types: String, Integer, Long, Double, Boolean, BigInteger, BigDecimal, JsonObject, JsonArray, null */
         
@@ -153,7 +150,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testNestedJson() throws ResourceException {
+    public void testNestedJson() throws Exception {
         
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
@@ -163,7 +160,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testNestedJsonWithTypedName() throws ResourceException {
+    public void testNestedJsonWithTypedName() throws Exception {
         
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
@@ -173,7 +170,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testNestedArray() throws ResourceException {
+    public void testNestedArray() throws Exception {
         
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
@@ -183,7 +180,7 @@ public class TestCouchbaseMetadataProcessor {
     }
 
     @Test
-    public void testComplexJson() throws ResourceException {
+    public void testComplexJson() throws Exception {
         
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
@@ -193,7 +190,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testJsonNestedArray() throws ResourceException {
+    public void testJsonNestedArray() throws Exception {
         
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
@@ -204,7 +201,7 @@ public class TestCouchbaseMetadataProcessor {
 
     @Ignore("not resolved so far")
     @Test
-    public void testMetadataCaseSensitive() throws ResourceException {
+    public void testMetadataCaseSensitive() throws Exception {
         
         CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
@@ -218,7 +215,7 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     @Test
-    public void testProcedures() throws ResourceException {
+    public void testProcedures() throws Exception {
         
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
@@ -360,21 +357,17 @@ public class TestCouchbaseMetadataProcessor {
     private static final boolean PRINT_TO_CONSOLE = false;
     private static final boolean REPLACE_EXPECTED = false;
     
-    private void helpTest(String name, MetadataFactory mf) throws ResourceException {
-        try {
-            String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-            if(PRINT_TO_CONSOLE) {
-                System.out.println(metadataDDL);
-            }
-            Path path = Paths.get(UnitTestUtil.getTestDataPath(), name);
-            if(REPLACE_EXPECTED) {
-                Files.write(path, metadataDDL.getBytes("UTF-8"), StandardOpenOption.TRUNCATE_EXISTING);
-            }
-            String expected = new String(Files.readAllBytes(path));
-            assertEquals(expected, metadataDDL);
-        } catch (IOException e) {
-            throw new ResourceException(e);
+    private void helpTest(String name, MetadataFactory mf) throws Exception {
+        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        if(PRINT_TO_CONSOLE) {
+            System.out.println(metadataDDL);
         }
+        Path path = Paths.get(UnitTestUtil.getTestDataPath(), name);
+        if(REPLACE_EXPECTED) {
+            Files.write(path, metadataDDL.getBytes("UTF-8"), StandardOpenOption.TRUNCATE_EXISTING);
+        }
+        String expected = new String(Files.readAllBytes(path));
+        assertEquals(expected, metadataDDL);
     }
     
     @Test

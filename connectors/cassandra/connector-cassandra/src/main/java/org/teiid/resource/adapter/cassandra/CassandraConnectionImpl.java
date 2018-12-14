@@ -26,6 +26,7 @@ import javax.resource.ResourceException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.cassandra.CassandraConnection;
 
 import com.datastax.driver.core.*;
@@ -111,7 +112,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	}
 
 	@Override
-	public KeyspaceMetadata keyspaceInfo() throws ResourceException {
+	public KeyspaceMetadata keyspaceInfo() throws TranslatorException {
 		String keyspace = config.getKeyspace();
 		KeyspaceMetadata result = metadata.getKeyspace(keyspace);
 		if (result == null && keyspace.length() > 2 && keyspace.charAt(0) == '"' && keyspace.charAt(keyspace.length() - 1) == '"') {
@@ -120,7 +121,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 			result = metadata.getKeyspace(keyspace);
 		}
 		if (result == null) {
-			throw new ResourceException(keyspace);
+			throw new TranslatorException(keyspace);
 		}
 		return result;
 	}

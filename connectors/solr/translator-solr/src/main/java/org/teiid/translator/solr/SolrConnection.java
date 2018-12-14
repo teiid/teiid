@@ -17,8 +17,6 @@
  */
 package org.teiid.translator.solr;
 
-import javax.resource.cci.Connection;
-
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.request.LukeRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -27,7 +25,7 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.teiid.translator.TranslatorException;
 
-public interface SolrConnection extends Connection {
+public interface SolrConnection {
 	public QueryResponse query(SolrQuery query) throws TranslatorException;
 	public UpdateResponse update(UpdateRequest request) throws TranslatorException;
 	public LukeResponse metadata(LukeRequest request) throws TranslatorException;

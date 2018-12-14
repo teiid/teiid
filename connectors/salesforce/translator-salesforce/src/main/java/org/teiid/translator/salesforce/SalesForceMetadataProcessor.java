@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.resource.ResourceException;
-
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -143,68 +141,60 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	}
 	
 	public void processMetadata() throws TranslatorException {
-		try {
-			DescribeGlobalResult globalResult = connection.getObjects();
-			DescribeGlobalSObjectResult[] objects = globalResult.getSobjects();
-			for (DescribeGlobalSObjectResult object : objects) {
-				addTable(object);
-			}  
-			
-			List<String> names = new ArrayList<String>();
-			for (String name : this.tableMap.keySet()) {
-				names.add(name);
-				if (names.size() < 100) {
-					continue;
-				}
-				getColumnsAndRelationships(names);
+		DescribeGlobalResult globalResult = connection.getObjects();
+		DescribeGlobalSObjectResult[] objects = globalResult.getSobjects();
+		for (DescribeGlobalSObjectResult object : objects) {
+			addTable(object);
+		}  
+		
+		List<String> names = new ArrayList<String>();
+		for (String name : this.tableMap.keySet()) {
+			names.add(name);
+			if (names.size() < 100) {
+				continue;
 			}
-			if (!names.isEmpty()) {
-				getColumnsAndRelationships(names);
-			}
-			
-			addRelationships();
-			
-			// Mark id fields are auto increment values, as they are not allowed to be updated
-			for (Table table:this.metadataFactory.getSchema().getTables().values()) {
-				if (importStatistics) {
-					try {
-						Long val = this.connection.getCardinality(table.getNameInSource());
-						if (val != null) {
-							table.setCardinality(val);
-						}
-					} catch (Exception e) {
-						LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get cardinality for", table); //$NON-NLS-1$
+			getColumnsAndRelationships(names);
+		}
+		if (!names.isEmpty()) {
+			getColumnsAndRelationships(names);
+		}
+		
+		addRelationships();
+		
+		// Mark id fields are auto increment values, as they are not allowed to be updated
+		for (Table table:this.metadataFactory.getSchema().getTables().values()) {
+			if (importStatistics) {
+				try {
+					Long val = this.connection.getCardinality(table.getNameInSource());
+					if (val != null) {
+						table.setCardinality(val);
 					}
-				}
-				if (table.getPrimaryKey() == null) {
-				    continue;
-				}
-				for (Column column:table.getPrimaryKey().getColumns()) {
-					if (!column.isUpdatable()) {
-						column.setAutoIncremented(true);
-					}
+				} catch (Exception e) {
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get cardinality for", table); //$NON-NLS-1$
 				}
 			}
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
+			if (table.getPrimaryKey() == null) {
+			    continue;
+			}
+			for (Column column:table.getPrimaryKey().getColumns()) {
+				if (!column.isUpdatable()) {
+					column.setAutoIncremented(true);
+				}
+			}
 		}
 	}
 
 	private void getColumnsAndRelationships(List<String> names)
 			throws TranslatorException {
-		try {
-			DescribeSObjectResult objectMetadatas[] = connection.getObjectMetaData(names.toArray(new String[names.size()]));
-			for (DescribeSObjectResult objectMetadata : objectMetadatas) {
-				getRelationships(objectMetadata);
-				Table table = this.tableMap.get(objectMetadata.getName());
-				boolean hasUpdateableColumn = addColumns(objectMetadata, table);
-				// Some SF objects return true for isUpdateable() but have no updateable columns.
-				if(objectMetadata.isDeletable() || (hasUpdateableColumn && (objectMetadata.isUpdateable() || objectMetadata.isCreateable()))) {
-					table.setSupportsUpdate(true);
-				}
+		DescribeSObjectResult objectMetadatas[] = connection.getObjectMetaData(names.toArray(new String[names.size()]));
+		for (DescribeSObjectResult objectMetadata : objectMetadatas) {
+			getRelationships(objectMetadata);
+			Table table = this.tableMap.get(objectMetadata.getName());
+			boolean hasUpdateableColumn = addColumns(objectMetadata, table);
+			// Some SF objects return true for isUpdateable() but have no updateable columns.
+			if(objectMetadata.isDeletable() || (hasUpdateableColumn && (objectMetadata.isUpdateable() || objectMetadata.isCreateable()))) {
+				table.setSupportsUpdate(true);
 			}
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
 		}
 		names.clear();
 	}

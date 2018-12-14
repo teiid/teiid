@@ -24,8 +24,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.resource.ResourceException;
-
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
@@ -193,11 +191,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	public void cancel() throws TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.cancel"));//$NON-NLS-1$
 		if (activeJob != null) {
-			try {
-				this.connection.cancelBulkJob(activeJob);
-			} catch (ResourceException e) {
-				throw new TranslatorException(e);
-			}
+			this.connection.cancelBulkJob(activeJob);
 		}
 	}
 	
@@ -206,7 +200,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		if (activeJob != null) {
 			try {
 				this.connection.closeJob(activeJob.getId());
-			} catch (ResourceException e) {
+			} catch (TranslatorException e) {
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
 			}
 		}
@@ -218,45 +212,41 @@ public class QueryExecutionImpl implements ResultSetExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
-		try {
-			//redundant with command log
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble(), "Incoming Query:", query); //$NON-NLS-1$
-			List<TableReference> from = ((Select)query).getFrom();
-			boolean join = false;
-			if(from.get(0) instanceof Join) {
-				join = true;
-				visitor = new JoinQueryVisitor(metadata);
-			} else {
-				visitor = new SelectVisitor(metadata);
-			}
-			visitor.visitNode(query);
-			if(visitor.canRetrieve()) {
-				context.logCommand("Using retrieve: ", visitor.getRetrieveFieldList(), visitor.getTableName(), visitor.getIdInCriteria()); //$NON-NLS-1$
-				results = this.executionFactory.buildQueryResult(connection.retrieve(visitor.getRetrieveFieldList(),
-						visitor.getTableName(), visitor.getIdInCriteria()));
-			} else {
-				String finalQuery = visitor.getQuery().trim();
-				//redundant
-				LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
-				context.logCommand(finalQuery);
-				
-				if (!join && !visitor.getQueryAll() 
-						&& (context.getSourceHints() != null && context.getSourceHints().contains("bulk"))) { //$NON-NLS-1$
-					BulkValidator bulkValidator = new BulkValidator();
-					query.acceptVisitor(bulkValidator);
-					if (bulkValidator.isBulkEligible()) {
-					    LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Using bulk logic", bulkValidator.usePkChunking()?"with":"without", "pk chunking"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-					    this.activeJob = connection.createBulkJob(visitor.getTableName(), OperationEnum.query, bulkValidator.usePkChunking());
-						batchInfo = connection.addBatch(finalQuery, this.activeJob);
-						return;
-					}
-                    LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Ingoring bulk hint as the query is not bulk eligible"); //$NON-NLS-1$
+		//redundant with command log
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble(), "Incoming Query:", query); //$NON-NLS-1$
+		List<TableReference> from = ((Select)query).getFrom();
+		boolean join = false;
+		if(from.get(0) instanceof Join) {
+			join = true;
+			visitor = new JoinQueryVisitor(metadata);
+		} else {
+			visitor = new SelectVisitor(metadata);
+		}
+		visitor.visitNode(query);
+		if(visitor.canRetrieve()) {
+			context.logCommand("Using retrieve: ", visitor.getRetrieveFieldList(), visitor.getTableName(), visitor.getIdInCriteria()); //$NON-NLS-1$
+			results = this.executionFactory.buildQueryResult(connection.retrieve(visitor.getRetrieveFieldList(),
+					visitor.getTableName(), visitor.getIdInCriteria()));
+		} else {
+			String finalQuery = visitor.getQuery().trim();
+			//redundant
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
+			context.logCommand(finalQuery);
+			
+			if (!join && !visitor.getQueryAll() 
+					&& (context.getSourceHints() != null && context.getSourceHints().contains("bulk"))) { //$NON-NLS-1$
+				BulkValidator bulkValidator = new BulkValidator();
+				query.acceptVisitor(bulkValidator);
+				if (bulkValidator.isBulkEligible()) {
+				    LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Using bulk logic", bulkValidator.usePkChunking()?"with":"without", "pk chunking"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+				    this.activeJob = connection.createBulkJob(visitor.getTableName(), OperationEnum.query, bulkValidator.usePkChunking());
+					batchInfo = connection.addBatch(finalQuery, this.activeJob);
+					return;
 				}
-				
-				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Ingoring bulk hint as the query is not bulk eligible"); //$NON-NLS-1$
 			}
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
+			
+			results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 		}
 	}
 	
@@ -282,7 +272,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
     		            batchResults = null;
     		        }
 		        }
-            } catch (ResourceException|IOException e) {
+            } catch (IOException e) {
                 throw new TranslatorException(e);
             }
 			List<Object> result = new ArrayList<Object>();
@@ -321,26 +311,22 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		return row;
 	}
 
-		private void loadBatch() throws TranslatorException {
-			try {
-				if(null != resultBatch) { // if we have an old batch, then we have to get new results
-					results = connection.queryMore(results.getQueryLocator(), context.getBatchSize());
-				}
-				resultBatch = new ArrayList<List<Object>>();
-				topResultIndex = 0;
-				for(SObject sObject : results.getRecords()) {
-					if (sObject == null) {
-						continue;
-					}
-					List<Object[]> result = getObjectData(sObject);
-					for(Iterator<Object[]> i = result.iterator(); i.hasNext(); ) {
-						resultBatch.add(Arrays.asList(i.next()));
-					}
-				}
-			} catch (ResourceException e) {
-				throw new TranslatorException(e);
+	private void loadBatch() throws TranslatorException {
+		if(null != resultBatch) { // if we have an old batch, then we have to get new results
+			results = connection.queryMore(results.getQueryLocator(), context.getBatchSize());
+		}
+		resultBatch = new ArrayList<List<Object>>();
+		topResultIndex = 0;
+		for(SObject sObject : results.getRecords()) {
+			if (sObject == null) {
+				continue;
+			}
+			List<Object[]> result = getObjectData(sObject);
+			for(Iterator<Object[]> i = result.iterator(); i.hasNext(); ) {
+				resultBatch.add(Arrays.asList(i.next()));
 			}
 		}
+	}
 
 		private List<Object[]> getObjectData(SObject sObject) throws TranslatorException {
 			Iterator<XmlObject> topFields = sObject.getChildren();

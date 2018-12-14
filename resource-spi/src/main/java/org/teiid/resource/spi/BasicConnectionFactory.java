@@ -26,7 +26,7 @@ import javax.resource.cci.ConnectionSpec;
 import javax.resource.cci.RecordFactory;
 import javax.resource.cci.ResourceAdapterMetaData;
 
-public abstract class BasicConnectionFactory<T extends BasicConnection> implements ConnectionFactory {
+public abstract class BasicConnectionFactory<T extends BasicConnection> implements ConnectionFactory, org.teiid.resource.api.ConnectionFactory {
 	private static final long serialVersionUID = 2900581028589520388L;
 	private Reference reference;
 	

@@ -23,13 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.resource.cci.Connection;
-
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
 
 
-public interface SimpleDBConnection extends Connection{
+public interface SimpleDBConnection {
     public static final String ITEM_NAME = "itemName()"; //$NON-NLS-1$
     
     public static class SimpleDBAttribute {

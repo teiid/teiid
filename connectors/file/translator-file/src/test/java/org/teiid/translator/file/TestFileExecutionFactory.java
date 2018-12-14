@@ -29,6 +29,8 @@ import java.util.Properties;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.file.JavaVirtualFile;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
@@ -36,7 +38,6 @@ import org.teiid.language.Literal;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.query.metadata.SystemMetadata;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TypeFacility;
 
@@ -48,8 +49,8 @@ public class TestFileExecutionFactory {
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "text", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
 		fef.getMetadata(mf, null);
 		Procedure p = mf.getSchema().getProcedure("getTextFiles");
-		FileConnection fc = Mockito.mock(FileConnection.class);
-		Mockito.stub(fc.getFile("*.txt")).toReturn(new File(UnitTestUtil.getTestDataPath(), "*.txt"));
+		VirtualFileConnection fc = Mockito.mock(VirtualFileConnection.class);
+		Mockito.stub(fc.getFiles("*.txt")).toReturn(JavaVirtualFile.getFiles("*.txt", new File(UnitTestUtil.getTestDataPath(), "*.txt")));
 		Call call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*.txt", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
 		ProcedureExecution pe = fef.createProcedureExecution(call, null, null, fc);
 		pe.execute();
@@ -69,7 +70,7 @@ public class TestFileExecutionFactory {
 		
 		call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*1*", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
 		pe = fef.createProcedureExecution(call, null, null, fc);
-		Mockito.stub(fc.getFile("*1*")).toReturn(new File(UnitTestUtil.getTestDataPath(), "*1*"));
+		Mockito.stub(fc.getFiles("*1*")).toReturn(JavaVirtualFile.getFiles("*1*", new File(UnitTestUtil.getTestDataPath(), "*1*")));
 		pe.execute();
 		count = 0;
 		while (true) {

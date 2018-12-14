@@ -20,8 +20,6 @@ package org.teiid.translator.excel;
 
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
@@ -31,8 +29,6 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.resource.ResourceException;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -53,12 +49,13 @@ import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.file.VirtualFile;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.LanguageObject;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.TranslatorException;
 
 
@@ -67,12 +64,12 @@ public class BaseExcelExecution implements Execution {
 	protected ExecutionContext executionContext; 
 	@SuppressWarnings("unused")
 	protected RuntimeMetadata metadata; 
-	protected FileConnection connection;
+	protected VirtualFileConnection connection;
     
     // Execution state
 	protected Iterator<Row> rowIterator;
 	private Row currentRow;
-	private File[] xlsFiles;
+	private VirtualFile[] xlsFiles;
 	private AtomicInteger fileCount = new AtomicInteger();
 	protected ExcelQueryVisitor visitor = new ExcelQueryVisitor();
 	protected FormulaEvaluator evaluator;
@@ -80,7 +77,7 @@ public class BaseExcelExecution implements Execution {
     protected Workbook workbook;
 
 	public BaseExcelExecution(ExecutionContext executionContext,
-			RuntimeMetadata metadata, FileConnection connection) {
+			RuntimeMetadata metadata, VirtualFileConnection connection) {
 		this.executionContext = executionContext;
         this.metadata = metadata;
         this.connection = connection;
@@ -96,17 +93,12 @@ public class BaseExcelExecution implements Execution {
     
     @Override
     public void execute() throws TranslatorException {
-    	try {
-			this.xlsFiles = FileConnection.Util.getFiles(this.visitor.getXlsPath(), this.connection, true);
-			this.rowIterator = readXLSFile(xlsFiles[fileCount.getAndIncrement()]);
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}    
+		this.xlsFiles = VirtualFileConnection.Util.getFiles(this.visitor.getXlsPath(), this.connection, true);
+		this.rowIterator = readXLSFile(xlsFiles[fileCount.getAndIncrement()]);
     }
 
-	private Iterator<Row> readXLSFile(File xlsFile) throws TranslatorException {
-		try (FileInputStream xlsFileStream = new FileInputStream(xlsFile);) {
-		    xlsFileStream.getChannel().tryLock(0, Long.MAX_VALUE, true);
+	private Iterator<Row> readXLSFile(VirtualFile xlsFile) throws TranslatorException {
+		try (InputStream xlsFileStream = xlsFile.openInputStream(true)) {
 			String extension = ExcelMetadataProcessor.getFileExtension(xlsFile);
 			if (extension.equalsIgnoreCase("xls")) { //$NON-NLS-1$
 				workbook = new HSSFWorkbook(xlsFileStream);
@@ -171,7 +163,7 @@ public class BaseExcelExecution implements Execution {
     	
     	while (!hasNext) {
     		this.rowIterator = null;
-    		File nextXlsFile = getNextXLSFile();
+    		VirtualFile nextXlsFile = getNextXLSFile();
     		if (nextXlsFile == null) {
     		    break;
     		}
@@ -187,14 +179,14 @@ public class BaseExcelExecution implements Execution {
     /**
      * @throws TranslatorException  
      */
-    protected File getNextXLSFile() throws TranslatorException {
+    protected VirtualFile getNextXLSFile() throws TranslatorException {
     	if (this.xlsFiles.length > this.fileCount.get()) {
     		return this.xlsFiles[this.fileCount.getAndIncrement()];
     	}
     	return null;
     }
     
-    protected File getCurrentXLSFile() {
+    protected VirtualFile getCurrentXLSFile() {
         if (this.xlsFiles.length >= this.fileCount.get()) {
             return this.xlsFiles[this.fileCount.get()-1];
         }

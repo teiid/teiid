@@ -18,16 +18,16 @@
 
 package org.teiid.translator.excel;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
@@ -35,7 +35,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 
 @Translator(name="excel", description="Excel file translator")
-public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, FileConnection> {
+public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, VirtualFileConnection> {
 
     private boolean formatStrings;
     
@@ -45,7 +45,7 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, F
 	}
 	
     @Override
-    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, FileConnection connection)
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, VirtualFileConnection connection)
     		throws TranslatorException {
     	ExcelExecution ex = new ExcelExecution((Select)command, executionContext, metadata, connection);
     	if (formatStrings) {
@@ -57,7 +57,7 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, F
     @Override
     public ExcelUpdateExecution createUpdateExecution(Command command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
-            FileConnection connection) throws TranslatorException {
+            VirtualFileConnection connection) throws TranslatorException {
         ExcelUpdateExecution ex = new ExcelUpdateExecution(command, executionContext, metadata, connection);
         if (formatStrings) {
             ex.setDataFormatter(new DataFormatter()); //assume default locale
@@ -66,7 +66,7 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, F
     }
     	
     @Override
-    public MetadataProcessor<FileConnection> getMetadataProcessor(){
+    public MetadataProcessor<VirtualFileConnection> getMetadataProcessor(){
         return new ExcelMetadataProcessor();
     }
 	

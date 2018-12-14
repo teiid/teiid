@@ -23,8 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.resource.ResourceException;
-
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
@@ -120,50 +118,30 @@ public class DirectQueryExecution implements ProcedureExecution  {
 				ids.add(Util.stripQutes(val.toString()));
 			}
 		}
-		try {
-			this.updateCount = this.connection.delete(ids.toArray(new String[ids.size()]));
-			this.updateQuery = true;
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}
+		this.updateCount = this.connection.delete(ids.toArray(new String[ids.size()]));
+		this.updateQuery = true;
 	}
 
 	private void doUpdate(String update)  throws TranslatorException {
 		DataPayload payload = buildDataPlayload(update);
-		try {
-			this.updateCount = this.connection.update(Arrays.asList(payload));
-			this.updateQuery = true;
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}
+		this.updateCount = this.connection.update(Arrays.asList(payload));
+		this.updateQuery = true;
 	}
 
 	private void doInsert(String insert) throws TranslatorException {
 		DataPayload payload = buildDataPlayload(insert);
-		try {
-			this.updateCount = this.connection.create(payload);
-			this.updateQuery = true;
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}
+		this.updateCount = this.connection.create(payload);
+		this.updateQuery = true;
 	}
 	
 	private void doUpsert(String upsert) throws TranslatorException {
         DataPayload payload = buildDataPlayload(upsert);
-        try {
-            this.updateCount = this.connection.upsert(payload); //$NON-NLS-1$
-            this.updateQuery = true;
-        } catch (ResourceException e) {
-            throw new TranslatorException(e);
-        }
+        this.updateCount = this.connection.upsert(payload); //$NON-NLS-1$
+        this.updateQuery = true;
     }
 
 	private void doSelect(String select) throws TranslatorException {
-		try {
-			this.results = this.connection.query(select, this.context.getBatchSize(), Boolean.FALSE);
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}
+		this.results = this.connection.query(select, this.context.getBatchSize(), Boolean.FALSE);
 	}
 
 	@Override
@@ -205,11 +183,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
 		else {
 			if(!result.isDone()) {
 				// fetch more results
-				try {
-					this.results = this.connection.queryMore(results.getQueryLocator(), context.getBatchSize());
-				} catch (ResourceException e) {
-					throw new TranslatorException(e);
-				}
+				this.results = this.connection.queryMore(results.getQueryLocator(), context.getBatchSize());
 				this.currentBatch = loadBatch(this.results);
 				
 				// read next row

@@ -17,12 +17,10 @@
  */
 package org.teiid.translator.accumulo;
 
-import javax.resource.cci.Connection;
-
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.security.Authorizations;
 
-public interface AccumuloConnection extends Connection {
+public interface AccumuloConnection {
 	Connector getInstance();
 	Authorizations getAuthorizations();
 }
