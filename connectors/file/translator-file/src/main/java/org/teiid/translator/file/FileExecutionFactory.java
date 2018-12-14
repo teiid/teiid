@@ -219,7 +219,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
         
         @Override
         public List<?> next() throws TranslatorException, DataNotAvailableException {
-            if(this.command.getProcedureName().equalsIgnoreCase(SAVEFILE) || this.command.getProcedureName().equalsIgnoreCase(DELETEFILE)){
+            if (files == null || index >= files.length) {
                 return null;
             }
             ArrayList<Object> result = new ArrayList<>(2);
