@@ -20,15 +20,20 @@ package org.teiid.translator.file;
 
 import static org.junit.Assert.*;
 
+import java.io.Closeable;
 import java.io.File;
+import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
@@ -80,5 +85,33 @@ public class TestFileExecutionFactory {
 		}
 		assertEquals(1, count);
 	}
+	
+    
+	@Test public void testGetVirtualFiles() throws Exception {
+        FileExecutionFactory fef = new FileExecutionFactory();
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "text", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        fef.getMetadata(mf, null);
+        Procedure p = mf.getSchema().getProcedure("getFiles");
+        VirtualFileConnection fc = Mockito.mock(VirtualFileConnection.class);
+        try (Closeable c = VFS.mountReal(new File(UnitTestUtil.getTestDataPath()), VFS.getChild("root"));) {
+            Mockito.stub(fc.getFiles("*.txt")).toReturn(new VirtualFile[] {VFS.getChild("root").getChild("file.txt")});
+            Call call = fef.getLanguageFactory().createCall("getFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*.txt", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
+            ProcedureExecution pe = fef.createProcedureExecution(call, null, null, fc);
+            pe.execute();
+            int count = 0;
+            while (true) {
+                List<?> val = pe.next();
+                if (val == null) {
+                    break;
+                }
+                assertTrue(val.get(0) instanceof Blob);
+                assertEquals(5, val.size());
+                assertTrue(val.get(3) instanceof Timestamp);
+                assertEquals(Long.valueOf(0), val.get(4));
+                count++;
+            }
+            assertEquals(1, count);
+        }
+    }
 	
 }
