@@ -344,8 +344,16 @@ public class TestODataIntegration {
     }
     
     @Test
+    public void testEntitySetWithTrailingSlash() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1/");
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\""+baseURL+"/loopy/vm1/$metadata#G1\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}]}", 
+                response.getContentAsString());
+    }
+    
+    @Test
     public void testEntitySetSkipOnly() throws Exception {
-        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$skip=1");
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1/?$skip=1");
         assertEquals(200, response.getStatus());
         assertEquals("{\"@odata.context\":\""+baseURL + "/loopy/vm1/$metadata#G1\",\"value\":[]}", 
                 response.getContentAsString());
@@ -353,7 +361,7 @@ public class TestODataIntegration {
 
     @Test
     public void testEntitySetWithKey() throws Exception {
-        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1(0)");
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1(0)/");
         assertEquals(200, response.getStatus());
         assertEquals("{\"@odata.context\":\""+baseURL+"/loopy/vm1/$metadata#G1/$entity\",\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}", 
                 response.getContentAsString());        

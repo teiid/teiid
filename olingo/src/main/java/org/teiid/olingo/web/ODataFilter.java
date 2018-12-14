@@ -146,8 +146,8 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         String version = null;
         String modelName = null;
 
-        String uri = ((HttpServletRequest) request).getRequestURI().toString();
-        String fullURL = ((HttpServletRequest) request).getRequestURL().toString();
+        String uri = httpRequest.getRequestURI().toString();
+        String fullURL = httpRequest.getRequestURL().toString();
         if (uri.startsWith("/odata4/static/") || uri.startsWith("/odata4/keycloak/")){ //$NON-NLS-1$ //$NON-NLS-2$
             chain.doFilter(httpRequest, response);
             return;
