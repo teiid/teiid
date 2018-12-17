@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 
-import javax.resource.spi.work.Work;
-
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.core.TeiidComponentException;
@@ -38,7 +36,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 
 
-public class LobWorkItem implements Work {
+public class LobWorkItem implements Runnable {
 	
 	private RequestWorkItem parent;
 	private int chunkSize; 
@@ -135,8 +133,4 @@ public class LobWorkItem implements Work {
     	this.resultsReceiver = resultsReceiver;
     }
 
-	@Override
-	public void release() {
-		
-	}
 }

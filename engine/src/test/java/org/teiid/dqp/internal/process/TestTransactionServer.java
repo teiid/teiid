@@ -20,7 +20,6 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
-import javax.resource.spi.XATerminator;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
@@ -30,13 +29,13 @@ import org.mockito.Mockito;
 import org.teiid.adminapi.Transaction;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
-import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.dqp.service.TransactionContext;
+import org.teiid.resource.api.XAImporter;
 
 public class TestTransactionServer {
 
     private TransactionServerImpl server;
-    private XATerminator xaTerminator;
+    private XAImporter xaImporter;
     private TransactionManager tm;
 	private javax.transaction.Transaction txn;
     
@@ -49,17 +48,19 @@ public class TestTransactionServer {
     private static final XidImpl XID2 = new XidImpl(0, new byte[] {
         2
     }, new byte[0]);
+    
+    static int TIMEOUT = 100;
 
     @Before public void setUp() throws Exception {
         server = new TransactionServerImpl();
-        xaTerminator = Mockito.mock(XATerminator.class);
         tm = Mockito.mock(TransactionManager.class);
         txn = Mockito.mock(javax.transaction.Transaction.class);
         Mockito.stub(tm.getTransaction()).toReturn(txn);
         Mockito.stub(tm.suspend()).toReturn(txn);
-        server.setXaTerminator(xaTerminator);
+        xaImporter = Mockito.mock(XAImporter.class);
+        Mockito.stub(xaImporter.importTransaction(Mockito.any(), Mockito.any(), Mockito.eq(TIMEOUT))).toReturn(txn);
+        server.setXaImporter(xaImporter);
         server.setTransactionManager(tm);
-        server.setWorkManager(new FakeWorkManager());
     }
 
     /**
@@ -171,7 +172,7 @@ public class TestTransactionServer {
     	server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
         server.commit(THREAD1, XID1, false, false);
         
-        Mockito.verify(xaTerminator).commit(XID1, false);
+        Mockito.verify(xaImporter).commit(XID1, false);
     }     
     
     @Test public void testLocalRollback() throws Exception {
@@ -279,13 +280,13 @@ public class TestTransactionServer {
         
     	server.prepare(THREAD1, XID1, false);
     	
-    	Mockito.verify(xaTerminator).prepare(tc.getXid());
+    	Mockito.verify(xaImporter).prepare(tc.getXid());
     	
     	server.commit(THREAD1, XID1, true, false);
     }
     
     @Test public void testGlobalPrepareFail() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, TIMEOUT,false);
         server.end(THREAD1, XID1, XAResource.TMFAIL, false);
         Mockito.verify(txn).setRollbackOnly();
     }    
@@ -300,7 +301,7 @@ public class TestTransactionServer {
 
 		
 		server.commit(THREAD1, XID1, true, false);
-		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
+		Mockito.verify(xaImporter).commit(tc.getXid(), false);
     }  
     
     @Test public void testGlobalOnePhaseCommit_force_prepare_through() throws Exception {
@@ -312,8 +313,8 @@ public class TestTransactionServer {
 		
 		server.commit(THREAD1, XID1, true, false);
 		
-		Mockito.verify(xaTerminator).prepare(tc.getXid());
-		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
+		Mockito.verify(xaImporter).prepare(tc.getXid());
+		Mockito.verify(xaImporter).commit(tc.getXid(), false);
     }  
     
     @Test public void testGlobalOnePhaseCommit_force_prepare() throws Exception {
@@ -326,8 +327,8 @@ public class TestTransactionServer {
 		server.commit(THREAD1, XID1, true, false);
 		
 		// since there are two sources the commit is not single phase
-		Mockito.verify(xaTerminator).prepare(tc.getXid());
-		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
+		Mockito.verify(xaImporter).prepare(tc.getXid());
+		Mockito.verify(xaImporter).commit(tc.getXid(), false);
     }  
     
     
@@ -343,7 +344,7 @@ public class TestTransactionServer {
 		server.commit(THREAD1, XID1, true, false);
 		
 		// since there are two sources the commit is not single phase
-		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
+		Mockito.verify(xaImporter).commit(tc.getXid(), false);
     }    
     
     @Test public void testGlobalOnePhaseRoolback() throws Exception {
@@ -358,7 +359,7 @@ public class TestTransactionServer {
 		server.rollback(THREAD1, XID1, false);
 		
 		// since there are two sources the commit is not single phase
-		Mockito.verify(xaTerminator).rollback(tc.getXid());
+		Mockito.verify(xaImporter).rollback(tc.getXid());
     }     
     
     @Test public void testRequestCommit() throws Exception{

@@ -25,6 +25,11 @@
 			<groupId>org.teiid</groupId>
 			<artifactId>teiid-api</artifactId>
 		</dependency>
+		
+		<dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-resource-spi</artifactId>
+        </dependency>
 
 		<dependency>
 			<groupId>org.teiid</groupId>

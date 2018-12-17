@@ -18,10 +18,6 @@
 
 package org.teiid.dqp.internal.process;
 
-import javax.resource.spi.work.Work;
-import javax.resource.spi.work.WorkEvent;
-import javax.resource.spi.work.WorkListener;
-
 import org.teiid.logging.LogManager;
 
 
@@ -30,7 +26,7 @@ import org.teiid.logging.LogManager;
  * Represents a task that performs work that may take more than one processing pass to complete.
  * During processing the WorkItem may receive events asynchronously through the moreWork method.
  */
-public abstract class AbstractWorkItem implements Work, WorkListener {
+public abstract class AbstractWorkItem implements Runnable {
 	
     enum ThreadState {
     	MORE_WORK, WORKING, IDLE, DONE
@@ -134,24 +130,4 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     
     public abstract String toString();
     
-    @Override
-    public void release() {
-    	
-    }
-    
-	@Override
-	public void workAccepted(WorkEvent arg0) {
-	}
-
-	@Override
-	public void workCompleted(WorkEvent arg0) {
-	}
-
-	@Override
-	public void workRejected(WorkEvent event) {
-	}
-
-	@Override
-	public void workStarted(WorkEvent arg0) {
-	}		
 }

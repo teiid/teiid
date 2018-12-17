@@ -1334,15 +1334,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		return processingTimestamp;
 	}
 	
-	@Override
-	public void release() {
-		try {
-			requestCancel("WorkManager requested release"); //$NON-NLS-1$
-		} catch (TeiidComponentException e) {
-			LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30026,requestID));
-		}
-	}
-
 	private void done() {
 		doneProducingBatches();
 		addToCache();

@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.activation.DataSource;
-import javax.resource.ResourceException;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Source;
 import javax.xml.transform.stax.StAXSource;
@@ -362,7 +361,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 				if (connection instanceof WrappedConnection) {
 					try {
 						unwrapped = ((WrappedConnection)connection).unwrap();
-					} catch (ResourceException e) {
+					} catch (Exception e) {
 						 throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477, this.manager.getConnectionName()));
 					}	
 				}

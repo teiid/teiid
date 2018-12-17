@@ -26,8 +26,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import javax.resource.spi.work.Work;
-
 import org.junit.After;
 import org.junit.Test;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
@@ -97,17 +95,13 @@ public class TestThreadReuseExecutor {
     @Test public void testFailingWork() throws Exception {
     	pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
     	final Semaphore signal = new Semaphore(1);
-    	pool.execute(new Work() {
+    	pool.execute(new Runnable() {
     		@Override
     		public void run() {
     			signal.release();
     			throw new RuntimeException();
     		}
     		
-    		@Override
-    		public void release() {
-    			
-    		}
     	});
     	assertTrue(signal.tryAcquire(2, TimeUnit.SECONDS));
     }

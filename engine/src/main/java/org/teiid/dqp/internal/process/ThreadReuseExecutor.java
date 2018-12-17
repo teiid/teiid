@@ -32,8 +32,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.resource.spi.work.Work;
-
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.logging.LogConstants;
@@ -77,7 +75,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		
 	}
 	
-	public static class RunnableWrapper implements PrioritizedRunnable, Work {
+	public static class RunnableWrapper implements PrioritizedRunnable {
 		Runnable r;
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		long creationTime;
@@ -119,11 +117,6 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 			return workContext;
 		}
 
-		@Override
-		public void release() {
-			
-		}
-		
 	}
 	
 	private final ThreadPoolExecutor tpe; 

@@ -23,14 +23,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
-import javax.resource.spi.work.Work;
-
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
-public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRunnable, Work {
+public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRunnable {
 	private int priority;
 	private long creationTime = System.currentTimeMillis();
 	private DQPWorkContext workContext = DQPWorkContext.getWorkContext();
@@ -77,11 +75,6 @@ public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRun
 	@Override
 	public DQPWorkContext getDqpWorkContext() {
 		return workContext;
-	}
-	
-	@Override
-	public void release() {
-		
 	}
 	
 	synchronized void addCompletionListener(CompletionListener<T> completionListener) {

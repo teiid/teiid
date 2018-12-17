@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.resource.spi.XATerminator;
 import javax.transaction.TransactionManager;
 import javax.xml.stream.XMLStreamException;
 
@@ -36,7 +35,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
-import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.core.util.UnitTestUtil;
@@ -59,6 +57,7 @@ import org.teiid.metadata.index.VDBMetadataFactory.IndexVDB;
 import org.teiid.query.metadata.VDBResources.Resource;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.resource.api.XAImporter;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.services.SessionServiceImpl;
@@ -115,8 +114,7 @@ public class FakeServer extends EmbeddedServer {
 		boolean detectTxn = true;
 		if (config.getTransactionManager() == null) {
 			config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
-			this.transactionService.setXaTerminator(SimpleMock.createSimpleMock(XATerminator.class));
-			this.transactionService.setWorkManager(new FakeWorkManager());
+			this.transactionService.setXaImporter(SimpleMock.createSimpleMock(XAImporter.class));
 			detectTxn = false;
 		}
 		this.realBufferManager = realBufferMangaer;

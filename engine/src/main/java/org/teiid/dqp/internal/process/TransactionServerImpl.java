@@ -25,13 +25,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 
-import javax.resource.NotSupportedException;
-import javax.resource.spi.XATerminator;
-import javax.resource.spi.work.WorkException;
-import javax.resource.spi.work.WorkManager;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.InvalidTransactionException;
@@ -54,6 +48,7 @@ import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.query.QueryPlugin;
+import org.teiid.resource.api.XAImporter;
 
 /**
  * Note that the begin methods do not leave the transaction associated with the
@@ -113,10 +108,9 @@ public class TransactionServerImpl implements TransactionService {
 
     protected TransactionMapping transactions = new TransactionMapping();
     
-    private XATerminator xaTerminator;
     protected TransactionManager transactionManager;
-    private WorkManager workManager;
     private boolean detectTransactions;
+    private XAImporter xaImporter;
     
     public void setDetectTransactions(boolean detectTransactions) {
 		this.detectTransactions = detectTransactions;
@@ -125,19 +119,15 @@ public class TransactionServerImpl implements TransactionService {
     public boolean isDetectTransactions() {
 		return detectTransactions;
 	}
-
-    public void setXaTerminator(XATerminator xaTerminator) {
-		this.xaTerminator = xaTerminator;
-	}
     
+    public void setXaImporter(XAImporter xaImporter) {
+        this.xaImporter = xaImporter;
+    }
+
     public void setTransactionManager(TransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
 	}
     
-    public void setWorkManager(WorkManager workManager) {
-		this.workManager = workManager;
-	}
-
     /**
      * Global Transaction 
      */
@@ -153,7 +143,7 @@ public class TransactionServerImpl implements TransactionService {
         }
         
         try {
-        	return this.xaTerminator.prepare(tc.getXid());
+        	return this.xaImporter.prepare(tc.getXid());
         } catch (XAException e) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30506, e);
         }
@@ -169,7 +159,7 @@ public class TransactionServerImpl implements TransactionService {
         		return; //nothing to do
         	}
         	//TODO: we have no way of knowing for sure if we can safely use the onephase optimization
-        	this.xaTerminator.commit(tc.getXid(), false); 
+        	this.xaImporter.commit(tc.getXid(), false); 
     	} catch (XAException e) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30507, e);
         } finally {
@@ -185,7 +175,7 @@ public class TransactionServerImpl implements TransactionService {
     	try {
     		// In the case of single TM, the container directly roll backs the sources.
         	if (!singleTM) {
-        		this.xaTerminator.rollback(tc.getXid());
+        		this.xaImporter.rollback(tc.getXid());
         	}
     	} catch (XAException e) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30508, e);
@@ -204,7 +194,7 @@ public class TransactionServerImpl implements TransactionService {
     	}
     	
     	try {
-			return this.xaTerminator.recover(flag);
+			return this.xaImporter.recover(flag);
 		} catch (XAException e) {
 			 throw new XATransactionException(QueryPlugin.Event.TEIID30509, e);
 		}
@@ -219,7 +209,7 @@ public class TransactionServerImpl implements TransactionService {
         	if (singleTM) {
         		return;
         	}
-            this.xaTerminator.forget(xid);
+            this.xaImporter.forget(xid);
         } catch (XAException err) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30510, err);
         } finally {
@@ -242,7 +232,6 @@ public class TransactionServerImpl implements TransactionService {
 					if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
 					     throw new XATransactionException(QueryPlugin.Event.TEIID30517, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
 					}
-					tc.setTransactionTimeout(timeout);
 					tc.setXid(xid);
 					tc.setTransactionType(TransactionContext.Scope.GLOBAL);
 					if (singleTM) {
@@ -254,22 +243,10 @@ public class TransactionServerImpl implements TransactionService {
 						    throw new XATransactionException(QueryPlugin.Event.TEIID30590, XAException.XAER_INVAL, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30590));
 						}
 					} else {
-						FutureWork<Transaction> work = new FutureWork<Transaction>(new Callable<Transaction>() {
-							@Override
-							public Transaction call() throws Exception {
-								return transactionManager.getTransaction();
-							}
-						}, 0);
-						workManager.doWork(work, WorkManager.INDEFINITE, tc, null);
-						tc.setTransaction(work.get());
+						Transaction txn = xaImporter.importTransaction(transactionManager, xid, timeout);
+						tc.setTransaction(txn);
 					}
-				} catch (NotSupportedException e) {
-					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
-				} catch (WorkException e) {
-					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
-				} catch (InterruptedException e) {
-					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
-				} catch (ExecutionException e) {
+				} catch (XAException e) {
 					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
 				} catch (SystemException e) {
 					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);

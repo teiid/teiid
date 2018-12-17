@@ -48,6 +48,7 @@ import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.resource.spi.XAImporterImpl;
 import org.teiid.runtime.jmx.JMXService;
 import org.teiid.services.InternalEventDistributorFactory;
 
@@ -73,8 +74,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	
 	@Override
     public void start(final StartContext context) {
-		this.transactionServerImpl.setWorkManager(getWorkManagerInjector().getValue());
-		this.transactionServerImpl.setXaTerminator(getXaTerminatorInjector().getValue());
+		this.transactionServerImpl.setXaImporter(new XAImporterImpl(getXaTerminatorInjector().getValue(), getWorkManagerInjector().getValue()));
 		this.transactionServerImpl.setTransactionManager(getTxnManagerInjector().getValue());
 		this.transactionServerImpl.setDetectTransactions(true);
 		setPreParser(preParserInjector.getValue());

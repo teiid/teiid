@@ -45,7 +45,6 @@ import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.resource.spi.XATerminator;
 import javax.transaction.*;
 
 import org.infinispan.transaction.tm.DummyTransactionManager;
@@ -64,7 +63,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.FileStorageManager;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
-import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
@@ -91,6 +89,7 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.resource.api.XAImporter;
 import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -1394,8 +1393,7 @@ public class TestEmbeddedServer {
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         ec.setUseDisk(false);
         ec.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
-        es.transactionService.setXaTerminator(SimpleMock.createSimpleMock(XATerminator.class));
-        es.transactionService.setWorkManager(new FakeWorkManager());
+        es.transactionService.setXaImporter(SimpleMock.createSimpleMock(XAImporter.class));
         
         es.start(ec);
         es.transactionService.setDetectTransactions(false);

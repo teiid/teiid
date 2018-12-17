@@ -23,12 +23,12 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.resource.spi.work.ExecutionContext;
 import javax.transaction.Transaction;
+import javax.transaction.xa.Xid;
 
 import org.teiid.core.TeiidRuntimeException;
 
-public class TransactionContext extends ExecutionContext implements Serializable, Cloneable{
+public class TransactionContext implements Serializable, Cloneable{
 
 	private static final long serialVersionUID = -8689401273499649058L;
 
@@ -46,6 +46,7 @@ public class TransactionContext extends ExecutionContext implements Serializable
     private Transaction transaction;
     private Set<String> suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     private int isolationLevel;
+    private Xid xid;
 
     public int getIsolationLevel() {
 		return isolationLevel;
@@ -111,6 +112,25 @@ public class TransactionContext extends ExecutionContext implements Serializable
         } catch (CloneNotSupportedException e) {
             throw new TeiidRuntimeException(e);
         }
+    }
+    
+    /**
+     * set a transaction context.
+     *
+     * @param xid transaction context.
+     */
+    public void setXid(Xid xid)
+    {
+       this.xid = xid;
+    }
+
+    /**
+     * @return an Xid object carrying a transaction context, 
+     * if any.
+     */
+    public Xid getXid() 
+    {
+       return this.xid;
     }
     
 }

@@ -20,11 +20,9 @@ package org.teiid.common.queue;
 
 import java.sql.Timestamp;
 
-import javax.resource.spi.work.Work;
-
 /**
  */
-public class FakeWorkItem implements Work {
+public class FakeWorkItem implements Runnable {
 
 	private static boolean DEBUG = false;
 	
@@ -65,10 +63,5 @@ public class FakeWorkItem implements Work {
     				Thread.currentThread().getName() + ": " + msg);     //$NON-NLS-1$
     	}
     }
-
-	@Override
-	public void release() {
-		
-	}
 
 }

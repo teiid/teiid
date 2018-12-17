@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.DefaultCacheManager;
@@ -47,7 +46,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private String securityDomain;
 	private TransactionManager transactionManager;
 	private ObjectReplicator objectReplicator;
-	private WorkManager workManager;
 	private boolean useDisk = true;
 	private String bufferDirectory;
 	private CacheFactory cacheFactory;
@@ -97,7 +95,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	/**
 	 * Set the {@link SecurityHelper} that can associate the appropriate SecurityContext
 	 * with threads executing Teiid tasks.  Will also set the appropriate user/subject information
-	 * on the Teiid contexts. Not required if a {@link WorkManager} is set.
+	 * on the Teiid contexts.
 	 * 
 	 * @param securityHelper
 	 */
@@ -123,30 +121,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	
 	public void setObjectReplicator(ObjectReplicator objectReplicator) {
 		this.objectReplicator = objectReplicator;
-	}
-	
-	/**
-	 * Sets the {@link WorkManager} to be used instead of a {@link ThreadReuseExecutor}.
-	 * This means that Teiid will not own the processing threads and will not necessarily be
-	 * responsible for security context propagation.
-	 * @param workManager
-	 */
-	public void setWorkManager(WorkManager workManager) {
-		this.workManager = workManager;
-	}
-	public WorkManager getWorkManager() {
-		return workManager;
-	}
-	
-	@Override
-	public TeiidExecutor getTeiidExecutor() {
-		if (workManager == null) {
-			return super.getTeiidExecutor();
-		}
-		//TODO: if concurrency is 1, then use a direct executor
-		//the only scheduled task right now just restarts a workitem,
-		//so that can be done in the scheduler thread
-		return new WorkManagerTeiidExecutor(workManager);
 	}
 	
 	public boolean isUseDisk() {

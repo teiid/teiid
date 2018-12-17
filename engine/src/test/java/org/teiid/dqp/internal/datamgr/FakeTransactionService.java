@@ -18,20 +18,18 @@
 
 package org.teiid.dqp.internal.datamgr;
 
-import javax.resource.spi.XATerminator;
 import javax.transaction.TransactionManager;
 
-import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
+import org.teiid.resource.api.XAImporter;
 
 
 public class FakeTransactionService extends TransactionServerImpl {
 
 	public FakeTransactionService() {
 		this.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
-		this.setXaTerminator(SimpleMock.createSimpleMock(XATerminator.class));
-		this.setWorkManager(new FakeWorkManager());
+		this.setXaImporter(SimpleMock.createSimpleMock(XAImporter.class));
 	}
 	
 }
