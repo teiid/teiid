@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.infinispan.api.InfinispanConnection;

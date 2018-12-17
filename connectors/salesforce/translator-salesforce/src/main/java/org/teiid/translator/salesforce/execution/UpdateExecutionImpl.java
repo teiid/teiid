@@ -20,8 +20,6 @@ package org.teiid.translator.salesforce.execution;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.resource.ResourceException;
-
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
@@ -55,7 +53,7 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
 	
 	@Override
 	protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
-	        throws ResourceException {
+	        throws TranslatorException {
 	    List<DataPayload> updateDataList = new ArrayList<DataPayload>();
 
         for (int i = 0; i < ids.length; i++) {

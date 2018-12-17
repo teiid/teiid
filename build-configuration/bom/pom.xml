@@ -720,6 +720,11 @@
 				<version>${version.org.teiid}</version>
 			</dependency>
 			<dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-resource-spi</artifactId>
+                <version>${version.org.teiid}</version>
+            </dependency>
+			<dependency>
 				<groupId>org.teiid</groupId>
 				<artifactId>teiid-api</artifactId>
 				<type>test-jar</type>
@@ -731,6 +736,11 @@
 				<artifactId>teiid-client</artifactId>
 				<version>${version.org.teiid}</version>
 			</dependency>
+			<dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-jboss-client</artifactId>
+                <version>${version.org.teiid}</version>
+            </dependency>
 			<dependency>
 				<groupId>org.teiid</groupId>
 				<artifactId>teiid-admin</artifactId>

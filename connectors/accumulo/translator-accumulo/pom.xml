@@ -28,10 +28,6 @@
 			<artifactId>teiid-admin</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.jboss.spec.javax.resource</groupId>
-			<artifactId>jboss-connector-api_1.7_spec</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.accumulo</groupId>
 			<artifactId>accumulo-core</artifactId>
 		</dependency>

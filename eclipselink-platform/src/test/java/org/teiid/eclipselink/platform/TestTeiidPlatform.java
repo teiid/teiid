@@ -17,13 +17,10 @@
  */
 package org.teiid.eclipselink.platform;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
@@ -31,20 +28,16 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import javax.resource.ResourceException;
-import javax.resource.cci.ConnectionFactory;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.deployers.VirtualDatabaseException;
-import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.resource.adapter.file.FileManagedConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.file.FileExecutionFactory;
 
 @SuppressWarnings("nls")
@@ -54,7 +47,7 @@ public class TestTeiidPlatform {
 	static EntityManagerFactory factory;
 	
 	@BeforeClass 
-	public static void init() throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, FileNotFoundException, IOException, ResourceException, SQLException {
+	public static void init() throws Exception {
 		
 		server = new EmbeddedServer();
 		FileExecutionFactory executionFactory = new FileExecutionFactory();

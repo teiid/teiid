@@ -30,7 +30,7 @@ import javax.resource.cci.RecordFactory;
 import javax.resource.cci.ResourceAdapterMetaData;
 import javax.resource.spi.ConnectionManager;
 
-public class WrappedConnectionFactory implements ConnectionFactory, Referenceable, Serializable  {
+public class WrappedConnectionFactory implements ConnectionFactory, Referenceable, Serializable, org.teiid.resource.api.ConnectionFactory  {
 
 	private static final long serialVersionUID = 5499157394014613035L;
 	private BasicConnectionFactory delegate;
@@ -50,8 +50,8 @@ public class WrappedConnectionFactory implements ConnectionFactory, Referenceabl
 	}
 	
 	@Override
-	public Connection getConnection() throws ResourceException {
-		return (Connection)cm.allocateConnection(mcf, null);
+	public WrappedConnection getConnection() throws ResourceException {
+		return (WrappedConnection)cm.allocateConnection(mcf, null);
 	}
 
 

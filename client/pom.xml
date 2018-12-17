@@ -52,12 +52,7 @@
 			<artifactId>teiid-common-core</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
-		</dependency>
-        <dependency>
-            <groupId>org.jboss.modules</groupId>
-            <artifactId>jboss-modules</artifactId>
-        </dependency>
-                   
+		</dependency>                   
         <dependency>
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-api</artifactId>

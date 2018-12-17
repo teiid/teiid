@@ -17,8 +17,7 @@
  */
 package org.teiid.couchbase;
 
-import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
+import org.teiid.translator.TranslatorException;
 
 import com.couchbase.client.java.query.N1qlQueryResult;
 
@@ -40,7 +39,7 @@ import com.couchbase.client.java.query.N1qlQueryResult;
  * @author kylin
  *
  */
-public interface CouchbaseConnection extends Connection {
+public interface CouchbaseConnection {
     
     /**
      * Returns the name of the  Namespace
@@ -55,5 +54,5 @@ public interface CouchbaseConnection extends Connection {
      * @param statement Any N1QL statement, like Insert, Select, Update, Delete, etc.
      * @return
      */
-    N1qlQueryResult execute(String statement) throws ResourceException;
+    N1qlQueryResult execute(String statement) throws TranslatorException;
 }

@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import javax.resource.ResourceException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
@@ -71,27 +70,23 @@ public class GetUpdatedExecutionImpl implements SalesforceProcedureExecution {
 
 	@Override
 	public void execute(ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
-		try {
-			Call command = parent.getCommand();
-			List<Argument> params = command.getArguments();
-			
-			Argument object = params.get(OBJECT);
-			String objectName = (String) object.getArgumentValue().getValue();
-			
-			Argument start = params.get(STARTDATE);
-			Timestamp startTime = (Timestamp) start.getArgumentValue().getValue();
-			GregorianCalendar startCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
-			startCalendar.setTime(startTime);
-			
-			Argument end = params.get(ENDDATE);
-			Timestamp endTime = (Timestamp) end.getArgumentValue().getValue();
-			GregorianCalendar endCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
-			endCalendar.setTime(endTime);
-			
-			updatedResult = parent.getConnection().getUpdated(objectName, startCalendar, endCalendar);
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}
+		Call command = parent.getCommand();
+		List<Argument> params = command.getArguments();
+		
+		Argument object = params.get(OBJECT);
+		String objectName = (String) object.getArgumentValue().getValue();
+		
+		Argument start = params.get(STARTDATE);
+		Timestamp startTime = (Timestamp) start.getArgumentValue().getValue();
+		GregorianCalendar startCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+		startCalendar.setTime(startTime);
+		
+		Argument end = params.get(ENDDATE);
+		Timestamp endTime = (Timestamp) end.getArgumentValue().getValue();
+		GregorianCalendar endCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+		endCalendar.setTime(endTime);
+		
+		updatedResult = parent.getConnection().getUpdated(objectName, startCalendar, endCalendar);
 	}
 
 	@Override

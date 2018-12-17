@@ -19,8 +19,6 @@ package org.teiid.translator.salesforce.execution;
 
 import java.util.ArrayList;
 
-import javax.resource.ResourceException;
-
 import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
@@ -97,40 +95,34 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 				result = processIds(Ids, visitor);
 			} catch (ClassCastException cce) {
 				throw new RuntimeException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13008));
-			} catch (ResourceException e) {
-			    throw new TranslatorException(e);
             }
 	
 		} else {
-			try {
-				String query = visitor.getQuery();
-				context.logCommand(query);
-				QueryResult results = getConnection().query(query, batchSize, Boolean.FALSE);
-				ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);
-                while (results != null) {
-                    if (results.getSize() > 0) {
-                        for (int i = 0; i < results.getRecords().length; i++) {
-    						SObject sObject = results.getRecords()[i];
-    						idList.add(sObject.getId());
-                            if (idList.size() == updateSize) {
-                                Ids = idList.toArray(new String[0]);
-                                result += processIds(Ids, visitor);
-                                idList.clear();
-                            }
-    					}
-                    }
-					if (results.isDone()) {
-					    break;
+			String query = visitor.getQuery();
+			context.logCommand(query);
+			QueryResult results = getConnection().query(query, batchSize, Boolean.FALSE);
+			ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);
+            while (results != null) {
+                if (results.getSize() > 0) {
+                    for (int i = 0; i < results.getRecords().length; i++) {
+						SObject sObject = results.getRecords()[i];
+						idList.add(sObject.getId());
+                        if (idList.size() == updateSize) {
+                            Ids = idList.toArray(new String[0]);
+                            result += processIds(Ids, visitor);
+                            idList.clear();
+                        }
 					}
-				    results = connection.queryMore(results.getQueryLocator(), batchSize);					    
-				}
-                if (!idList.isEmpty()) {
-                    Ids = idList.toArray(new String[0]);
-                    result += processIds(Ids, visitor);
                 }
-			} catch (ResourceException e) {
-				throw new TranslatorException(e);
+				if (results.isDone()) {
+				    break;
+				}
+			    results = connection.queryMore(results.getQueryLocator(), batchSize);					    
 			}
+            if (!idList.isEmpty()) {
+                Ids = idList.toArray(new String[0]);
+                result += processIds(Ids, visitor);
+            }
 		}
 	}
 
@@ -139,9 +131,9 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 	 * @param ids
 	 * @param visitor
 	 * @return
-	 * @throws ResourceException
+	 * @throws TranslatorException
 	 */
-    protected int processIds(String[] ids, IQueryProvidingVisitor visitor) throws ResourceException {
+    protected int processIds(String[] ids, IQueryProvidingVisitor visitor) throws TranslatorException {
         return 0;
     }
 }

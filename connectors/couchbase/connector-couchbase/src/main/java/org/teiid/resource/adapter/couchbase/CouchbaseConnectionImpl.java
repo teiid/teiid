@@ -25,6 +25,7 @@ import javax.resource.ResourceException;
 import org.teiid.core.BundleUtil;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.translator.TranslatorException;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -57,10 +58,12 @@ public class CouchbaseConnectionImpl extends BasicConnection implements Couchbas
 	}
 
     @Override
-    public N1qlQueryResult execute(String statement) throws ResourceException {
+    public N1qlQueryResult execute(String statement) throws TranslatorException {
         N1qlQueryResult result = this.bucket.query(N1qlQuery.simple(statement, N1qlParams.build().consistency(scanConsistency)));
         if (!result.finalSuccess()) {
-            throw new ResourceException(UTIL.gs("query_error", result.errors()), result.status()); //$NON-NLS-1$
+            TranslatorException te = new TranslatorException(UTIL.gs("query_error", result.errors())); //$NON-NLS-1$
+            te.setCode(result.status());
+            throw te;
         }
         return result;
     }

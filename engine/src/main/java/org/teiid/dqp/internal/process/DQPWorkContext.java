@@ -40,7 +40,10 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.BatchSerializer;
 import org.teiid.client.security.SessionToken;
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.jdbc.LocalProfile;
 import org.teiid.logging.LogManager;
@@ -142,7 +145,7 @@ public class DQPWorkContext implements Serializable {
     private boolean admin;
     private MetadataFactory metadataFactory;
 
-	private transient LocalProfile connectionProfile = new LocalProfile();
+	private transient LocalProfile connectionProfile;
 
     private boolean local = true;
 
@@ -369,6 +372,15 @@ public class DQPWorkContext implements Serializable {
 	}
 	
 	public LocalProfile getConnectionProfile() {
+	    if (connectionProfile == null) {
+	        try {
+                connectionProfile = (LocalProfile) ReflectionHelper.create(
+                        "org.teiid.jdbc.jboss.ModuleLocalProfile", null, //$NON-NLS-1$
+                        getClass().getClassLoader());
+            } catch (TeiidException e) {
+                throw new TeiidRuntimeException(e);
+            }
+	    }
 		return connectionProfile;
 	}
 

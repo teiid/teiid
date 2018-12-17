@@ -20,7 +20,7 @@ package org.teiid.translator.cassandra;
 
 import java.util.List;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
 import org.teiid.language.Argument;

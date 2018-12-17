@@ -31,12 +31,11 @@ import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.file.VirtualFileConnection;
 
 @Ignore("Ignore due to this test depend on remote ftp server and reference configuration")
 public class TestFtpFileConnection {
     
-    private static VirtualFileConnection sample() throws ResourceException {
+    private static FtpFileConnectionImpl sample() throws ResourceException {
         FtpManagedConnectionFactory mcf = new FtpManagedConnectionFactory();
         mcf.setParentDirectory("/home/kylin/vsftpd"); //$NON-NLS-1$
         mcf.setHost("10.66.192.120"); //$NON-NLS-1$
@@ -49,7 +48,7 @@ public class TestFtpFileConnection {
     @Test
     public void testGetFile() throws ResourceException, IOException {
         
-        VirtualFileConnection conn = sample();
+        FtpFileConnectionImpl conn = sample();
         VirtualFile file = conn.getFile("marketdata-price.txt"); //$NON-NLS-1$
         assertNotNull(file.openStream());
         file = conn.getFile("marketdata-price1.txt"); //$NON-NLS-1$
@@ -68,20 +67,20 @@ public class TestFtpFileConnection {
     }
     
     @Test(expected = ResourceException.class)
-    public void testGetFiles() throws ResourceException, IOException {
-        VirtualFileConnection conn = sample();
-        VirtualFile[] files = conn.getFiles("*.txt");
-        assertEquals(2, files.length); //$NON-NLS-1$ 
+    public void testGetFiles() throws Exception {
+        FtpFileConnectionImpl conn = sample();
+        org.teiid.file.VirtualFile[] files = conn.getFiles("*.txt");
+        assertEquals(2, files.length);  
         conn.close();
     }
     
     @Test
-    public void testAdd() throws IOException, ResourceException {
-        VirtualFileConnection conn = sample();
+    public void testAdd() throws Exception {
+        FtpFileConnectionImpl conn = sample();
         VirtualFile file = conn.getFile("pom.xml"); //$NON-NLS-1$
         assertFalse(file.exists());
         VirtualFile pom = VFS.getChild(new File("pom.xml").getAbsolutePath()); //$NON-NLS-1$
-        conn.add(pom.openStream(), pom);
+        conn.add(pom.openStream(), pom.getName());
         assertTrue(file.exists());
         conn.close();
         conn = sample();
@@ -91,11 +90,11 @@ public class TestFtpFileConnection {
     }
     
     @Test
-    public void testRemove() throws ResourceException, IOException {
-        VirtualFileConnection conn = sample();
+    public void testRemove() throws Exception {
+        FtpFileConnectionImpl conn = sample();
         VirtualFile pom = VFS.getChild(new File("pom.xml").getAbsolutePath()); //$NON-NLS-1$
         VirtualFile file = conn.getFile("pom.xml"); //$NON-NLS-1$
-        conn.add(pom.openStream(), pom);
+        conn.add(pom.openStream(), pom.getName());
         assertTrue(file.exists());
         conn.remove("pom.xml"); //$NON-NLS-1$
         assertFalse(file.exists());

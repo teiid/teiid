@@ -10,10 +10,6 @@
 	<name>SimpleDB API</name>
 	<description>This is API for communicating with SimpleDB</description>
 	<dependencies>
-        <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
-        </dependency>
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-simpledb</artifactId>

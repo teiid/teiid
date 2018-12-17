@@ -27,8 +27,6 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.resource.ResourceException;
-
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -79,50 +77,46 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
-		try {
-			Insert insert = (Insert)command;
-			if (insert.getParameterValues() == null) {
-				DataPayload data = new DataPayload();
-				data.setType(this.objectName);
-				buildSingleRowInsertPayload(insert, data);
-				if (insert.isUpsert()) {
-				    result = getConnection().upsert(data); 
-				} else {
-				    result = getConnection().create(data);
-				}
+		Insert insert = (Insert)command;
+		if (insert.getParameterValues() == null) {
+			DataPayload data = new DataPayload();
+			data.setType(this.objectName);
+			buildSingleRowInsertPayload(insert, data);
+			if (insert.isUpsert()) {
+			    result = getConnection().upsert(data); 
+			} else {
+			    result = getConnection().create(data);
 			}
-			else {
-				if (this.activeJob == null) {
-					this.activeJob = getConnection().createBulkJob(this.objectName, insert.isUpsert()?OperationEnum.upsert:OperationEnum.insert, false);
-					counts = new ArrayList<Integer>();
+		}
+		else {
+			if (this.activeJob == null) {
+				this.activeJob = getConnection().createBulkJob(this.objectName, insert.isUpsert()?OperationEnum.upsert:OperationEnum.insert, false);
+				counts = new ArrayList<Integer>();
+			}
+			if (this.activeJob.getState() == JobStateEnum.Open) {
+				while (this.rowIter.hasNext()) {			
+					List<SObject> rows = buildBulkRowPayload(insert, this.rowIter, this.executionFactory.getMaxBulkInsertBatchSize());
+					batches.add(getConnection().addBatch(rows, activeJob));
 				}
-				if (this.activeJob.getState() == JobStateEnum.Open) {
-					while (this.rowIter.hasNext()) {			
-						List<SObject> rows = buildBulkRowPayload(insert, this.rowIter, this.executionFactory.getMaxBulkInsertBatchSize());
-						batches.add(getConnection().addBatch(rows, activeJob));
-					}
-					this.activeJob = getConnection().closeJob(this.activeJob.getId());
-				}
-				
-				BatchResult[] batchResult = getConnection().getBulkResults(this.activeJob, batches);
-				for(BatchResult br:batchResult) {
-					for (Result r : br.getResult()) {
-						if (r.isSuccess() && r.isCreated()) {
-							counts.add(1);
-						} else if (r.getErrors().length > 0) {
-							counts.add(Statement.EXECUTE_FAILED);
-							this.context.addWarning(new SQLWarning(r.getErrors()[0].getMessage(), r.getErrors()[0].getStatusCode().name()));
-						} else {
-							counts.add(Statement.SUCCESS_NO_INFO);
-						}
+				this.activeJob = getConnection().closeJob(this.activeJob.getId());
+			}
+			
+			BatchResult[] batchResult = getConnection().getBulkResults(this.activeJob, batches);
+			for(BatchResult br:batchResult) {
+				for (Result r : br.getResult()) {
+					if (r.isSuccess() && r.isCreated()) {
+						counts.add(1);
+					} else if (r.getErrors().length > 0) {
+						counts.add(Statement.EXECUTE_FAILED);
+						this.context.addWarning(new SQLWarning(r.getErrors()[0].getMessage(), r.getErrors()[0].getStatusCode().name()));
+					} else {
+						counts.add(Statement.SUCCESS_NO_INFO);
 					}
 				}
-				// now process the next set of batch rows
-				this.activeJob = null;
 			}
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}		
+			// now process the next set of batch rows
+			this.activeJob = null;
+		}
 	}
 
 	private void buildSingleRowInsertPayload(Insert insert, DataPayload data) throws TranslatorException {
@@ -209,11 +203,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 	@Override
 	public void cancel() throws TranslatorException {
 		if (this.activeJob != null) {
-			try {
-				getConnection().cancelBulkJob(this.activeJob);
-			} catch (ResourceException e) {
-				throw new TranslatorException(e);
-			}
+			getConnection().cancelBulkJob(this.activeJob);
 		}
 	}
 }

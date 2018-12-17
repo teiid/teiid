@@ -21,7 +21,7 @@ package org.teiid.translator.swagger;
 import java.util.Collections;
 import java.util.List;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.language.Call;
 import org.teiid.metadata.RuntimeMetadata;

@@ -17,13 +17,10 @@
  */
 package org.teiid.translator.excel;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.resource.ResourceException;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -32,6 +29,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.teiid.file.VirtualFile;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -39,14 +38,13 @@ import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
 
-public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection> {
+public class ExcelMetadataProcessor implements MetadataProcessor<VirtualFileConnection> {
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Excel File Name", description="Excel File name, use file name pattern if one than one file in the parent directory", required=true)
 	public static final String FILE = MetadataFactory.EXCEL_URI+"FILE"; //$NON-NLS-1$
@@ -66,24 +64,20 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 	private int dataRowNumber = 0;
 	private boolean hasDataRowNumber = false;
 
-	public void process(MetadataFactory mf, FileConnection conn) throws TranslatorException {
+	public void process(MetadataFactory mf, VirtualFileConnection conn) throws TranslatorException {
 		if (this.excelFileName == null) {
 			throw new TranslatorException(ExcelPlugin.Event.TEIID23004, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23004, "importer.ExcelFileName")); //$NON-NLS-1$
 		}
 		try {
-			File xlsFile = conn.getFile(this.excelFileName);
-			if (xlsFile.isDirectory()) {
-			    File[] files = xlsFile.listFiles();
-			    if (files.length > 0) {
-			        xlsFile = files[0];
-			    }
-			}
-			if (xlsFile.isDirectory() || !xlsFile.exists()) {
-				throw new TranslatorException(ExcelPlugin.Event.TEIID23005, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23005, xlsFile.getName()));
+			VirtualFile[] xlsFiles = conn.getFiles(this.excelFileName);
+			if (xlsFiles == null || xlsFiles.length == 0) {
+				throw new TranslatorException(ExcelPlugin.Event.TEIID23005, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23005, excelFileName));
 			}
 
+			VirtualFile xlsFile = xlsFiles[0];
+			
 			String extension = getFileExtension(xlsFile);
-			FileInputStream xlsFileStream = new FileInputStream(xlsFile);
+			InputStream xlsFileStream = xlsFile.createInputStreamFactory().getInputStream();
 			try {
 				Workbook workbook = null;
 				if (extension.equalsIgnoreCase("xls")) { //$NON-NLS-1$
@@ -100,8 +94,6 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 			} finally {
 				xlsFileStream.close();
 			}
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
 		} catch (IOException e) {
 			throw new TranslatorException(e);
 		}
@@ -239,7 +231,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		this.excelFileName = fileName;
 	}
 
-	static String getFileExtension(File xlsFile) {
+	static String getFileExtension(VirtualFile xlsFile) {
 		int idx = xlsFile.getName().lastIndexOf('.');
 		String extension = "xls"; //$NON-NLS-1$
 		if (idx > 0) {

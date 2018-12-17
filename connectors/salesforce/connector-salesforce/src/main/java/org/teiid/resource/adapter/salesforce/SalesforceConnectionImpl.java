@@ -51,6 +51,7 @@ import org.teiid.resource.adapter.salesforce.transport.SalesforceConnectorConfig
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.ConnectionContext;
 import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedObject;
@@ -180,7 +181,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 	
 	@Override
-	public Long getCardinality(String sobject) throws ResourceException {
+	public Long getCardinality(String sobject) throws TranslatorException {
 		InputStream is = null;
 		try {
 			is = doRestHttpGet(new URL(restEndpoint + "/query/?explain=select+id+from+" + URLEncoder.encode(sobject, "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
@@ -204,13 +205,13 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			s = s.substring(index+1, end);
 			return Long.valueOf(s);
 		} catch (NumberFormatException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (MalformedURLException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (UnsupportedEncodingException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (IOException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} finally {
 			if (is != null) {
 				try {
@@ -247,7 +248,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		return false;
 	}
 
-	public QueryResult query(String queryString, int batchSize, boolean queryAll) throws ResourceException {
+	public QueryResult query(String queryString, int batchSize, boolean queryAll) throws TranslatorException {
 		
 		if(batchSize > 2000) {
 			batchSize = 2000;
@@ -264,19 +265,19 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 				qr = partnerConnection.query(queryString);
 			}
 		} catch (InvalidFieldFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (MalformedQueryFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (InvalidSObjectFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (InvalidIdFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (UnexpectedErrorFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (InvalidQueryLocatorFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (ConnectionException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} finally {
 			partnerConnection.clearMruHeader();
 			partnerConnection.clearQueryOptions();
@@ -284,7 +285,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		return qr;
 	}
 
-	public QueryResult queryMore(String queryLocator, int batchSize) throws ResourceException {
+	public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException {
 		if(batchSize > 2000) {
 			batchSize = 2000;
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
@@ -294,27 +295,27 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		try {
 			return partnerConnection.queryMore(queryLocator);
 		} catch (InvalidFieldFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (UnexpectedErrorFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (InvalidQueryLocatorFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (ConnectionException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} finally {
 			partnerConnection.clearQueryOptions();
 		}
 		
 	}
 
-	public int delete(String[] ids) throws ResourceException {
+	public int delete(String[] ids) throws TranslatorException {
 		DeleteResult[] results = null;
 		try {
 			results = partnerConnection.delete(ids);
 		} catch (UnexpectedErrorFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (ConnectionException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 		
 		boolean allGood = true;
@@ -337,12 +338,12 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			}
 		}
 		if(!allGood) {
-			throw new ResourceException(errorMessages.toString());
+			throw new TranslatorException(errorMessages.toString());
 		}
 		return results.length;
 	}
 	
-	public int upsert(DataPayload data) throws ResourceException {
+	public int upsert(DataPayload data) throws TranslatorException {
 	    SObject toCreate = new SObject();
         toCreate.setType(data.getType());
         for (DataPayload.Field field : data.getMessageElements()) {
@@ -353,25 +354,25 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
         try {
             results = partnerConnection.upsert(ID_FIELD_NAME, objects);
         } catch (InvalidFieldFault e) {
-            throw new ResourceException(e);
+            throw new TranslatorException(e);
         } catch (InvalidSObjectFault e) {
-            throw new ResourceException(e);
+            throw new TranslatorException(e);
         } catch (InvalidIdFault e) {
-            throw new ResourceException(e);
+            throw new TranslatorException(e);
         } catch (UnexpectedErrorFault e) {
-            throw new ResourceException(e);
+            throw new TranslatorException(e);
         } catch (ConnectionException e) {
-            throw new ResourceException(e);
+            throw new TranslatorException(e);
         }
         for (UpsertResult result : results) {
             if(!result.isSuccess()) {
-                throw new ResourceException(result.getErrors()[0].getMessage());
+                throw new TranslatorException(result.getErrors()[0].getMessage());
             }
         }
         return results.length;
 	}
 
-	public int create(DataPayload data) throws ResourceException {
+	public int create(DataPayload data) throws TranslatorException {
 		SObject toCreate = new SObject();
 		toCreate.setType(data.getType());
 		for (DataPayload.Field field : data.getMessageElements()) {
@@ -382,20 +383,20 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		try {
 			result = partnerConnection.create(objects);
 		} catch (InvalidFieldFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (InvalidSObjectFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (InvalidIdFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (UnexpectedErrorFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (ConnectionException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 		return analyzeResult(result);
 	}
 
-	public int update(List<DataPayload> updateDataList) throws ResourceException {
+	public int update(List<DataPayload> updateDataList) throws TranslatorException {
 		List<SObject> params = new ArrayList<SObject>(updateDataList.size());
 		for(int i = 0; i < updateDataList.size(); i++) {
 			DataPayload data = updateDataList.get(i);
@@ -411,38 +412,38 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			try {
 				result = partnerConnection.update(params.toArray(new SObject[params.size()]));
 			} catch (InvalidFieldFault e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			} catch (InvalidSObjectFault e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			} catch (InvalidIdFault e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			} catch (UnexpectedErrorFault e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			} catch (ConnectionException e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			}
 		return analyzeResult(result);
 	}
 	
-	private int analyzeResult(SaveResult[] results) throws ResourceException {
+	private int analyzeResult(SaveResult[] results) throws TranslatorException {
 		for (SaveResult result : results) {
 			if(!result.isSuccess()) {
-				throw new ResourceException(result.getErrors()[0].getMessage());
+				throw new TranslatorException(result.getErrors()[0].getMessage());
 			}
 		}
 		return results.length;
 	}
 
-	public UpdatedResult getUpdated(String objectType, Calendar startDate, Calendar endDate) throws ResourceException {
+	public UpdatedResult getUpdated(String objectType, Calendar startDate, Calendar endDate) throws TranslatorException {
 			GetUpdatedResult updated;
 			try {
 				updated = partnerConnection.getUpdated(objectType, startDate, endDate);
 			} catch (InvalidSObjectFault e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			} catch (UnexpectedErrorFault e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			} catch (ConnectionException e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			}
 			UpdatedResult result = new UpdatedResult(); 
 			result.setLatestDateCovered(updated.getLatestDateCovered());
@@ -451,16 +452,16 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 
 	public DeletedResult getDeleted(String objectName, Calendar startCalendar,
-			Calendar endCalendar) throws ResourceException {
+			Calendar endCalendar) throws TranslatorException {
 			GetDeletedResult deleted;
 			try {
 				deleted = partnerConnection.getDeleted(objectName, startCalendar, endCalendar);
 			} catch (InvalidSObjectFault e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			} catch (UnexpectedErrorFault e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			} catch (ConnectionException e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			}
 			DeletedResult result = new DeletedResult();
 			result.setLatestDateCovered(deleted.getLatestDateCovered());
@@ -479,44 +480,44 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			return result;
 	}
 	
-	public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException {
+	public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException {
 		try {
 			return partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
 		} catch (InvalidFieldFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (MalformedQueryFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (InvalidSObjectFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (InvalidIdFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (UnexpectedErrorFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (ConnectionException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 		
 	}
 
-	public DescribeGlobalResult getObjects() throws ResourceException {
+	public DescribeGlobalResult getObjects() throws TranslatorException {
 		try {
 			return partnerConnection.describeGlobal();
 		} catch (UnexpectedErrorFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (ConnectionException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 	}
 
-	public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws ResourceException {
+	public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws TranslatorException {
 		try {
 			return partnerConnection.describeSObjects(objectName);
 		} catch (InvalidSObjectFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (UnexpectedErrorFault e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		} catch (ConnectionException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 	}
 
@@ -531,7 +532,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 
 	@Override
-	public JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws ResourceException {
+	public JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws TranslatorException {
         try {
 			JobInfo job = new JobInfo();
 			job.setObject(objectName);
@@ -551,33 +552,33 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			}
 			return info;
 		} catch (AsyncApiException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 	}
 
 	@Override
-	public String addBatch(List<com.sforce.async.SObject> payload, JobInfo job) throws ResourceException {
+	public String addBatch(List<com.sforce.async.SObject> payload, JobInfo job) throws TranslatorException {
 		try {
 			BatchRequest request = this.bulkConnection.createBatch(job);
 			request.addSObjects(payload.toArray(new com.sforce.async.SObject[payload.size()]));
 			return request.completeRequest().getId();
 		} catch (AsyncApiException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 	}
 	
 	@Override
-	public BatchResultInfo addBatch(String query, JobInfo job) throws ResourceException {
+	public BatchResultInfo addBatch(String query, JobInfo job) throws TranslatorException {
 		try {
 			BatchInfo batch = this.bulkConnection.createBatchFromStream(job, new ByteArrayInputStream(query.getBytes(Charset.forName("UTF-8")))); //$NON-NLS-1$
 			return new BatchResultInfo(batch.getId());
 		} catch (AsyncApiException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 	}
 	
 	@Override
-	public BulkBatchResult getBatchQueryResults(String jobId, BatchResultInfo info) throws ResourceException {
+	public BulkBatchResult getBatchQueryResults(String jobId, BatchResultInfo info) throws TranslatorException {
 		if (info.getResultList() == null && info.getPkBatches() == null) {
 			try {
 				BatchInfo batch = this.bulkConnection.getBatchInfo(jobId, info.getBatchId());
@@ -587,7 +588,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
     				    // we don't know, then we'll explicitly check
     				    JobInfo jobStatus = this.bulkConnection.getJobStatus(jobId);
     				    if (jobStatus.getState() == JobStateEnum.Aborted) {
-                            throw new ResourceException(JobStateEnum.Aborted.name());
+                            throw new TranslatorException(JobStateEnum.Aborted.name());
                         }
     				    BatchInfoList batchInfoList = this.bulkConnection.getBatchInfoList(jobId);
     				    LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Pk chunk batches", batchInfoList); //$NON-NLS-1$
@@ -602,7 +603,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
     		                switch (batchInfoItem.getState()) {
     		                case Failed:
     		                case NotProcessed:
-                                throw new ResourceException(batchInfoItem.getStateMessage());
+                                throw new TranslatorException(batchInfoItem.getStateMessage());
     		                case Completed:
     		                    anyComplete = true;
 		                    default:
@@ -624,10 +625,10 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 				    case Queued:
                     throwDataNotAvailable(info);
 	                 default:
-	                    throw new ResourceException(batch.getStateMessage());
+	                    throw new TranslatorException(batch.getStateMessage());
 				}
 			} catch (AsyncApiException e) {
-				throw new ResourceException(e);
+				throw new TranslatorException(e);
 			}
 		}
 		try {
@@ -642,7 +643,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		    info.resetWaitCount();
 		    return result;
 		} catch (AsyncApiException e) {
-		    throw new ResourceException(e);
+		    throw new TranslatorException(e);
 		}
 	}
 
@@ -653,7 +654,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
     }
 
     private void getNextPkChunkResultList(String jobId,
-            BatchResultInfo info) throws AsyncApiException, ResourceException {
+            BatchResultInfo info) throws AsyncApiException, TranslatorException {
         Map<String, BatchInfo> batches = info.getPkBatches();
         if (batches.isEmpty()) {
             return; //terminal condition
@@ -681,7 +682,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
             switch (bi.getState()) {
             case Failed:
             case NotProcessed:
-                throw new ResourceException(bi.getStateMessage());
+                throw new TranslatorException(bi.getStateMessage());
             case Completed:
                 if (completedId == null) {
                     completedId = bi.getId();
@@ -728,16 +729,16 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
     }
 
 	@Override 
-	public JobInfo closeJob(String jobId) throws ResourceException {
+	public JobInfo closeJob(String jobId) throws TranslatorException {
 		try {
 			return this.bulkConnection.closeJob(jobId);
 		} catch (AsyncApiException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 	}
 
 	@Override
-	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws ResourceException {
+	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws TranslatorException {
 		try {
 			JobInfo info = this.bulkConnection.getJobStatus(job.getId());
 			if (info.getNumberBatchesTotal() != info.getNumberBatchesFailed() + info.getNumberBatchesCompleted()) {
@@ -749,16 +750,16 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			}
 			return results;
 		} catch (AsyncApiException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 	}
 	
 	@Override
-	public void cancelBulkJob(JobInfo job) throws ResourceException {
+	public void cancelBulkJob(JobInfo job) throws TranslatorException {
 		try {
 			this.bulkConnection.abortJob(job.getId());
 		} catch (AsyncApiException e) {
-			throw new ResourceException(e);
+			throw new TranslatorException(e);
 		}
 	}	
 	

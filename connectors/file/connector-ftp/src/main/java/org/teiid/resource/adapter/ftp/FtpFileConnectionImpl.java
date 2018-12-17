@@ -20,6 +20,7 @@ package org.teiid.resource.adapter.ftp;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Map;
 
@@ -30,10 +31,65 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.core.BundleUtil;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.translator.TranslatorException;
 
 public class FtpFileConnectionImpl extends BasicConnection implements VirtualFileConnection {
+    
+    static class JBossVirtualFile implements org.teiid.file.VirtualFile {
+
+        private VirtualFile file;
+        
+        public JBossVirtualFile(VirtualFile file) {
+            this.file = file;
+        }
+        
+        @Override
+        public String getName() {
+            return file.getName();
+        }
+
+        @Override
+        public InputStreamFactory createInputStreamFactory() {
+            return new InputStreamFactory() {
+                
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return file.openStream();
+                }
+            };
+        }
+
+        @Override
+        public InputStream openInputStream(boolean lock) throws IOException {
+            //locking not supported
+            return file.openStream();
+        }
+
+        @Override
+        public OutputStream openOutputStream(boolean lock) throws IOException {
+            throw new IOException("not supported"); //$NON-NLS-1$
+        }
+
+        @Override
+        public long getLastModified() {
+            return file.getLastModified();
+        }
+
+        @Override
+        public long getCreationTime() {
+            //not supported through vfs
+            return file.getLastModified();
+        }
+
+        @Override
+        public long getSize() {
+            return file.getSize();
+        }
+        
+    }
     
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(FtpFileConnectionImpl.class);
     
@@ -73,16 +129,16 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
     }
 
     @Override
-    public VirtualFile[] getFiles(String pattern) throws ResourceException {
-        if(this.getFile(pattern).exists()) {
-            return new VirtualFile[]{this.getFile(pattern)};
+    public org.teiid.file.VirtualFile[] getFiles(String pattern) {
+        VirtualFile file = this.getFile(pattern);
+        if(file.exists()) {
+            return new org.teiid.file.VirtualFile[]{new JBossVirtualFile(file)};
         }
         
-        throw new ResourceException("Can not open multiple ftp stream based file in one connection"); //$NON-NLS-1$ 
+        return null; 
     }
-
-    @Override
-    public VirtualFile getFile(String path) throws ResourceException {
+    
+    public VirtualFile getFile(String path) {
         if(path == null) {
             return this.mountPoint;
         }
@@ -94,16 +150,16 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
     }
 
     @Override
-    public boolean add(InputStream in, VirtualFile file) throws ResourceException {
+    public void add(InputStream in, String path) throws TranslatorException {
         try {
-            return this.client.storeFile(file.getName(), in);
+            this.client.storeFile(path, in);
         } catch (IOException e) {
-            throw new ResourceException(UTIL.getString("ftp_failed_write", file.getName(), this.client.getReplyString()), e); //$NON-NLS-1$
+            throw new TranslatorException(e, UTIL.getString("ftp_failed_write", path, this.client.getReplyString())); //$NON-NLS-1$
         }
     }
 
     @Override
-    public boolean remove(String path) throws ResourceException {
+    public boolean remove(String path) {
         return this.mountPoint.getChild(path).delete();
     }
     

@@ -11,12 +11,12 @@
     <description>The java API for the File</description>
     <dependencies>
         <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jboss-vfs</artifactId>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
         </dependency>   
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+        </dependency>
     </dependencies>    
 </project>

@@ -29,23 +29,24 @@ import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.file.JavaVirtualFile;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestExcelExecution {
 
-    static ArrayList helpExecute(String ddl, FileConnection connection, String query) throws Exception {
+    static ArrayList helpExecute(String ddl, VirtualFileConnection connection, String query) throws Exception {
         return helpExecute(ddl, connection, query, false);
     }
     
-    static ArrayList helpExecute(String ddl, FileConnection connection, String query, boolean format) throws Exception {
+    static ArrayList helpExecute(String ddl, VirtualFileConnection connection, String query, boolean format) throws Exception {
 		ExcelExecutionFactory translator = new ExcelExecutionFactory();
 		translator.setFormatStrings(format);
     	translator.start();
@@ -84,32 +85,12 @@ public class TestExcelExecution {
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
 				") OPTIONS (\"teiid_excel:FILE\" 'names.xls');";
 
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
     	assertEquals("[[13, FirstName, LastName, Age], [14, John, Doe, 44.0], [15, Jane, Smith, 40.0], [16, Matt, Liek, 13.0], [17, Sarah, Byne, 10.0], [18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
 	}
-	
-    @Test
-    public void testFileGlob() throws Exception {
-        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" + 
-                "   ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" + 
-                "   column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" + 
-                "   column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" + 
-                "   column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" + 
-                "   CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-                ") OPTIONS (\"teiid_excel:FILE\" '*.xls');";
-
-        FileConnection connection = Mockito.mock(FileConnection.class);
-        File f = Mockito.mock(File.class);
-        Mockito.stub(f.isDirectory()).toReturn(true);
-        Mockito.stub(f.listFiles()).toReturn(new File[] {UnitTestUtil.getTestDataFile("names.xls")});
-        Mockito.stub(connection.getFile("*.xls")).toReturn(f);
-        
-        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-        assertEquals("[[13, FirstName, LastName, Age], [14, John, Doe, 44.0], [15, Jane, Smith, 40.0], [16, Matt, Liek, 13.0], [17, Sarah, Byne, 10.0], [18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
-    }	
 	
 	@Test
 	public void testExecutionNoDataNumberXLSX() throws Exception {
@@ -121,8 +102,8 @@ public class TestExcelExecution {
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
 				") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx');";
 
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xlsx")).toReturn(UnitTestUtil.getTestDataFile("names.xlsx"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xlsx")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
     	assertEquals("[[1, FirstName, LastName, Age], [2, John, Doe, null], [3, Jane, Smith, 40.0], [4, Matt, Liek, 13.0], [5, Sarah, Byne, 10.0], [6, Rocky, Dog, 3.0]]", results.toString());
@@ -134,8 +115,8 @@ public class TestExcelExecution {
 				"	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1')\n" + 
 				") OPTIONS (\"teiid_excel:FILE\" '3219.xlsx');";
 
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("3219.xlsx")).toReturn(UnitTestUtil.getTestDataFile("3219.xlsx"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("3219.xlsx")).toReturn(JavaVirtualFile.getFiles("3219.xlsx", new File(UnitTestUtil.getTestDataPath(), "3219.xlsx")));
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
     	assertEquals(results.size(), 7);
@@ -156,8 +137,8 @@ public class TestExcelExecution {
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
 				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'empty-ignore.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
 
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("empty-ignore.xls")).toReturn(UnitTestUtil.getTestDataFile("empty-ignore.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("empty-ignore.xls")).toReturn(JavaVirtualFile.getFiles("empty-ignore.xls", new File(UnitTestUtil.getTestDataPath(), "empty-ignore.xls")));
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
     	assertEquals(6, results.size());
@@ -172,8 +153,8 @@ public class TestExcelExecution {
 				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2')\n" + 
 				") OPTIONS (\"teiid_excel:FILE\" '3219.xlsx');";
 
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("3219.xlsx")).toReturn(UnitTestUtil.getTestDataFile("3219.xlsx"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("3219.xlsx")).toReturn(JavaVirtualFile.getFiles("3219.xlsx", new File(UnitTestUtil.getTestDataPath(), "3219.xlsx")));
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
     	assertEquals(results.size(), 7);
@@ -189,8 +170,8 @@ public class TestExcelExecution {
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
 				") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '18');";
 
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
     	assertEquals("[[18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
@@ -209,8 +190,8 @@ public class TestExcelExecution {
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
 				") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '6');";
 
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xlsx")).toReturn(UnitTestUtil.getTestDataFile("names.xlsx"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xlsx")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
     	assertEquals("[[6, Rocky, Dog, 3.0]]", results.toString());
@@ -226,8 +207,8 @@ public class TestExcelExecution {
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
 				") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '18');";
 
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
     	assertEquals("[[18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
@@ -244,8 +225,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testExecutionEquals() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID=16");
     	assertEquals("[[Matt]]", results.toString());
@@ -253,8 +234,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testExecutionGT() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID>16");
     	assertEquals("[[Sarah], [Rocky], [Total]]", results.toString());
@@ -262,8 +243,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testExecutionGE() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID>=16");
     	assertEquals("[[Matt], [Sarah], [Rocky], [Total]]", results.toString());
@@ -271,8 +252,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testExecutionLT() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID < 16");
     	assertEquals("[[John], [Jane]]", results.toString());
@@ -280,8 +261,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testExecutionLE() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID <= 16");
     	assertEquals("[[John], [Jane], [Matt]]", results.toString());
@@ -289,8 +270,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testExecutionNE() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID != 16");
     	assertEquals("[[John], [Jane], [Sarah], [Rocky], [Total]]", results.toString());
@@ -298,8 +279,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testExecutionLimit() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 3,1");
     	assertEquals("[[Sarah]]", results.toString());
@@ -307,8 +288,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testExecutionLimit2() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 1");
     	assertEquals("[[John]]", results.toString());
@@ -316,8 +297,8 @@ public class TestExcelExecution {
 
 	@Test
 	public void testExecutionAnd() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID > 16 and ROW_ID < 18");
     	assertEquals("[[Sarah]]", results.toString());
@@ -325,8 +306,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testExecutionIN() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID IN (13, 18)");
     	assertEquals("[[John], [Total]]", results.toString());
@@ -334,8 +315,8 @@ public class TestExcelExecution {
 	
     @Test
     public void testStartBeyondRows() throws Exception {
-        FileConnection connection = Mockito.mock(FileConnection.class);
-        Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xlsx"));
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
 
         ArrayList results = helpExecute(commonDDL, connection, "select * from Sheet1");
         //typed as time
@@ -344,8 +325,8 @@ public class TestExcelExecution {
 	
 	@Test
 	public void testTime() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xlsx"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
 
     	String ddl = commonDDL.replace("14", "6");
         ArrayList results = helpExecute(ddl, connection, "select \"time\" from Sheet1");
@@ -372,8 +353,8 @@ public class TestExcelExecution {
 	
 	@Test(expected=TranslatorException.class)
 	public void testExecutionNoFile() throws Exception {
-    	FileConnection connection = Mockito.mock(FileConnection.class);
-    	Mockito.stub(connection.getFile("names.xls")).toReturn(new File("does not exist"));
+    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+    	Mockito.stub(connection.getFiles("names.xlsx")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File("does not exist")));
 
     	helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID != 16");
 	}	

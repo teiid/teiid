@@ -17,8 +17,16 @@
             <artifactId>teiid-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>file-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-resource-spi</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.spec.javax.resource</groupId>

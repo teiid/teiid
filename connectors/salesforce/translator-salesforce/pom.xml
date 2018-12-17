@@ -53,10 +53,6 @@
 			<groupId>com.force.api</groupId>
 			<artifactId>force-wsc</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.spec.javax.resource</groupId>
-			<artifactId>jboss-connector-api_1.7_spec</artifactId>
-		</dependency>
 	</dependencies>
 
 	<build>

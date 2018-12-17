@@ -22,10 +22,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
-import javax.resource.cci.ConnectionFactory;
-
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
@@ -44,6 +40,8 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.resource.api.Connection;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.translator.CacheDirective.Scope;
 import org.teiid.translator.TypeFacility.RUNTIME_CODES;
 import org.teiid.translator.TypeFacility.RUNTIME_NAMES;
@@ -178,7 +176,7 @@ public class ExecutionFactory<F, C> {
 		if (factory instanceof ConnectionFactory) {
 			try {
 				return (C) ((ConnectionFactory)factory).getConnection();
-			} catch (ResourceException e) {
+			} catch (Exception e) {
 				 throw new TranslatorException(DataPlugin.Event.TEIID60000, e);
 			}
 		}
@@ -217,7 +215,7 @@ public class ExecutionFactory<F, C> {
 		if (connection instanceof Connection) {
 			try {
 				((Connection)connection).close();
-			} catch (ResourceException e) {
+			} catch (Exception e) {
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Error closing"); //$NON-NLS-1$
 			}
 			return;

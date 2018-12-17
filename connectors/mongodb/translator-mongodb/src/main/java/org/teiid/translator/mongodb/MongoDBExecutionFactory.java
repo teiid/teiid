@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.bson.types.Binary;
 import org.teiid.core.types.BinaryType;

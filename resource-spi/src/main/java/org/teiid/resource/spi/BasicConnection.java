@@ -26,7 +26,7 @@ import javax.resource.cci.ResultSetInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
 
-public abstract class BasicConnection implements Connection {
+public abstract class BasicConnection implements Connection, org.teiid.resource.api.Connection {
 
 	@Override
 	public Interaction createInteraction() throws ResourceException {

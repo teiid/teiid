@@ -20,7 +20,7 @@ package org.teiid.translator.amazon.s3;
 
 import java.nio.charset.Charset;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
 import org.teiid.core.types.DataTypeManager;

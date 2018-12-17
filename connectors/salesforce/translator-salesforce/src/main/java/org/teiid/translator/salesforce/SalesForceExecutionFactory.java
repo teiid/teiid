@@ -23,7 +23,7 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Call;

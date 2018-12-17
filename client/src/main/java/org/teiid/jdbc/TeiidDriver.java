@@ -29,8 +29,10 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.teiid.core.TeiidException;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.jdbc.JDBCURL.ConnectionType;
 import org.teiid.net.TeiidURL;
 
@@ -88,20 +90,21 @@ public class TeiidDriver implements Driver {
         
         ConnectionImpl myConnection = null;
 
+        ConnectionProfile cp = socketProfile;
+        if (conn == ConnectionType.Embedded) {
+            if (localProfile == null) {
+                try {
+                    localProfile = (ConnectionProfile) ReflectionHelper.create(
+                            "org.teiid.jdbc.jboss.ModuleLocalProfile", null, //$NON-NLS-1$
+                            getClass().getClassLoader());
+                } catch (TeiidException e) {
+                    throw TeiidSQLException.create(e, JDBCPlugin.Util.gs("module_load_failed"));//$NON-NLS-1$
+                }
+            }
+            cp = localProfile;
+        }
         try {
-        	if (conn == ConnectionType.Embedded) {
-        		if (localProfile == null) {
-        			try {
-        				getClass().getClassLoader().loadClass("org.jboss.modules.Module"); //$NON-NLS-1$
-        			} catch(ClassNotFoundException e) {
-        			    logger.warning(JDBCPlugin.Util.gs("module_load_failed"));//$NON-NLS-1$
-        			}
-        			localProfile = new LocalProfile();
-        		}
-        		myConnection = localProfile.connect(url, info);
-        	} else { 
-        		myConnection = socketProfile.connect(url, info);
-        	}
+            myConnection = cp.connect(url, info);
         } catch (TeiidSQLException e) {
             logger.log(Level.FINE, "Could not create connection", e); //$NON-NLS-1$
             throw TeiidSQLException.create(e, e.getMessage());

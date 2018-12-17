@@ -71,7 +71,6 @@ public class TestEmbeddedMongoExecution {
     
     @After
     public void afterTest() throws Exception {
-        this.connection.close();
         this.client.close();        
     }
 

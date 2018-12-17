@@ -28,8 +28,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.resource.ResourceException;
-
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.logging.LogConstants;
@@ -77,19 +75,15 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29009));
         }
         
-        try {
-            List<String> keyspaces = loadKeyspaces(conn);
-            for(String keyspace : keyspaces) {
-                addTable(mf, conn, conn.getNamespace(), keyspace);  
-            }
-        } catch (ResourceException e) {
-            throw new TranslatorException(e);
+        List<String> keyspaces = loadKeyspaces(conn);
+        for(String keyspace : keyspaces) {
+            addTable(mf, conn, conn.getNamespace(), keyspace);  
         }
        
         addProcedures(mf, conn);
     }
 
-    private List<String> loadKeyspaces(CouchbaseConnection conn) throws ResourceException {
+    private List<String> loadKeyspaces(CouchbaseConnection conn) throws TranslatorException {
         
         String namespace = conn.getNamespace();
         
@@ -147,9 +141,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
      * @param conn - CouchbaseConnection
      * @param namespace - couchbase namespace
      * @param keyspace - couchbase  keyspace
-     * @throws ResourceException 
+     * @throws TranslatorException 
      */
-    private void addTable(MetadataFactory mf, CouchbaseConnection conn, String namespace, String keyspace) throws ResourceException {
+    private void addTable(MetadataFactory mf, CouchbaseConnection conn, String namespace, String keyspace) throws TranslatorException {
         
         String nameInSource = nameInSource(keyspace);
         

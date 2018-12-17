@@ -17,8 +17,6 @@
  */
 package org.teiid.translator.salesforce.execution;
 
-import javax.resource.ResourceException;
-
 import org.teiid.language.Command;
 import org.teiid.language.Delete;
 import org.teiid.metadata.RuntimeMetadata;
@@ -48,7 +46,7 @@ public class DeleteExecutionImpl extends AbstractUpdateExecution {
 	
 	@Override
 	protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
-	        throws ResourceException {
+	        throws TranslatorException {
 	    return getConnection().delete(ids);
 	}
 }

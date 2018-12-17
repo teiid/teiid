@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.resource.ResourceException;
-
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogConstants;
@@ -63,12 +61,7 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, n1ql));
 		executionContext.logCommand(n1ql);
 				
-		N1qlQueryResult queryResult;
-        try {
-            queryResult = connection.execute(n1ql);
-        } catch (ResourceException e) {
-            throw new TranslatorException(e);
-        }
+		N1qlQueryResult queryResult = connection.execute(n1ql);
 		this.results = queryResult.iterator();
 	}
 

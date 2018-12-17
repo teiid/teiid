@@ -33,7 +33,15 @@
         </dependency>
         <dependency>
             <groupId>org.teiid</groupId>
+            <artifactId>teiid-resource-spi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-jboss-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.teiid</groupId>
