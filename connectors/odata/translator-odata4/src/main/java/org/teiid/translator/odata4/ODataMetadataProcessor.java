@@ -33,8 +33,8 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.ws.WSConnection;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.WSConnection;
 import org.teiid.util.FullyQualifiedName;
 
 public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {

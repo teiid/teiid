@@ -43,7 +43,6 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.WSConnection;
 
 @Translator(name="ws", description="A translator for making Web Service calls")
 public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {

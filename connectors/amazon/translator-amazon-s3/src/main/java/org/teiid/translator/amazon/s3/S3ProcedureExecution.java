@@ -59,8 +59,8 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
+import org.teiid.translator.ws.WSConnection;
 
 public class S3ProcedureExecution implements ProcedureExecution {
 	private final Call command;

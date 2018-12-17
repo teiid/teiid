@@ -32,10 +32,5 @@
       <scope>test</scope>
     </dependency>
         
-    <dependency>
-        <groupId>org.jboss.spec.javax.xml.ws</groupId>
-        <artifactId>jboss-jaxws-api_2.3_spec</artifactId>
-    </dependency>
-    
   </dependencies>
 </project>

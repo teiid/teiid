@@ -49,10 +49,10 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.WSConnection;
 import org.teiid.translator.odata4.ODataUpdateExecution.EntityCollectionIterator.NotSupportedAccepts;
 import org.teiid.translator.odata4.ODataUpdateVisitor.OperationType;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
+import org.teiid.translator.ws.WSConnection;
 
 public class ODataUpdateExecution extends BaseQueryExecution implements UpdateExecution {
     private ODataUpdateVisitor visitor;

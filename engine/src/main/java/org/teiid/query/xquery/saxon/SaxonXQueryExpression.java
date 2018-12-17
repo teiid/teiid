@@ -55,7 +55,7 @@ import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.query.util.CommandContext;
-import org.teiid.translator.WSConnection.Util;
+import org.teiid.util.WSUtil;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.expr.ContextItemExpression;
@@ -111,7 +111,7 @@ public class SaxonXQueryExpression implements Cloneable {
 		
 		public void close() {
 			for (Source source : sources) {
-				Util.closeSource(source);
+				WSUtil.closeSource(source);
 				if (source instanceof StAXSource) {
 					StAXSource ss = (StAXSource)source;
 					if (ss.getXMLEventReader() != null) {

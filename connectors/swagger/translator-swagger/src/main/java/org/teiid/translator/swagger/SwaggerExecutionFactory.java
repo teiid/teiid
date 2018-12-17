@@ -31,7 +31,7 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
+import org.teiid.translator.ws.WSConnection;
 
 @Translator(name="swagger", description="A translator for making swagger based data service call")
 public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {

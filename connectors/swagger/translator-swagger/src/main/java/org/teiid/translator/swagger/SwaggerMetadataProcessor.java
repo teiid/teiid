@@ -42,8 +42,8 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
-import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
+import org.teiid.translator.ws.WSConnection;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -32,7 +32,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
+import org.teiid.util.WSUtil;
 
 public class ODataProcedureVisitor extends HierarchyVisitor {
 	protected ODataExecutionFactory executionFactory;
@@ -73,10 +73,10 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
                     if (i != 0) {
                         this.buffer.append("&"); //$NON-NLS-1$
                     }
-                    this.buffer.append(WSConnection.Util.httpURLEncode(param.getMetadataObject().getName()));
+                    this.buffer.append(WSUtil.httpURLEncode(param.getMetadataObject().getName()));
                     this.buffer.append(Tokens.EQ);
                     this.executionFactory.convertToODataInput(param.getArgumentValue(), temp);
-                    this.buffer.append(WSConnection.Util.httpURLEncode(temp.toString()));
+                    this.buffer.append(WSUtil.httpURLEncode(temp.toString()));
                     temp.setLength(0);
                 }
             }

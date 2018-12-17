@@ -39,7 +39,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.WSConnection;
+import org.teiid.translator.ws.WSConnection;
 
 @Translator(name="amazon-s3", description="Amazon S3 Translator, reads contents of files or writes to them")
 public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {

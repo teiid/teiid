@@ -53,6 +53,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.ws.WSConnection;
 
 /**
  * TODO:

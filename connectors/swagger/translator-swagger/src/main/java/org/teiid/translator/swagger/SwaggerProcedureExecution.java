@@ -46,8 +46,9 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
+import org.teiid.translator.ws.WSConnection;
+import org.teiid.util.WSUtil;
 
 public class SwaggerProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
     private Object returnValue;
@@ -90,7 +91,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
             for (int i = 0; i < params.size(); i++) {
                 param = params.get(i);
                 ProcedureParameter metadata = param.getMetadataObject();
-                String argName = WSConnection.Util.httpURLEncode(param.getMetadataObject().getName());
+                String argName = WSUtil.httpURLEncode(param.getMetadataObject().getName());
                 if (param.getDirection() == Direction.IN || param.getDirection() == Direction.INOUT) {
                     String in = metadata.getProperty(RestMetadataExtension.PARAMETER_TYPE, false);
                     if (in.equalsIgnoreCase(RestMetadataExtension.ParameterType.QUERY.name())) {
@@ -183,7 +184,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
         if (value.getValue() == null) {
             throw new TeiidRuntimeException("Null is not supported"); //$NON-NLS-1$
         }
-        return WSConnection.Util.httpURLEncode(value.getValue().toString());
+        return WSUtil.httpURLEncode(value.getValue().toString());
     }
     
     private void addArgumentValue(String argName, Array value, String collectionFormat,

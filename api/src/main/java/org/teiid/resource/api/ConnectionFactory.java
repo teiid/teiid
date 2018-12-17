@@ -18,8 +18,8 @@
 
 package org.teiid.resource.api;
 
-public interface ConnectionFactory {
+public interface ConnectionFactory<T extends Connection> {
 
-    public Connection getConnection() throws Exception;
+    public T getConnection() throws Exception;
 
 }

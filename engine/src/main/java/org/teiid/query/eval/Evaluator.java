@@ -71,7 +71,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.WSConnection.Util;
+import org.teiid.util.WSUtil;
 
 public class Evaluator {
 
@@ -929,7 +929,7 @@ public class Evaluator {
 				result.append('&');
 			}
 			appendedAny = true;
-			result.append(Util.httpURLEncode(nameValuePair.name)).append('=').append(Util.httpURLEncode((String)nameValuePair.value));
+			result.append(WSUtil.httpURLEncode(nameValuePair.name)).append('=').append(WSUtil.httpURLEncode((String)nameValuePair.value));
 		}
 		if (!appendedAny) {
 			return path;

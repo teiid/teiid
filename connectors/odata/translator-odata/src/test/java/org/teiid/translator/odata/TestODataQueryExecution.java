@@ -65,7 +65,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
+import org.teiid.translator.ws.WSConnection;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataQueryExecution {

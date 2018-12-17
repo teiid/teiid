@@ -56,8 +56,8 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
 import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
+import org.teiid.translator.ws.WSConnection;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataMetadataProcessor {

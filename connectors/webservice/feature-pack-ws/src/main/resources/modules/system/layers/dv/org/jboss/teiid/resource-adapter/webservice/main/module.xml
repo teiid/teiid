@@ -17,6 +17,7 @@
         <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
+        <module name="org.jboss.teiid.translator.ws" />
         <module name="javax.jws.api" />
         <module name="org.apache.cxf" />
         <module name="org.apache.cxf.impl" />

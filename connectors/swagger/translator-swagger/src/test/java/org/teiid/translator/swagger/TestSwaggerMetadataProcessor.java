@@ -46,7 +46,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
+import org.teiid.translator.ws.WSConnection;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

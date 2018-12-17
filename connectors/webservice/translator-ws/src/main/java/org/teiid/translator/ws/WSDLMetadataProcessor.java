@@ -52,7 +52,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.WSExecutionFactory.Event;
 
 public class WSDLMetadataProcessor implements MetadataProcessor<WSConnection> {

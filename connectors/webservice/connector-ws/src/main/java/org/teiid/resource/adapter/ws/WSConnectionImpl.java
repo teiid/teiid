@@ -72,7 +72,8 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.ConnectionContext;
-import org.teiid.translator.WSConnection;
+import org.teiid.translator.ws.WSConnection;
+import org.teiid.util.WSUtil;
 
 /**
  * WebService connection implementation.
@@ -312,7 +313,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 					endpoint = defaultEndpoint + "/" + endpoint; //$NON-NLS-1$
 				}
 				if ((defaultQueryString != null) && (defaultQueryString.trim().length() > 0)) {
-					endpoint = WSConnection.Util.appendQueryString(endpoint, defaultQueryString);
+					endpoint = WSUtil.appendQueryString(endpoint, defaultQueryString);
 				}
 				if ((defaultFragment != null) && (endpoint.indexOf('#') < 0)) {
 					endpoint = endpoint + '#' + defaultFragment;

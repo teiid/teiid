@@ -81,10 +81,10 @@ import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
-import org.teiid.translator.WSConnection.Util;
 import org.teiid.util.CharsetUtils;
 import org.teiid.util.StAXSQLXML;
 import org.teiid.util.StAXSQLXML.StAXSourceProvider;
+import org.teiid.util.WSUtil;
 
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NameChecker;
@@ -454,8 +454,8 @@ public class XMLSystemFunctions {
 			}, context);
 			return new ClobType(new ClobImpl(result.getStreamFactory(), -1));
 		} finally {
-			Util.closeSource(styleSource);
-			Util.closeSource(xmlSource);
+			WSUtil.closeSource(styleSource);
+			WSUtil.closeSource(xmlSource);
 		}
     }
 
@@ -846,7 +846,7 @@ public class XMLSystemFunctions {
             // Return string representation of non-node value
             return o.toString();
         } finally {
-        	Util.closeSource(s);
+        	WSUtil.closeSource(s);
         }
     }
     

@@ -57,7 +57,7 @@ import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.WSConnection;
+import org.teiid.translator.ws.WSConnection;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataQueryExecution {

@@ -54,7 +54,6 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
 
 /**
  * http handler

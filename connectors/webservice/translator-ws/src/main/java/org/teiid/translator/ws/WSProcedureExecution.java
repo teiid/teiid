@@ -55,10 +55,9 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
-import org.teiid.translator.WSConnection.Util;
 import org.teiid.translator.ws.WSExecutionFactory.Binding;
 import org.teiid.util.StAXSQLXML;
+import org.teiid.util.WSUtil;
 
 /**
  * A soap call executor - handles all styles doc/literal, rpc/encoded etc. 
@@ -126,8 +125,8 @@ public class WSProcedureExecution implements ProcedureExecution {
 						StringWriter writer = new StringWriter();
 						//TODO: prevent this from being too large 
 				        t.transform(source, new StreamResult(writer));
-						String param = Util.httpURLEncode(this.executionFactory.getXMLParamName())+"="+Util.httpURLEncode(writer.toString()); //$NON-NLS-1$
-						endpoint = WSConnection.Util.appendQueryString(endpoint, param);
+						String param = WSUtil.httpURLEncode(this.executionFactory.getXMLParamName())+"="+WSUtil.httpURLEncode(writer.toString()); //$NON-NLS-1$
+						endpoint = WSUtil.appendQueryString(endpoint, param);
 					} catch (TransformerException e) {
 						throw new WebServiceException(e);
 					}
@@ -151,7 +150,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 		} catch (XMLStreamException e) {
 			throw new TranslatorException(e);
 		} finally {
-			Util.closeSource(source);
+			WSUtil.closeSource(source);
 		}
     }
 

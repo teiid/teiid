@@ -36,8 +36,8 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
+import org.teiid.translator.ws.WSConnection;
 
 public class ODataQueryExecution extends BaseQueryExecution implements ResultSetExecution {
     

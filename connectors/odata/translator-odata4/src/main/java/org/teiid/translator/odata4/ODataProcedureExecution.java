@@ -39,9 +39,10 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
 import org.teiid.translator.document.DocumentNode;
 import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
+import org.teiid.translator.ws.WSConnection;
+import org.teiid.util.WSUtil;
 
 public class ODataProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
     private Object returnValue;
@@ -83,9 +84,9 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
                     if (i != 0) {
                         sb.append("&"); //$NON-NLS-1$
                     }
-                    sb.append(WSConnection.Util.httpURLEncode(param.getMetadataObject().getName()));
+                    sb.append(WSUtil.httpURLEncode(param.getMetadataObject().getName()));
                     sb.append(Tokens.EQ);
-                    sb.append(WSConnection.Util.httpURLEncode(ODataTypeManager.convertToODataURIValue(param.getArgumentValue().getValue(), 
+                    sb.append(WSUtil.httpURLEncode(ODataTypeManager.convertToODataURIValue(param.getArgumentValue().getValue(), 
                             ODataTypeManager.odataType(param.getType()).getFullQualifiedName()
                             .getFullQualifiedNameAsString())));
                 }

@@ -16,16 +16,12 @@
  * limitations under the License.
  */
 
-package org.teiid.translator;
+package org.teiid.translator.ws;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLEncoder;
 
 import javax.xml.namespace.QName;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
 
@@ -45,42 +41,6 @@ public interface WSConnection {
 	QName getServiceQName();
 	
 	QName getPortQName();
-
-	public static class Util {
-		
-		public static String appendQueryString(String endpoint, String param) {
-			return endpoint + (endpoint.indexOf('?') >= 0?'&':'?') + param;
-		}
-		
-	    public static String httpURLEncode(String s) {
-	        try {
-	            return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        } catch (UnsupportedEncodingException e) {
-	        	throw new RuntimeException(e);
-	        }
-	    }
-
-		public static void closeSource(final Source source) {
-			if (!(source instanceof StreamSource)) {
-				return;
-			}
-			
-			StreamSource stream = (StreamSource)source;
-			try {
-				if (stream.getInputStream() != null) {
-					stream.getInputStream().close();
-				}
-			} catch (IOException e) {
-			}
-			try {
-				if (stream.getReader() != null) {
-					stream.getReader().close();
-				}
-			} catch (IOException e) {
-			}
-		}
-		
-	}
 
 	String getStatusMessage(int status);
 	

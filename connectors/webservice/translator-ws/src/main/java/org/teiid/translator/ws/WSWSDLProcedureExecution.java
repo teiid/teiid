@@ -42,9 +42,8 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
-import org.teiid.translator.WSConnection.Util;
 import org.teiid.util.StAXSQLXML;
+import org.teiid.util.WSUtil;
 
 /**
  * A WSDL soap call executor 
@@ -99,7 +98,7 @@ public class WSWSDLProcedureExecution implements ProcedureExecution {
 		} catch (IOException e) {
 			throw new TranslatorException(e);
 		} finally {
-			Util.closeSource(source);
+			WSUtil.closeSource(source);
 		}
     }
 

@@ -41,7 +41,6 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.WSConnection;
 
 @SuppressWarnings("nls")
 public class TestWSTranslatorMetadata {

@@ -48,6 +48,7 @@ import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
+import org.teiid.translator.ws.WSConnection;
 
 /**
  * TODO:
