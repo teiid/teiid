@@ -25,6 +25,7 @@ import java.sql.SQLException;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 
 import org.junit.Test;
@@ -75,5 +76,14 @@ public class TestXAConnection {
 		}
 		Mockito.verify(cel).connectionErrorOccurred((ConnectionEvent) Mockito.anyObject());
 	}
+	
+	@Test(expected=XAException.class) public void testStartFailure() throws Exception {
+        ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+        XidImpl xid = new XidImpl();
+        Mockito.doThrow(new SQLException(new InvalidSessionException())).when(conn).startTransaction(xid, XAResource.TMNOFLAGS, 100);
+        XAConnectionImpl xaConn = new XAConnectionImpl(conn);
+        xaConn.setTransactionTimeout(100);
+        xaConn.start(xid, XAResource.TMNOFLAGS);
+    }
 
 }

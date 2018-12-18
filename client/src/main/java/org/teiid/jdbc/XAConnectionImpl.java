@@ -296,7 +296,7 @@ public class XAConnectionImpl implements XAConnection, XAResource {
 			getMMConnection().startTransaction(mmXid, flag, timeOut); 	
         }catch(SQLException e){
             String logMsg = JDBCPlugin.Util.getString("MMXAResource.FailedStartTXN", xid, new Integer(flag)); //$NON-NLS-1$
-            handleError(e, logMsg);
+            throw handleError(e, logMsg);
         }
     }
         

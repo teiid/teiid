@@ -233,7 +233,6 @@ public class TransactionServerImpl implements TransactionService {
 					     throw new XATransactionException(QueryPlugin.Event.TEIID30517, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
 					}
 					tc.setXid(xid);
-					tc.setTransactionType(TransactionContext.Scope.GLOBAL);
 					if (singleTM) {
 						tc.setTransaction(transactionManager.getTransaction());
 						if (tc.getTransaction() == null) {
@@ -246,6 +245,7 @@ public class TransactionServerImpl implements TransactionService {
 						Transaction txn = xaImporter.importTransaction(transactionManager, xid, timeout);
 						tc.setTransaction(txn);
 					}
+					tc.setTransactionType(TransactionContext.Scope.GLOBAL);
 				} catch (XAException e) {
 					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
 				} catch (SystemException e) {
@@ -542,9 +542,12 @@ public class TransactionServerImpl implements TransactionService {
         }
         
         try {
-            tc.getTransaction().setRollbackOnly();
+            Transaction t = tc.getTransaction();
+            if (t != null) {
+                t.setRollbackOnly();
+            }
 		} catch (SystemException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30541, e);
+			throw new XATransactionException(QueryPlugin.Event.TEIID30541, e);
 		}
     }
 
