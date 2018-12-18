@@ -21,45 +21,48 @@ package org.teiid.arquillian;
 import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
+import java.util.Random;
+
+import javax.sql.XAConnection;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
 
 import org.jboss.arquillian.junit.Arquillian;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.jboss.AdminFactory;
+import org.teiid.client.xa.XidImpl;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
+import org.teiid.jdbc.TeiidDataSource;
 import org.teiid.jdbc.TeiidDriver;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
 public class IntegrationTestTransactions extends AbstractMMQueryTestCase {
 
-	private Admin admin;
+	private static Admin admin;
 	
-	@Before
-	public void setup() throws Exception {
+	@BeforeClass
+	public static void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT,	"admin", "admin".toCharArray());
+		admin.deploy("txn-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("txn-vdb.xml")));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "txn", 1));
 	}
 	
-	@After
-	public void teardown() throws AdminException {
+	@AfterClass
+	public static void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
 		admin.close();
 	}
 
 	@Test
     public void testViewDefinition() throws Exception {
-				
-		admin.deploy("txn-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("txn-vdb.xml")));
-		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "txn", 1));
-		
-		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:txn@mm://localhost:31000;user=user;password=user", null);
-		
+	    this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:txn@mm://localhost:31000;user=user;password=user", null);
 		execute("create local temporary table temp (x integer)"); //$NON-NLS-1$
 		execute("call proc()");
 		execute("start transaction"); //$NON-NLS-1$
@@ -99,5 +102,34 @@ public class IntegrationTestTransactions extends AbstractMMQueryTestCase {
 		d = internalResultSet.getDouble(1);
 		assertEquals("Expected same after autoCommit", d, d2, 0);
     }
+	
+	@Test public void testXa() throws Exception {
+	    this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:txn@mm://localhost:31000;user=user;password=user", null);
+	    TeiidDataSource tds = new TeiidDataSource();
+        tds.setDatabaseName("txn");
+        tds.setServerName("localhost");
+        tds.setPortNumber(31000);
+        XAConnection xa = tds.getXAConnection("user", "user");
+        XAResource xar = xa.getXAResource();
+        xar.setTransactionTimeout(100);
+        byte[] gid = new byte[10];
+        byte[] bid = new byte[10];
+        Random r = new Random();
+        r.nextBytes(gid);
+        r.nextBytes(bid);
+        XidImpl xidImpl = new XidImpl(0, gid, bid);
+        
+        //sequence should succeed
+        xar.start(xidImpl, XAResource.TMNOFLAGS);
+        xar.end(xidImpl, XAResource.TMFAIL);
+        xar.rollback(xidImpl);
+        
+        try {
+            xar.start(new XidImpl(), XAResource.TMNOFLAGS);
+            fail("invalid xid should fail");
+        } catch (XAException e) {
+            
+        }
+	}
 
 }

@@ -244,7 +244,6 @@ public class TransactionServerImpl implements TransactionService {
 					}
 					tc.setTransactionTimeout(timeout);
 					tc.setXid(xid);
-					tc.setTransactionType(TransactionContext.Scope.GLOBAL);
 					if (singleTM) {
 						tc.setTransaction(transactionManager.getTransaction());
 						if (tc.getTransaction() == null) {
@@ -263,6 +262,7 @@ public class TransactionServerImpl implements TransactionService {
 						workManager.doWork(work, WorkManager.INDEFINITE, tc, null);
 						tc.setTransaction(work.get());
 					}
+					tc.setTransactionType(TransactionContext.Scope.GLOBAL);
 				} catch (NotSupportedException e) {
 					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
 				} catch (WorkException e) {
@@ -565,9 +565,12 @@ public class TransactionServerImpl implements TransactionService {
         }
         
         try {
-            tc.getTransaction().setRollbackOnly();
+            Transaction t = tc.getTransaction();
+            if (t != null) {
+                t.setRollbackOnly();
+            }
 		} catch (SystemException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30541, e);
+			throw new XATransactionException(QueryPlugin.Event.TEIID30541, e);
 		}
     }
 
