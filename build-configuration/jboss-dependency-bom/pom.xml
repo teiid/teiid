@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+        <artifactId>teiid-build-configuration-parent</artifactId>
+        <groupId>org.teiid</groupId>
+        <version>12.0.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+    <groupId>org.teiid</groupId>
+	<artifactId>teiid-jboss-bom</artifactId>
+	<packaging>pom</packaging>
+	<name>Teiid Inter-dedendency BOM</name>
+
+	<description>Teiid Inter-dependency Bom</description>
+	<dependencyManagement>
+		<dependencies>
+                        <!-- ====== -->            
+            <!-- Import the core parent to get all the managed dependencies from core -->
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-core-parent</artifactId>
+                <type>pom</type>
+                <version>${version.org.wildfly.core}</version>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+			    <groupId>org.wildfly</groupId>
+			    <artifactId>wildfly-parent</artifactId>
+                <type>pom</type>
+                <version>${version.org.wildfly}</version>
+                <scope>import</scope>			    
+            </dependency>
+            
+            <dependency>
+				<groupId>org.wildfly.core</groupId>
+				<artifactId>wildfly-controller</artifactId>
+				<version>${version.org.wildfly.core}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly.core</groupId>
+				<artifactId>wildfly-controller-client</artifactId>
+				<version>${version.org.wildfly.core}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly.core</groupId>
+				<artifactId>wildfly-server</artifactId>
+				<version>${version.org.wildfly.core}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly</groupId>
+				<artifactId>wildfly-naming</artifactId>
+				<version>${version.org.wildfly}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly</groupId>
+				<artifactId>wildfly-security</artifactId>
+				<version>${version.org.wildfly}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly</groupId>
+				<artifactId>wildfly-weld</artifactId>
+				<version>${version.org.wildfly}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.wildfly.arquillian</groupId>
+				<artifactId>wildfly-arquillian-common</artifactId>
+				<version>${version.org.wildfly.arquillian}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly.arquillian</groupId>
+				<artifactId>wildfly-arquillian-container-managed</artifactId>
+				<version>${version.org.wildfly.arquillian}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly.arquillian</groupId>
+				<artifactId>wildfly-arquillian-container-remote</artifactId>
+				<version>${version.org.wildfly.arquillian}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly.arquillian</groupId>
+				<artifactId>wildfly-arquillian-protocol-jmx</artifactId>
+				<version>${version.org.wildfly.arquillian}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly.arquillian</groupId>
+				<artifactId>wildfly-arquillian-testenricher-msc</artifactId>
+				<version>${version.org.wildfly.arquillian}</version>
+            </dependency>
+            <dependency>
+				<groupId>org.jboss.arquillian.testenricher</groupId>
+				<artifactId>arquillian-testenricher-initialcontext</artifactId>
+				<version>${version.org.jboss.arquillian.testenricher}</version>
+			</dependency>
+            
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-core</artifactId>
+                <version>9.3.1.Final</version>
+            </dependency> 
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-commons</artifactId>
+                <version>9.3.1.Final</version>       
+            </dependency>  
+            
+            <dependency>
+                <groupId>org.jboss</groupId>
+                <artifactId>jboss-vfs</artifactId>
+                <version>3.2.14.Final</version>
+            </dependency> 
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging</artifactId>
+                <version>3.3.2.Final</version>       
+            </dependency>  
+            <dependency>
+                <groupId>org.jboss.marshalling</groupId>
+                <artifactId>jboss-marshalling-river</artifactId>
+                <version>2.0.6.Final</version>      
+            </dependency>  
+            <dependency>
+                <groupId>org.jboss.marshalling</groupId>
+                <artifactId>jboss-marshalling</artifactId>
+                <version>2.0.6.Final</version>      
+            </dependency>  
+            <dependency>
+                <groupId>org.jboss.marshalling</groupId>
+                <artifactId>jboss-marshalling-osgi</artifactId>
+                <version>2.0.5.Final</version>      
+            </dependency>  
+			<dependency>
+				<groupId>javax.validation</groupId>
+				<artifactId>validation-api</artifactId>
+				<version>${version.javax.validation}</version>
+			</dependency>       
+			<dependency>
+				<groupId>javax.activation</groupId>
+				<artifactId>activation</artifactId>
+				<version>1.1.1</version>
+			</dependency>       
+			<dependency>
+				<groupId>org.jboss.spec.javax.transaction</groupId>
+				<artifactId>jboss-transaction-api_1.2_spec</artifactId>
+				<version>1.1.1.Final</version>
+			</dependency>       
+ 			<dependency>
+				<groupId>org.jboss.spec.javax.resource</groupId>
+				<artifactId>jboss-connector-api_1.7_spec</artifactId>
+				<version>1.0.1.Final</version>
+			</dependency>           
+
+		</dependencies>
+	</dependencyManagement>
+
+</project>

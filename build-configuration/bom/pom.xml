@@ -289,11 +289,6 @@
 				<artifactId>swagger-parser</artifactId>
 				<version>${version.swagger-parser}</version>
 			</dependency>
-			<dependency>
-				<groupId>javax.validation</groupId>
-				<artifactId>validation-api</artifactId>
-				<version>${version.javax.validation}</version>
-			</dependency>
 
 			<dependency>
 				<groupId>jline</groupId>

@@ -20,6 +20,7 @@
     
     <modules>
        <module>bom</module>
+       <module>jboss-dependency-bom</module>
     </modules>
 
 	<properties>
