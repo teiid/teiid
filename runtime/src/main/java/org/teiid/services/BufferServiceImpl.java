@@ -52,22 +52,33 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     // Instance
     private BufferManagerImpl bufferMgr;
+
+    //general batch properties
+    private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
+    private boolean inlineLobs = true;
+
+    // storage layers - only used if useDisk is true
+    private boolean useDisk = true;
+    private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAULT_MAX_OBJECT_SIZE;
+    private BufferFrontedFileStoreCache fsc;
+    private FileStorageManager fsm;
+    
+    //reserve / heap properties
+    private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
+    private int maxReservedHeapKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
+    
+    //fixed memory properties
+	private long fixedMemoryBufferSpaceMb = -1;
+    private boolean fixedMemoryBufferOffHeap;
+    
+	//disk properties
 	private File bufferDir;
-	private boolean useDisk = true;
-	private boolean encryptFiles = false;
-	private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
+    private boolean encryptFiles = false;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
     private long maxFileSize = SplittableStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
-    private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
-    private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
-    private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
-    private boolean inlineLobs = true;
-    private long memoryBufferSpace = -1;
-    private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAULT_MAX_OBJECT_SIZE;
-    private boolean memoryBufferOffHeap;
-	private FileStorageManager fsm;
-	private BufferFrontedFileStoreCache fsc;
-	private long vmMaxMemory = Runtime.getRuntime().maxMemory();
+    private long maxDiskBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
+       
+    private long vmMaxMemory = Runtime.getRuntime().maxMemory();
 	
     /**
      * Clean the file storage directory on startup 
@@ -83,7 +94,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
             // Construct and initialize the buffer manager
             this.bufferMgr = new BufferManagerImpl(false);
             this.bufferMgr.setProcessorBatchSize(processorBatchSize);
-            this.bufferMgr.setMaxReserveKB(this.maxReserveKb);
+            this.bufferMgr.setMaxReserveKB(this.maxReservedHeapKb);
             this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
             this.bufferMgr.setInlineLobs(inlineLobs);
             this.bufferMgr.initialize();
@@ -101,7 +112,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsm = new FileStorageManager();
                 fsm.setStorageDirectory(bufferDir.getCanonicalPath());
                 fsm.setMaxOpenFiles(maxOpenFiles);
-                fsm.setMaxBufferSpace(maxBufferSpace*MB);
+                fsm.setMaxBufferSpace(maxDiskBufferSpace*MB);
                 SplittableStorageManager ssm = new SplittableStorageManager(fsm);
                 ssm.setMaxFileSize(maxFileSize);
                 StorageManager sm = ssm;
@@ -111,11 +122,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsc = new BufferFrontedFileStoreCache();
                 fsc.setBufferManager(this.bufferMgr);
                 fsc.setMaxStorageObjectSize(maxStorageObjectSize);
-                fsc.setDirect(memoryBufferOffHeap);
-                if (memoryBufferSpace < 0) {
+                fsc.setDirect(fixedMemoryBufferOffHeap);
+                if (fixedMemoryBufferSpaceMb < 0) {
                     //use approximately 40% of what's set aside for the reserved accounting for conversion from kb to bytes
                     long autoMaxBufferSpace = 4*(((long)this.bufferMgr.getMaxReserveKB())<<10)/10; 
-				    if (this.maxReserveKb >= 0) {
+				    if (this.maxReservedHeapKb >= 0) {
 				        //if the max reserve has been - it may be too high
 				        //across most vm sizes we use about 1/4 of the remaining memory for the fixed buffer
 				        autoMaxBufferSpace = Math.min(autoMaxBufferSpace, (vmMaxMemory - (((long)this.bufferMgr.getMaxReserveKB())<<10))/4);
@@ -123,13 +134,13 @@ public class BufferServiceImpl implements BufferService, Serializable {
 				    fsc.setMemoryBufferSpace(autoMaxBufferSpace);
                 } else {
                 	//scale from MB to bytes
-                	fsc.setMemoryBufferSpace(memoryBufferSpace << 20);
+                	fsc.setMemoryBufferSpace(fixedMemoryBufferSpaceMb << 20);
                 }
                 //estimate inode/batch overhead
-				long batchAndInodeOverheadKB = fsc.getMemoryBufferSpace()>>(memoryBufferOffHeap?19:17);
+				long batchAndInodeOverheadKB = fsc.getMemoryBufferSpace()>>(fixedMemoryBufferOffHeap?19:17);
         		this.bufferMgr.setMaxReserveKB((int)Math.max(0, this.bufferMgr.getMaxReserveKB() - batchAndInodeOverheadKB));
-                if (this.maxReserveKb < 0) {
-                	if (memoryBufferOffHeap) {
+                if (this.maxReservedHeapKb < 0) {
+                	if (fixedMemoryBufferOffHeap) {
                 		//the default is too large if off heap
                 		this.bufferMgr.setMaxReserveKB(8*this.bufferMgr.getMaxReserveKB()/10);
                 	} else {
@@ -225,51 +236,61 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public int getMaxProcessingKb() {
 		return maxProcessingKb;
 	}
-
-    public int getMaxReservedKb() {
-		return maxReserveKb;
-	}
+    
+    public void setMaxReservedHeapMb(int maxReservedHeap) {
+        this.maxReservedHeapKb = (int)Math.min(Integer.MAX_VALUE, ((long)maxReservedHeap)<<10);
+    }
+    
+    public int getMaxReservedHeapMb() {
+        return this.maxReservedHeapKb >> 10;
+    }
     
     public void setMaxProcessingKb(int maxProcessingKb) {
 		this.maxProcessingKb = maxProcessingKb;
 	}
     
+    @Deprecated
     public void setMaxReserveKb(int maxReserveKb) {
-		this.maxReserveKb = maxReserveKb;
+		this.maxReservedHeapKb = maxReserveKb;
 	}
     
-	public long getMaxBufferSpace() {
-		return maxBufferSpace;
+	public long getMaxDiskBufferSpaceMb() {
+		return maxDiskBufferSpace;
 	}
     
-    public void setMaxBufferSpace(long maxBufferSpace) {
-		this.maxBufferSpace = maxBufferSpace;
+    public void setMaxDiskBufferSpaceMb(long maxBufferSpace) {
+		this.maxDiskBufferSpace = maxBufferSpace;
 	}
     
-    public void setMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
-		this.memoryBufferOffHeap = memoryBufferOffHeap;
+    public void setFixedMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
+		this.fixedMemoryBufferOffHeap = memoryBufferOffHeap;
 	}
 
-    public void setMemoryBufferSpace(int memoryBufferSpace) {
-		this.memoryBufferSpace = memoryBufferSpace;
+    public void setFixedMemoryBufferSpaceMb(int memoryBufferSpace) {
+		this.fixedMemoryBufferSpaceMb = memoryBufferSpace;
 	}
 
+    @Deprecated
     public void setMaxStorageObjectSize(int maxStorageObjectSize) {
-		this.maxStorageObjectSize = maxStorageObjectSize;
-	}    
+        this.maxStorageObjectSize = maxStorageObjectSize;
+    }
+    
+    public void setMaxStorageObjectSizeKb(int maxStorageObjectSize) {
+        this.maxStorageObjectSize = (int)Math.min(Integer.MAX_VALUE, ((long)maxStorageObjectSize)<<10);
+    }
 
-    public long getUsedDiskBufferSpaceMB() {
+    public long getUsedDiskBufferSpaceMb() {
     	if (fsm != null) {
     		return fsm.getUsedBufferSpace()/MB;
     	}
     	return 0;
     }
 
-	public long getHeapCacheMemoryInUseKB() {
+	public long getHeapBufferInUseKb() {
 		return bufferMgr.getActiveBatchBytes()/1024;
 	}
 
-	public long getHeapMemoryInUseByActivePlansKB() {
+	public long getMemoryReservedByActivePlansKb() {
 		return this.bufferMgr.getMaxReserveKB() - bufferMgr.getReserveBatchBytes()/1024;
 	}
 	
@@ -287,18 +308,18 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	return 0;
     }
     
-    public long getMemoryBufferUsedKB() {
+    public long getMemoryBufferUsedKb() {
     	if (fsc != null) {
     		return fsc.getMemoryInUseBytes() >> 10;
     	}
     	return 0;
     }
     
-    public long getCacheReadCount() {
+    public long getStorageReadCount() {
     	return bufferMgr.getReadCount();
     }
     
-    public long getCacheWriteCount() {
+    public long getStorageWriteCount() {
     	return bufferMgr.getWriteCount();
     }    
 	
@@ -306,16 +327,16 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		return bufferMgr.getReadAttempts();
 	}
 
-    public int getMemoryBufferSpace() {
-		return (int)memoryBufferSpace;
+    public int getFixedMemoryBufferSpaceMb() {
+		return (int)fixedMemoryBufferSpaceMb;
 	}
 
-    public int getMaxStorageObjectSize() {
-		return maxStorageObjectSize;
+    public int getMaxStorageObjectSizeKb() {
+		return maxStorageObjectSize >> 10;
 	}
 
-    public boolean isMemoryBufferOffHeap() {
-		return memoryBufferOffHeap;
+    public boolean isFixedMemoryBufferOffHeap() {
+		return fixedMemoryBufferOffHeap;
 	}    
     
     public boolean isEncryptFiles() {

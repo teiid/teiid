@@ -86,7 +86,7 @@ connect
 
 :restart-servers(blocking=true)
 
-/profile=ha/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache,preparedplan-cache-infinispan-container=teiid-cache,policy-decider-module=org.jboss.teiid,distributed-cache-jgroups-stack=teiid-cluster,buffer-service-max-buffer-space=51200)
+/profile=ha/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache,preparedplan-cache-infinispan-container=teiid-cache,policy-decider-module=org.jboss.teiid,distributed-cache-jgroups-stack=teiid-cluster,buffer-manager-disk-max-space-mb=51200)
 /profile=ha/subsystem=teiid/transport=local:add()
 /profile=ha/subsystem=teiid/transport=odata:add()
 /profile=ha/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc)
@@ -172,7 +172,7 @@ connect
 /profile=ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
 /profile=ha/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
 
-/profile=full-ha/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache,preparedplan-cache-infinispan-container=teiid-cache,policy-decider-module=org.jboss.teiid,distributed-cache-jgroups-stack=teiid-cluster,buffer-service-max-buffer-space=51200)
+/profile=full-ha/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache,preparedplan-cache-infinispan-container=teiid-cache,policy-decider-module=org.jboss.teiid,distributed-cache-jgroups-stack=teiid-cluster,buffer-manager-disk-max-space-mb=51200)
 /profile=full-ha/subsystem=teiid/transport=local:add()
 /profile=full-ha/subsystem=teiid/transport=odata:add()
 /profile=full-ha/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc)

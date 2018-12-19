@@ -32,8 +32,6 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DataRolePolicyDecider;
 import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
-import org.teiid.dqp.internal.process.TeiidExecutor;
-import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.security.SecurityHelper;
@@ -225,10 +223,12 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		this.processorBatchSize = processorBatchSize;
 	}
 
+	@Deprecated
 	public int getMaxReserveKb() {
 		return maxReserveKb;
 	}
 
+	@Deprecated
 	public void setMaxReserveKb(int maxReserveKb) {
 		this.maxReserveKb = maxReserveKb;
 	}
@@ -257,10 +257,12 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		this.maxOpenFiles = maxOpenFiles;
 	}
 
+	@Deprecated
 	public long getMaxBufferSpace() {
 		return maxBufferSpace;
 	}
 
+	@Deprecated
 	public void setMaxBufferSpace(long maxBufferSpace) {
 		this.maxBufferSpace = maxBufferSpace;
 	}
@@ -281,26 +283,32 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		this.encryptFiles = encryptFiles;
 	}
 
+	@Deprecated
 	public int getMaxStorageObjectSize() {
 		return maxStorageObjectSize;
 	}
 
+	@Deprecated
 	public void setMaxStorageObjectSize(int maxStorageObjectSize) {
 		this.maxStorageObjectSize = maxStorageObjectSize;
 	}
 
+	@Deprecated
 	public boolean isMemoryBufferOffHeap() {
 		return memoryBufferOffHeap;
 	}
 
+	@Deprecated
 	public void setMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
 		this.memoryBufferOffHeap = memoryBufferOffHeap;
 	}
 
+	@Deprecated
 	public int getMemoryBufferSpace() {
 		return memoryBufferSpace;
 	}
 
+	@Deprecated
 	public void setMemoryBufferSpace(int memoryBufferSpace) {
 		this.memoryBufferSpace = memoryBufferSpace;
 	}

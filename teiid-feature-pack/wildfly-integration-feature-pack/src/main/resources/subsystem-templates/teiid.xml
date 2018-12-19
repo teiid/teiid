@@ -1,7 +1,7 @@
 <config>
     <extension-module>org.jboss.teiid</extension-module>
-    <subsystem xmlns="urn:jboss:domain:teiid:1.1">            
-        <buffer-service max-buffer-space="51200"/>
+    <subsystem xmlns="urn:jboss:domain:teiid:1.2">            
+        <buffer-manager disk-max-space-mb="51200"/>
         
         <resultset-cache infinispan-container="teiid" name="resultset"/>
         <preparedplan-cache infinispan-container="teiid" name="preparedplan"/>

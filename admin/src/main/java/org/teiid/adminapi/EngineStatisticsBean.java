@@ -29,14 +29,30 @@ public interface EngineStatisticsBean {
     /**
      * Total amount memory used by buffer manager for active queries and cached queries
      * @return
+     * @see #getBufferHeapInUseKb()
      */
+    @Deprecated
     long getTotalMemoryUsedInKB();
+    
+    /**
+     * Heap memory estimate in use by buffer manager
+     * @return
+     */
+    long getBufferHeapInUseKb();
     
     /**
      * Total memory used by buffer manager for active plans
      * @return
+     * @see #getBufferHeapReservedByActivePlansKb()
      */
+    @Deprecated
     long getMemoryUsedByActivePlansInKB();
+    
+    /**
+     * Total processing memory reserved by active plans
+     * @return
+     */
+    long getBufferHeapReservedByActivePlansKb();
     
     /**
      * Number of writes to disk by buffer manager to save the overflow from memory
@@ -53,14 +69,30 @@ public interface EngineStatisticsBean {
     /**
      * Total number of cache reads, includes disk and soft-cache references
      * @return
+     * @see #getStorageReadCount();
      */
+    @Deprecated
     long getCacheReadCount();
+    
+    /**
+     * Total number of storage reads from the layer below the heap
+     * @return
+     */
+    long getStorageReadCount();
     
     /**
      * Total number of cache writes, includes disk and soft-cache references
      * @return
+     * @see #getStorageReadCount()
      */
+    @Deprecated
     long getCacheWriteCount();
+    
+    /**
+     * Total number of storage writes to the layer below the heap
+     * @return
+     */
+    long getStorageWriteCount();
     
     /**
      * Disk space used by buffer manager to save overflowed memory contents

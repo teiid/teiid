@@ -18,17 +18,11 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILD_TYPE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
@@ -37,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
@@ -58,6 +53,9 @@ import org.xml.sax.SAXParseException;
 
 @SuppressWarnings("nls")
 public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
+    
+    static String SCHEMA_1_1 = "schema/jboss-teiid.xsd";
+    static String SCHEMA_1_2 = "schema/jboss-teiid_1_2.xsd";
 
 	public TestTeiidConfiguration() {
 		super(TeiidExtension.TEIID_SUBSYSTEM, new TeiidExtension());
@@ -65,13 +63,13 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
 	@Override
 	protected String getSubsystemXml() throws IOException {
-		String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));		
+		String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config_1_2.xml"));		
 		return subsystemXml;
 	} 
 	
     @Override
     protected String getSubsystemXsdPath() throws Exception {
-        return "schema/jboss-teiid.xsd";
+        return SCHEMA_1_2;
     }	
 	
     @Test
@@ -81,7 +79,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     
     @Override
 	protected String readResource(final String name) throws IOException {
-    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.1\"> \n" +     			 
+    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.2\"> \n" +     			 
     			"</subsystem>";
         
     	if (name.equals("minimum")) {
@@ -97,7 +95,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
     @Test
     public void testOutputPerisitence() throws Exception {
-    	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json.txt"));
+    	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json_1_2.txt"));
     	ModelNode testModel = ModelNode.fromJSONString(json);
         String triggered = outputModel(testModel);
 
@@ -114,7 +112,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     
     @Test
     public void testOutputModel() throws Exception {
-    	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json.txt"));
+    	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json_1_2.txt"));
     	ModelNode testModel = ModelNode.fromJSONString(json);
         String triggered = outputModel(testModel);
 
@@ -129,7 +127,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     
     @Test
     public void testSchema() throws Exception {
-    	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
+    	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config_1_2.xml"));
     	validate(subsystemXml);
     	
         KernelServices services = standardSubsystemTest(null, false);
@@ -142,7 +140,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     }
 
 	private void validate(String marshalled) throws SAXException, IOException {
-		URL xsdURL = Thread.currentThread().getContextClassLoader().getResource("schema/jboss-teiid.xsd");
+		URL xsdURL = Thread.currentThread().getContextClassLoader().getResource(SCHEMA_1_2);
 		
 		SchemaFactory factory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
 		Schema schema = factory.newSchema(xsdURL);
@@ -175,7 +173,13 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     @Test
     public void testParseSubsystem() throws Exception {
         //Parse the subsystem xml into operations
-    	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
+    	helpTestParseSubsystem("src/test/resources/teiid-sample-config.xml");
+    	helpTestParseSubsystem("src/test/resources/teiid-sample-config_1_2.xml");
+    }
+
+    private List<ModelNode> helpTestParseSubsystem(String config)
+            throws IOException, FileNotFoundException, XMLStreamException {
+        String subsystemXml = ObjectConverterUtil.convertToString(new FileReader(config));
         List<ModelNode> operations = super.parse(subsystemXml);
 
         ///Check that we have the expected number of operations
@@ -189,6 +193,10 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         PathElement element = addr.getElement(0);
         Assert.assertEquals(SUBSYSTEM, element.getKey());
         Assert.assertEquals(TeiidExtension.TEIID_SUBSYSTEM, element.getValue());
+        //make sure the properties are normalized
+        assertEquals(addSubsystem.get("buffer-manager-processor-batch-size").asInt(), 2);
+        assertEquals(addSubsystem.get("buffer-manager-heap-max-reserve-mb").asInt(), 2);
+        return operations;
     }
     
     @Test

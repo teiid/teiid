@@ -65,6 +65,20 @@ enum Element {
 	INLINE_LOBS("inline-lobs", "buffer-service-inline-lobs"),
 	ENCRYPT_FILES_ATTRIBUTE("encrypt-files", "buffer-service-encrypt-files"),
 	
+	BUFFER_MANAGER_ELEMENT("buffer-manager"),
+	BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-manager-processor-batch-size"),
+	BUFFER_MANAGER_INLINE_LOBS("inline-lobs", "buffer-manager-inline-lobs"),
+	BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE("heap-max-processing-kb", "buffer-manager-heap-max-processing-kb"),
+	BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE("heap-max-reserve-mb", "buffer-manager-heap-max-reserve-mb"),
+	BUFFER_MANAGER_USE_DISK_ATTRIBUTE("storage-enabled", "buffer-manager-storage-enabled"),
+	BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE("storage-max-object-size-kb", "buffer-manager-storage-max-object-size-kb"),
+	BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE("fixed-memory-space-mb", "buffer-manager-fixed-memory-space-mb"),
+	BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE("fixed-memory-off-heap", "buffer-manager-fixed-memory-off-heap"),
+	BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE("disk-max-file-size-mb", "buffer-manager-disk-max-file-size-mb"),
+	BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE("disk-max-space-mb", "buffer-manager-disk-max-space-mb"),
+	BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE("disk-max-open-files", "buffer-manager-disk-max-open-files"),
+	BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE("disk-encrypt-files", "buffer-manager-disk-encrypt-files"),
+	
 	//prepared-plan-cache-config
 	PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache"),
 	PPC_ENABLE_ATTRIBUTE("enable", "preparedplan-cache-enable"),
