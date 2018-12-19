@@ -28,11 +28,6 @@
 				<version>${version.com.squareup}</version>
 			</dependency>
 			<dependency>
-			    <groupId>org.infinispan.protostream</groupId>
-			    <artifactId>protostream</artifactId>
-			    <version>${version.org.infinispan.protostream}</version>
-			</dependency>
-			<dependency>
              	<groupId>org.apache.lucene</groupId>
              	<artifactId>lucene-core</artifactId>
              	<version>${version.org.apache.lucene}</version>

@@ -392,30 +392,12 @@
    </dependencies>
 	<dependencyManagement>
 		<dependencies>
-            <!-- import infinispan bom -->
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>teiid-bom</artifactId>
                 <version>${version.org.teiid}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-
-            <!-- ====== -->            
-            <!-- Import the core parent to get all the managed dependencies from core -->
-            <dependency>
-                <groupId>org.wildfly.core</groupId>
-                <artifactId>wildfly-core-parent</artifactId>
-                <type>pom</type>
-                <version>${version.org.wildfly.core}</version>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-			    <groupId>org.wildfly</groupId>
-			    <artifactId>wildfly-parent</artifactId>
-                <type>pom</type>
-                <version>${version.org.wildfly}</version>
-                <scope>import</scope>			    
             </dependency>
         </dependencies>
 	</dependencyManagement>

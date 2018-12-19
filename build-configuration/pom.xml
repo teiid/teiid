@@ -5,7 +5,7 @@
     <parent>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-parent</artifactId>
-      <version>29</version>
+      <version>28</version>
       <relativePath />
     </parent> 
     
@@ -68,7 +68,6 @@
 	    <version.io.swagger>1.5.17</version.io.swagger>
 
         <version.javax.validation>1.1.0.Final</version.javax.validation>
-        <version.jta>1.1</version.jta>
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.8.0</version.jts2geojson>
         <version.junit>4.12</version.junit>
@@ -124,12 +123,8 @@
         
         <!-- Infinispan Translator -->
         <version.org.infinispan>9.1.2.Final</version.org.infinispan>
-        <version.io.netty>4.1.5.Final</version.io.netty>
-        <version.org.jboss.logging>3.3.0.Final</version.org.jboss.logging>
         <version.org.apache.lucene>5.5.0</version.org.apache.lucene>
         <version.com.squareup>4.0.3</version.com.squareup>
-        <version.org.infinispan.protostream>4.1.1.Final</version.org.infinispan.protostream>
-        <!-- Infinispan Translator -->
         
         <!--  Data Quality -->
         <version.com.github.mpkorstanje>3.0.0</version.com.github.mpkorstanje>
