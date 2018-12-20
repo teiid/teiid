@@ -17,6 +17,7 @@
  */
 package org.teiid.jboss;
 
+import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.SimpleAttributeDefinition;
@@ -32,6 +33,8 @@ import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
 public class TeiidConstants {
+	private static final ModelVersion BUFFER_SERVICE_VERSION = ModelVersion.create(1, 2);
+
     // Non persistent attributes
     public static SimpleAttributeDefinition ACTIVE_SESSION_COUNT = new SimpleAttributeDefinitionBuilder("active-session-count", ModelType.INT)
         .setXmlName("active-session-count")
@@ -175,6 +178,111 @@ public class TeiidConstants {
     	.setRequired(false)
     	.setAllowExpression(false)
     	.build();
+    
+    /*
+     * Deprecated buffer-service attributes
+     */
+    @Deprecated
+    public static SimpleAttributeDefinition USE_DISK_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.USE_DISK_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+        .setXmlName(Element.BUFFER_MANAGER_USE_DISK_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();
+    
+    @Deprecated    
+    public static SimpleAttributeDefinition PROCESSOR_BATCH_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.PROCESSOR_BATCH_SIZE_ATTRIBUTE.getModelName(), ModelType.INT)
+        .setXmlName(Element.BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();
+    
+    @Deprecated
+    public static SimpleAttributeDefinition MAX_PROCESSING_KB_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.MAX_PROCESSING_KB_ATTRIBUTE.getModelName(), ModelType.INT)
+        .setXmlName(Element.BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setMeasurementUnit(MeasurementUnit.KILOBYTES)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();
+    
+    @Deprecated
+    public static SimpleAttributeDefinition MAX_RESERVED_KB_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.MAX_RESERVED_KB_ATTRIBUTE.getModelName(), ModelType.INT)
+        .setXmlName(Element.BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setMeasurementUnit(MeasurementUnit.KILOBYTES)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();  
+
+    @Deprecated
+    public static SimpleAttributeDefinition MAX_FILE_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.MAX_FILE_SIZE_ATTRIBUTE.getModelName(), ModelType.LONG)
+        .setXmlName(Element.BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();  
+
+    @Deprecated
+    public static SimpleAttributeDefinition MAX_BUFFER_SPACE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.MAX_BUFFER_SPACE_ATTRIBUTE.getModelName(), ModelType.LONG)
+        .setXmlName(Element.BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setMeasurementUnit(MeasurementUnit.MEGABYTES)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();  
+    
+    @Deprecated
+    public static SimpleAttributeDefinition MAX_OPEN_FILES_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.MAX_OPEN_FILES_ATTRIBUTE.getModelName(), ModelType.INT)
+        .setXmlName(Element.BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();  
+    
+    @Deprecated
+    public static SimpleAttributeDefinition MEMORY_BUFFER_SPACE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.MEMORY_BUFFER_SPACE_ATTRIBUTE.getModelName(), ModelType.INT)
+        .setXmlName(Element.BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setMeasurementUnit(MeasurementUnit.MEGABYTES)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();   
+
+    @Deprecated
+    public static SimpleAttributeDefinition MEMORY_BUFFER_OFFHEAP_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+        .setXmlName(Element.BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setDefaultValue(new ModelNode(false))
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();   
+
+    @Deprecated
+    public static SimpleAttributeDefinition MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.getModelName(), ModelType.INT)
+        .setXmlName(Element.BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setMeasurementUnit(MeasurementUnit.BYTES)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();   
+    
+    @Deprecated
+    public static SimpleAttributeDefinition INLINE_LOBS = new SimpleAttributeDefinitionBuilder(Element.INLINE_LOBS.getModelName(), ModelType.BOOLEAN)
+        .setXmlName(Element.BUFFER_MANAGER_INLINE_LOBS.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();   
+    
+    @Deprecated
+    public static SimpleAttributeDefinition ENCRYPT_FILES_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.ENCRYPT_FILES_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+        .setXmlName(Element.BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setDeprecated(BUFFER_SERVICE_VERSION)
+        .build();    
     
     // buffer manager
     public static SimpleAttributeDefinition BUFFER_MANAGER_USE_DISK_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_USE_DISK_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)

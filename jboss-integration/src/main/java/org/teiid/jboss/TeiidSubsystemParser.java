@@ -28,6 +28,7 @@ import java.util.Set;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.parsing.ParseUtils;
 import org.jboss.as.controller.persistence.SubsystemMarshallingContext;
 import org.jboss.dmr.ModelNode;
@@ -55,7 +56,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
             writer.writeEndElement();
         }
         
-    	if (like(node, Element.BUFFER_MANAGER_ELEMENT)){
+    	if (like(node, Element.BUFFER_MANAGER_ELEMENT) || like(node, Element.BUFFER_SERVICE_ELEMENT)){
     		writer.writeStartElement(Element.BUFFER_MANAGER_ELEMENT.getLocalName());
     		writeBufferManager(writer, node);
     		writer.writeEndElement();
@@ -196,6 +197,21 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     }
     
 	private void writeBufferManager(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+	    //if using a cli add, we end up here - the xml name has already been changed
+        USE_DISK_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        INLINE_LOBS.marshallAsAttribute(node, false, writer);
+        PROCESSOR_BATCH_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MAX_PROCESSING_KB_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MAX_FILE_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MAX_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MAX_OPEN_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MEMORY_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        ENCRYPT_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        //values need adjusted
+        writeAdjustedValue(writer, node, MAX_RESERVED_KB_ATTRIBUTE);
+        writeAdjustedValue(writer, node, MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE);
+	    
 		BUFFER_MANAGER_USE_DISK_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 		BUFFER_MANAGER_INLINE_LOBS.marshallAsAttribute(node, false, writer);
 		BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
@@ -209,6 +225,18 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 		BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 		BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 	}
+
+    private void writeAdjustedValue(XMLExtendedStreamWriter writer,
+            ModelNode node, SimpleAttributeDefinition element) throws XMLStreamException {
+        String name = element.getName();
+        if (node.hasDefined(name)) {
+            int value = node.get(name).asInt();
+            if (value > 0) {
+                value = value/1024;
+            }
+            writer.writeAttribute(element.getXmlName(), String.valueOf(value));
+        }
+    }
 
 	private void writeResultsetCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
 		RSC_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);

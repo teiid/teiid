@@ -40,6 +40,8 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
+import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
+import org.jboss.as.controller.operations.common.Util;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -275,6 +277,37 @@ class AttributeWrite extends AbstractWriteAttributeHandler<Void> {
 
 	public AttributeWrite(AttributeDefinition... attr) {
 		super(attr);
+	}
+	
+	@Override
+	public void execute(OperationContext context, ModelNode operation)
+	        throws OperationFailedException {
+        final String attributeName = operation.require(NAME).asString();
+        System.out.println(attributeName);
+        if (attributeName.startsWith("buffer-service")) { //$NON-NLS-1$
+            final AttributeDefinition attributeDefinition = getAttributeDefinition(attributeName);
+            String newAttribute = "buffer-manager-" + attributeDefinition.getXmlName(); //$NON-NLS-1$
+            boolean defined = operation.hasDefined(VALUE);
+            ModelNode newValue = defined ? operation.get(VALUE) : new ModelNode();
+            
+            if (defined && 
+                    (newAttribute.equals(Element.BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.getModelName()) 
+                            || newAttribute.equals(Element.BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE.getModelName()))) {
+                int value = newValue.asInt();
+                if (value > 0) {
+                    value = value/1024;
+                }
+                newValue = new ModelNode(value);
+            }
+            
+            PathAddress currentAddress = context.getCurrentAddress();
+            operation = Util.createOperation(ModelDescriptionConstants.WRITE_ATTRIBUTE_OPERATION, currentAddress);
+            operation.get(ModelDescriptionConstants.NAME).set(newAttribute);
+            operation.get(ModelDescriptionConstants.VALUE).set(newValue);
+            super.execute(context, operation);
+            return;
+        }
+        super.execute(context, operation);
 	}
 
 	@Override

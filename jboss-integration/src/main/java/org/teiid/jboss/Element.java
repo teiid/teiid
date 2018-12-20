@@ -51,18 +51,31 @@ enum Element {
     PREPARSER_MODULE_ELEMENT("preparser-module", "preparser-module"),
 	
 	// buffer manager
+    @Deprecated
 	BUFFER_SERVICE_ELEMENT("buffer-service"),
+	@Deprecated
 	USE_DISK_ATTRIBUTE("use-disk", "buffer-service-use-disk"),
+	@Deprecated
 	PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-service-processor-batch-size"),
+	@Deprecated
 	MAX_PROCESSING_KB_ATTRIBUTE("max-processing-kb", "buffer-service-max-processing-kb"),
+	@Deprecated
 	MAX_RESERVED_KB_ATTRIBUTE("max-reserve-kb", "buffer-service-max-reserve-kb"),
+	@Deprecated
 	MAX_FILE_SIZE_ATTRIBUTE("max-file-size", "buffer-service-max-file-size"),
+	@Deprecated
 	MAX_BUFFER_SPACE_ATTRIBUTE("max-buffer-space", "buffer-service-max-buffer-space"),
+	@Deprecated
 	MAX_OPEN_FILES_ATTRIBUTE("max-open-files", "buffer-service-max-open-files"),
+	@Deprecated
 	MEMORY_BUFFER_SPACE_ATTRIBUTE("memory-buffer-space", "buffer-service-memory-buffer-space"),
+	@Deprecated
 	MEMORY_BUFFER_OFFHEAP_ATTRIBUTE("memory-buffer-off-heap", "buffer-service-memory-buffer-off-heap"),
+	@Deprecated
 	MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE("max-storage-object-size", "buffer-service-max-storage-object-size"),
+	@Deprecated
 	INLINE_LOBS("inline-lobs", "buffer-service-inline-lobs"),
+	@Deprecated
 	ENCRYPT_FILES_ATTRIBUTE("encrypt-files", "buffer-service-encrypt-files"),
 	
 	BUFFER_MANAGER_ELEMENT("buffer-manager"),

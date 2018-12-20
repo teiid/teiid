@@ -24,8 +24,8 @@ import java.util.List;
 
 import javax.transaction.TransactionManager;
 
+import org.infinispan.commons.tx.lookup.TransactionManagerLookup;
 import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.transaction.lookup.TransactionManagerLookup;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.core.TeiidRuntimeException;
@@ -55,33 +55,25 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	
 	private boolean allowEnvFunction;
 	
-	private int processorBatchSize ;
-	private int maxReserveKb ;
-	private int maxProcessingKb ;
+	//buffer manager properties
+	private int processorBatchSize = -1 ;
+	private int maxReserveKb = -1;
+	private int maxProcessingKb = -1;
 	private boolean inlineLobs = true;
-	private int maxOpenFiles ;
-	
-	private long maxBufferSpace ;
-	private long maxFileSize ;
+	private int maxOpenFiles = -1;
+	private long maxBufferSpace = -1;
+	private long maxFileSize = -1;
 	private boolean encryptFiles = false;
-	private int maxStorageObjectSize ;
+	private int maxStorageObjectSize = -1;
 	private boolean memoryBufferOffHeap = false;
-	private int memoryBufferSpace ;
+	private int memoryBufferSpace = -1;
+	
 	private String nodeName;
 	
     private DefaultCacheManager cacheManager;
 	private AuthenticationType authenticationType;
 	
 	public EmbeddedConfiguration() {
-		processorBatchSize = -1;
-		maxReserveKb = -1;
-		maxProcessingKb = -1;
-		maxOpenFiles = -1;
-		maxBufferSpace = -1;
-		maxFileSize = -1;
-		maxStorageObjectSize = -1;
-		memoryBufferSpace = -1;
-		
 		DefaultAuthorizationValidator authorizationValidator = new DefaultAuthorizationValidator();
 		authorizationValidator.setPolicyDecider(new DataRolePolicyDecider());
 		this.setAuthorizationValidator(authorizationValidator);
@@ -233,26 +225,32 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		this.maxReserveKb = maxReserveKb;
 	}
 
+	@Deprecated
 	public int getMaxProcessingKb() {
 		return maxProcessingKb;
 	}
 
+	@Deprecated
 	public void setMaxProcessingKb(int maxProcessingKb) {
 		this.maxProcessingKb = maxProcessingKb;
 	}
 
+	@Deprecated
 	public boolean isInlineLobs() {
 		return inlineLobs;
 	}
 
+	@Deprecated
 	public void setInlineLobs(boolean inlineLobs) {
 		this.inlineLobs = inlineLobs;
 	}
 
+	@Deprecated
 	public int getMaxOpenFiles() {
 		return maxOpenFiles;
 	}
 
+	@Deprecated
 	public void setMaxOpenFiles(int maxOpenFiles) {
 		this.maxOpenFiles = maxOpenFiles;
 	}
@@ -267,18 +265,22 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		this.maxBufferSpace = maxBufferSpace;
 	}
 
+	@Deprecated
 	public long getMaxFileSize() {
 		return maxFileSize;
 	}
 
+	@Deprecated
 	public void setMaxFileSize(long maxFileSize) {
 		this.maxFileSize = maxFileSize;
 	}
 
+	@Deprecated
 	public boolean isEncryptFiles() {
 		return encryptFiles;
 	}
 
+	@Deprecated
 	public void setEncryptFiles(boolean encryptFiles) {
 		this.encryptFiles = encryptFiles;
 	}

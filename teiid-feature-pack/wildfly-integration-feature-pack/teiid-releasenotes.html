@@ -27,7 +27,7 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-5351">TEIID-5351</a> Updated to the WildFly 14.0.1 server.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-5524">TEIID-5524</a> JMX support for Teiid standalone (Thorntail, Spring Boot, embedded)</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-4498">TEIID-4498</a> Additional subquery optimization to prevent per-row evaluation.</li>
-  <li><a href="https://issues.jboss.org/browse/TEIID-5563">TEIID-5563</a> Refactoring to remove JEE dependencies from core Teiid.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5563">TEIID-5563</a> Refactoring to remove JEE dependencies from core Teiid - please consult the migration guide if you are doing custom Teiid development.</li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -213,11 +213,12 @@ specified and isSourceRequired should return false (see setSourceRequired).  If 
 
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
-See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+See the Admin Guide for more on configuration and installation.
 
 <h4>from 11.2</h4>
 <ul>
    <li><a href="https://issues.jboss.org/browse/TEIID-5490">TEIID-5490</a> org.teiid.longRanks now defaults to true.  Analytical functions such as row_number return a long by default.</li>
+   <li><a href="https://issues.jboss.org/browse/TEIID-5574">TEIID-5574</a> the cli buffer-service properties have been deprecated and replaced with buffer-manager properties - see the migration guide for more</li>
 </ul>
 
 <h4>from 10.3</h4>
