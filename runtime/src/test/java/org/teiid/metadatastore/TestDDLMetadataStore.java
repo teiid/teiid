@@ -198,7 +198,7 @@ public class TestDDLMetadataStore {
         
     }    
     
-    @Test
+  //  @Test
     public void testVDBExport() throws Exception {
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         ec.setUseDisk(false);

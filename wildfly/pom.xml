@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>teiid-parent</artifactId>
+    <groupId>org.teiid</groupId>
+    <version>12.0.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>wildfly-parent</artifactId>
+  <packaging>pom</packaging>
+  <name>Teiid Wildfly Parent</name>
+  <description>This project is aggregator for all the wildfly related modules.</description>
+  
+  <properties>
+        
+        <version.org.wildfly>14.0.1.Final</version.org.wildfly>
+	    <version.org.wildfly.core>6.0.2.Final</version.org.wildfly.core>
+	    <version.org.wildfly.arquillian>2.1.1.Final</version.org.wildfly.arquillian>
+        <version.org.wildfly.build-tools>1.2.10.Final</version.org.wildfly.build-tools>
+        <version.org.jboss.arquillian.testenricher>1.4.0.Final</version.org.jboss.arquillian.testenricher>
+      
+  </properties>
+  
+  	<dependencyManagement>
+		<dependencies>
+            <dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-bom</artifactId>
+                <version>${version.org.teiid}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
+            <!-- ====== -->            
+            <!-- Import the core parent to get all the managed dependencies from core -->
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-core-parent</artifactId>
+                <type>pom</type>
+                <version>${version.org.wildfly.core}</version>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+			    <groupId>org.wildfly</groupId>
+			    <artifactId>wildfly-parent</artifactId>
+                <type>pom</type>
+                <version>${version.org.wildfly}</version>
+                <scope>import</scope>			    
+            </dependency>
+            
+        </dependencies>
+	</dependencyManagement>
+  
+    <dependencies>
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-naming</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-security</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-weld</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-common</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-container-managed</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-container-remote</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-protocol-jmx</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-testenricher-msc</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.testenricher</groupId>
+            <artifactId>arquillian-testenricher-initialcontext</artifactId>
+            <version>${version.org.jboss.arquillian.testenricher}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-controller</artifactId>
+            <version>${version.org.wildfly.core}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-controller-client</artifactId>
+            <version>${version.org.wildfly.core}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-server</artifactId>
+            <version>${version.org.wildfly.core}</version>
+        </dependency>    
+
+        <dependency>
+            <groupId>org.wildfly.build</groupId>
+            <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
+            <version>${version.org.wildfly.build-tools}</version>
+        </dependency>
+          
+    <!--  Internal Test Dependencies -->
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-api</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope><!--module>test-integration</module-->
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-client</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-admin</artifactId>
+      <scope>test</scope>
+    </dependency>    
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
+      <scope>test</scope>
+    </dependency>    
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>	
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>        
+
+    <dependency>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-vfs</artifactId>
+        <scope>test</scope>
+    </dependency> 
+    <dependency>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging</artifactId>
+        <scope>test</scope>        
+    </dependency>          
+    
+  </dependencies>
+  
+  <modules>
+ 		<module>jboss-admin</module>
+		<module>jboss-client</module>
+        <module>jboss-integration</module>
+        <module>jboss-security</module>
+        <module>teiid-feature-pack</module>
+        <module>resource-adapters</module>
+        <module>test-integration</module>
+        <module>wildfly-build</module>
+  </modules>
+</project>

@@ -260,11 +260,6 @@
 				<artifactId>swagger-parser</artifactId>
 				<version>${version.swagger-parser}</version>
 			</dependency>
-			<dependency>
-				<groupId>javax.validation</groupId>
-				<artifactId>validation-api</artifactId>
-				<version>${version.javax.validation}</version>
-			</dependency>
 
 			<dependency>
 				<groupId>jline</groupId>
@@ -672,8 +667,8 @@
 				<artifactId>teiid-olingo-patches</artifactId>
 				<version>${version.org.teiid}</version>
 			</dependency>
-
-			<dependency>
+			
+            <dependency>
 				<groupId>org.teiid</groupId>
 				<artifactId>teiid-common-core</artifactId>
 				<version>${version.org.teiid}</version>
@@ -1038,12 +1033,6 @@
            </dependency>
            
            <dependency>
-               <groupId>org.hibernate</groupId>
-               <artifactId>hibernate-core</artifactId>
-               <version>5.3.6.Final</version>
-           </dependency>
-           
-           <dependency>
                <groupId>commons-codec</groupId>
                <artifactId>commons-codec</artifactId>
                <version>1.10</version>
@@ -1090,6 +1079,13 @@
                <artifactId>resteasy-jaxrs</artifactId>
                <version>3.6.1.Final</version>
            </dependency>
+
+           <dependency>
+               <groupId>org.ow2.asm</groupId>
+               <artifactId>asm</artifactId>
+               <version>6.2.1</version>
+           </dependency>           
+           
            
            <dependency>
                <groupId>wsdl4j</groupId>
@@ -1159,91 +1155,22 @@
                <artifactId>jboss-connector-api_1.7_spec</artifactId>
                <version>1.0.1.Final</version>
             </dependency>  
-            
+            <dependency>
+               <groupId>org.jboss.spec.javax.xml.bind</groupId>
+               <artifactId>jboss-jaxb-api_2.3_spec</artifactId>
+               <version>1.0.1.Final</version>
+           </dependency>           
             <dependency>
                <groupId>org.slf4j</groupId>
                <artifactId>slf4j-api</artifactId>
                <version>1.7.22.jbossorg-1</version>
             </dependency>
-            
-            <!-- TODO: remove these after the reorg -->
             <dependency>
-                <groupId>org.wildfly.core</groupId>
-                <artifactId>wildfly-core-parent</artifactId>
-                <type>pom</type>
-                <version>${version.org.wildfly.core}</version>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.wildfly</groupId>
-                <artifactId>wildfly-parent</artifactId>
-                <type>pom</type>
-                <version>${version.org.wildfly}</version>
-                <scope>import</scope>               
-            </dependency>
-		    <dependency>
-                <groupId>org.wildfly</groupId>
-                <artifactId>wildfly-naming</artifactId>
-                <version>${version.org.wildfly}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wildfly</groupId>
-                <artifactId>wildfly-security</artifactId>
-                <version>${version.org.wildfly}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wildfly</groupId>
-                <artifactId>wildfly-weld</artifactId>
-                <version>${version.org.wildfly}</version>
+               <groupId>org.jboss.resteasy</groupId>
+               <artifactId>resteasy-multipart-provider</artifactId>
+               <version>3.6.1.Final</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.wildfly.arquillian</groupId>
-                <artifactId>wildfly-arquillian-common</artifactId>
-                <version>${version.org.wildfly.arquillian}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wildfly.arquillian</groupId>
-                <artifactId>wildfly-arquillian-container-managed</artifactId>
-                <version>${version.org.wildfly.arquillian}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wildfly.arquillian</groupId>
-                <artifactId>wildfly-arquillian-container-remote</artifactId>
-                <version>${version.org.wildfly.arquillian}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wildfly.arquillian</groupId>
-                <artifactId>wildfly-arquillian-protocol-jmx</artifactId>
-                <version>${version.org.wildfly.arquillian}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wildfly.arquillian</groupId>
-                <artifactId>wildfly-arquillian-testenricher-msc</artifactId>
-                <version>${version.org.wildfly.arquillian}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.arquillian.testenricher</groupId>
-                <artifactId>arquillian-testenricher-initialcontext</artifactId>
-                <version>${version.org.jboss.arquillian.testenricher}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.wildfly.core</groupId>
-                <artifactId>wildfly-controller</artifactId>
-                <version>${version.org.wildfly.core}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wildfly.core</groupId>
-                <artifactId>wildfly-controller-client</artifactId>
-                <version>${version.org.wildfly.core}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wildfly.core</groupId>
-                <artifactId>wildfly-server</artifactId>
-                <version>${version.org.wildfly.core}</version>
-            </dependency>
-            
 		</dependencies>
 	</dependencyManagement>
 

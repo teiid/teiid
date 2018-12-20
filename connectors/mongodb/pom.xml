@@ -15,8 +15,6 @@
   <modules>
     <module>mongodb-api</module>
     <module>translator-mongodb</module>
-    <module>connector-mongodb</module>
-    <module>feature-pack-mongodb</module>
   </modules>
 
 </project>

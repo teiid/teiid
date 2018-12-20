@@ -15,7 +15,6 @@
   <modules>
     <module>translator-odata4</module>
     <module>translator-odata</module>
-    <module>feature-pack-odata</module>
-  </modules>
+   </modules>
 
 </project>

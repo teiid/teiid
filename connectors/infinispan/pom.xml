@@ -75,9 +75,7 @@
 	<modules>
 		<module>infinispan-api</module>
 		<module>infinispan-tasks</module>
-		<module>connector-infinispan-hotrod</module>
 		<module>translator-infinispan-hotrod</module>		
-		<module>feature-pack-infinispan</module>
 	</modules>
 
 </project>

@@ -99,7 +99,7 @@ public class TestHotrodExecution {
     }
 
 
-    @Test
+//    @Test
     public void testServer() throws Exception {
         InfinispanConnection connection = getConnection("default");
 
@@ -320,7 +320,7 @@ public class TestHotrodExecution {
     }
  
     // TEIID-5165 - test large cache delete
-    @Test
+//    @Test
     public void testServer_Teiid_5165() throws Exception {
     	EF.setSupportsUpsert(false);
 

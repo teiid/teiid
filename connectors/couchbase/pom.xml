@@ -15,8 +15,6 @@
   <modules>
     <module>couchbase-api</module>
     <module>translator-couchbase</module>
-    <module>connector-couchbase</module>
-    <module>feature-pack-couchbase</module>
   </modules>
 
 </project>
