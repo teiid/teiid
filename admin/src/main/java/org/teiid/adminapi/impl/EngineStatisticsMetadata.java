@@ -149,4 +149,24 @@ public class EngineStatisticsMetadata extends AdminObjectImpl implements EngineS
 		sb.append("; maxWaitPlanCount ").append(maxWaitPlanCount); //$NON-NLS-1$
 		return sb.toString();
 	}
+
+    @Override
+    public long getBufferHeapInUseKb() {
+        return totalMemoryUsedInKB;
+    }
+
+    @Override
+    public long getBufferHeapReservedByActivePlansKb() {
+        return memoryUsedByActivePlansInKB;
+    }
+
+    @Override
+    public long getStorageReadCount() {
+        return cacheReadCount;
+    }
+
+    @Override
+    public long getStorageWriteCount() {
+        return cacheWriteCount;
+    }
 }

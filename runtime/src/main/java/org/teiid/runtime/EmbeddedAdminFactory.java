@@ -35,13 +35,13 @@ public class EmbeddedAdminFactory {
 			DQPCore dqp) {
 		EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
 		stats.setSessionCount(activeSessionsCount);
-		stats.setTotalMemoryUsedInKB(bufferService.getHeapCacheMemoryInUseKB());
-		stats.setMemoryUsedByActivePlansInKB(bufferService.getHeapMemoryInUseByActivePlansKB());
+		stats.setTotalMemoryUsedInKB(bufferService.getHeapBufferInUseKb());
+		stats.setMemoryUsedByActivePlansInKB(bufferService.getMemoryReservedByActivePlansKb());
 		stats.setDiskWriteCount(bufferService.getDiskWriteCount());
 		stats.setDiskReadCount(bufferService.getDiskReadCount());
-		stats.setCacheReadCount(bufferService.getCacheReadCount());
-		stats.setCacheWriteCount(bufferService.getCacheWriteCount());
-		stats.setDiskSpaceUsedInMB(bufferService.getUsedDiskBufferSpaceMB());
+		stats.setCacheReadCount(bufferService.getStorageReadCount());
+		stats.setCacheWriteCount(bufferService.getStorageWriteCount());
+		stats.setDiskSpaceUsedInMB(bufferService.getUsedDiskBufferSpaceMb());
 		stats.setActivePlanCount(dqp.getActivePlanCount());
 		stats.setWaitPlanCount(dqp.getWaitingPlanCount());
 		stats.setMaxWaitPlanWaterMark(dqp.getMaxWaitingPlanWatermark());

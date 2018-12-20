@@ -178,7 +178,7 @@ public class TestLocalBufferService {
         BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
         svc.setVmMaxMemory(14l<<30);
-        svc.setMaxReserveKb(10<<20);
+        svc.setMaxReservedHeapMb(10<<10);
         svc.start();
         BufferManagerImpl impl = svc.getBufferManager();
         BufferFrontedFileStoreCache cache = (BufferFrontedFileStoreCache)impl.getCache();

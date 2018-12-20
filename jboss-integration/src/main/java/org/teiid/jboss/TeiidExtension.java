@@ -30,7 +30,7 @@ import org.teiid.runtime.JBossLogger;
 public class TeiidExtension implements Extension {
 		
 	public static final String TEIID_SUBSYSTEM = "teiid"; //$NON-NLS-1$
-	public static ModelVersion TEIID_VERSION = ModelVersion.create(1, 1);
+	public static ModelVersion TEIID_VERSION = ModelVersion.create(1, 2);
 	
     public static ResourceDescriptionResolver getResourceDescriptionResolver(final String keyPrefix) {
         return new StandardResourceDescriptionResolver(keyPrefix,
@@ -53,5 +53,6 @@ public class TeiidExtension implements Extension {
 	@Override
 	public void initializeParsers(ExtensionParsingContext context) {
 		context.setSubsystemXmlMapping(TEIID_SUBSYSTEM, Namespace.CURRENT.getUri(), TeiidSubsystemParser.INSTANCE);
+		context.setSubsystemXmlMapping(TEIID_SUBSYSTEM, Namespace.TEIID_1_1.getUri(), TeiidSubsystemParser.INSTANCE);
 	}
 }
