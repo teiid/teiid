@@ -138,7 +138,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         String protoContents = null;
         if( protobufFile != null &&  !protobufFile.isEmpty()) {
             File f = new File(protobufFile);
-            if(f == null || !f.exists() || !f.isFile()) {
+            if(!f.exists() || !f.isFile()) {
                 throw new TranslatorException(InfinispanPlugin.Event.TEIID25000,
                         InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25000, protobufFile));
             }

@@ -59,11 +59,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.teiid.connectors</groupId>
-      <artifactId>connector-file</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
         <groupId>org.teiid.connectors</groupId>
         <artifactId>translator-file</artifactId>
         <scope>test</scope>

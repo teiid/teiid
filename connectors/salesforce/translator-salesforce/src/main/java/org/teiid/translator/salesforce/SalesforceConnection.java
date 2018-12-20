@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.teiid.resource.api.Connection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedResult;
@@ -36,7 +37,7 @@ import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.QueryResult;
 
-public interface SalesforceConnection {
+public interface SalesforceConnection extends Connection {
 	
 	public static class BatchResultInfo {
 		private String batchId;

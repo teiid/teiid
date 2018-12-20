@@ -15,34 +15,13 @@
 		<dependencies>
          	
 			<dependency>
-				<groupId>org.infinispan</groupId>
-				<artifactId>infinispan-bom</artifactId>
-				<version>${version.org.infinispan}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
+	            <groupId>org.teiid.connectors</groupId>
+	            <artifactId>infinispan</artifactId>
+	            <version>${version.org.teiid}</version>
+	            <type>pom</type>
+	            <scope>import</scope>
+            </dependency>
 					
-			<dependency>
-				<groupId>com.squareup</groupId>
-				<artifactId>protoparser</artifactId>
-				<version>${version.com.squareup}</version>
-			</dependency>
-			<dependency>
-             	<groupId>org.apache.lucene</groupId>
-             	<artifactId>lucene-core</artifactId>
-             	<version>${version.org.apache.lucene}</version>
-         	</dependency> 
-
-			<dependency>
-				<groupId>org.teiid.connectors</groupId>
-				<artifactId>infinispan-api</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid.connectors</groupId>
-				<artifactId>translator-infinispan-hotrod</artifactId>
-				<version>${project.version}</version>
-			</dependency>
 			<dependency>
 				<groupId>org.teiid.connectors</groupId>
 				<artifactId>connector-infinispan-hotrod</artifactId>
@@ -57,20 +36,6 @@
 
 		</dependencies>
 	</dependencyManagement>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.1</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 	<modules>
 		<module>connector-infinispan-hotrod</module>	

@@ -80,6 +80,19 @@
 			<artifactId>jboss-logging</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>translator-infinispan-hotrod</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>translator-infinispan-hotrod</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
 	</dependencies>
 
 </project>

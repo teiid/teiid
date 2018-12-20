@@ -329,46 +329,6 @@
 				<artifactId>ant-launcher</artifactId>
 				<version>${version.org.apache.ant}</version>
 			</dependency>
-
-			<dependency>
-				<groupId>org.apache.cxf</groupId>
-				<artifactId>cxf-rt-rs-client</artifactId>
-				<version>${version.org.apache.cxf}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cxf</groupId>
-				<artifactId>cxf-rt-frontend-jaxrs</artifactId>
-				<version>${version.org.apache.cxf}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>org.apache.cxf</groupId>
-						<artifactId>cxf-rt-bindings-xml</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.apache.cxf</groupId>
-						<artifactId>cxf-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.apache.cxf</groupId>
-						<artifactId>cxf-rt-core</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cxf</groupId>
-				<artifactId>cxf-rt-rs-security-oauth</artifactId>
-				<version>${version.org.apache.cxf}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cxf</groupId>
-				<artifactId>cxf-rt-rs-security-oauth2</artifactId>
-				<version>${version.org.apache.cxf}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cxf</groupId>
-				<artifactId>cxf-rt-rs-security-oauth2-saml</artifactId>
-				<version>${version.org.apache.cxf}</version>
-			</dependency>
 			<dependency>
 				<groupId>org.apache.derby</groupId>
 				<artifactId>derby</artifactId>
@@ -686,11 +646,6 @@
 				<version>${version.org.teiid}</version>
 			</dependency>
 			<dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-resource-spi</artifactId>
-                <version>${version.org.teiid}</version>
-            </dependency>
-			<dependency>
 				<groupId>org.teiid</groupId>
 				<artifactId>teiid-api</artifactId>
 				<type>test-jar</type>
@@ -703,11 +658,6 @@
 				<version>${version.org.teiid}</version>
 			</dependency>
 			<dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-jboss-client</artifactId>
-                <version>${version.org.teiid}</version>
-            </dependency>
-			<dependency>
 				<groupId>org.teiid</groupId>
 				<artifactId>teiid-admin</artifactId>
 				<version>${version.org.teiid}</version>
@@ -717,21 +667,6 @@
 				<artifactId>teiid-admin</artifactId>
 				<version>${version.org.teiid}</version>
 				<type>test-jar</type>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-jboss-admin</artifactId>
-				<version>${version.org.teiid}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-jboss-security</artifactId>
-				<version>${version.org.teiid}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-adminshell</artifactId>
-				<version>${version.org.teiid}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.teiid</groupId>
@@ -771,11 +706,6 @@
 				<groupId>org.teiid</groupId>
 				<artifactId>teiid-metadata</artifactId>
 				<type>test-jar</type>
-				<version>${version.org.teiid}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid</groupId>
-				<artifactId>teiid-jboss-integration</artifactId>
 				<version>${version.org.teiid}</version>
 			</dependency>
 			<dependency>
@@ -850,21 +780,6 @@
 			</dependency>
 			<dependency>
 				<groupId>org.teiid.connectors</groupId>
-				<artifactId>connector-salesforce</artifactId>
-				<version>${version.org.teiid}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid.connectors</groupId>
-				<artifactId>connector-salesforce-34</artifactId>
-				<version>${version.org.teiid}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid.connectors</groupId>
-				<artifactId>connector-salesforce-41</artifactId>
-				<version>${version.org.teiid}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid.connectors</groupId>
 				<artifactId>translator-jdbc</artifactId>
 				<version>${version.org.teiid}</version>
 			</dependency>
@@ -911,10 +826,17 @@
 				<version>${version.org.teiid}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.teiid.connectors</groupId>
-				<artifactId>connector-file</artifactId>
-				<version>${version.org.teiid}</version>
-			</dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-infinispan-hotrod</artifactId>
+                <version>${version.org.teiid}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-infinispan-hotrod</artifactId>
+                <version>${version.org.teiid}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
 
 	        <dependency>
 		        <groupId>xerces</groupId>
@@ -1118,6 +1040,13 @@
            </dependency>
            
            <dependency>
+               <groupId>org.jboss.resteasy</groupId>
+               <artifactId>resteasy-multipart-provider</artifactId>
+               <version>3.6.1.Final</version>
+           </dependency>
+           
+           
+           <dependency>
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
                 <version>${version.javax.validation}</version>
@@ -1151,11 +1080,6 @@
                <version>1.1.1.Final</version>
             </dependency>       
             <dependency>
-               <groupId>org.jboss.spec.javax.resource</groupId>
-               <artifactId>jboss-connector-api_1.7_spec</artifactId>
-               <version>1.0.1.Final</version>
-            </dependency>  
-            <dependency>
                <groupId>org.jboss.spec.javax.xml.bind</groupId>
                <artifactId>jboss-jaxb-api_2.3_spec</artifactId>
                <version>1.0.1.Final</version>
@@ -1164,11 +1088,6 @@
                <groupId>org.slf4j</groupId>
                <artifactId>slf4j-api</artifactId>
                <version>1.7.22.jbossorg-1</version>
-            </dependency>
-            <dependency>
-               <groupId>org.jboss.resteasy</groupId>
-               <artifactId>resteasy-multipart-provider</artifactId>
-               <version>3.6.1.Final</version>
             </dependency>
 
 		</dependencies>

@@ -1,0 +1,25 @@
+# Batch script to add and configure logging in the JBoss server
+connect
+
+# Start batching commands
+batch
+
+# Add the periodic rotating file handlers corresponding to those added to the logging properties file
+/subsystem=logging/periodic-rotating-file-handler=TEIID_COMMAND_LOG/:add(suffix=.yyyy-MM-dd,formatter="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%E%n",level=DEBUG,append=true,file={"path"=>"teiid-command.log", "relative-to"=>"jboss.server.log.dir"})
+/subsystem=logging/periodic-rotating-file-handler=TEIID_AUDIT_LOG/:add(suffix=.yyyy-MM-dd,formatter="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%E%n",level=DEBUG,append=true,file={"path"=>"teiid-audit.log", "relative-to"=>"jboss.server.log.dir"})
+
+# Configure the logging async handlers
+/subsystem=logging/async-handler=TEIID_COMMAND_LOG_ASYNC:add(level=DEBUG,queue-length=1024,overflow-action=BLOCK,subhandlers=["TEIID_COMMAND_LOG"], enabled=true)
+/subsystem=logging/async-handler=TEIID_AUDIT_LOG_ASYNC:add(level=DEBUG,queue-length=1024,overflow-action=BLOCK,subhandlers=["TEIID_AUDIT_LOG"], enabled=true)
+
+
+# Create the logger for teiid
+/subsystem=logging/logger=org.teiid.COMMAND_LOG:remove
+/subsystem=logging/logger=org.teiid.AUDIT_LOG:remove
+
+/subsystem=logging/logger=org.teiid.COMMAND_LOG:add(level=DEBUG, handlers=[TEIID_COMMAND_LOG_ASYNC], use-parent-handlers=false)
+/subsystem=logging/logger=org.teiid.AUDIT_LOG:add(level=DEBUG, handlers=[TEIID_AUDIT_LOG_ASYNC], use-parent-handlers=false)
+
+
+# Run the batch commands
+run-batch

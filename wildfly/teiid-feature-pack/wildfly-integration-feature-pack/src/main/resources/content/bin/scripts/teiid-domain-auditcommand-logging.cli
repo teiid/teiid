@@ -1,0 +1,37 @@
+# Batch script to add and configure logging in the JBoss server
+connect
+
+# Start batching commands
+batch
+
+# Add the periodic rotating file handlers corresponding to those added to the logging properties file
+/profile=ha/subsystem=logging/periodic-rotating-file-handler=TEIID_COMMAND_LOG/:add(suffix=.yyyy-MM-dd,formatter="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%E%n",level=DEBUG,append=true,file={"path"=>"teiid-command.log", "relative-to"=>"jboss.server.log.dir"})
+/profile=ha/subsystem=logging/periodic-rotating-file-handler=TEIID_AUDIT_LOG/:add(suffix=.yyyy-MM-dd,formatter="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%E%n",level=DEBUG,append=true,file={"path"=>"teiid-audit.log", "relative-to"=>"jboss.server.log.dir"})
+
+/profile=full-ha/subsystem=logging/periodic-rotating-file-handler=TEIID_COMMAND_LOG/:add(suffix=.yyyy-MM-dd,formatter="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%E%n",level=DEBUG,append=true,file={"path"=>"teiid-command.log", "relative-to"=>"jboss.server.log.dir"})
+/profile=full-ha/subsystem=logging/periodic-rotating-file-handler=TEIID_AUDIT_LOG/:add(suffix=.yyyy-MM-dd,formatter="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%E%n",level=DEBUG,append=true,file={"path"=>"teiid-audit.log", "relative-to"=>"jboss.server.log.dir"})
+
+
+# Configure the logging async handlers
+/profile=ha/subsystem=logging/async-handler=TEIID_COMMAND_LOG_ASYNC:add(level=DEBUG,queue-length=1024,overflow-action=BLOCK,subhandlers=["TEIID_COMMAND_LOG"], enabled=true)
+/profile=ha/subsystem=logging/async-handler=TEIID_AUDIT_LOG_ASYNC:add(level=DEBUG,queue-length=1024,overflow-action=BLOCK,subhandlers=["TEIID_AUDIT_LOG"], enabled=true)
+
+/profile=full-ha/subsystem=logging/async-handler=TEIID_COMMAND_LOG_ASYNC:add(level=DEBUG,queue-length=1024,overflow-action=BLOCK,subhandlers=["TEIID_COMMAND_LOG"], enabled=true)
+/profile=full-ha/subsystem=logging/async-handler=TEIID_AUDIT_LOG_ASYNC:add(level=DEBUG,queue-length=1024,overflow-action=BLOCK,subhandlers=["TEIID_AUDIT_LOG"], enabled=true)
+
+
+# Create the logger for teiid
+/profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:remove
+/profile=ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:remove
+
+/profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add(level=DEBUG, handlers=[TEIID_COMMAND_LOG_ASYNC], use-parent-handlers=false)
+/profile=ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:add(level=DEBUG, handlers=[TEIID_AUDIT_LOG_ASYNC], use-parent-handlers=false)
+
+/profile=full-ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:remove
+/profile=full-ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:remove
+
+/profile=full-ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add(level=DEBUG, handlers=[TEIID_COMMAND_LOG_ASYNC], use-parent-handlers=false)
+/profile=full-ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:add(level=DEBUG, handlers=[TEIID_AUDIT_LOG_ASYNC], use-parent-handlers=false)
+
+# Run the batch commands
+run-batch

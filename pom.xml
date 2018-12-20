@@ -18,7 +18,6 @@
 	<properties>		
 	    <site.url>http://teiid.io</site.url>
 	    <illegaltransitivereportonly>true</illegaltransitivereportonly>
-	    <version.teiid.console>3.1.0</version.teiid.console>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -75,7 +74,6 @@
 		<id>release</id>
 		<modules>
 			<module>build</module>
-            <module>wildfly</module>
 		</modules>
 	</profile>
       
@@ -83,7 +81,6 @@
 		<id>final-release</id>
 		<modules>
 			<module>build</module>
-            <module>wildfly</module>
 		</modules>
 		<build>
 			<plugins>
@@ -120,20 +117,6 @@
 		</build>
 	</profile>
     
-    <profile>
-		<id>wildfly</id>
-		<modules>
-            <module>wildfly</module>
-		</modules>
-	</profile>
-        
-    <profile>
-      <id>docs</id>
-      <modules>
-        <module>documentation</module>
-      </modules>
-    </profile>
-      
     <profile>
          <!--
           This is to enable faster build for development time.
@@ -409,7 +392,6 @@
         <module>build-configuration</module>
 		<module>common-core</module>
 		<module>api</module>
-		<module>resource-spi</module>
 		<module>client</module>
 		<module>admin</module>
 		<module>data-quality</module>
@@ -421,14 +403,8 @@
 		<module>olingo-common</module>
 		<module>olingo-patches</module>
 		<module>olingo</module>
-		<!--module>jboss-admin</module>
-		<module>jboss-client</module>
-		<module>jboss-integration</module>
-		<module>jboss-security</module-->
-		<module>rest-service</module>
-		<!--module>teiid-feature-pack</module-->
         <module>connectors</module>
-		<!--module>test-integration</module-->
 		<module>saxon-xom</module>
+		<module>wildfly</module>
 	</modules>
 </project>

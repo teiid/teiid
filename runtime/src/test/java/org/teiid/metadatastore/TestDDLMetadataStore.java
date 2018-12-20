@@ -23,7 +23,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -198,7 +197,7 @@ public class TestDDLMetadataStore {
         
     }    
     
-  //  @Test
+    @Test
     public void testVDBExport() throws Exception {
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         ec.setUseDisk(false);

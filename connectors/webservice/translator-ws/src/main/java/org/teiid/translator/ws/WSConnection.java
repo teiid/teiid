@@ -25,10 +25,12 @@ import javax.xml.namespace.QName;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
 
+import org.teiid.resource.api.Connection;
+
 /**
  * Simple interface for web services
  */
-public interface WSConnection {
+public interface WSConnection extends Connection {
 	
 	public static final String STATUS_CODE = "status-code"; //$NON-NLS-1$
 

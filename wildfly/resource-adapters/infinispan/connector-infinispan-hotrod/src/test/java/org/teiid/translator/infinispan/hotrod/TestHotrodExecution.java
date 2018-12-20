@@ -99,7 +99,7 @@ public class TestHotrodExecution {
     }
 
 
-//    @Test
+    @Test
     public void testServer() throws Exception {
         InfinispanConnection connection = getConnection("default");
 
@@ -285,7 +285,7 @@ public class TestHotrodExecution {
         		+ "{d '"+new SimpleDateFormat("yyyy-MM-dd").format(date)+"'}, "
         		+ "null, null, "
         		+ "convert('clob contents', clob), xmlparse(CONTENT '<a>foo</a>'), null)";
-        System.out.println(sql);
+        
         command = UTILITY.parseCommand(sql);
         
         
@@ -320,7 +320,7 @@ public class TestHotrodExecution {
     }
  
     // TEIID-5165 - test large cache delete
-//    @Test
+    @Test
     public void testServer_Teiid_5165() throws Exception {
     	EF.setSupportsUpsert(false);
 

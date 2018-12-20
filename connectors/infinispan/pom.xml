@@ -43,18 +43,6 @@
 				<artifactId>translator-infinispan-hotrod</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>org.teiid.connectors</groupId>
-				<artifactId>connector-infinispan-hotrod</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid.connectors</groupId>
-				<artifactId>connector-infinispan-hotrod</artifactId>
-				<version>${project.version}</version>
-				<type>test-jar</type>
-			</dependency>
-
 		</dependencies>
 	</dependencyManagement>
 

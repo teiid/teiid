@@ -8,7 +8,7 @@
 	</parent>
 	<artifactId>translator-infinispan-hotrod</artifactId>
 	<name>Infinispan Protobuf Translator</name>
-	<description>This tranlator is using protobuf based schema to access the Infinispan cache</description>
+	<description>This translator is using protobuf based schema to access the Infinispan cache</description>
 
 	<dependencies>
 		<dependency>
@@ -52,27 +52,6 @@
 			<artifactId>protoparser</artifactId>
 		</dependency>
 		<!-- test dependencies -->
-        <dependency>
-            <groupId>org.teiid.connectors</groupId>
-            <artifactId>connector-infinispan-hotrod</artifactId>
-            <scope>test</scope>
-        </dependency>		
-		<dependency>
-			<groupId>org.teiid.connectors</groupId>
-			<artifactId>connector-infinispan-hotrod</artifactId>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-server-hotrod</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>

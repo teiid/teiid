@@ -1,25 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <artifactId>teiid-parent</artifactId>
-    <groupId>org.teiid</groupId>
-    <version>12.0.0-SNAPSHOT</version>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-parent</artifactId>
+      <version>28</version>
+      <relativePath />
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>wildfly-parent</artifactId>
+  <groupId>org.teiid</groupId>
+  <version>12.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Teiid Wildfly Parent</name>
   <description>This project is aggregator for all the wildfly related modules.</description>
   
   <properties>
-        
+        <site.url>http://teiid.io</site.url>
         <version.org.wildfly>14.0.1.Final</version.org.wildfly>
 	    <version.org.wildfly.core>6.0.2.Final</version.org.wildfly.core>
 	    <version.org.wildfly.arquillian>2.1.1.Final</version.org.wildfly.arquillian>
         <version.org.wildfly.build-tools>1.2.10.Final</version.org.wildfly.build-tools>
         <version.org.jboss.arquillian.testenricher>1.4.0.Final</version.org.jboss.arquillian.testenricher>
-      
+        <version.org.apache.cxf>3.2.5-jbossorg-1</version.org.apache.cxf>
+        
+        <version.teiid.console>3.1.0</version.teiid.console>
+        <version.org.teiid>${project.version}</version.org.teiid>
   </properties>
+  
+  <profiles>
+    <profile>
+         <!--
+          This is to enable faster build for development time.
+          -->
+      <id>dev</id>
+      <properties>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <skipTests>true</skipTests>
+      </properties>
+    </profile>
+  </profiles>
   
   	<dependencyManagement>
 		<dependencies>
@@ -29,6 +48,95 @@
                 <version>${version.org.teiid}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-resource-spi</artifactId>
+                <version>${version.org.teiid}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-jboss-client</artifactId>
+                <version>${version.org.teiid}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-jboss-admin</artifactId>
+                <version>${version.org.teiid}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-jboss-security</artifactId>
+                <version>${version.org.teiid}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-jboss-integration</artifactId>
+                <version>${version.org.teiid}</version>
+            </dependency>
+
+            <dependency>
+				<groupId>org.teiid.connectors</groupId>
+				<artifactId>connector-salesforce</artifactId>
+				<version>${version.org.teiid}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.teiid.connectors</groupId>
+				<artifactId>connector-salesforce-34</artifactId>
+				<version>${version.org.teiid}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.teiid.connectors</groupId>
+				<artifactId>connector-salesforce-41</artifactId>
+				<version>${version.org.teiid}</version>
+			</dependency>
+
+            <dependency>
+				<groupId>org.teiid.connectors</groupId>
+				<artifactId>connector-file</artifactId>
+				<version>${version.org.teiid}</version>
+			</dependency>
+
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-client</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+                <version>${version.org.apache.cxf}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-rt-bindings-xml</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-rt-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-security-oauth</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-security-oauth2</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-security-oauth2-saml</artifactId>
+                <version>${version.org.apache.cxf}</version>
             </dependency>
             
             <!-- ====== -->            
@@ -48,10 +156,6 @@
                 <scope>import</scope>			    
             </dependency>
             
-        </dependencies>
-	</dependencyManagement>
-  
-    <dependencies>
         <dependency>
             <groupId>org.wildfly</groupId>
             <artifactId>wildfly-naming</artifactId>
@@ -120,6 +224,12 @@
             <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
             <version>${version.org.wildfly.build-tools}</version>
         </dependency>
+            
+        </dependencies>
+	</dependencyManagement>
+  
+    <dependencies>
+
           
     <!--  Internal Test Dependencies -->
     <dependency>
@@ -181,9 +291,53 @@
         <groupId>org.jboss.logging</groupId>
         <artifactId>jboss-logging</artifactId>
         <scope>test</scope>        
-    </dependency>          
+    </dependency>
+    
+    <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <scope>test</scope>
+    </dependency>
     
   </dependencies>
+  
+  <build>
+      <pluginManagement>
+           <plugins>
+		      <!-- Build a test-jar for each project, so that src/test/* resources and 
+		            classes can be used in other projects. Also customize how the jar files are 
+		            assembled. -->
+		       <plugin>
+		           <groupId>org.apache.maven.plugins</groupId>
+		           <artifactId>maven-jar-plugin</artifactId>
+		           <executions>
+		               <execution>
+		                   <goals>
+		                       <goal>test-jar</goal>
+		                   </goals>
+		               </execution>
+		           </executions>
+		           <configuration>
+		               <archive>
+		                   <manifest>
+		                       <addDefaultSpecificationEntries> true</addDefaultSpecificationEntries>
+		                       <addDefaultImplementationEntries> true</addDefaultImplementationEntries>
+		                   </manifest>
+		                   <manifestEntries>
+		                       <Implementation-URL>${project.url}</Implementation-URL>
+		                   </manifestEntries>
+		               </archive>
+		           </configuration>
+		       </plugin>
+          </plugins>
+      </pluginManagement>
+  </build>
   
   <modules>
  		<module>jboss-admin</module>
@@ -191,6 +345,7 @@
         <module>jboss-integration</module>
         <module>jboss-security</module>
         <module>teiid-feature-pack</module>
+        <module>resource-spi</module>
         <module>resource-adapters</module>
         <module>test-integration</module>
         <module>wildfly-build</module>

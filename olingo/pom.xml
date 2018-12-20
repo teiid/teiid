@@ -197,11 +197,6 @@
           <scope>test</scope>
         </dependency>        
         <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
-            <scope>test</scope>
-        </dependency>        
-        <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-runtime</artifactId>
             <type>test-jar</type>
