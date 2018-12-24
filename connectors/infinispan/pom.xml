@@ -21,6 +21,20 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			
+			<!-- override the runtime dependencies -->
+			
+			<dependency>
+	            <groupId>org.infinispan</groupId>
+	            <artifactId>infinispan-core</artifactId>
+	            <version>${version.org.infinispan}</version>
+            </dependency>
+            
+            <dependency>
+	            <groupId>org.infinispan</groupId>
+	            <artifactId>infinispan-commons</artifactId>
+	            <version>${version.org.infinispan}</version>
+            </dependency>
 					
 			<dependency>
 				<groupId>com.squareup</groupId>

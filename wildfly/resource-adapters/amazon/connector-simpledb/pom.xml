@@ -8,8 +8,7 @@
     </parent>
     <groupId>org.teiid.connectors</groupId>
 	<artifactId>connector-simpledb</artifactId>
-    <version>12.0.0-SNAPSHOT</version>
-	<name>SimpleDB Connector</name>
+    <name>SimpleDB Connector</name>
 	<description>This connector reads data from SimpleDB database</description>
 
 	<dependencies>

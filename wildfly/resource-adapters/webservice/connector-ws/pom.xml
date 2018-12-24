@@ -8,7 +8,6 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-ws</artifactId>
     <groupId>org.teiid.connectors</groupId>
-    <version>12.0.0-SNAPSHOT</version>
     <name>Web Service Adapter</name>
     <description>This resource adapter reads data from Web Services</description>
     

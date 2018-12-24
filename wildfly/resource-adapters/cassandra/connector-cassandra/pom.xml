@@ -8,7 +8,6 @@
     
     <groupId>org.teiid.connectors</groupId>
     <artifactId>connector-cassandra</artifactId>
-    <version>12.0.0-SNAPSHOT</version>
     <name>Cassandra Resource Adapter</name>
     <description>Cassandra Resource Adapter</description>
     

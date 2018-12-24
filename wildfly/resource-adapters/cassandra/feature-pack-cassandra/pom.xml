@@ -8,7 +8,6 @@
     </parent>
     <groupId>org.teiid.connectors</groupId>
     <artifactId>feature-pack-cassandra</artifactId>
-    <version>12.0.0-SNAPSHOT</version>
     <name>Cassandra Feature Pack</name>
     <packaging>pom</packaging>
 

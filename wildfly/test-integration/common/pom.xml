@@ -222,6 +222,7 @@
                                     </systemPropertyVariables>
                                     <includes>
                                         <include>**/IntegrationTest*</include>
+                                        <include>**/Test*</include>
                                     </includes>
                                 </configuration>
                             </execution>

@@ -8,7 +8,6 @@
 	</parent>
     <groupId>org.teiid.connectors</groupId>
     <artifactId>feature-pack-jdbc</artifactId>
-    <version>12.0.0-SNAPSHOT</version>
     <name>JDBC Feature Pack</name>
     <packaging>pom</packaging>
 

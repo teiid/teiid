@@ -24,10 +24,59 @@
         <version.org.apache.cxf>3.2.5-jbossorg-1</version.org.apache.cxf>
         
         <version.teiid.console>3.1.0</version.teiid.console>
-        <version.org.teiid>${project.version}</version.org.teiid>
+        <!-- <version.org.teiid>${project.version}</version.org.teiid> -->
   </properties>
   
-  <profiles>
+    <!-- copied from the teiid-parent when things separate-->
+    <profiles>
+	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
+	<profile>
+		<id>release</id>
+		<modules>
+			<module>wildfly-build</module>
+		</modules>
+	</profile>
+      
+	<profile>		
+		<id>final-release</id>
+		<modules>
+			<module>wildfly-build</module>
+		</modules>
+		<build>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>${version.javadoc.plugin}</version>
+					<configuration>
+						<maxmemory>512m</maxmemory>
+						<!-- <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames> -->
+						<failOnError>false</failOnError>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<artifactId>maven-gpg-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>sign-artifacts</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>sign</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</build>
+	</profile>
+    
     <profile>
          <!--
           This is to enable faster build for development time.
@@ -37,15 +86,18 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <skipTests>true</skipTests>
       </properties>
-    </profile>
-  </profiles>
+      <modules>
+        <module>wildfly-build</module>
+      </modules>
+    </profile>   
+	</profiles>
   
   	<dependencyManagement>
 		<dependencies>
             <dependency>
                 <groupId>org.teiid</groupId>
-                <artifactId>teiid-bom</artifactId>
-                <version>${version.org.teiid}</version>
+                <artifactId>teiid-parent</artifactId>
+                <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -53,50 +105,50 @@
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>teiid-resource-spi</artifactId>
-                <version>${version.org.teiid}</version>
+                <version>${project.version}</version>
             </dependency>
             
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>teiid-jboss-client</artifactId>
-                <version>${version.org.teiid}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>teiid-jboss-admin</artifactId>
-                <version>${version.org.teiid}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>teiid-jboss-security</artifactId>
-                <version>${version.org.teiid}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>teiid-jboss-integration</artifactId>
-                <version>${version.org.teiid}</version>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
 				<groupId>org.teiid.connectors</groupId>
 				<artifactId>connector-salesforce</artifactId>
-				<version>${version.org.teiid}</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.teiid.connectors</groupId>
 				<artifactId>connector-salesforce-34</artifactId>
-				<version>${version.org.teiid}</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.teiid.connectors</groupId>
 				<artifactId>connector-salesforce-41</artifactId>
-				<version>${version.org.teiid}</version>
+				<version>${project.version}</version>
 			</dependency>
 
             <dependency>
 				<groupId>org.teiid.connectors</groupId>
 				<artifactId>connector-file</artifactId>
-				<version>${version.org.teiid}</version>
+				<version>${project.version}</version>
 			</dependency>
 
             <dependency>
@@ -339,6 +391,24 @@
       </pluginManagement>
   </build>
   
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+    
+    <distributionManagement>
+        <repository>
+            <id>oss.sonatype.org</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <snapshotRepository>
+            <id>oss.sonatype.org</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+  
   <modules>
  		<module>jboss-admin</module>
 		<module>jboss-client</module>
@@ -348,6 +418,5 @@
         <module>resource-spi</module>
         <module>resource-adapters</module>
         <module>test-integration</module>
-        <module>wildfly-build</module>
   </modules>
 </project>

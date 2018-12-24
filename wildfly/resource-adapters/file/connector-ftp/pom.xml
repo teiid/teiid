@@ -8,7 +8,6 @@
     </parent>
     <groupId>org.teiid.connectors</groupId>
     <artifactId>connector-ftp</artifactId>
-    <version>12.0.0-SNAPSHOT</version>
     <name>FTP/FTPS Resource Adapter</name>
     <description>This Resource Adapter reads data from ftp/ftps server</description>
     
