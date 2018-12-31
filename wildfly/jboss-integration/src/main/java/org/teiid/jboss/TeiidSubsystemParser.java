@@ -28,6 +28,7 @@ import java.util.Set;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.parsing.ParseUtils;
 import org.jboss.as.controller.persistence.SubsystemMarshallingContext;
 import org.jboss.dmr.ModelNode;
@@ -55,9 +56,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
             writer.writeEndElement();
         }
         
-    	if (like(node, Element.BUFFER_SERVICE_ELEMENT)){
-    		writer.writeStartElement(Element.BUFFER_SERVICE_ELEMENT.getLocalName());
-    		writeBufferService(writer, node);
+    	if (like(node, Element.BUFFER_MANAGER_ELEMENT) || like(node, Element.BUFFER_SERVICE_ELEMENT)){
+    		writer.writeStartElement(Element.BUFFER_MANAGER_ELEMENT.getLocalName());
+    		writeBufferManager(writer, node);
     		writer.writeEndElement();
     	}
     	
@@ -195,20 +196,47 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	}
     }
     
-	private void writeBufferService(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		USE_DISK_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		INLINE_LOBS.marshallAsAttribute(node, false, writer);
-		PROCESSOR_BATCH_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		MAX_PROCESSING_KB_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		MAX_RESERVED_KB_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		MAX_FILE_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		MAX_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		MAX_OPEN_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		MEMORY_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-		ENCRYPT_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+	private void writeBufferManager(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+	    //if using a cli add, we end up here - the xml name has already been changed
+        USE_DISK_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        INLINE_LOBS.marshallAsAttribute(node, false, writer);
+        PROCESSOR_BATCH_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MAX_PROCESSING_KB_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MAX_FILE_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MAX_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MAX_OPEN_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MEMORY_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        ENCRYPT_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        //values need adjusted
+        writeAdjustedValue(writer, node, MAX_RESERVED_KB_ATTRIBUTE);
+        writeAdjustedValue(writer, node, MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE);
+	    
+		BUFFER_MANAGER_USE_DISK_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_INLINE_LOBS.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 	}
+
+    private void writeAdjustedValue(XMLExtendedStreamWriter writer,
+            ModelNode node, SimpleAttributeDefinition element) throws XMLStreamException {
+        String name = element.getName();
+        if (node.hasDefined(name)) {
+            int value = node.get(name).asInt();
+            if (value > 0) {
+                value = value/1024;
+            }
+            writer.writeAttribute(element.getXmlName(), String.valueOf(value));
+        }
+    }
 
 	private void writeResultsetCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
 		RSC_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);
@@ -256,6 +284,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         // elements
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             switch (Namespace.forUri(reader.getNamespaceURI())) {
+                case TEIID_1_2:
                 case TEIID_1_1: {
                     Element element = Element.forName(reader.getLocalName());
                     switch (element) {
@@ -294,8 +323,15 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     					break;
     					
     				case BUFFER_SERVICE_ELEMENT:
-    					parseBufferService(reader, bootServices);
+    				    if (Namespace.forUri(reader.getNamespaceURI()) == Namespace.TEIID_1_2) {
+    				        throw ParseUtils.unexpectedElement(reader);
+    				    }
+    				    parseBufferService(reader, bootServices);
     					break;
+    					
+    				case BUFFER_MANAGER_ELEMENT:
+    				    parseBufferManager(reader, bootServices);
+                        break;
     				
     				case PREPAREDPLAN_CACHE_ELEMENT:
     					parsePreparedPlanCacheConfiguration(reader, bootServices);
@@ -619,40 +655,48 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			
     			switch(element) {
     			case USE_DISK_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				node.get(Element.BUFFER_MANAGER_USE_DISK_ATTRIBUTE.getModelName()).set(Boolean.parseBoolean(attrValue));
     				break;
     			case INLINE_LOBS:
-    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				node.get(Element.BUFFER_MANAGER_INLINE_LOBS.getModelName()).set(Boolean.parseBoolean(attrValue));
     				break;
     			case PROCESSOR_BATCH_SIZE_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+    				node.get(Element.BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
     				break;
     			case MAX_PROCESSING_KB_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+    				node.get(Element.BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
     				break;
     			case MAX_RESERVED_KB_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+    			    int val = Integer.parseInt(attrValue);
+    			    if (val > 0) {
+    			        val = val / 1024;
+    			    }
+    				node.get(Element.BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE.getModelName()).set(val);
     				break;
     			case MAX_OPEN_FILES_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+    				node.get(Element.BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
     				break;
     			case MAX_FILE_SIZE_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Long.parseLong(attrValue));
+    				node.get(Element.BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE.getModelName()).set(Long.parseLong(attrValue));
     				break;
     			case MAX_BUFFER_SPACE_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Long.parseLong(attrValue));
+    				node.get(Element.BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE.getModelName()).set(Long.parseLong(attrValue));
     				break;
     			case MEMORY_BUFFER_SPACE_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+    				node.get(Element.BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
     				break;
     			case MEMORY_BUFFER_OFFHEAP_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				node.get(Element.BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.getModelName()).set(Boolean.parseBoolean(attrValue));
     				break;
     			case MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+    			    val = Integer.parseInt(attrValue);
+                    if (val > 0) {
+                        val = val / 1024;
+                    }
+    				node.get(Element.BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.getModelName()).set(val);
     				break;
     			case ENCRYPT_FILES_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				node.get(Element.BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE.getModelName()).set(Boolean.parseBoolean(attrValue));
     				break;
     			default:
     				throw ParseUtils.unexpectedAttribute(reader, i);    			
@@ -661,6 +705,60 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	}
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
     	return node;
+    }
+    
+    private ModelNode parseBufferManager(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+        
+        if (reader.getAttributeCount() > 0) {
+            for(int i=0; i<reader.getAttributeCount(); i++) {
+                String attrName = reader.getAttributeLocalName(i);
+                String attrValue = reader.getAttributeValue(i);
+                Element element = Element.forName(attrName, Element.BUFFER_MANAGER_ELEMENT);
+                
+                switch(element) {
+                case BUFFER_MANAGER_USE_DISK_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+                    break;
+                case BUFFER_MANAGER_INLINE_LOBS:
+                    node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+                    break;
+                case BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+                    break;
+                case BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+                    break;
+                case BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+                    break;
+                case BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+                    break;
+                case BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Long.parseLong(attrValue));
+                    break;
+                case BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Long.parseLong(attrValue));
+                    break;
+                case BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+                    break;
+                case BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+                    break;
+                case BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+                    break;
+                case BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+                    break;
+                default:
+                    throw ParseUtils.unexpectedAttribute(reader, i);                
+                }
+            }
+        }
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
+        return node;
     }
     
     private ModelNode parsePreparedPlanCacheConfiguration(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {

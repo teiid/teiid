@@ -24,12 +24,13 @@ import java.util.Map;
 enum Namespace {
     // must be first
     UNKNOWN(null),
-    TEIID_1_1("urn:jboss:domain:teiid:1.1"); //$NON-NLS-1$
+    TEIID_1_1("urn:jboss:domain:teiid:1.1"), //$NON-NLS-1$
+    TEIID_1_2("urn:jboss:domain:teiid:1.2"); //$NON-NLS-1$
 
     /**
      * The current namespace version.
      */
-    public static final Namespace CURRENT = TEIID_1_1;
+    public static final Namespace CURRENT = TEIID_1_2;
 
     private final String uri;
 

@@ -145,20 +145,34 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
 		// object replicator
 		TeiidConstants.DC_STACK_ATTRIBUTE,
-
+		
 		// Buffer Service
-		TeiidConstants.USE_DISK_ATTRIBUTE,
-		TeiidConstants.INLINE_LOBS,
-		TeiidConstants.PROCESSOR_BATCH_SIZE_ATTRIBUTE,
-		TeiidConstants.MAX_PROCESSING_KB_ATTRIBUTE,
-		TeiidConstants.MAX_RESERVED_KB_ATTRIBUTE,
-		TeiidConstants.MAX_FILE_SIZE_ATTRIBUTE,
-		TeiidConstants.MAX_BUFFER_SPACE_ATTRIBUTE,
-		TeiidConstants.MAX_OPEN_FILES_ATTRIBUTE,
-		TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE,
-		TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE,
-		TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE,
-		TeiidConstants.ENCRYPT_FILES_ATTRIBUTE,
+        TeiidConstants.USE_DISK_ATTRIBUTE,
+        TeiidConstants.INLINE_LOBS,
+        TeiidConstants.PROCESSOR_BATCH_SIZE_ATTRIBUTE,
+        TeiidConstants.MAX_PROCESSING_KB_ATTRIBUTE,
+        TeiidConstants.MAX_RESERVED_KB_ATTRIBUTE,
+        TeiidConstants.MAX_FILE_SIZE_ATTRIBUTE,
+        TeiidConstants.MAX_BUFFER_SPACE_ATTRIBUTE,
+        TeiidConstants.MAX_OPEN_FILES_ATTRIBUTE,
+        TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE,
+        TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE,
+        TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE,
+        TeiidConstants.ENCRYPT_FILES_ATTRIBUTE,
+
+		// Buffer Manager
+		TeiidConstants.BUFFER_MANAGER_USE_DISK_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_INLINE_LOBS,
+		TeiidConstants.BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE,
+		TeiidConstants.BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE,
 		
 		// prepared plan cache
 		TeiidConstants.PPC_NAME_ATTRIBUTE,
@@ -696,42 +710,66 @@ class TeiidAdd extends AbstractAddStepHandler {
     		return bufferManger;
     	}
     	
-    	if (isDefined(USE_DISK_ATTRIBUTE, node, context)) {
-    		bufferManger.setUseDisk(asBoolean(USE_DISK_ATTRIBUTE, node, context));
-    	}	                	
-    	if (isDefined(PROCESSOR_BATCH_SIZE_ATTRIBUTE, node, context)) {
-    		bufferManger.setProcessorBatchSize(asInt(PROCESSOR_BATCH_SIZE_ATTRIBUTE, node, context));
-    	}	
-    	if (isDefined(MAX_PROCESSING_KB_ATTRIBUTE, node, context)) {
-    		bufferManger.setMaxProcessingKb(asInt(MAX_PROCESSING_KB_ATTRIBUTE, node, context));
-    	}
-    	if (isDefined(MAX_RESERVED_KB_ATTRIBUTE, node, context)) {
-    		bufferManger.setMaxReserveKb(asInt(MAX_RESERVED_KB_ATTRIBUTE, node, context));
-    	}
-    	if (isDefined(MAX_FILE_SIZE_ATTRIBUTE, node, context)) {
-    		bufferManger.setMaxFileSize(asLong(MAX_FILE_SIZE_ATTRIBUTE, node, context));
-    	}
-    	if (isDefined(MAX_BUFFER_SPACE_ATTRIBUTE, node, context)) {
-    		bufferManger.setMaxBufferSpace(asLong(MAX_BUFFER_SPACE_ATTRIBUTE, node, context));
-    	}
-    	if (isDefined(MAX_OPEN_FILES_ATTRIBUTE, node, context)) {
-    		bufferManger.setMaxOpenFiles(asInt(MAX_OPEN_FILES_ATTRIBUTE, node, context));
-    	}	    
-    	if (isDefined(MEMORY_BUFFER_SPACE_ATTRIBUTE, node, context)) {
-    		bufferManger.setMemoryBufferSpace(asInt(MEMORY_BUFFER_SPACE_ATTRIBUTE, node, context));
-    	}  
-    	if (isDefined(MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node, context)) {
-    		bufferManger.setMemoryBufferOffHeap(asBoolean(MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node, context));
-    	} 
-    	if (isDefined(MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node, context)) {
-    		bufferManger.setMaxStorageObjectSize(asInt(MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node, context));
-    	}
-    	if (isDefined(INLINE_LOBS, node, context)) {
-    		bufferManger.setInlineLobs(asBoolean(INLINE_LOBS, node, context));
-    	}     	
-    	if (isDefined(ENCRYPT_FILES_ATTRIBUTE, node, context)) {
-    		bufferManger.setEncryptFiles(asBoolean(ENCRYPT_FILES_ATTRIBUTE, node, context));
-    	}
+    	if (isDefined(BUFFER_MANAGER_USE_DISK_ATTRIBUTE, node, context)) {
+    		bufferManger.setUseDisk(asBoolean(BUFFER_MANAGER_USE_DISK_ATTRIBUTE, node, context));
+    	} else if (isDefined(USE_DISK_ATTRIBUTE, node, context)) {
+            bufferManger.setUseDisk(asBoolean(USE_DISK_ATTRIBUTE, node, context));
+        }	                	
+    	if (isDefined(BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE, node, context)) {
+    		bufferManger.setProcessorBatchSize(asInt(BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE, node, context));
+    	} else if (isDefined(PROCESSOR_BATCH_SIZE_ATTRIBUTE, node, context)) {
+            bufferManger.setProcessorBatchSize(asInt(PROCESSOR_BATCH_SIZE_ATTRIBUTE, node, context));
+        }	
+    	if (isDefined(BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxProcessingKb(asInt(BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE, node, context));
+    	} else if (isDefined(MAX_PROCESSING_KB_ATTRIBUTE, node, context)) {
+            bufferManger.setMaxProcessingKb(asInt(MAX_PROCESSING_KB_ATTRIBUTE, node, context));
+        }
+    	if (isDefined(BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxReservedHeapMb(asInt(BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE, node, context));
+    	} else if (isDefined(MAX_RESERVED_KB_ATTRIBUTE, node, context)) {
+            bufferManger.setMaxReserveKb(asInt(MAX_RESERVED_KB_ATTRIBUTE, node, context));
+        }
+    	if (isDefined(BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxFileSize(asLong(BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE, node, context));
+    	} else if (isDefined(MAX_FILE_SIZE_ATTRIBUTE, node, context)) {
+            bufferManger.setMaxFileSize(asLong(MAX_FILE_SIZE_ATTRIBUTE, node, context));
+        }
+    	if (isDefined(BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxDiskBufferSpaceMb(asLong(BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE, node, context));
+    	} else if (isDefined(MAX_BUFFER_SPACE_ATTRIBUTE, node, context)) {
+            bufferManger.setMaxDiskBufferSpaceMb(asLong(MAX_BUFFER_SPACE_ATTRIBUTE, node, context));
+        }
+    	if (isDefined(BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxOpenFiles(asInt(BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE, node, context));
+    	} else  if (isDefined(MAX_OPEN_FILES_ATTRIBUTE, node, context)) {
+            bufferManger.setMaxOpenFiles(asInt(MAX_OPEN_FILES_ATTRIBUTE, node, context));
+        }	    
+    	if (isDefined(BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE, node, context)) {
+    		bufferManger.setFixedMemoryBufferSpaceMb(asInt(BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE, node, context));
+    	} else if (isDefined(MEMORY_BUFFER_SPACE_ATTRIBUTE, node, context)) {
+            bufferManger.setFixedMemoryBufferSpaceMb(asInt(MEMORY_BUFFER_SPACE_ATTRIBUTE, node, context));
+        } 
+    	if (isDefined(BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node, context)) {
+    		bufferManger.setFixedMemoryBufferOffHeap(asBoolean(BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node, context));
+    	} else if (isDefined(MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node, context)) {
+            bufferManger.setFixedMemoryBufferOffHeap(asBoolean(MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node, context));
+        }
+    	if (isDefined(BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxStorageObjectSizeKb(asInt(BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node, context));
+    	} else if (isDefined(MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node, context)) {
+            bufferManger.setMaxStorageObjectSize(asInt(MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node, context));
+        }
+    	if (isDefined(BUFFER_MANAGER_INLINE_LOBS, node, context)) {
+    		bufferManger.setInlineLobs(asBoolean(BUFFER_MANAGER_INLINE_LOBS, node, context));
+    	} else if (isDefined(INLINE_LOBS, node, context)) {
+            bufferManger.setInlineLobs(asBoolean(INLINE_LOBS, node, context));
+        }     	
+    	if (isDefined(BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE, node, context)) {
+    		bufferManger.setEncryptFiles(asBoolean(BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE, node, context));
+    	} else if (isDefined(ENCRYPT_FILES_ATTRIBUTE, node, context)) {
+            bufferManger.setEncryptFiles(asBoolean(ENCRYPT_FILES_ATTRIBUTE, node, context));
+        }
     	return bufferManger;
     }	
     

@@ -468,16 +468,16 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			this.bufferService.setMaxOpenFiles(config.getMaxOpenFiles());
 		
 		if(config.getMaxBufferSpace() != -1)
-			this.bufferService.setMaxBufferSpace(config.getMaxBufferSpace());
+			this.bufferService.setMaxDiskBufferSpaceMb(config.getMaxBufferSpace());
 		if(config.getMaxFileSize() != -1) 
 			this.bufferService.setMaxFileSize(config.getMaxFileSize());
 		this.bufferService.setEncryptFiles(config.isEncryptFiles());
 		if(config.getMaxStorageObjectSize() != -1) {
 			this.bufferService.setMaxStorageObjectSize(config.getMaxStorageObjectSize());
 		}
-		this.bufferService.setMemoryBufferOffHeap(config.isMemoryBufferOffHeap());
+		this.bufferService.setFixedMemoryBufferOffHeap(config.isMemoryBufferOffHeap());
 		if(config.getMemoryBufferSpace() != -1)
-			this.bufferService.setMemoryBufferSpace(config.getMemoryBufferSpace());
+			this.bufferService.setFixedMemoryBufferSpaceMb(config.getMemoryBufferSpace());
 		
 	}
 
