@@ -21,6 +21,7 @@ package org.teiid.translator.google.api;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.resource.api.Connection;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.google.api.result.RowsResult;
 import org.teiid.translator.google.api.result.UpdateResult;
@@ -30,7 +31,7 @@ import org.teiid.translator.google.api.result.UpdateResult;
  * Connection to GoogleSpreadsheet API. 
  * 
  */
-public interface GoogleSpreadsheetConnection {
+public interface GoogleSpreadsheetConnection extends Connection {
 	public RowsResult executeQuery(String worksheetTitle, String query, Integer offset, Integer limit, int batchSize);
 	public UpdateResult updateRows(String worksheetTitle, String criteria, List<UpdateSet> set);
 	public UpdateResult deleteRows(String worksheetTitle, String criteria);

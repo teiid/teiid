@@ -23,9 +23,10 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.LukeResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.teiid.resource.api.Connection;
 import org.teiid.translator.TranslatorException;
 
-public interface SolrConnection {
+public interface SolrConnection extends Connection {
 	public QueryResponse query(SolrQuery query) throws TranslatorException;
 	public UpdateResponse update(UpdateRequest request) throws TranslatorException;
 	public LukeResponse metadata(LukeRequest request) throws TranslatorException;

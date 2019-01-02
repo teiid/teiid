@@ -17,8 +17,10 @@
  */
 package org.teiid.mongodb;
 
+import org.teiid.resource.api.Connection;
+
 import com.mongodb.DB;
 
-public interface MongoDBConnection {
+public interface MongoDBConnection extends Connection {
 	public DB getDatabase();
 }

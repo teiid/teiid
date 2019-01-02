@@ -14,8 +14,6 @@
   
   <modules>
     <module>translator-cassandra</module>
-    <module>connector-cassandra</module>
-    <module>feature-pack-cassandra</module>
   </modules>
 
 </project>

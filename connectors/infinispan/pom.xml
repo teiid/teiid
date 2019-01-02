@@ -21,16 +21,25 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			
+			<!-- override the runtime dependencies -->
+			
+			<dependency>
+	            <groupId>org.infinispan</groupId>
+	            <artifactId>infinispan-core</artifactId>
+	            <version>${version.org.infinispan}</version>
+            </dependency>
+            
+            <dependency>
+	            <groupId>org.infinispan</groupId>
+	            <artifactId>infinispan-commons</artifactId>
+	            <version>${version.org.infinispan}</version>
+            </dependency>
 					
 			<dependency>
 				<groupId>com.squareup</groupId>
 				<artifactId>protoparser</artifactId>
 				<version>${version.com.squareup}</version>
-			</dependency>
-			<dependency>
-			    <groupId>org.infinispan.protostream</groupId>
-			    <artifactId>protostream</artifactId>
-			    <version>${version.org.infinispan.protostream}</version>
 			</dependency>
 			<dependency>
              	<groupId>org.apache.lucene</groupId>
@@ -48,18 +57,6 @@
 				<artifactId>translator-infinispan-hotrod</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>org.teiid.connectors</groupId>
-				<artifactId>connector-infinispan-hotrod</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.teiid.connectors</groupId>
-				<artifactId>connector-infinispan-hotrod</artifactId>
-				<version>${project.version}</version>
-				<type>test-jar</type>
-			</dependency>
-
 		</dependencies>
 	</dependencyManagement>
 
@@ -80,9 +77,7 @@
 	<modules>
 		<module>infinispan-api</module>
 		<module>infinispan-tasks</module>
-		<module>connector-infinispan-hotrod</module>
 		<module>translator-infinispan-hotrod</module>		
-		<module>feature-pack-infinispan</module>
 	</modules>
 
 </project>

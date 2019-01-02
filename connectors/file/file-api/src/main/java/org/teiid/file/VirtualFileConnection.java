@@ -20,12 +20,13 @@ package org.teiid.file;
 import java.io.InputStream;
 
 import org.teiid.connector.DataPlugin;
+import org.teiid.resource.api.Connection;
 import org.teiid.translator.TranslatorException;
 
 /**
  * Simple interface for the filesystem
  */
-public interface VirtualFileConnection {
+public interface VirtualFileConnection extends Connection {
 	
     /**
      * Return a list of files by a given file pattern

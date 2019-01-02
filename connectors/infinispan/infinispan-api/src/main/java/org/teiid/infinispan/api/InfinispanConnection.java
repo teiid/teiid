@@ -21,9 +21,10 @@ import java.util.Map;
 
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.protostream.BaseMarshaller;
+import org.teiid.resource.api.Connection;
 import org.teiid.translator.TranslatorException;
 
-public interface InfinispanConnection {
+public interface InfinispanConnection extends Connection {
 
     <K, V> BasicCache<K, V> getCache(String cacheName, boolean createIfNotExists) throws TranslatorException;
 

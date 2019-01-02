@@ -15,6 +15,7 @@
       <useDefaultExcludes>true</useDefaultExcludes>
       <outputDirectory>teiid</outputDirectory>
       <excludes>
+          <exclude>${basedir}/wildfly/**</exclude>
           <exclude>**/target/**</exclude>
           <exclude>**/.settings/**</exclude>
           <exclude>**/*.log</exclude>        

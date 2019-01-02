@@ -17,12 +17,6 @@
 		<module>translator-salesforce</module>
 		<module>translator-salesforce-34</module>
 		<module>translator-salesforce-41</module>
-		<module>connector-salesforce</module>
-		<module>connector-salesforce-34</module>
-		<module>connector-salesforce-41</module>
-		<module>feature-pack-salesforce</module>
-        <module>feature-pack-salesforce-34</module>
-        <module>feature-pack-salesforce-41</module>
 	</modules>
 
 </project>

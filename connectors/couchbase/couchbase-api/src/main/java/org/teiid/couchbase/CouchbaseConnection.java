@@ -17,6 +17,7 @@
  */
 package org.teiid.couchbase;
 
+import org.teiid.resource.api.Connection;
 import org.teiid.translator.TranslatorException;
 
 import com.couchbase.client.java.query.N1qlQueryResult;
@@ -39,7 +40,7 @@ import com.couchbase.client.java.query.N1qlQueryResult;
  * @author kylin
  *
  */
-public interface CouchbaseConnection {
+public interface CouchbaseConnection extends Connection {
     
     /**
      * Returns the name of the  Namespace

@@ -32,12 +32,14 @@ import javax.persistence.Persistence;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.resource.adapter.file.FileManagedConnectionFactory;
+import org.teiid.file.JavaVirtualFile;
+import org.teiid.file.VirtualFile;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
-import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
 import org.teiid.translator.file.FileExecutionFactory;
 
 @SuppressWarnings("nls")
@@ -53,11 +55,15 @@ public class TestTeiidPlatform {
 		FileExecutionFactory executionFactory = new FileExecutionFactory();
 		server.addTranslator("file", executionFactory);
 		
-		FileManagedConnectionFactory fileManagedconnectionFactory = new FileManagedConnectionFactory();
-		fileManagedconnectionFactory.setParentDirectory(UnitTestUtil.getTestDataPath()+File.separator+"file");
-		ConnectionFactory connectionFactory = fileManagedconnectionFactory.createConnectionFactory();
-		ConnectionFactoryProvider<ConnectionFactory> connectionFactoryProvider = new EmbeddedServer.SimpleConnectionFactoryProvider<ConnectionFactory>(connectionFactory);
-		server.addConnectionFactoryProvider("java:/marketdata-file", connectionFactoryProvider);
+		server.addConnectionFactory("java:/marketdata-file", new ConnectionFactory<VirtualFileConnection>() {
+		    @Override
+		    public VirtualFileConnection getConnection() throws Exception {
+		        VirtualFileConnection result = Mockito.mock(VirtualFileConnection.class);
+		        JavaVirtualFile javaVirtualFile = new JavaVirtualFile(UnitTestUtil.getTestDataFile("file/marketdata.csv"));
+                Mockito.stub(result.getFiles(Mockito.anyString())).toReturn(new VirtualFile[] {javaVirtualFile});
+		        return result;
+		    }
+        });
 		
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		server.start(config);

@@ -19,8 +19,9 @@ package org.teiid.translator.accumulo;
 
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.security.Authorizations;
+import org.teiid.resource.api.Connection;
 
-public interface AccumuloConnection {
+public interface AccumuloConnection extends Connection {
 	Connector getInstance();
 	Authorizations getAuthorizations();
 }

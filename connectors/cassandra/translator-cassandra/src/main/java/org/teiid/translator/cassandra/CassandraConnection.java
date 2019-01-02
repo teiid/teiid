@@ -20,6 +20,7 @@ package org.teiid.translator.cassandra;
 
 import java.util.List;
 
+import org.teiid.resource.api.Connection;
 import org.teiid.translator.TranslatorException;
 
 import com.datastax.driver.core.KeyspaceMetadata;
@@ -29,7 +30,7 @@ import com.datastax.driver.core.VersionNumber;
 /**
  * Connection to Cassandra NoSql database.
  * */
-public interface CassandraConnection {
+public interface CassandraConnection extends Connection {
 	
 	/**
 	 * Executes a CQL query.

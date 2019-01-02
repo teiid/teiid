@@ -24,10 +24,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.metadata.Column;
+import org.teiid.resource.api.Connection;
 import org.teiid.translator.TranslatorException;
 
 
-public interface SimpleDBConnection {
+public interface SimpleDBConnection extends Connection {
     public static final String ITEM_NAME = "itemName()"; //$NON-NLS-1$
     
     public static class SimpleDBAttribute {
