@@ -439,48 +439,6 @@ public class SessionServiceImpl implements SessionService {
 		return securityHelper;
 	}
 
-    static String getBaseUsername(String username) {
-        if (username == null) {
-            return username;
-        }
-        
-        int index = getQualifierIndex(username);
-
-        String result = username;
-        
-        if (index != -1) {
-            result = username.substring(0, index);
-        }
-        
-        //strip the escape character from the remaining ats
-        return result.replaceAll("\\\\"+AT, AT); //$NON-NLS-1$
-    }
-    
-    static String getDomainName(String username) {
-        if (username == null) {
-            return username;
-        }
-        
-        int index = getQualifierIndex(username);
-        
-        if (index != -1) {
-            return username.substring(index + 1);
-        }
-        
-        return null;
-    }
-    
-    static int getQualifierIndex(String username) {
-        int index = username.length();
-        while ((index = username.lastIndexOf(AT, --index)) != -1) {
-            if (index > 0 && username.charAt(index - 1) != '\\') {
-                return index;
-            }
-        }
-        
-        return -1;
-    }
-    
 	@Override
 	public AuthenticationType getAuthenticationType(String vdbName, String version, String userName) throws LogonException {
 		if (userName == null) {

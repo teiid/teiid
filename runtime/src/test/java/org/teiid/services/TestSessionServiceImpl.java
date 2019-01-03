@@ -221,17 +221,6 @@ public class TestSessionServiceImpl {
 		
 	}	
 	
-    @Test public void testBaseUsername() throws Exception {
-        
-        assertEquals("foo@bar.com", SessionServiceImpl.getBaseUsername("foo\\@bar.com@foo")); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        assertEquals("foo", SessionServiceImpl.getDomainName("me\\@bar.com@foo")); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        assertEquals(null, SessionServiceImpl.getDomainName("@")); //$NON-NLS-1$
-        
-        assertEquals("@", SessionServiceImpl.getBaseUsername("@")); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     @Test public void testMaxSessionsPerUser() throws Exception {
         VDBRepository repo = Mockito.mock(VDBRepository.class);
         VDBMetaData vdb = new VDBMetaData();
