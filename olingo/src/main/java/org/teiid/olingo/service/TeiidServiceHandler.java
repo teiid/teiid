@@ -23,7 +23,6 @@ package org.teiid.olingo.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -81,6 +80,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.odata.api.BaseResponse;
 import org.teiid.odata.api.Client;
+import org.teiid.odata.api.ComplexResponse;
 import org.teiid.odata.api.QueryResponse;
 import org.teiid.odata.api.UpdateResponse;
 import org.teiid.olingo.EdmComplexResponse;
@@ -273,15 +273,12 @@ public class TeiidServiceHandler implements ServiceHandler {
                 result.setNext(new URI(nextUri));
             } catch (URISyntaxException e) {
                 throw new ODataApplicationException(e.getMessage(), 500, Locale.getDefault(), e);
-            } catch (MalformedURLException e) {
-                throw new ODataApplicationException(e.getMessage(), 500, Locale.getDefault(), e);
             }
         }
         response.writeReadEntitySet(visitor.getContext().getEdmEntityType(), result);
     }
 
-    String buildNextToken(final String queryPath, String nextToken)
-            throws URISyntaxException, MalformedURLException {
+    String buildNextToken(final String queryPath, String nextToken) {
         StringBuilder sb = new StringBuilder();
         if (queryPath != null) {
             String[] pairs = queryPath.split("&");
@@ -304,21 +301,21 @@ public class TeiidServiceHandler implements ServiceHandler {
         return sb.toString();
     }
     
-    private void sendResults(final DataRequest request,
-            final ODataSQLBuilder visitor,
-            final BaseResponse queryResponse, EdmComplexResponse response)
+    private void sendResults(final ServiceRequest request,
+            final ComplexResponse result, EdmComplexResponse response)
             throws ODataApplicationException, SerializerException {
         if (request.getPreference(ODATA_MAXPAGESIZE) != null) {
             response.writeHeader(PREFERENCE_APPLIED,
                     ODATA_MAXPAGESIZE+"="+ request.getPreference(ODATA_MAXPAGESIZE)); //$NON-NLS-1$
         }
-        CrossJoinResult result = (CrossJoinResult)queryResponse;
         URI next = null;
         if (result.getNextToken() != null) {
             try {
-                next = new URI(request.getODataRequest().getRawRequestUri()
-                        + (request.getODataRequest().getRawQueryPath() == null ?"?$skiptoken=":"&$skiptoken=")
-                        + result.getNextToken());
+                String nextUri = request.getODataRequest().getRawBaseUri()
+                        +request.getODataRequest().getRawODataPath()
+                        + "?"
+                        +buildNextToken(request.getODataRequest().getRawQueryPath(), result.getNextToken());
+                next = new URI(nextUri);
             } catch (URISyntaxException e) {
                 throw new ODataApplicationException(e.getMessage(), 500, Locale.getDefault(), e);
             }
@@ -752,6 +749,22 @@ public class TeiidServiceHandler implements ServiceHandler {
         } 
         */
         final OperationResponseImpl operationResult = queryResponse;
+        
+        
+        if (operationResult.getProcedureReturn().hasResultSet() 
+                && operationResult.getNextToken() != null) {
+            
+            ContextURL.Builder builder = new ContextURL.Builder()
+                    .asCollection()
+                    .entitySetOrSingletonOrType("Edm.ComplexType");
+            EdmComplexResponse complexResponse = EdmComplexResponse.getInstance(
+                    request, builder.build(), false, response.getODataResponse());
+            
+            sendResults(request, queryResponse, complexResponse);
+            return;
+        }
+                
+        
         response.accepts(new ServiceResponseVisior() {
             @Override
             public void visit(PropertyResponse response)
@@ -884,14 +897,14 @@ public class TeiidServiceHandler implements ServiceHandler {
 
         try {
             Query query = visitor.selectQuery();
-            BaseResponse queryResponse = executeQuery(request, request.isCountRequest(), visitor, query);
+            ComplexResponse queryResponse = (ComplexResponse)executeQuery(request, request.isCountRequest(), visitor, query);
             ContextURL.Builder builder = new ContextURL.Builder()
                 .asCollection()
                 .entitySetOrSingletonOrType("Edm.ComplexType");
                 
             EdmComplexResponse complexResponse = EdmComplexResponse.getInstance(
                     request, builder.build(), false, response);
-            sendResults(request, visitor, queryResponse, complexResponse);
+            sendResults(request, queryResponse, complexResponse);
         } catch (Exception e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),

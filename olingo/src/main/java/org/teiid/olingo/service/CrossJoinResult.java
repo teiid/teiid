@@ -21,16 +21,23 @@
  */
 package org.teiid.olingo.service;
 
+import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
+import org.apache.olingo.server.api.ODataResponse;
+import org.apache.olingo.server.api.ServiceMetadata;
+import org.apache.olingo.server.api.serializer.SerializerException;
+import org.teiid.odata.api.ComplexResponse;
 import org.teiid.odata.api.QueryResponse;
 import org.teiid.olingo.ComplexReturnType;
+import org.teiid.olingo.TeiidODataJsonSerializer;
 
-public class CrossJoinResult implements QueryResponse {
+public class CrossJoinResult implements QueryResponse, ComplexResponse {
     private String nextToken;
     private CrossJoinNode documentNode;
     private List<List<ComplexReturnType>> out = new ArrayList<List<ComplexReturnType>>();
@@ -89,5 +96,14 @@ public class CrossJoinResult implements QueryResponse {
     @Override
     public String getNextToken() {
         return this.nextToken;
+    }
+    
+    @Override
+    public void serialize(ODataResponse response,
+            TeiidODataJsonSerializer serializer, ServiceMetadata metadata,
+            ContextURL contextURL, URI next) throws SerializerException {
+        response.setContent(serializer.complexCollection(metadata,
+                getResults(), contextURL, next)
+                .getContent());
     }
 }

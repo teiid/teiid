@@ -23,7 +23,7 @@ package org.teiid.odata.api;
 
 import java.sql.SQLException;
 
-public interface OperationResponse extends QueryResponse {
+public interface OperationResponse extends QueryResponse, ComplexResponse {
 
     Object getResult();
     

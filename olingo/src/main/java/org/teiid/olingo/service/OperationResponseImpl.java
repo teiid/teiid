@@ -1,6 +1,7 @@
 package org.teiid.olingo.service;
 
 import java.io.IOException;
+import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.olingo.commons.api.data.ComplexValue;
+import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmComplexType;
@@ -17,15 +19,20 @@ import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.edm.EdmReturnType;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
+import org.apache.olingo.server.api.ODataResponse;
+import org.apache.olingo.server.api.ServiceMetadata;
+import org.apache.olingo.server.api.serializer.SerializerException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.odata.api.OperationResponse;
 import org.teiid.olingo.ODataPlugin;
+import org.teiid.olingo.TeiidODataJsonSerializer;
 import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 
 public class OperationResponseImpl implements OperationResponse {
     private List<ComplexValue> complexValues = new ArrayList<ComplexValue>();
     private Property returnValue;
     private ProcedureReturn procedureReturn;
+    private String nextToken;
     
     public OperationResponseImpl(ProcedureReturn procedureReturn) {
         this.procedureReturn = procedureReturn;
@@ -87,11 +94,12 @@ public class OperationResponseImpl implements OperationResponse {
 
     @Override
     public void setNextToken(String token) {
+        this.nextToken = token;
     }
 
     @Override
     public String getNextToken() {
-        return null;
+        return nextToken;
     }
 
     @Override
@@ -115,5 +123,18 @@ public class OperationResponseImpl implements OperationResponse {
 		} catch (IOException e) {
 			throw new SQLException(e);
 		} 
+    }
+    
+    public ProcedureReturn getProcedureReturn() {
+        return procedureReturn;
+    }
+    
+    @Override
+    public void serialize(ODataResponse response,
+            TeiidODataJsonSerializer serializer, ServiceMetadata metadata,
+            ContextURL contextURL, URI next) throws SerializerException {
+        response.setContent(serializer.complexCollection(metadata, (EdmComplexType)this.procedureReturn.getReturnType().getType(),
+                (Property)getResult(), contextURL, next)
+                .getContent());
     }
 }
