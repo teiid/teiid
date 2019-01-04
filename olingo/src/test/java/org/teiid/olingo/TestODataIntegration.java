@@ -1076,6 +1076,35 @@ public class TestODataIntegration {
     }
     
     @Test 
+    public void testNextWithProcedure() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create procedure x (i integer) returns table (b integer) as select i union all select i+1;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+            
+            Properties props = new Properties();
+            props.setProperty("batch-size", "1");
+            localClient = getClient(teiid.getDriver(), "northwind", props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/x(i=1)");
+            assertEquals(200, response.getStatus());
+            String starts = "{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"b\":1}],";
+            assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
+            JsonNode node = getJSONNode(response);
+            String nextLink = node.get("@odata.nextLink").asText();
+            response = http.GET(nextLink);
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.1.vw.x_RSParam)\",\"value\":[{\"b\":2}]}", 
+                    response.getContentAsString());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test 
     public void testSkipToken() throws Exception {
         try {
             ModelMetaData mmd = new ModelMetaData();
