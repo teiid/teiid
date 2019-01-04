@@ -15,13 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.teiid.odata.api;
 
-import java.sql.SQLException;
+import java.net.URI;
 
-public interface OperationResponse extends QueryResponse, ComplexResponse {
+import org.apache.olingo.commons.api.data.ContextURL;
+import org.apache.olingo.server.api.ODataResponse;
+import org.apache.olingo.server.api.ServiceMetadata;
+import org.apache.olingo.server.api.serializer.SerializerException;
+import org.teiid.olingo.TeiidODataJsonSerializer;
 
-    Object getResult();
-    
-    void setReturnValue(Object value) throws SQLException;
+public interface ComplexResponse extends QueryResponse {
+
+    public void serialize(ODataResponse response,
+            TeiidODataJsonSerializer serializer, ServiceMetadata metadata,
+            ContextURL contextURL, URI next) throws SerializerException;
+
 }

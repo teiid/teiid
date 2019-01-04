@@ -32,7 +32,7 @@ import org.apache.olingo.server.core.ContentNegotiatorException;
 import org.apache.olingo.server.core.ServiceRequest;
 import org.apache.olingo.server.core.responses.ServiceResponse;
 import org.apache.olingo.server.core.responses.ServiceResponseVisior;
-import org.teiid.olingo.service.CrossJoinResult;
+import org.teiid.odata.api.ComplexResponse;
 
 public class EdmComplexResponse extends ServiceResponse {
     private final TeiidODataJsonSerializer serializer;
@@ -56,7 +56,7 @@ public class EdmComplexResponse extends ServiceResponse {
                 request.getResponseContentType(), request.getPreferences(), contextURL);
     }
 
-    public void writeComplexType(CrossJoinResult complexResult, URI next) throws SerializerException {
+    public void writeComplexType(ComplexResponse complexResult, URI next) throws SerializerException {
 
         assert (!isClosed());
 
@@ -66,9 +66,8 @@ public class EdmComplexResponse extends ServiceResponse {
         }
 
         // write the whole collection to response
-        this.response.setContent(this.serializer.complexCollection(metadata,
-                        complexResult.getResults(), this.contextURL, next)
-                        .getContent());
+        complexResult.serialize(response, serializer, metadata, contextURL, next);
+        
         writeOK(this.responseContentType);
         close();
     }
