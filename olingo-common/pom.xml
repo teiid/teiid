@@ -44,12 +44,11 @@
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-commons-core</artifactId>
         </dependency>
-        
+
         <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-        </dependency> 
-                
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

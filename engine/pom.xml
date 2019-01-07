@@ -97,12 +97,6 @@
         </dependency>
 
 		<dependency>
-		    <!-- dependecy for jboss-vfs -->
-		    <groupId>org.jboss.logging</groupId>
-		    <artifactId>jboss-logging</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>net.sf.saxon</groupId>
 			<artifactId>Saxon-HE</artifactId>
 		</dependency>
@@ -132,6 +126,11 @@
               <artifactId>xom</artifactId>
         </dependency>
         
+        <dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>javax.activation</groupId>
             <artifactId>activation</artifactId>

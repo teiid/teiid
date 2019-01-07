@@ -28,11 +28,6 @@
             <groupId>com.io7m.xom</groupId>
             <artifactId>xom</artifactId>
         </dependency>
-        
-        <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-        </dependency>
                                   
 	</dependencies>
 

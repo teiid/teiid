@@ -20,7 +20,30 @@
   <artifactId>teiid-runtime</artifactId>
   <name>Runtime Engine</name>
   <description>Teiid Runtime Engine</description>
+  <properties>
+      <!-- turned off dup finder in runtime due to the infinispan dups in different jars  -->
+      <!--
+                     <classpathElement name="org.infinispan.util.AbstractDelegatingCollection">
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-core/9.3.1.Final/infinispan-core-9.3.1.Final.jar</file>
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-commons/9.3.1.Final/infinispan-commons-9.3.1.Final.jar</file>
+                </classpathElement>
+                <classpathElement name="org.infinispan.util.AbstractDelegatingConcurrentMap">
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-core/9.3.1.Final/infinispan-core-9.3.1.Final.jar</file>
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-commons/9.3.1.Final/infinispan-commons-9.3.1.Final.jar</file>
+                </classpathElement>
+                <classpathElement name="org.infinispan.util.AbstractDelegatingMap">
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-core/9.3.1.Final/infinispan-core-9.3.1.Final.jar</file>
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-commons/9.3.1.Final/infinispan-commons-9.3.1.Final.jar</file>
+                </classpathElement>
+                <classpathElement name="org.infinispan.util.AbstractDelegatingSet">
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-core/9.3.1.Final/infinispan-core-9.3.1.Final.jar</file>
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-commons/9.3.1.Final/infinispan-commons-9.3.1.Final.jar</file>
+                </classpathElement>
+      -->
+       <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
       
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.teiid</groupId>
@@ -75,23 +98,10 @@
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-core</artifactId>
     </dependency>
-    <!-- these are excluded from infinispan core in the wildfly parent
-         but needed to run/test -->
     <dependency>
-        <groupId>com.github.ben-manes.caffeine</groupId>
-        <artifactId>caffeine</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>io.reactivex.rxjava2</groupId>
-        <artifactId>rxjava</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.marshalling</groupId>
-        <artifactId>jboss-marshalling-river</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.marshalling</groupId>
-        <artifactId>jboss-marshalling</artifactId>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-commons</artifactId>
+        <scope>compile</scope>
     </dependency>
     <dependency>
         <groupId>org.jboss.logging</groupId>
@@ -100,11 +110,11 @@
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-vfs</artifactId>
-    </dependency>    
-    <dependency>   
-        <groupId>org.jboss</groupId>
-        <artifactId>staxmapper</artifactId>
-    </dependency>    
+    </dependency>
+    <dependency>
+        <groupId>xml-apis</groupId>
+        <artifactId>xml-apis</artifactId>
+    </dependency>
     <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
@@ -114,6 +124,14 @@
       <groupId>org.picketbox</groupId>
       <artifactId>picketbox</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>io.opentracing</groupId>
+        <artifactId>opentracing-api</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.opentracing</groupId>
+        <artifactId>opentracing-util</artifactId>
     </dependency>
     <dependency>
       <groupId>io.opentracing</groupId>

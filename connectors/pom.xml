@@ -11,69 +11,34 @@
   <name>Connectors</name>
   <description>This project is aggregator for all the supported connectors.</description>
   <dependencies>
-          
-    <!--  Internal Test Dependencies -->
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-api</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-engine</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-common-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-common-core</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-client</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-admin</artifactId>
-      <scope>test</scope>
-    </dependency>    
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-engine</artifactId>
-      <scope>test</scope>
-    </dependency>    
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-metadata</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-metadata</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>        
-
-    <dependency>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-vfs</artifactId>
-        <scope>test</scope>
-    </dependency> 
-    <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging</artifactId>
-        <scope>test</scope>        
-    </dependency>          
-    
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-metadata</artifactId>
+            <scope>test</scope>
+        </dependency>      
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>  
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-metadata</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-engine</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>  
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-engine</artifactId>
+            <scope>test</scope>
+        </dependency>       
   </dependencies>
   
   <modules>

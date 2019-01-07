@@ -9,6 +9,29 @@
 	<artifactId>rest-service</artifactId>
 	<name>Teiid VDB REST Servce</name>
 	<description>Open API based service over Teiid VDB</description>
+  <properties>
+      <!-- turned off dup finder in runtime due to the infinispan dups in different jars  -->
+      <!--
+                     <classpathElement name="org.infinispan.util.AbstractDelegatingCollection">
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-core/9.3.1.Final/infinispan-core-9.3.1.Final.jar</file>
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-commons/9.3.1.Final/infinispan-commons-9.3.1.Final.jar</file>
+                </classpathElement>
+                <classpathElement name="org.infinispan.util.AbstractDelegatingConcurrentMap">
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-core/9.3.1.Final/infinispan-core-9.3.1.Final.jar</file>
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-commons/9.3.1.Final/infinispan-commons-9.3.1.Final.jar</file>
+                </classpathElement>
+                <classpathElement name="org.infinispan.util.AbstractDelegatingMap">
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-core/9.3.1.Final/infinispan-core-9.3.1.Final.jar</file>
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-commons/9.3.1.Final/infinispan-commons-9.3.1.Final.jar</file>
+                </classpathElement>
+                <classpathElement name="org.infinispan.util.AbstractDelegatingSet">
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-core/9.3.1.Final/infinispan-core-9.3.1.Final.jar</file>
+                    <file>/home/vhalbert/.m2/repository/org/infinispan/infinispan-commons/9.3.1.Final/infinispan-commons-9.3.1.Final.jar</file>
+                </classpathElement>
+      -->
+       <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
+  </properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.teiid</groupId>
@@ -22,7 +45,10 @@
             <groupId>org.teiid</groupId>
             <artifactId>teiid-api</artifactId>
         </dependency>
-        
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-engine</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-runtime</artifactId>
@@ -32,12 +58,22 @@
 			<groupId>org.teiid</groupId>
 			<artifactId>teiid-admin</artifactId>
 		</dependency>
-		
+		<dependency>
+		    <groupId>org.jboss.resteasy</groupId>
+		    <artifactId>resteasy-jaxrs</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.ow2.asm</groupId>
 			<artifactId>asm</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>org.jboss.spec.javax.ws.rs</groupId>
 			<artifactId>jboss-jaxrs-api_2.1_spec</artifactId>
@@ -52,67 +88,24 @@
 			<groupId>org.jboss.spec.javax.servlet</groupId>
 			<artifactId>jboss-servlet-api_3.1_spec</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.spec.javax.xml.bind</groupId>
+            <artifactId>jboss-jaxb-api_2.3_spec</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>io.swagger</groupId>
 			<artifactId>swagger-jaxrs</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.swagger</groupId>
-			<artifactId>swagger-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.swagger</groupId>
 			<artifactId>swagger-annotations</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>io.swagger</groupId>
-			<artifactId>swagger-models</artifactId>
-		</dependency>
-        <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-parser</artifactId>
-        </dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-annotations</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.dataformat</groupId>
-			<artifactId>jackson-dataformat-yaml</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.dataformat</groupId>
-			<artifactId>jackson-dataformat-xml</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.reflections</groupId>
-		    <artifactId>reflections</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>com.fasterxml.jackson.datatype</groupId>
-		    <artifactId>jackson-datatype-joda</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>com.google.guava</groupId>
-		    <artifactId>guava</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>javax.validation</groupId>
-		    <artifactId>validation-api</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-lang3</artifactId>
-		</dependency>
-		<dependency>
+
+        <dependency>
 			<groupId>org.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
 			<type>test-jar</type>
