@@ -77,6 +77,7 @@ public class LobManager {
 	private int maxMemoryBytes = DataTypeManager.MAX_LOB_MEMORY_BYTES;
 	private int[] lobIndexes;
 	private FileStore lobStore;
+    private boolean saveTemporary;
 	
 	public LobManager(int[] lobIndexes, FileStore lobStore) {
 		this.lobIndexes = lobIndexes;
@@ -87,6 +88,7 @@ public class LobManager {
 		LobManager clone = new LobManager(lobIndexes, null);
 		clone.inlineLobs = inlineLobs;
 		clone.maxMemoryBytes = maxMemoryBytes;
+		clone.saveTemporary = saveTemporary;
 		synchronized (lobReferences) {
 			for (Map.Entry<String, LobHolder> entry : lobReferences.entrySet()) {
 				LobHolder lobHolder = new LobHolder(entry.getValue().lob);
@@ -135,14 +137,16 @@ public class LobManager {
 				break;
 			case CREATE:
 				try {
-					StorageMode storageMode = InputStreamFactory.getStorageMode(lob);
-					if (lob.getReferenceStreamId() == null || (inlineLobs 
+	                StorageMode storageMode = InputStreamFactory.getStorageMode(lob);
+					if (id == null || (inlineLobs 
 							&& (storageMode == StorageMode.MEMORY
 							|| (storageMode != StorageMode.FREE && lob.length()*(lob instanceof BaseClobType?2:1) <= maxMemoryBytes)))) {
 						lob.setReferenceStreamId(null);
 						//since this is untracked at this point, we must detach if possible
 						if (inlineLobs && storageMode == StorageMode.OTHER) {
 							persistLob(lob, null, null, true, maxMemoryBytes);
+						} else {
+						    saveTemporaryLob(lob);
 						}
 						continue;
 					}
@@ -153,6 +157,7 @@ public class LobManager {
 					 throw new TeiidComponentException(QueryPlugin.Event.TEIID30034, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30034));
 				}
 				if (lobHolder == null) {
+				    saveTemporaryLob(lob);
 					this.lobReferences.put(id, new LobHolder(lob));					
 				} else {
 					lobHolder.referenceCount++;
@@ -161,6 +166,12 @@ public class LobManager {
 			}
 		}
 	}
+
+    private void saveTemporaryLob(Streamable<?> lob) {
+        if (saveTemporary) {
+            InputStreamFactory.setTemporary(lob, false);
+        }
+    }
 	
     public Streamable<?> getLobReference(String id) throws TeiidComponentException {
     	LobHolder lob = this.lobReferences.get(id);
@@ -201,6 +212,8 @@ public class LobManager {
 		// if this is not attached, just return
 		if (InputStreamFactory.getStorageMode(lob) != StorageMode.MEMORY) {
 			persistLob(lob, store, bytes, inlineLobs, maxMemoryBytes);
+		} else {
+		    InputStreamFactory.setTemporary(lob, false);
 		}
 	}
 
@@ -307,6 +320,12 @@ public class LobManager {
 
 	public void remove() {
 		this.lobReferences.clear();
-		this.lobStore.remove();
+		if (this.lobStore != null) {
+		    this.lobStore.remove();
+		}
 	}
+
+    public void setSaveTemporary(boolean b) {
+        this.saveTemporary = b;
+    }
 }

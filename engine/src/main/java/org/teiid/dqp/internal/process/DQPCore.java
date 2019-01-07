@@ -176,7 +176,7 @@ public class DQPCore implements DQP {
     	}
 		ClientState state = clientState.get(key);
 		if (state == null && create) {
-			state = new ClientState(new TempTableStore(key, TransactionMode.ISOLATE_WRITES));
+			state = new ClientState(new TempTableStore(key, TransactionMode.ISOLATE_WRITES, false));
     		clientState.put(key, state);
 		}
 		return state;

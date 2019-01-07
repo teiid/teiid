@@ -186,6 +186,11 @@ public abstract class InputStreamFactory implements Source {
 		public Reader getReader(Reader reader) {
 		    return reader;
 		}
+		
+		@Override
+        public void setTemporary(boolean temp) {
+            setTemporary(clob, temp);
+        }
     	
     }
     
@@ -236,6 +241,11 @@ public abstract class InputStreamFactory implements Source {
 		public StorageMode getStorageMode() {
 			return getStorageMode(blob);
 		}
+		
+		@Override
+		public void setTemporary(boolean temp) {
+            setTemporary(blob, temp);
+        }
     	
     }
     
@@ -260,6 +270,23 @@ public abstract class InputStreamFactory implements Source {
 		return StorageMode.OTHER;
     }
     
+    public static void setTemporary(Object lob, boolean temp) {
+        if (lob instanceof Streamable<?>) {
+            setTemporary(((Streamable<?>)lob).getReference(), temp);
+        }
+        if (lob instanceof BaseLob) {
+            BaseLob baseLob = (BaseLob)lob;
+            try {
+                baseLob.getStreamFactory().setTemporary(temp);
+            } catch (SQLException e) {
+            }
+        }
+    }
+    
+    public void setTemporary(boolean temp) {
+        
+    }
+
     public static class SQLXMLInputStreamFactory extends InputStreamFactory implements DataSource {
     	
     	protected SQLXML sqlxml;
@@ -307,5 +334,5 @@ public abstract class InputStreamFactory implements Source {
 		}
     	
     }
-    
+
 }

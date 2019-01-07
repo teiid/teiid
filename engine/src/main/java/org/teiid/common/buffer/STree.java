@@ -493,6 +493,9 @@ public class STree implements Cloneable {
 		truncate(true);
 		this.keyManager.remove();
 		this.leafManager.remove();
+		if (this.lobManager != null) {
+		    this.lobManager.remove();
+		}
 	}
 
 	public long getRowCount() {
@@ -641,5 +644,11 @@ public class STree implements Cloneable {
 	public void setMinStorageSize(int minStorageSize) {
 		this.minStorageSize = minStorageSize;
 	}
+
+    public void setSaveTemporaryLobs(boolean b) {
+        if (this.lobManager != null) {
+            this.lobManager.setSaveTemporary(b);
+        }
+    }
 
 }

@@ -47,6 +47,7 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
@@ -197,7 +198,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private Map<LookupKey, TupleSource> lookups;
 		private TempTableStore sessionTempTableStore;
 		
-		private Set<InputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<InputStreamFactory, Boolean>());
+		private Set<FileStoreInputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<FileStoreInputStreamFactory, Boolean>());
 
 		private LRUCache<AbstractMetadataRecord, Boolean> accessible;
 
@@ -813,11 +814,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 				this.globalState.lookups = null;
 			}
 			if (this.globalState.created != null) {
-				for (InputStreamFactory isf : this.globalState.created) {
-					try {
-						isf.free();
-					} catch (IOException e) {
-					}
+				for (FileStoreInputStreamFactory isf : this.globalState.created) {
+				    if (isf.isTemporary()) {
+				        //TODO: we could also elect to not free memory backed lobs
+				        isf.free();
+				    }
 				}
 				this.globalState.created.clear();
 			}
@@ -1133,12 +1134,13 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		}, -1);
 	}
 
-	public void addCreatedLob(InputStreamFactory isf) {
+	public void addCreatedLob(FileStoreInputStreamFactory isf) {
 		if (this.globalState.created != null) {
+		    isf.setTemporary(true);
 			this.globalState.created.add(isf);
 		}
 	}
-
+	
 	public void disableAutoCleanLobs() {
 		this.globalState.created = null;
 	}

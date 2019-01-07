@@ -1149,7 +1149,7 @@ public class XMLSystemFunctions {
 			
 		};
 		if (context != null) {
-			context.addCreatedLob(isf);
+			context.addCreatedLob(fsisf);
 		}
 		return new SQLXMLImpl(isf);
 	}

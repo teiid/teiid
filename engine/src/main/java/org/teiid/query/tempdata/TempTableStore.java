@@ -357,10 +357,16 @@ public class TempTableStore {
     private TempTableStore parentTempTableStore;
     
     private HashMap<String, TableProcessor> processors;
+    private boolean localScoped;
     
     public TempTableStore(String sessionID, TransactionMode transactionMode) {
+        this(sessionID, transactionMode, true);
+    }
+    
+    public TempTableStore(String sessionID, TransactionMode transactionMode, boolean localScoped) {
         this.sessionID = sessionID;
         this.transactionMode = transactionMode;
+        this.localScoped = localScoped;
     }
     
     public void setParentTempTableStore(TempTableStore parentTempTableStore) {
@@ -431,6 +437,7 @@ public class TempTableStore {
     		}
     	}
         final TempTable tempTable = new TempTable(id, buffer, columns, create.getPrimaryKey().size(), sessionID);
+        tempTable.getTree().setSaveTemporaryLobs(!localScoped);
         if (add) {
         	tempTables.put(tempTableName, tempTable);
         }

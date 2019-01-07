@@ -38,6 +38,7 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	private String encoding;
 	private PhantomReference<Object> cleanup;
 	private Writer writer;
+    private boolean temporary;
 
 	public FileStoreInputStreamFactory(FileStore lobBuffer, String encoding) {
 		this.encoding = encoding;
@@ -133,4 +134,13 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 		}
 		return StorageMode.MEMORY;
 	}
+	
+	public boolean isTemporary() {
+        return temporary;
+    }
+	
+	@Override
+    public void setTemporary(boolean b) {
+        this.temporary = b;
+    }
 }

@@ -80,6 +80,11 @@ public final class SaveOnReadInputStream extends FilterInputStream {
 			}
 			return fsisf.getStorageMode();
 		}
+		
+		@Override
+		public void setTemporary(boolean temp) {
+		    fsisf.setTemporary(temp);
+		};
 	};
 
 	public SaveOnReadInputStream(InputStream in,

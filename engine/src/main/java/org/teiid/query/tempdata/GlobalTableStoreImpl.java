@@ -202,7 +202,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	}
 	
 	private ConcurrentHashMap<String, MatTableInfo> matTables = new ConcurrentHashMap<String, MatTableInfo>();
-	private TempTableStore tableStore = new TempTableStore("SYSTEM", TransactionMode.ISOLATE_READS); //$NON-NLS-1$
+	private TempTableStore tableStore = new TempTableStore("SYSTEM", TransactionMode.ISOLATE_READS, false); //$NON-NLS-1$
 	private BufferManager bufferManager;
 	private QueryMetadataInterface metadata;
 	private volatile Serializable localAddress;

@@ -2597,5 +2597,35 @@ public class TestEmbeddedServer {
         rs.next();
         assertTrue(rs.getObject(1) instanceof Long);
     }
+    
+    @Test public void testTemporaryLobs() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        es.start(ec);
+        
+        String ddl = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIRTUAL VIEW x as select 1 as col";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl.getBytes("UTF-8")), true);
+        
+        Connection connection = es.getDriver().connect("jdbc:teiid:test", null);
+        Statement stmt = connection.createStatement();
+        stmt.execute("set autoCommitTxn off");
+        
+        PreparedStatement ps = connection.prepareStatement("insert into #temp select 1 as x, cast(? as clob) y");
+        ps.setClob(1, new StringReader(new String(new char[4000])));
+        ps.execute();
+        
+        //ensure that a temporary memory lob is still usable
+        stmt.execute("insert into #temp select 2, concat((select y from #temp where x = 1), (select y from #temp where x = 1))");
+        
+        //keep making it larger to trigger disk backing, and make sure it's still usable
+        stmt.execute("insert into #temp select 3, concat((select y from #temp where x = 2), (select y from #temp where x = 2))");
+        stmt.execute("insert into #temp select 4, concat((select y from #temp where x = 3), (select y from #temp where x = 3))");
+        stmt.execute("insert into #temp select 5, concat((select y from #temp where x = 4), (select y from #temp where x = 4))");
+        stmt.execute("insert into #temp select 6, concat((select y from #temp where x = 5), (select y from #temp where x = 5))");
+    }
 
 }
