@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.BatchSerializer;
 import org.teiid.client.ResizingArrayList;
 import org.teiid.client.util.ExceptionUtil;
@@ -53,6 +54,7 @@ import org.teiid.core.types.Streamable;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.RequestWorkItem;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -75,7 +77,7 @@ import org.teiid.query.util.Options;
  *       
  * TODO: add a pre-fetch for tuplebuffers or some built-in correlation logic with the queue.      
  */
-public class BufferManagerImpl implements BufferManager, ReplicatedObject<String> {
+public class BufferManagerImpl implements BufferManager, ReplicatedObject<String>, SessionKiller {
 
 	private static final int SYSTEM_OVERHEAD_MEGS = 150;
 
@@ -533,8 +535,10 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
     private long maxFileStoreLength = Long.MAX_VALUE;
     private long maxBatchManagerSizeEstimate = Long.MAX_VALUE;
-    private boolean enforceMaxBatchManagerSizeEstimate = true;
+    private boolean enforceMaxBatchManagerSizeEstimate = false;
     private long maxSessionBatchManagerSizeEstimate = Long.MAX_VALUE;
+    
+    private SessionService sessionService;
 	    
     public BufferManagerImpl() {
         this(true);
@@ -674,9 +678,16 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$
     	}
     	
-    	FileStore result = this.storageManager.createFileStore(name);
-    	result.setMaxLength(this.maxFileStoreLength);
-    	return result;
+    	FileStore delegate = this.storageManager.createFileStore(name);
+    	
+    	ConstraintedFileStore wrapper = new ConstraintedFileStore(delegate, this);
+    	
+    	wrapper.setMaxLength(this.maxFileStoreLength);
+    	CommandContext cc = CommandContext.getThreadLocalContext();
+        if (cc != null) {
+            wrapper.setSession(cc.getSession());
+        }
+    	return wrapper;
     }
     
     @Override
@@ -1470,6 +1481,53 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	public void setEnforceMaxBatchManagerSizeEstimate(
             boolean enforceMaxBatchManagerSizeEstimate) {
         this.enforceMaxBatchManagerSizeEstimate = enforceMaxBatchManagerSizeEstimate;
+    }
+	
+	private AtomicBoolean killing = new AtomicBoolean();
+	
+	@Override
+	public boolean killLargestConsumer() {
+	    if (sessionService == null) {
+	        return false;
+	    }
+	    
+	    //this could be called from competing threads
+	    //we only need 1 session killed at a time
+	    //TODO: may need to introduce a further timeout between killings
+	    if (killing.compareAndSet(false, true)) {
+            try {
+                //this is called infrequently and the should only be on the order of
+                //10's of thousands of sessions, so just sort here
+                SessionMetadata toKill = sessionService.getActiveSessions().stream().max((s, s1) -> {
+                    return Long.compare(s.getBytesUsed(),
+                            s1.getBytesUsed());
+                }).orElse(null);
+                if (toKill == null) {
+                    return false;
+                }
+                LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31294, toKill.getSessionId(), toKill.getBytesUsed()));
+                sessionService.terminateSession(toKill.getSessionId(), "Buffer Manager"); //$NON-NLS-1$
+                return true;
+            } finally {
+                killing.set(false);
+            }
+	    }
+	    //can't wait indefinitely as we may introduce a deadlock
+	    for (int i = 0; i < 10; i++) {
+            if (killing.get()) {
+                try {
+                    Thread.sleep(10); 
+                } catch (InterruptedException e) {
+                    throw new TeiidRuntimeException(e);
+                }
+            }
+	    }
+	    
+	    return true;
+	}
+	
+	public void setSessionService(SessionService sessionService) {
+        this.sessionService = sessionService;
     }
 
 }

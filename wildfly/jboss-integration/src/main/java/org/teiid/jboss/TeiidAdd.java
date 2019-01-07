@@ -549,6 +549,7 @@ class TeiidAdd extends AbstractAddStepHandler {
         //install a session service
         //TODO: may eventually couple this with DQPCore
         final SessionServiceImpl sessionServiceImpl = new SessionServiceImpl();
+        bufferService.setSessionService(sessionServiceImpl);
         
         if (isDefined(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context)) {
    			String securityDomain = asString(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context);

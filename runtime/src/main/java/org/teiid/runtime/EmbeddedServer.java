@@ -394,6 +394,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 		this.sessionService.setVDBRepository(repo);
 		setBufferManagerProperties(config);
+		this.bufferService.setSessionService(this.sessionService);
 		BufferService bs = getBufferService();
 		this.dqp.setBufferManager(bs.getBufferManager());
 

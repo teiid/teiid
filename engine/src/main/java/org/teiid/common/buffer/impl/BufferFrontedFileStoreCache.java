@@ -1008,6 +1008,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			if (info.inode != EMPTY_ADDRESS) {
 				bm = getBlockManager(info.gid, oid, info.inode);
 			} else if (demote) {
+			    info.evicting = false; //satisfy the post condition
+			    info.notifyAll();
 				return EMPTY_ADDRESS;
 			}
 			//release the lock to perform the transfer
@@ -1015,12 +1017,12 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 		}
 		try {
 			if (demote && block == EMPTY_ADDRESS) {
-				storageWrites.getAndIncrement();
 				BlockInputStream is = new BlockInputStream(bm, memoryBlockCount); 
 				BlockStore blockStore = sizeBasedStores[sizeIndex];
-				for (int i = 0; i < 3; i++) {
+				outer: for (int i = 0; i < 3; i++) {
 					try {
 						block = blockStore.writeToStorageBlock(info, is);
+						storageWrites.getAndIncrement();
 						break;
 					} catch (OutOfDiskException e) {
 						switch (i) {
@@ -1029,6 +1031,35 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 							defragTask.truncate(true);
 							break;
 						case 1:
+						    //kill a session
+						    try {
+						        //the evicting flag is a defacto lock
+						        //we can't hold it while killing a session
+    						    synchronized (info) {
+    						        info.evicting = false;
+    						        info.notifyAll();
+                                }
+    						    this.bufferManager.killLargestConsumer();
+						    } finally {
+    	                        synchronized (info) {
+    	                            //wait for a consistent state
+	                                info.await(true, true);
+                                    info.evicting = true;
+                                    block = info.block;
+                                    memoryBlockCount = info.memoryBlockCount;
+                                    sizeIndex = info.sizeIndex;
+                                    //already evicted
+    	                            if (block != EMPTY_ADDRESS) {
+    	                                break outer;
+    	                            }
+    	                            //removed
+    	                            if (info.inode == EMPTY_ADDRESS) {
+    	                                bm = null;
+    	                                break outer;
+    	                            }
+    	                            //still needs eviction
+    	                        }
+						    }
 							synchronized (this) {
 								if (System.currentTimeMillis() - lastFullRun > FULL_DEFRAG_TRUNCATE_TIMEOUT) {
 									defragTask.defrag(true);

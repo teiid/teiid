@@ -2627,5 +2627,135 @@ public class TestEmbeddedServer {
         stmt.execute("insert into #temp select 5, concat((select y from #temp where x = 4), (select y from #temp where x = 4))");
         stmt.execute("insert into #temp select 6, concat((select y from #temp where x = 5), (select y from #temp where x = 5))");
     }
+    
+    @Test public void testSessionKilling() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setMemoryBufferSpace(1);
+        ec.setMaxReserveKb(1);
+        ec.setMaxBufferSpace(1);
+        ec.setMaxActivePlans(2);
+        ec.setMaxStorageObjectSize(6000000);
+        es.start(ec);
+        
+        String ddl = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIRTUAL VIEW x as select 1 as col";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl.getBytes("UTF-8")), true);
+        Connection connection = es.getDriver().connect("jdbc:teiid:test", null);
+        Statement stmt = connection.createStatement();
+        stmt.execute("set autoCommitTxn off");
+        PreparedStatement ps = connection.prepareStatement("insert into #temp select 1 as x, cast(? as clob) y");
+        ps.setClob(1, new StringReader(new String(new char[65000])));
+        ps.execute();
+        for (int i = 0; i < 7; i++) {
+            stmt.execute("insert into #temp select 2 as x, concat((select y from #temp where x = 1), (select y from #temp where x = 1))");
+        }
+        boolean killed = false;
+        for (int i = 0; i < 2; i++) {
+            try {
+                stmt.execute("insert into #temp select 2 as x, concat((select y from #temp where x = 1), (select y from #temp where x = 1))");
+            } catch (SQLException e) {
+                //session killed
+                killed = true;
+                break;
+            }
+        }
+        assertTrue(killed);
+        
+        //same setup, but don't push over the limit yet
+        connection = es.getDriver().connect("jdbc:teiid:test", null);
+        stmt = connection.createStatement();
+        stmt.execute("set autoCommitTxn off");
+        ps = connection.prepareStatement("insert into #temp select 1 as x, cast(? as clob) y");
+        ps.setClob(1, new StringReader(new String(new char[65000])));
+        ps.execute();
+        for (int i = 0; i < 7; i++) {
+            stmt.execute("insert into #temp select 2 as x, concat((select y from #temp where x = 1), (select y from #temp where x = 1))");
+        }
+        
+        Connection connection2 = es.getDriver().connect("jdbc:teiid:test", null);
+        Statement stmt2 = connection2.createStatement();
+        stmt2.execute("set autoCommitTxn off");
+        PreparedStatement ps2 = connection2.prepareStatement("insert into #temp select 1 as x, cast(? as clob) y");
+        ps2.setClob(1, new StringReader(new String(new char[65000])));
+        ps2.execute();
+        for (int i = 0; i < 2; i++) {
+            stmt2.execute("insert into #temp select 2 as x, concat((select y from #temp where x = 1), (select y from #temp where x = 1))");
+        }
+        
+        try {
+            stmt.executeQuery("select * from #temp");
+            fail();
+        } catch (SQLException e) {
+            //should have been killed - it's the largest
+        }
+        
+        //ensure the other is still valid
+        stmt2.executeQuery("select * from #temp");
+    }
+    
+    @Test public void testSessionKillingWithTables() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setMemoryBufferSpace(1);
+        ec.setMaxReserveKb(1);
+        ec.setMaxBufferSpace(1);
+        ec.setMaxActivePlans(2);
+        ec.setMaxStorageObjectSize(6000000);
+        ec.setMaxProcessingKb(1);
+        es.start(ec);
+        
+        String ddl = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIRTUAL VIEW x as select 1 as col";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl.getBytes("UTF-8")), true);
+        Connection connection = es.getDriver().connect("jdbc:teiid:test", null);
+        Statement stmt = connection.createStatement();
+        stmt.execute("set autoCommitTxn off");
+        for (int i = 0; i < 54; i++) {
+            stmt.execute("insert into #temp select * from sys.columns limit 400");
+        }
+        boolean killed = false;
+        for (int i = 0; i < 8; i++) {
+            try {
+                stmt.execute("insert into #temp select * from sys.columns limit 400");
+            } catch (SQLException e) {
+                //session killed
+                killed = true;
+                break;
+            }
+        }
+        assertTrue(killed);
+        
+        //same setup, but don't push over the limit yet
+        connection = es.getDriver().connect("jdbc:teiid:test", null);
+        stmt = connection.createStatement();
+        stmt.execute("set autoCommitTxn off");
+        for (int i = 0; i < 54; i++) {
+            stmt.execute("insert into #temp select * from sys.columns limit 400");
+        }
+        
+        Connection connection2 = es.getDriver().connect("jdbc:teiid:test", null);
+        Statement stmt2 = connection2.createStatement();
+        stmt2.execute("set autoCommitTxn off");
+        for (int i = 0; i < 8; i++) {
+            stmt2.execute("insert into #temp select * from sys.columns limit 400");
+        }
+        
+        try {
+            stmt.executeQuery("select * from #temp");
+            fail();
+        } catch (SQLException e) {
+            //should have been killed - it's the largest
+        }
+        
+        //ensure the other is still valid
+        stmt2.executeQuery("select * from #temp");
+    }
 
 }

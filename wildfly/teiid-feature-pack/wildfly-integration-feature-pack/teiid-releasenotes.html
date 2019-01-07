@@ -217,6 +217,7 @@ See the Admin Guide for more on configuration and installation.
 
 <h4>from 11.2</h4>
 <ul>
+   <li><a href="https://issues.jboss.org/browse/TEIID-5584">TEIID-5584</a> org.teiid.enforceSingleMaxBufferSizeEstimate now defaults to false.  Rather the biggest memory consumers among sessions will be killed by default in the event of running out of disk space.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-5490">TEIID-5490</a> org.teiid.longRanks now defaults to true.  Analytical functions such as row_number return a long by default.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-5574">TEIID-5574</a> the cli buffer-service properties have been deprecated and replaced with buffer-manager properties - see the migration guide for more</li>
 </ul>

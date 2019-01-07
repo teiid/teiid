@@ -79,6 +79,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private long maxDiskBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
        
     private long vmMaxMemory = Runtime.getRuntime().maxMemory();
+    private SessionServiceImpl sessionService;
 	
     /**
      * Clean the file storage directory on startup 
@@ -97,6 +98,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
             this.bufferMgr.setMaxReserveKB(this.maxReservedHeapKb);
             this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
             this.bufferMgr.setInlineLobs(inlineLobs);
+            this.bufferMgr.setSessionService(sessionService);
             this.bufferMgr.initialize();
             
             // If necessary, add disk storage manager
@@ -353,6 +355,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
     
     public void setVmMaxMemory(long vmMaxMemory) {
         this.vmMaxMemory = vmMaxMemory;
+    }
+
+    public void setSessionService(SessionServiceImpl sessionService) {
+        this.sessionService = sessionService;
     }
 
 }

@@ -721,6 +721,7 @@ public class TestTempTables extends TempTableTestHarness {
 	@Test public void testLargeException() throws Exception {
 	    BufferManagerImpl bm = BufferManagerFactory.getTestBufferManager(20480, 256);
 	    bm.setMaxBatchManagerSizeEstimate(100000);
+	    bm.setEnforceMaxBatchManagerSizeEstimate(true);
 	    FakeDataManager fdm = new FakeDataManager();
         TestProcessor.sampleData1(fdm);
 	    setUp(RealMetadataFactory.example1Cached(), fdm, bm);

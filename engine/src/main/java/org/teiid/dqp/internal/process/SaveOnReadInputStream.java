@@ -25,6 +25,9 @@ import java.io.InputStream;
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.query.util.CommandContext;
 
 /**
  * An {@link InputStream} wrapper that saves the input on read and provides a {@link InputStreamFactory}.
@@ -75,7 +78,12 @@ public final class SaveOnReadInputStream extends FilterInputStream {
 				try {
 					getInputStream().close();
 				} catch (IOException e) {
-					return StorageMode.OTHER;
+				    CommandContext cc = CommandContext.getThreadLocalContext();
+				    if (cc != null) {
+				        cc.addWarning(e);
+				    }
+				    LogManager.logInfo(LogConstants.CTX_DQP, e.getMessage());
+					return StorageMode.FREE;
 				}
 			}
 			return fsisf.getStorageMode();
