@@ -192,6 +192,7 @@ public class TestBufferManagerImpl {
         bufferManager.setCache(new MemoryStorageManager());
         bufferManager.initialize();
         BatchManagerImpl batchManager = bufferManager.createBatchManager(1l, new Class<?>[] {Integer.class});
+        batchManager.describe(null); //should not error
         batchManager.remove();
         try {
             batchManager.getBatch(1l, false);
