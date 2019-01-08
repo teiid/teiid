@@ -195,13 +195,8 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         }        
     }
 
-    public static boolean isNonAscii(String val) {
-        for (int i = 0; i < val.length(); i++) {
-        	if (val.charAt(i) > 127) {
-        	    return true;
-        	}
-        }
-        return false;
+    protected boolean isNonAscii(String val) {
+        return this.executionFactory.isNonAscii(val);
     }
     
     protected boolean useUnicodePrefix() {

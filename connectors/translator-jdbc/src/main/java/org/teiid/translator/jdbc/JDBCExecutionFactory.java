@@ -977,7 +977,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             if (useUnicodePrefix()) {
                 //sources that require the prefix, also require binding as an N type
                 if (type == Types.VARCHAR) {
-                    if (SQLConversionVisitor.isNonAscii(param.toString())) {
+                    if (isNonAscii(param.toString())) {
                         type = Types.NVARCHAR;
                     }
                 } else if (type == Types.CLOB) {
@@ -1555,10 +1555,34 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	}
 
 	/**
-	 * @return true if the N prefix should be used for strings containing non-ascii characters
+	 * @return true if the N prefix an N* type binding should be used for strings containing non-ascii characters
 	 */
 	public boolean useUnicodePrefix() {
 		return false;
+	}
+	
+	/**
+	 * 
+	 * @return true if the database code page includes extended characters values in the 128-255 range
+	 */
+	public boolean isExtendedAscii() {
+	    //TODO: we may need to look this up from the database - but it could be down to a specific column collation
+	    return true;
+	}
+	
+	/**
+     * 
+     * @param val
+     * @return true if the string is non-ascii
+     */
+	protected boolean isNonAscii(String val) {
+	    int max = isExtendedAscii()?255:127;
+	    for (int i = 0; i < val.length(); i++) {
+            if (val.codePointAt(i) > max) {
+                return true;
+            }
+        }
+        return false;
 	}
 
 	/**
@@ -1583,7 +1607,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         if (obj instanceof Literal) {
             Object value = ((Literal) obj).getValue();
             if (value != null) {
-                return SQLConversionVisitor.isNonAscii(value.toString());
+                return isNonAscii(value.toString());
             }
             return false;
         }

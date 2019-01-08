@@ -83,6 +83,10 @@ public class TestOracleConvertModifier {
     @Test public void testStringToNChar() throws Exception {
         helpTest(LANG_FACTORY.createLiteral("日", String.class), "char", "cast(N'日' AS nchar(1))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
+    
+    @Test public void testLatinStringToChar() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral("é", String.class), "char", "cast('é' AS char(1))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
 
     @Test public void testStringToBoolean() throws Exception {
         helpTest(LANG_FACTORY.createLiteral("5", String.class), "boolean", "CASE WHEN '5' IN ('false', '0') THEN 0 WHEN '5' IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
