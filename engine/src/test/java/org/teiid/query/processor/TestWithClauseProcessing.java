@@ -491,13 +491,24 @@ public class TestWithClauseProcessing {
 	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 
-	@Test public void testWithAndUncorrelatedSubquery() throws TeiidComponentException, TeiidProcessingException {
-	    String sql = "WITH t(n) AS ( select e1 from pm2.g1 ) SELECT n FROM t as t1, pm1.g1 where e1 = (select n from t)"; //$NON-NLS-1$
+	@Test public void testWithAndUncorrelatedSubquery() throws Exception {
+	    String sql = "WITH t(n) AS /*+ no_inline */ ( select e1 from pm2.g1 ) SELECT n FROM t as t1, pm1.g1 where e1 = (select n from t)"; //$NON-NLS-1$
 
 	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
 	    bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
 	    CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
-	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (WITH t (n) AS (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0)", "WITH t (n) AS (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (SELECT g_0.n FROM t AS g_0)", "WITH t (n) AS (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    
+	    dataManager.addData("WITH t (n) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_0.n FROM t AS g_0", Arrays.asList("a"));
+	    dataManager.addData("SELECT 1 FROM g1 AS g_0 WHERE g_0.e1 = 'a'", Arrays.asList(1));
+	    
+	    List<?>[] expected = new List[] { 
+                Arrays.asList("a"),
+            };
+	    
+	    helpProcess(plan, TestProcessor.createCommandContext(), dataManager, expected);
 	}
 	
 	@Test public void testWithPushdownNested() throws TeiidException {
@@ -956,6 +967,64 @@ public class TestWithClauseProcessing {
         dataManager.addData("SELECT g_0.column1, g_0.column2 FROM y.table1 AS g_0 WHERE g_0.column1 = 'bob'");
         dataManager.addData("SELECT g_0.column3 AS c_0, g_0.column4 AS c_1 FROM y.table2 AS g_0 WHERE g_0.column3 = 'joe' ORDER BY c_0", Arrays.asList("joe", "employee"));
         helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("joe", "employee")});
+    }
+    
+    @Test public void testNestedWithWithTopLevelCorrelatedSubquery() throws Exception {
+        String sql = "SELECT \n" + 
+                "(exec \"logMsg\"(\n" + 
+                "    \"level\" => 'INFO',\n" + 
+                "    \"context\" => 'DEBUG.FOO.BAR',\n" + 
+                "    \"msg\" => tccd.bank_account_holder_name)) as something\n" + 
+                "FROM \n" + 
+                "(\n" + 
+                "    SELECT c.city AS \"bank_account_holder_name\"\n" + 
+                "    FROM \"address\" c\n" + 
+                "    JOIN \n" + 
+                "    (\n" + 
+                "        select ca.addressid\n" + 
+                "        from \"customeraddress\" ca\n" + 
+                "     cross JOIN \n" + 
+                "    (\n" + 
+                "        WITH latest_exchange_rates AS \n" + 
+                "        (\n" + 
+                "            SELECT exchange_rate_date AS month_begin\n" + 
+                "            FROM (\n" + 
+                "                SELECT  CURDATE() as exchange_rate_date\n" + 
+                "                )t\n" + 
+                "        )\n" + 
+                "        SELECT DISTINCT dt.month_start AS month_begin\n" + 
+                "        FROM (\n" + 
+                "            CALL createDateDimensionsTable(\n" + 
+                "                \"startdate\" => TIMESTAMPADD(SQL_TSI_MONTH, 1, (SELECT month_begin FROM latest_exchange_rates)),\n" + 
+                "                \"enddate\" => TIMESTAMPADD(SQL_TSI_YEAR, 15, (SELECT month_begin FROM latest_exchange_rates))\n" + 
+                "            ) ) AS dt\n" + 
+                "    ) fx\n" + 
+                "    ) ci ON ci.addressid = c.addressid\n" + 
+                ") tccd ;";
+        
+        String ddl = "CREATE PROCEDURE createDateDimensionsTable(\n" + 
+                "         IN startdate date NOT NULL OPTIONS (ANNOTATION 'Start date for table.'),\n" + 
+                "         IN enddate date OPTIONS (ANNOTATION 'End date for table. If NULL, uses current date.')\n" + 
+                "        )\n" + 
+                "        RETURNS \n" + 
+                "        (\n" + 
+                "         \"month_start\" date\n" + 
+                "        ) AS\n" + 
+                "        BEGIN\n" + 
+                "            select CURDATE() as month_start;\n" + 
+                "        END;"
+                + "create foreign procedure logMsg (level string, context string, msg string) returns boolean;"
+                + "create foreign table address (addressid integer, city string);"
+                + "create foreign table customeraddress (addressid integer);";
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        CommandContext cc = createCommandContext();
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()), cc);
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.city FROM y.address AS g_0, y.customeraddress AS g_1 WHERE g_1.addressid = g_0.addressid", Arrays.asList("baltimore"));
+        dataManager.addData("EXEC logMsg('INFO', 'DEBUG.FOO.BAR', 'baltimore')", Arrays.asList(Boolean.TRUE));
+        helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(Boolean.TRUE)});
     }
 
 }

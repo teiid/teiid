@@ -54,12 +54,12 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -609,21 +609,24 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	protected Collection<? extends LanguageObject> getObjects() {
-		ArrayList<LanguageObject> list = new ArrayList<LanguageObject>();
+	public Collection<? extends SubqueryContainer<?>> getObjects() {
+		ArrayList<SubqueryContainer<?>> list = new ArrayList<SubqueryContainer<?>>();
 		if (shouldEvaluate) {
 			//collect any evaluatable subqueries
-			for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.command)) {
-				if (container instanceof ExistsCriteria && ((ExistsCriteria)container).shouldEvaluate()) {
-					list.add(container);
-				}
-				if (container instanceof ScalarSubquery && ((ScalarSubquery)container).shouldEvaluate()) {
-					list.add(container);
-				}
-			}
+			collectEvaluatable(list, this.command);
 		}
 		return list;
 	}
+
+    private void collectEvaluatable(ArrayList<SubqueryContainer<?>> list, Command cmd) {
+        for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(cmd)) {
+        	if (container instanceof Evaluatable<?> && ((Evaluatable<?>)container).shouldEvaluate()) {
+        		list.add(container);
+        	} else {
+        	    collectEvaluatable(list, container.getCommand());
+        	}
+        }
+    }
 	
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {

@@ -222,7 +222,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     }
     
     @Override
-    protected Collection<? extends LanguageObject> getObjects() {
+    public Collection<? extends LanguageObject> getObjects() {
     	return this.selectSymbols;
     }
     

@@ -126,7 +126,7 @@ public class RuleApplySecurity implements OptimizerRule {
 		        		if (!group.isProcedure()) {
 		        			project = RelationalPlanner.createProjectNode(masked);
 		        		}
-	        			rules.getPlanner().planSubqueries(null, sourceNode.getGroups(), project, project.getSubqueryContainers(), true);
+	        			rules.getPlanner().planSubqueries(sourceNode.getGroups(), project, project.getSubqueryContainers(), true, false);
 	        			project.addGroups(GroupsUsedByElementsVisitor.getGroups(project.getCorrelatedReferenceElements()));
 	        			if (!group.isProcedure()) {
 	        				//we need to insert a view to give a single place to evaluate the subqueries
@@ -160,7 +160,7 @@ public class RuleApplySecurity implements OptimizerRule {
                     if (parent == null) {
                     	parent = critNode;
                     }
-                    rules.getPlanner().planSubqueries(null, sourceNode.getGroups(), critNode, critNode.getSubqueryContainers(), true);
+                    rules.getPlanner().planSubqueries(sourceNode.getGroups(), critNode, critNode.getSubqueryContainers(), true, false);
                     critNode.addGroups(GroupsUsedByElementsVisitor.getGroups(critNode.getCorrelatedReferenceElements()));
                     root.addAsParent(critNode);
                 }

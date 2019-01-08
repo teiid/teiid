@@ -390,7 +390,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	protected Collection<? extends LanguageObject> getObjects() {
+	public Collection<? extends LanguageObject> getObjects() {
 		return this.getChildren()[0].getOutputElements();
 	}
 

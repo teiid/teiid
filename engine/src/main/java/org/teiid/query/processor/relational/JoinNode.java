@@ -383,7 +383,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
 	}
     
     @Override
-    protected Collection<? extends LanguageObject> getObjects() {
+    public Collection<? extends LanguageObject> getObjects() {
     	List<LanguageObject> all = new ArrayList<LanguageObject>();
     	if (leftExpressions != null) {
     		all.addAll(leftExpressions);

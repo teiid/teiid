@@ -418,7 +418,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	}
 	
 	@Override
-	protected Collection<? extends LanguageObject> getObjects() {
+	public Collection<? extends LanguageObject> getObjects() {
 		return this.table.getPassing();
 	}
 	

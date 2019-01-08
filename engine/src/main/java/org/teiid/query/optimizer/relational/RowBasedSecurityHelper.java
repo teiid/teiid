@@ -333,7 +333,7 @@ public class RowBasedSecurityHelper {
 			return;
 		}
 		Set<GroupSymbol> groups = Collections.singleton(gs);
-		planner.planSubqueries(null, groups, null, subqueries, true);
+		planner.planSubqueries(groups, null, subqueries, true, false);
 		List<Reference> refs = new LinkedList<Reference>();
 		CorrelatedReferenceCollectorVisitor.collectReferences(object, groups, refs, planner.metadata);
 		if (!refs.isEmpty()) {
