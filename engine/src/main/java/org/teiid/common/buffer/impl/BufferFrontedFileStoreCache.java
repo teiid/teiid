@@ -1003,6 +1003,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			if (info.inode != EMPTY_ADDRESS) {
 				bm = getBlockManager(info.gid, oid, info.inode);
 			} else if (demote) {
+			    info.evicting = false; //satisfy the post condition
+			    info.notifyAll();
 				return EMPTY_ADDRESS;
 			}
 			//release the lock to perform the transfer

@@ -52,7 +52,7 @@ public class Options {
 	private boolean aggressiveJoinGrouping = true;
 	private long maxSessionBufferSizeEstimate = Long.MAX_VALUE;
 	private boolean tracingWithActiveSpanOnly = true;
-	private boolean enforceSingleMaxBufferSizeEstimate = true;
+	private boolean enforceSingleMaxBufferSizeEstimate = false;
 	
 	public Properties getProperties() {
 		return properties;

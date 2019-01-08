@@ -533,7 +533,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
     private long maxFileStoreLength = Long.MAX_VALUE;
     private long maxBatchManagerSizeEstimate = Long.MAX_VALUE;
-    private boolean enforceMaxBatchManagerSizeEstimate = true;
+    private boolean enforceMaxBatchManagerSizeEstimate = false;
     private long maxSessionBatchManagerSizeEstimate = Long.MAX_VALUE;
 	    
     public BufferManagerImpl() {
