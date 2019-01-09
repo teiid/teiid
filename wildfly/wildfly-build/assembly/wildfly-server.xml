@@ -1,6 +1,6 @@
 <assembly>
   
-  <id>wildfly-server</id>
+  <id>server</id>
   
   <formats>
     <format>zip</format>
