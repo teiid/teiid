@@ -8,7 +8,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>wildfly-parent</artifactId>
-  <groupId>org.teiid</groupId>
+  <groupId>org.teiid.wildfly</groupId>
   <version>12.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Teiid Wildfly Parent</name>
@@ -103,50 +103,50 @@
             </dependency>
             
             <dependency>
-                <groupId>org.teiid</groupId>
+                <groupId>org.teiid.wildfly</groupId>
                 <artifactId>teiid-resource-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
             <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-jboss-client</artifactId>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>teiid-wildfly-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-jboss-admin</artifactId>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>teiid-wildfly-admin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-jboss-security</artifactId>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>teiid-wildfly-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-jboss-integration</artifactId>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>teiid-wildfly-integration</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-				<groupId>org.teiid.connectors</groupId>
+				<groupId>org.teiid.wildfly.connectors</groupId>
 				<artifactId>connector-salesforce</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.teiid.connectors</groupId>
+				<groupId>org.teiid.wildfly.connectors</groupId>
 				<artifactId>connector-salesforce-34</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.teiid.connectors</groupId>
+				<groupId>org.teiid.wildfly.connectors</groupId>
 				<artifactId>connector-salesforce-41</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
             <dependency>
-				<groupId>org.teiid.connectors</groupId>
+				<groupId>org.teiid.wildfly.connectors</groupId>
 				<artifactId>connector-file</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -410,13 +410,13 @@
     </distributionManagement>
   
   <modules>
- 		<module>jboss-admin</module>
-		<module>jboss-client</module>
-        <module>jboss-integration</module>
-        <module>jboss-security</module>
+ 		<module>wildfly-admin</module>
+		<module>wildfly-client</module>
+        <module>wildfly-integration</module>
+        <module>wildfly-security</module>
         <module>teiid-feature-pack</module>
         <module>resource-spi</module>
-        <module>resource-adapters</module>
+        <module>connectors</module>
         <module>test-integration</module>
   </modules>
 </project>

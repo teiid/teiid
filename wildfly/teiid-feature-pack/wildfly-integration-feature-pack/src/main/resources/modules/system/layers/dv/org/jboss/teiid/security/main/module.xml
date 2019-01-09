@@ -4,7 +4,7 @@
         <property name="jboss.api" value="private"/>
     </properties>
     <resources>
-        <artifact name="${org.teiid:teiid-jboss-security}" />
+        <artifact name="${org.teiid.wildfly:teiid-wildfly-security}" />
     </resources>
     <dependencies>
         <module name="javax.api" />

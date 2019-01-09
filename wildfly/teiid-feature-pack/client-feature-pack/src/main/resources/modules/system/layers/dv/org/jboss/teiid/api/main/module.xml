@@ -6,7 +6,7 @@
     
     <resources>
         <artifact name="${org.teiid:teiid-api}"/>
-        <artifact name="${org.teiid:teiid-resource-spi}"/>
+        <artifact name="${org.teiid.wildfly:teiid-resource-spi}"/>
     </resources>
 
     <dependencies>
