@@ -2680,8 +2680,13 @@ public class TestEmbeddedServer {
         PreparedStatement ps2 = connection2.prepareStatement("insert into #temp select 1 as x, cast(? as clob) y");
         ps2.setClob(1, new StringReader(new String(new char[65000])));
         ps2.execute();
-        for (int i = 0; i < 1; i++) {
-            stmt2.execute("insert into #temp select 2 as x, concat((select y from #temp where x = 1), (select y from #temp where x = 1))");
+        for (int i = 0; i < 3; i++) {
+            try {
+                stmt2.execute("insert into #temp select 2 as x, concat((select y from #temp where x = 1), (select y from #temp where x = 1))");
+            } catch (SQLException e) {
+                //ideally this would always succeed, but that can't yet be assured
+                break;
+            }
         }
         
         try {
@@ -2740,7 +2745,12 @@ public class TestEmbeddedServer {
         Statement stmt2 = connection2.createStatement();
         stmt2.execute("set autoCommitTxn off");
         for (int i = 0; i < 8; i++) {
-            stmt2.execute("insert into #temp select * from sys.columns limit 400");
+            try {
+                stmt2.execute("insert into #temp select * from sys.columns limit 400");
+            } catch (SQLException e) {
+                //ideally this would always succeed, but that can't yet be assured
+                break;
+            }
         }
         
         try {
