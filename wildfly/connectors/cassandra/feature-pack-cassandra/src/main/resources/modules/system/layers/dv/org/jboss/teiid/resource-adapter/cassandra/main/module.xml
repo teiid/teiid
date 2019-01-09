@@ -1,0 +1,20 @@
+<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.resource-adapter.cassandra">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+       
+    <resources>
+        <artifact name="${org.teiid.wildfly.connectors:connector-cassandra}"/>
+        <resource-root path="."/>
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core"/>
+        <module name="org.jboss.teiid.api"/>
+        <module name="com.datastax.cassandra.driver.core"/>
+        <module name="org.jboss.teiid.translator.cassandra"/>
+    </dependencies>
+</module>

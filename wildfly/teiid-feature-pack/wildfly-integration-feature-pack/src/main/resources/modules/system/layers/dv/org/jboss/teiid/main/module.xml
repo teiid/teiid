@@ -7,10 +7,10 @@
     <resources>
         <artifact name="${org.teiid:teiid-engine}"/>
         <artifact name="${org.teiid:saxon-xom}"/>
-        <artifact name="${org.teiid:teiid-jboss-integration}"/>
+        <artifact name="${org.teiid.wildfly:teiid-wildfly-integration}"/>
         <artifact name="${org.teiid:teiid-metadata}"/>
         <artifact name="${org.teiid:teiid-runtime}"/>
-        <artifact name="${org.teiid:teiid-jboss-admin}"/>
+        <artifact name="${org.teiid.wildfly:teiid-wildfly-admin}"/>
         <artifact name="${org.teiid:teiid-data-quality}"/>
         <resource-root path="deployments" />
     </resources>
