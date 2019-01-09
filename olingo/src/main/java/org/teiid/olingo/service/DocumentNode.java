@@ -486,7 +486,7 @@ public class DocumentNode {
             fkColumns = DocumentNode.getColumnNames(getPKColumns(from.getTable()));
         }                   
         
-        List<String> pkColumns = DocumentNode.getColumnNames(getPKColumns(to.getTable()));
+        List<String> pkColumns = DocumentNode.getColumnNames(fk.getReferenceKey().getColumns());
         Criteria criteria = DocumentNode.buildJoinCriteria(
                 from.getGroupSymbol(),
                 to.getGroupSymbol(), pkColumns, fkColumns);

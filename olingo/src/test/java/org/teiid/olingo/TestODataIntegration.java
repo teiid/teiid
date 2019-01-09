@@ -3302,7 +3302,6 @@ public class TestODataIntegration {
                     .send();                        
             assertEquals(200, response.getStatus());
             String content = response.getContentAsString();
-            System.out.println(content);
             assertTrue(content.contains("Namespace=\"northwind.1.fkmodel\""));
             assertTrue(content.contains("Namespace=\"northwind.1.pkmodel\""));
             
@@ -3313,6 +3312,41 @@ public class TestODataIntegration {
             content = response.getContentAsString();
             assertTrue(content.contains("Namespace=\"northwind.1.fkmodel\""));
             assertTrue(content.contains("Namespace=\"northwind.1.pkmodel\""));
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test public void testMultipleUnique() throws Exception {
+        String ddl = "CREATE VIEW pktable (\n" + 
+                "id integer primary key,\n" + 
+                "keyvalue string UNIQUE\n" + 
+                ") AS \n" + 
+                "SELECT 1 as id, 'a' as keyvalue\n" +
+                "CREATE VIEW fktable (\n" + 
+                "id integer primary key,\n" + 
+                "fkvalue string,\n" + 
+                //reference the unique key, not the pk
+                "CONSTRAINT fkid FOREIGN KEY(fkvalue) REFERENCES pktable(keyvalue)\n" + 
+                ") OPTIONS(UPDATABLE 'TRUE') \n" + 
+                "AS\n" + 
+                "SELECT 1 as id, 'a' as fkvalue";
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("model");
+            mmd.addSourceMetadata("DDL", ddl);
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/model/fktable(1)/fkid")
+                    .method("GET")
+                    .send();                        
+            //if things get crossed up we'll either get a 400 or 404
+            assertEquals(200, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
