@@ -112,6 +112,18 @@
 		</dependency>
      
 	</dependencies>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.teiid.wildfly</groupId>
+				<artifactId>test-integration-common</artifactId>
+				<type>test-jar</type>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	
+	</dependencyManagement>
 
   <modules>
     <module>common</module>

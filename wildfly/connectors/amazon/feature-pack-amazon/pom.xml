@@ -23,7 +23,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>org.teiid</groupId>
+			<groupId>org.teiid.wildfly</groupId>
 			<artifactId>teiid-client-feature-pack</artifactId>
 			<version>${project.version}</version>
 			<type>zip</type>

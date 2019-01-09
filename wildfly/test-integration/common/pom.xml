@@ -168,10 +168,10 @@
                                 <configuration>
                                     <artifactItems>
                                         <artifactItem>
-                                            <groupId>org.teiid</groupId>
-                                            <artifactId>teiid</artifactId>
+                                            <groupId>org.teiid.wildfly</groupId>
+                                            <artifactId>teiid-wildfly</artifactId>
                                             <version>${project.version}</version>
-                                            <classifier>wildfly-server</classifier>
+                                            <classifier>server</classifier>
                                             <type>zip</type>
                                             <overWrite>false</overWrite>
                                             <outputDirectory>${project.build.directory}</outputDirectory>
