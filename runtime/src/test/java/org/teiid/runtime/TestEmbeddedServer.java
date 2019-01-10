@@ -2670,7 +2670,7 @@ public class TestEmbeddedServer {
         ps = connection.prepareStatement("insert into #temp select 1 as x, cast(? as clob) y");
         ps.setClob(1, new StringReader(new String(new char[65000])));
         ps.execute();
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 6; i++) {
             stmt.execute("insert into #temp select 2 as x, concat((select y from #temp where x = 1), (select y from #temp where x = 1))");
         }
         
@@ -2737,14 +2737,14 @@ public class TestEmbeddedServer {
         connection = es.getDriver().connect("jdbc:teiid:test", null);
         stmt = connection.createStatement();
         stmt.execute("set autoCommitTxn off");
-        for (int i = 0; i < 54; i++) {
+        for (int i = 0; i < 50; i++) {
             stmt.execute("insert into #temp select * from sys.columns limit 400");
         }
         
         Connection connection2 = es.getDriver().connect("jdbc:teiid:test", null);
         Statement stmt2 = connection2.createStatement();
         stmt2.execute("set autoCommitTxn off");
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 10; i++) {
             try {
                 stmt2.execute("insert into #temp select * from sys.columns limit 400");
             } catch (SQLException e) {
