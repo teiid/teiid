@@ -1088,12 +1088,6 @@
 
             <dependency>
                 <groupId>org.teiid</groupId>
-                <artifactId>teiid-olingo-patches</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.teiid</groupId>
                 <artifactId>teiid-common-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1155,11 +1149,6 @@
                 <type>test-jar</type>
                 <version>${project.version}</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>rest-service</artifactId>
-                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.teiid</groupId>
@@ -1584,13 +1573,11 @@
 		<module>engine</module>
 		<module>metadata</module>
 		<module>runtime</module>
-		<module>rest-service</module>
 		<module>hibernate-dialect</module>
 		<module>eclipselink-platform</module>		
 		<module>olingo-common</module>
-		<module>olingo-patches</module>
 		<module>olingo</module>
-        <module>connectors</module>
+                <module>connectors</module>
 		<module>saxon-xom</module>
 		<module>wildfly</module>
 	</modules>

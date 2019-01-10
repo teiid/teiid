@@ -6,7 +6,7 @@
     </properties>
     
     <resources>
-        <artifact name="${org.teiid:rest-service}" />
+        <artifact name="${org.teiid.wildfly:rest-service}" />
     </resources>
     
     <dependencies>

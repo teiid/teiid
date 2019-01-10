@@ -101,13 +101,16 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
             <dependency>
                 <groupId>org.teiid.wildfly</groupId>
                 <artifactId>teiid-resource-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+            <dependency>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>rest-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.teiid.wildfly</groupId>
                 <artifactId>teiid-wildfly-client</artifactId>
@@ -416,6 +419,7 @@
         <module>wildfly-security</module>
         <module>teiid-feature-pack</module>
         <module>resource-spi</module>
+        <module>rest-service</module>
         <module>connectors</module>
         <module>test-integration</module>
   </modules>
