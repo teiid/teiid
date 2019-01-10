@@ -5,7 +5,6 @@
     </properties>
     
     <resources>
-        <artifact name="${org.teiid:teiid-olingo-patches}"/>
         <artifact name="${org.apache.olingo:odata-server-api}"/>
         <artifact name="${org.apache.olingo:odata-server-core}"/>
         <artifact name="${org.apache.olingo:odata-server-core-ext}"/>        

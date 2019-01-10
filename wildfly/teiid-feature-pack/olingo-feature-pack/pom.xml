@@ -37,10 +37,6 @@
         </dependency>        
         <dependency>
             <groupId>org.teiid</groupId>
-            <artifactId>teiid-olingo-patches</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.teiid</groupId>
             <artifactId>teiid-olingo-common</artifactId>
         </dependency>
         <dependency>
