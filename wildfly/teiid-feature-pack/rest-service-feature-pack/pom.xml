@@ -42,7 +42,7 @@
             <type>zip</type>
         </dependency>                          
         <dependency>
-            <groupId>org.teiid</groupId>
+            <groupId>org.teiid.wildfly</groupId>
             <artifactId>rest-service</artifactId>
         </dependency>
     </dependencies>
