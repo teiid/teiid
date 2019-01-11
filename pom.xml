@@ -1456,13 +1456,6 @@
            </dependency>
 
            <dependency>
-               <groupId>org.ow2.asm</groupId>
-               <artifactId>asm</artifactId>
-               <version>6.2.1</version>
-           </dependency>           
-           
-           
-           <dependency>
                <groupId>wsdl4j</groupId>
                <artifactId>wsdl4j</artifactId>
                <version>1.6.3</version>
@@ -1491,13 +1484,6 @@
                 <artifactId>guava</artifactId>
                 <version>${version.com.google.guava}</version>
            </dependency>
-           
-           <dependency>
-               <groupId>org.jboss.resteasy</groupId>
-               <artifactId>resteasy-multipart-provider</artifactId>
-               <version>3.6.1.Final</version>
-           </dependency>
-           
            
            <dependency>
                 <groupId>javax.validation</groupId>
