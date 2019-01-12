@@ -18,17 +18,12 @@
 
 package org.teiid.runtime;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.transaction.TransactionManager;
 
-import org.infinispan.commons.tx.lookup.TransactionManagerLookup;
-import org.infinispan.manager.DefaultCacheManager;
 import org.teiid.cache.CacheFactory;
-import org.teiid.cache.infinispan.InfinispanCacheFactory;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DataRolePolicyDecider;
 import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
@@ -48,7 +43,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private String bufferDirectory;
 	private CacheFactory cacheFactory;
 	private int maxResultSetCacheStaleness = DEFAULT_MAX_STALENESS_SECONDS;
-	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
 	private List<SocketConfiguration> transports;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
@@ -70,7 +64,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	
 	private String nodeName;
 	
-    private DefaultCacheManager cacheManager;
 	private AuthenticationType authenticationType;
 	
 	public EmbeddedConfiguration() {
@@ -129,41 +122,19 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		return this.bufferDirectory;
 	}
 	
+	@Deprecated
 	public String getInfinispanConfigFile() {
-		return infinispanConfigFile;
+		return null;
 	}
 	
+	@Deprecated
 	public void setInfinispanConfigFile(String infinispanConfigFile) {
-		this.infinispanConfigFile = infinispanConfigFile;
 	}
 	
 	public CacheFactory getCacheFactory() {
-		if (this.cacheFactory == null) {
-			try {
-				cacheManager = new DefaultCacheManager(this.infinispanConfigFile, true);				
-				for(String cacheName:cacheManager.getCacheNames()) {
-	                if (getTransactionManager() != null) {
-	                    setCacheTransactionManger(cacheName);
-	                }				    
-					cacheManager.startCache(cacheName);
-				}
-				this.cacheFactory = new InfinispanCacheFactory(cacheManager, this.getClass().getClassLoader());
-			} catch (IOException e) {
-				throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40100, e);
-			}
-		}
 		return this.cacheFactory;
 	}
 
-    private void setCacheTransactionManger(String cacheName) {
-        cacheManager.getCacheConfiguration(cacheName).transaction().transactionManagerLookup(new TransactionManagerLookup() {
-            @Override
-            public TransactionManager getTransactionManager() throws Exception {
-                return EmbeddedConfiguration.this.getTransactionManager();
-            }
-        });
-    }
-	
 	public void setCacheFactory(CacheFactory cacheFactory) {
 		this.cacheFactory = cacheFactory;
 	}
@@ -175,8 +146,8 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	}
 	
 	protected void stop() {
-		if (cacheManager != null) {
-			cacheManager.stop();
+		if (cacheFactory != null) {
+			cacheFactory.destroy();
 		}
 	}
 	
