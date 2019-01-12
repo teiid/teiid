@@ -34,9 +34,6 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
-import org.teiid.cache.Cache;
-import org.teiid.cache.CacheFactory;
-import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.VirtualDatabaseException;
@@ -88,15 +85,6 @@ public class ConvertVDB {
         
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         ec.setUseDisk(false);
-        ec.setCacheFactory(new CacheFactory() {
-            @Override
-            public <K, V> Cache<K, V> get(String name) {
-                return new MockCache<>(name, 10);
-            }
-            @Override
-            public void destroy() {
-            }
-        });
         
         MyServer es = new MyServer();
         
@@ -221,28 +209,4 @@ public class ConvertVDB {
         }
     };
     
-    private static class MockCache<K, V> extends LRUCache<K, V> implements Cache<K, V> {
-        
-        private String name;
-        
-        public MockCache(String cacheName, int maxSize) {
-            super(maxSize<0?Integer.MAX_VALUE:maxSize);
-            this.name = cacheName;
-        }
-        
-        @Override
-        public V put(K key, V value, Long ttl) {
-            return put(key, value);
-        }
-    
-        @Override
-        public String getName() {
-            return this.name;
-        }
-    
-        @Override
-        public boolean isTransactional() {
-            return false;
-        }
-    }    
 }

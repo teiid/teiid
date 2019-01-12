@@ -18,6 +18,8 @@
 package org.teiid.cache;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.core.TeiidRuntimeException;
@@ -66,6 +68,11 @@ public class DefaultCacheFactory implements CacheFactory, Serializable {
 		@Override
 		public V put(K key, V value, Long ttl) {
 			return put(key, value);
+		}
+		
+		@Override
+		public Set<K> keySet() {
+		    return new HashSet<K>(super.keySet());
 		}
 	
 		@Override

@@ -32,15 +32,7 @@ import java.net.UnknownHostException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -131,17 +123,7 @@ import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.transport.ChannelListener;
-import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.ClientServiceRegistryImpl;
-import org.teiid.transport.LocalServerConnection;
-import org.teiid.transport.LogonImpl;
-import org.teiid.transport.ODBCSocketListener;
-import org.teiid.transport.SessionCheckingProxy;
-import org.teiid.transport.SocketClientInstance;
-import org.teiid.transport.SocketConfiguration;
-import org.teiid.transport.SocketListener;
-import org.teiid.transport.WireProtocol;
+import org.teiid.transport.*;
 import org.teiid.vdb.runtime.VDBKey;
 import org.xml.sax.SAXException;
 
@@ -1095,18 +1077,18 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
         }
 	}
 	
-    static class LocalCache<K, V> extends LRUCache<K, V> implements Cache<K, V> {
-        private static final long serialVersionUID = -7894312381042966398L;
+    static class LocalCache<K, V> implements Cache<K, V> {
         private String name;
+        private Map<K, V> cache;
 
         LocalCache(String cacheName, int maxSize) {
-            super(maxSize < 0 ? Integer.MAX_VALUE : maxSize);
+            cache = Collections.synchronizedMap(new LRUCache<>(maxSize < 0 ? Integer.MAX_VALUE : maxSize));
             this.name = cacheName;
         }
 
         @Override
         public V put(K key, V value, Long ttl) {
-            return put(key, value);
+            return cache.put(key, value);
         }
 
         @Override
@@ -1117,6 +1099,31 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
         @Override
         public boolean isTransactional() {
             return false;
+        }
+        
+        @Override
+        public V get(K key) {
+            return cache.get(key);
+        }
+        
+        @Override
+        public Set<K> keySet() {
+            return new HashSet<>(cache.keySet());
+        }
+        
+        @Override
+        public int size() {
+            return cache.size();
+        }
+        
+        @Override
+        public void clear() {
+            cache.clear();
+        }
+        
+        @Override
+        public V remove(K key) {
+            return cache.remove(key);
         }
     }	
 }

@@ -193,6 +193,30 @@ public class TestSessionAwareCache {
 		//ensure that the min and the parent are used
 		assertEquals(Long.valueOf(0), cache.computeTtl(id, result, null));
 	}
+	
+	@Test public void testClear() {
+        
+        SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+        
+        DQPWorkContext context = buildWorkContext();
+        CacheID id = new CacheID(context, new ParseInfo(), "SELECT * FROM FOO");
+        
+        Cachable result = Mockito.mock(Cachable.class);
+        Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
+        Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);        
+        
+        id = new CacheID(context, new ParseInfo(), "SELECT * FROM FOO");
+        cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);
+        
+        id = new CacheID(context, new ParseInfo(), "SELECT * FROM FOO1");
+        cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);
+        
+        assertEquals(2, cache.getTotalCacheEntries());
+        
+        cache.clearForVDB(context.getVdbName(), context.getVdbVersion());
+        
+        assertEquals(0, cache.getTotalCacheEntries());
+    }
 
 	public static DQPWorkContext buildWorkContext() {
 		DQPWorkContext workContext = new DQPWorkContext();

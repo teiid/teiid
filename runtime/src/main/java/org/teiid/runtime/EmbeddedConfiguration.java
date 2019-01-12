@@ -122,15 +122,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		return this.bufferDirectory;
 	}
 	
-	@Deprecated
-	public String getInfinispanConfigFile() {
-		return null;
-	}
-	
-	@Deprecated
-	public void setInfinispanConfigFile(String infinispanConfigFile) {
-	}
-	
 	public CacheFactory getCacheFactory() {
 		return this.cacheFactory;
 	}

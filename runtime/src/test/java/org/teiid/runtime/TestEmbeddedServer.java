@@ -321,7 +321,6 @@ public class TestEmbeddedServer {
 	
 	@Test public void testDeploy() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
-		//ec.setCacheFactory(Infinispan);
 		ec.setUseDisk(false);
 		es.start(ec);
 		

@@ -109,8 +109,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import scala.concurrent.duration.Duration.Infinite;
-
 @SuppressWarnings("nls")
 public class TestODataIntegration {
     
