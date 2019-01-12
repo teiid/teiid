@@ -59,6 +59,7 @@ import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.CacheStatistics;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -107,6 +108,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import scala.concurrent.duration.Duration.Infinite;
 
 @SuppressWarnings("nls")
 public class TestODataIntegration {
@@ -214,6 +217,7 @@ public class TestODataIntegration {
         teiid = new EmbeddedServer();
         EmbeddedConfiguration config = new EmbeddedConfiguration();
         config.setTransactionManager(new DummyBaseTransactionManager());
+        config.setCacheFactory(InfinispanCacheFactory.buildCache(null, config.getTransactionManager()));
         SocketConfiguration sc = new SocketConfiguration();
         sc.setBindAddress("localhost");
         sc.setPortNumber(31000);

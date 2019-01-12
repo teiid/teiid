@@ -59,6 +59,7 @@ import org.teiid.GeneratedKeys;
 import org.teiid.PreParser;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.FileStorageManager;
@@ -108,6 +109,7 @@ import io.opentracing.Scope;
 import io.opentracing.mock.MockSpan;
 import io.opentracing.mock.MockTracer;
 import io.opentracing.util.GlobalTracer;
+import scala.concurrent.duration.Duration.Infinite;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
@@ -319,6 +321,7 @@ public class TestEmbeddedServer {
 	
 	@Test public void testDeploy() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		//ec.setCacheFactory(Infinispan);
 		ec.setUseDisk(false);
 		es.start(ec);
 		
@@ -972,6 +975,8 @@ public class TestEmbeddedServer {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		MockTransactionManager tm = new MockTransactionManager();
 		ec.setTransactionManager(tm);
+		
+		ec.setCacheFactory(InfinispanCacheFactory.buildCache(null, tm));
 		ec.setUseDisk(false);
 		es.start(ec);
 		
@@ -2173,12 +2178,14 @@ public class TestEmbeddedServer {
 	
 	@Test public void testBatchedUpdateErrors() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
-		ec.setUseDisk(false);
-		es.start(ec);
-		
 		MockTransactionManager tm = new MockTransactionManager();
 		ec.setTransactionManager(tm);
 		
+		
+		ec.setCacheFactory(InfinispanCacheFactory.buildCache(null, tm));
+		ec.setUseDisk(false);
+		es.start(ec);
+				
 		HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
 			@Override
 			public boolean supportsCompareCriteriaEquals() {

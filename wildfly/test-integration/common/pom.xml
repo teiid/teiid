@@ -43,6 +43,10 @@
         </dependency>
         <dependency>
             <groupId>org.teiid</groupId>
+            <artifactId>cache-infinispan</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.teiid</groupId>
             <artifactId>teiid-runtime</artifactId>
             <type>test-jar</type>
         </dependency>
