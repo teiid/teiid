@@ -59,6 +59,8 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.cache.Cache;
+import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
@@ -67,6 +69,7 @@ import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.BundleUtil.Event;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReflectionHelper;
@@ -128,9 +131,20 @@ import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.transport.*;
+import org.teiid.transport.ChannelListener;
+import org.teiid.transport.ClientServiceRegistry;
+import org.teiid.transport.ClientServiceRegistryImpl;
+import org.teiid.transport.LocalServerConnection;
+import org.teiid.transport.LogonImpl;
+import org.teiid.transport.ODBCSocketListener;
+import org.teiid.transport.SessionCheckingProxy;
+import org.teiid.transport.SocketClientInstance;
+import org.teiid.transport.SocketConfiguration;
+import org.teiid.transport.SocketListener;
+import org.teiid.transport.WireProtocol;
 import org.teiid.vdb.runtime.VDBKey;
 import org.xml.sax.SAXException;
+
 
 /**
  * A simplified server environment for embedded use.
@@ -381,6 +395,19 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			this.transactionService.setDetectTransactions(true);
 			this.transactionService.setTransactionManager(config.getTransactionManager());
 		}
+		
+		if (config.getCacheFactory() == null) {
+            config.setCacheFactory(new CacheFactory() {
+                @Override
+                public <K, V> Cache<K, V> get(String name) {
+                    return new LocalCache<>(name, 256);
+                }
+                @Override
+                public void destroy() {
+                }
+            });			
+		}
+		
 		if (config.getSecurityHelper() != null) {
 			this.sessionService.setSecurityHelper(config.getSecurityHelper());
 		} else {
@@ -1067,4 +1094,29 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             deployment.addAttchment(PreParser.class, preParser);
         }
 	}
+	
+    static class LocalCache<K, V> extends LRUCache<K, V> implements Cache<K, V> {
+        private static final long serialVersionUID = -7894312381042966398L;
+        private String name;
+
+        LocalCache(String cacheName, int maxSize) {
+            super(maxSize < 0 ? Integer.MAX_VALUE : maxSize);
+            this.name = cacheName;
+        }
+
+        @Override
+        public V put(K key, V value, Long ttl) {
+            return put(key, value);
+        }
+
+        @Override
+        public String getName() {
+            return this.name;
+        }
+
+        @Override
+        public boolean isTransactional() {
+            return false;
+        }
+    }	
 }
