@@ -1173,11 +1173,6 @@
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
-		    <dependency>
-		      <groupId>org.teiid</groupId>
-		      <artifactId>cache-infinispan</artifactId>
-		      <version>${project.version}</version>
-		    </dependency>              
             <dependency>
                 <groupId>org.teiid</groupId>
                 <artifactId>test-integration-common</artifactId>
@@ -1563,7 +1558,6 @@
 		<module>data-quality</module>
 		<module>engine</module>
 		<module>metadata</module>
-		<module>cache-infinispan</module>
 		<module>runtime</module>
 		<module>hibernate-dialect</module>
 		<module>eclipselink-platform</module>		

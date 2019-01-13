@@ -297,7 +297,6 @@ public class SessionAwareCache<T> {
 		for (CacheID key:keys) {
 			if (key.vdbInfo.equals(vdbKey)) {
 				cache.remove(key);
-				break;
 			}
 		}
 	}
