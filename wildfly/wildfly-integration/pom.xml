@@ -57,11 +57,6 @@
 		</dependency>
         
         <dependency>
-            <groupId>org.teiid</groupId>
-            <artifactId>cache-infinispan</artifactId>
-        </dependency>
-                
-        <dependency>
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging</artifactId>     
         </dependency> 

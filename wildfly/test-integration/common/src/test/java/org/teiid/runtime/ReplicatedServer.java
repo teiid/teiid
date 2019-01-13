@@ -21,7 +21,6 @@ package org.teiid.runtime;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.infinispan.transaction.tm.DummyTransactionManager;
-import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.jboss.NodeTracker;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.logging.LogConstants;
@@ -53,8 +52,8 @@ public class ReplicatedServer extends FakeServer {
                 return new JGroupsObjectReplicator(server.channelFactory, server.scheduler);
             }
         };
+        config.setInfinispanConfigFile(ispn);
         config.setTransactionManager(new DummyTransactionManager());
-        config.setCacheFactory(InfinispanCacheFactory.buildCache(ispn, config.getTransactionManager()));
         config.setNodeName(nodeName);
         server.start(config, true);
         
