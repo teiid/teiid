@@ -35,6 +35,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
+import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.core.util.UnitTestUtil;
@@ -116,6 +117,9 @@ public class FakeServer extends EmbeddedServer {
 			config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
 			this.transactionService.setXaImporter(SimpleMock.createSimpleMock(XAImporter.class));
 			detectTxn = false;
+		}
+		if (config.getCacheFactory() == null) {
+			config.setCacheFactory(InfinispanCacheFactory.buildCache(null, config.getTransactionManager()));
 		}
 		this.realBufferManager = realBufferMangaer;
 		start(config);

@@ -18,19 +18,47 @@
 
 package org.teiid.cache.infinispan;
 
+import java.io.IOException;
 import java.io.Serializable;
 
+import javax.transaction.TransactionManager;
+
+import org.infinispan.commons.tx.lookup.TransactionManagerLookup;
+import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheFactory;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.runtime.RuntimePlugin;
+
 
 public class InfinispanCacheFactory implements CacheFactory, Serializable{
 	private static final long serialVersionUID = -2767452034178675653L;
 	private transient EmbeddedCacheManager cacheStore;
 	private volatile boolean destroyed = false;
 	private ClassLoader classLoader;
+	
+	public static CacheFactory buildCache(String configFile, TransactionManager tm) {
+		try {
+			if (configFile == null) {
+				configFile = "infinispan-config.xml"; // in classpath
+			}
+			DefaultCacheManager cacheManager = new DefaultCacheManager(configFile, true);				
+			for(String cacheName:cacheManager.getCacheNames()) {
+                if (tm != null) {
+                    cacheManager.getCacheConfiguration(cacheName).transaction().transactionManagerLookup(new TransactionManagerLookup() {
+                        @Override
+                        public TransactionManager getTransactionManager() throws Exception {
+                            return tm;
+                        }
+                    });
+                }				    
+				cacheManager.startCache(cacheName);
+			}
+			return new InfinispanCacheFactory(cacheManager, InfinispanCacheFactory.class.getClassLoader());
+		} catch (IOException e) {
+			throw new TeiidRuntimeException("Failed to initialize a Infinispan cache factory");
+		}
+	}
 	
 	public InfinispanCacheFactory(EmbeddedCacheManager cm, ClassLoader classLoader) {
 		this.cacheStore = cm;
@@ -47,7 +75,7 @@ public class InfinispanCacheFactory implements CacheFactory, Serializable{
 			}
 			return null;
 		}
-		throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40099, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40099));
+		throw new TeiidRuntimeException("Cache system has been shutdown");
 	}
 	
 	public void destroy() {

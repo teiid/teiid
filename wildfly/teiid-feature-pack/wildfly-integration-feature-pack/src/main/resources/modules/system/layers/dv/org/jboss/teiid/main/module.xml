@@ -7,6 +7,7 @@
     <resources>
         <artifact name="${org.teiid:teiid-engine}"/>
         <artifact name="${org.teiid:saxon-xom}"/>
+        <artifact name="${org.teiid:cache-infinispan}"/>
         <artifact name="${org.teiid.wildfly:teiid-wildfly-integration}"/>
         <artifact name="${org.teiid:teiid-metadata}"/>
         <artifact name="${org.teiid:teiid-runtime}"/>
