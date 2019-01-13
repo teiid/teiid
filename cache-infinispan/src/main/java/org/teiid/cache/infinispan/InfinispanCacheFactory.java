@@ -18,13 +18,8 @@
 
 package org.teiid.cache.infinispan;
 
-import java.io.IOException;
 import java.io.Serializable;
 
-import javax.transaction.TransactionManager;
-
-import org.infinispan.commons.tx.lookup.TransactionManagerLookup;
-import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheFactory;
@@ -36,29 +31,6 @@ public class InfinispanCacheFactory implements CacheFactory, Serializable{
 	private transient EmbeddedCacheManager cacheStore;
 	private volatile boolean destroyed = false;
 	private ClassLoader classLoader;
-	
-	public static CacheFactory buildCache(String configFile, TransactionManager tm) {
-		try {
-			if (configFile == null) {
-				configFile = "infinispan-config.xml"; // in classpath
-			}
-			DefaultCacheManager cacheManager = new DefaultCacheManager(configFile, true);				
-			for(String cacheName:cacheManager.getCacheNames()) {
-                if (tm != null) {
-                    cacheManager.getCacheConfiguration(cacheName).transaction().transactionManagerLookup(new TransactionManagerLookup() {
-                        @Override
-                        public TransactionManager getTransactionManager() throws Exception {
-                            return tm;
-                        }
-                    });
-                }				    
-				cacheManager.startCache(cacheName);
-			}
-			return new InfinispanCacheFactory(cacheManager, InfinispanCacheFactory.class.getClassLoader());
-		} catch (IOException e) {
-			throw new TeiidRuntimeException("Failed to initialize a Infinispan cache factory");
-		}
-	}
 	
 	public InfinispanCacheFactory(EmbeddedCacheManager cm, ClassLoader classLoader) {
 		this.cacheStore = cm;

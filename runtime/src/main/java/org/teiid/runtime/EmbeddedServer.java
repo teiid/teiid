@@ -379,15 +379,35 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		
 		if (config.getCacheFactory() == null) {
-            config.setCacheFactory(new CacheFactory() {
-                @Override
-                public <K, V> Cache<K, V> get(String name) {
-                    return new LocalCache<>(name, 256);
+		    String infinispanConfig = config.getInfinispanConfigFile();
+		    
+		    CacheFactory cacheFactory = null;
+		    
+		    try {
+                Class<?> clazz = Class.forName("org.teiid.cache.infinispan.EmbeddedInfinispanCacheFactoryBuilder"); //$NON-NLS-1$
+                Method m = clazz.getMethod("buildCacheFactory", String.class, TransactionManager.class); //$NON-NLS-1$
+                
+                cacheFactory = (CacheFactory) m.invoke(null, infinispanConfig, config.getTransactionManager());
+            } catch (Throwable t) {
+                if (infinispanConfig != null) {
+                    throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40168, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40168));
                 }
-                @Override
-                public void destroy() {
-                }
-            });			
+                LogManager.logInfo(LogConstants.CTX_DQP, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40169) + ": " + t.getMessage());
+            }
+		    
+		    if (cacheFactory == null) {
+		        cacheFactory = new CacheFactory() {
+	                @Override
+	                public <K, V> Cache<K, V> get(String name) {
+	                    return new LocalCache<>(name, 256);
+	                }
+	                @Override
+	                public void destroy() {
+	                }
+	            };
+		    }
+		    
+            config.setCacheFactory(cacheFactory);			
 		}
 		
 		if (config.getSecurityHelper() != null) {

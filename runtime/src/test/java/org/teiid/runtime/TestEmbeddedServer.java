@@ -59,7 +59,6 @@ import org.teiid.GeneratedKeys;
 import org.teiid.PreParser;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.FileStorageManager;
@@ -109,7 +108,6 @@ import io.opentracing.Scope;
 import io.opentracing.mock.MockSpan;
 import io.opentracing.mock.MockTracer;
 import io.opentracing.util.GlobalTracer;
-import scala.concurrent.duration.Duration.Infinite;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
@@ -975,7 +973,6 @@ public class TestEmbeddedServer {
 		MockTransactionManager tm = new MockTransactionManager();
 		ec.setTransactionManager(tm);
 		
-		ec.setCacheFactory(InfinispanCacheFactory.buildCache(null, tm));
 		ec.setUseDisk(false);
 		es.start(ec);
 		
@@ -2180,8 +2177,6 @@ public class TestEmbeddedServer {
 		MockTransactionManager tm = new MockTransactionManager();
 		ec.setTransactionManager(tm);
 		
-		
-		ec.setCacheFactory(InfinispanCacheFactory.buildCache(null, tm));
 		ec.setUseDisk(false);
 		es.start(ec);
 				

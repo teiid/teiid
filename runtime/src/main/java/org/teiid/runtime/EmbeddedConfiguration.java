@@ -43,6 +43,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private String bufferDirectory;
 	private CacheFactory cacheFactory;
 	private int maxResultSetCacheStaleness = DEFAULT_MAX_STALENESS_SECONDS;
+	private String infinispanConfigFile;
 	private List<SocketConfiguration> transports;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
@@ -120,6 +121,20 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	
 	public String getBufferDirectory() {
 		return this.bufferDirectory;
+	}
+	
+	@Deprecated
+	public String getInfinispanConfigFile() {
+		return infinispanConfigFile;
+	}
+	
+	/**
+     * @see #setCacheFactory(CacheFactory) to set the {@link CacheFactory} directly
+     * @return
+     */
+	@Deprecated
+	public void setInfinispanConfigFile(String infinispanConfigFile) {
+		this.infinispanConfigFile = infinispanConfigFile;
 	}
 	
 	public CacheFactory getCacheFactory() {

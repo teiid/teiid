@@ -72,14 +72,6 @@
         <artifactId>jboss-transaction-api_1.2_spec</artifactId>
     </dependency>
     <dependency>
-        <groupId>com.github.ben-manes.caffeine</groupId>
-        <artifactId>caffeine</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>io.reactivex.rxjava2</groupId>
-        <artifactId>rxjava</artifactId>
-    </dependency>
-    <dependency>
         <groupId>org.jboss.marshalling</groupId>
         <artifactId>jboss-marshalling-river</artifactId>
     </dependency>
