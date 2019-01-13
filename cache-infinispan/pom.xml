@@ -7,9 +7,8 @@
 	</parent>
 	<licenses>
         <license>
-            <name>Mozilla Public License</name>
-            <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
-            <distribution>repo</distribution>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
     <modelVersion>4.0.0</modelVersion>
@@ -22,6 +21,16 @@
     <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-core</artifactId>
+    </dependency>
+    
+    <dependency>
+        <groupId>com.github.ben-manes.caffeine</groupId>
+        <artifactId>caffeine</artifactId>
+    </dependency>
+    
+    <dependency>
+        <groupId>io.reactivex.rxjava2</groupId>
+        <artifactId>rxjava</artifactId>
     </dependency>
 
     <dependency>
