@@ -16,7 +16,7 @@
 	<artifactId>test-integration-db</artifactId>
 
 	<name>DB Dependent Integration Tests</name>
- 	<groupId>org.teiid.teiid-test-integration</groupId>
+ 	<groupId>org.teiid.wildfly.teiid-test-integration</groupId>
 	<description>Integration tests that require external database dependencies </description>
 	<dependencies>
 
