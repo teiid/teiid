@@ -8,7 +8,7 @@ before_install:
 install: mvn -P release install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 branches:
   only:
-- test
+  - test
 script: mvn -P arquillian-tests test -B
 cache:
   directories:
