@@ -1,9 +1,15 @@
 language: java
 sudo: false
+jdk:
+    - openjdk8
+    - openjdk11
 before_install:
 - cp settings.xml $HOME/.m2/settings.xml
 install: mvn -P release install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-script: mvn -P arquillian-tests test -B
+matrix:
+    include:
+    - jdk: openjdk8
+      script: mvn -P arquillian-tests test -B
 cache:
   directories:
   - $HOME/.m2
