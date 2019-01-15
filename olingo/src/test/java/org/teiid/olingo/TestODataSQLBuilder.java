@@ -259,7 +259,7 @@ public class TestODataSQLBuilder {
             Query actualCommand = (Query) QueryParser.getQueryParser().parseCommand(sqlExpected, new ParseInfo());
             Mockito.verify(client).executeSQL(arg1.capture(),
                     Mockito.eq(parameters), Mockito.eq(count),
-                    (Integer) Mockito.eq(skip), (Integer) Mockito.eq(top),
+                    Mockito.eq(skip), Mockito.eq(top),
                     (String) Mockito.eq(null), Mockito.anyInt(),
                     arg6.capture());
             Assert.assertEquals(actualCommand.toString(), arg1.getValue().toString());
@@ -307,15 +307,15 @@ public class TestODataSQLBuilder {
     @Test
     public void testEntitySet$OrderBy() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$orderby=e1 desc,e2",
-                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 ORDER BY g0.e1 DESC, g0.e2");
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 ORDER BY g0.e1 DESC NULLS LAST, g0.e2 NULLS FIRST");
         helpTest("/odata4/vdb/PM1/G1?$orderby=e1",
-                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 ORDER BY g0.e1");
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 ORDER BY g0.e1 NULLS FIRST");
     }
 
     @Test
     public void testEntitySet$OrderByNotIn$Select() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$orderby=e2&$select=e1",
-                "SELECT g0.e1, g0.e2 FROM PM1.G1 AS g0 ORDER BY g0.e2");
+                "SELECT g0.e1, g0.e2 FROM PM1.G1 AS g0 ORDER BY g0.e2 NULLS FIRST");
     }
 
     @Test
@@ -389,7 +389,7 @@ public class TestODataSQLBuilder {
     public void test$CountIn$orderby() throws Exception {
         String expected = "SELECT g0.e1, g0.e2, g0.e3, (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) "
                 + "AS \"_orderByAlias\" FROM PM1.G1 AS g0 "
-                + "ORDER BY \"_orderByAlias\"";
+                + "ORDER BY \"_orderByAlias\" NULLS FIRST";
         helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count", expected);
     }    
         
@@ -399,7 +399,7 @@ public class TestODataSQLBuilder {
                 "SELECT g0.e1, g0.e2, g0.e3, "
                 + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) AS \"_orderByAlias\" "
                 + "FROM PM1.G1 AS g0 "
-                + "ORDER BY \"_orderByAlias\"");
+                + "ORDER BY \"_orderByAlias\" NULLS FIRST");
     }
 
     @Test
@@ -792,7 +792,7 @@ public class TestODataSQLBuilder {
         ArgumentCaptor<List> arg2 = ArgumentCaptor.forClass(List.class);
         
         if (sqlExpected != null) {
-            Command actualCommand = (Command) QueryParser.getQueryParser().parseCommand(sqlExpected, new ParseInfo());
+            Command actualCommand = QueryParser.getQueryParser().parseCommand(sqlExpected, new ParseInfo());
             Mockito.verify(client).executeUpdate(arg1.capture(), arg2.capture());
             Assert.assertEquals(actualCommand.toString(), arg1.getValue().toString());
         }
@@ -947,7 +947,7 @@ public class TestODataSQLBuilder {
     @Test
     public void testExpandOrderby() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($orderby=e1 desc)",
-                "SELECT g0.e1, g0.e2, g0.e3, /*+ MJ */ (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1 DESC) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
+                "SELECT g0.e1, g0.e2, g0.e3, /*+ MJ */ (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1 DESC NULLS LAST) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
     }
     
     @Test
@@ -1002,7 +1002,7 @@ public class TestODataSQLBuilder {
                 "SELECT g0.e2, g1.e2 "
                 + "FROM PM1.G1 AS g0, "
                 + "PM1.G2 AS g1 "
-                + "ORDER BY g0.e1, g1.e2");        
+                + "ORDER BY g0.e1 NULLS FIRST, g1.e2 NULLS FIRST");        
     }
     
     @Ignore //OLINGO-904
