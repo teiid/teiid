@@ -14,7 +14,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>12.0.0</version>
+    <version>12.0.1-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>		
 	    <site.url>http://teiid.io</site.url>
@@ -125,7 +125,7 @@
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
         <developerConnection>scm:git:git@github.com:teiid/teiid.git</developerConnection>
         <url>http://github.com/teiid/teiid</url>
-		<tag>teiid-parent-12.0.0</tag>
+		<tag>HEAD</tag>
     </scm>
 	<url>${site.url}</url>
 	<developers>
