@@ -38,6 +38,7 @@ import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.core.uri.queryoption.expression.LiteralImpl;
 import org.teiid.core.TeiidException;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
@@ -295,6 +296,7 @@ public class DocumentNode {
         // provide implicit ordering for cursor logic
         for (Column column:record.getColumns()) {
             ElementSymbol expr = new ElementSymbol(column.getName(), this.groupSymbol);
+            //we'll assume that null values won't be part of the unique key
             orderBy.addVariable(expr);
             addProjectedColumn(column.getName(), expr);
         }
