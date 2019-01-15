@@ -6,10 +6,7 @@ jdk:
 before_install:
 - cp settings.xml $HOME/.m2/settings.xml
 install: mvn -P release install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-matrix:
-    include:
-    - jdk: openjdk8
-      script: mvn -P arquillian-tests test -B
+script: mvn -P arquillian-tests test -B
 cache:
   directories:
   - $HOME/.m2
@@ -19,6 +16,7 @@ deploy:
   skip_cleanup: true
   on:
     condition: $TRAVIS_EVENT_TYPE = cron
+    jdk: openjdk8
 notifications:
   webhooks:
     urls:

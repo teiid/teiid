@@ -20,6 +20,9 @@
 	<artifactId>test-integration-common</artifactId>
 	<name>Common Integration Tests</name>
 	<description>Common Integration tests that do not require external dependencies</description>
+	<properties>
+	   <skip.arquillian>false</skip.arquillian>
+	</properties>
     <dependencies>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -155,6 +158,15 @@
     </dependencies>
     <profiles>
     <profile>
+        <id>jdk test</id>
+        <activation>
+            <jdk>[11.0,)</jdk>
+        </activation>
+        <properties>
+            <skip.arquillian>true</skip.arquillian>
+        </properties>    
+    </profile>
+    <profile>
         <id>arquillian-tests</id>
             <build>
                 <plugins>
@@ -215,18 +227,18 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>default-test</id>
+                                <id>arquillian</id>
                                 <goals>
                                     <goal>test</goal>
                                 </goals>
                                 <configuration>
+                                    <skipTests>${skip.arquillian}</skipTests>
                                     <systemPropertyVariables>
                                         <jbossHome>${project.build.directory}/teiid-${project.version}</jbossHome>
                                         <serverConfig>standalone-teiid.xml</serverConfig>
                                     </systemPropertyVariables>
                                     <includes>
                                         <include>**/IntegrationTest*</include>
-                                        <include>**/Test*</include>
                                     </includes>
                                 </configuration>
                             </execution>
