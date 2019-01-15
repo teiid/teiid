@@ -40,7 +40,7 @@ import org.teiid.translator.TypeFacility;
 @SuppressWarnings("nls")
 public class TranslationHelper {
 	
-    public static final String PARTS_VDB = "/PartsSupplier.vdb"; //$NON-NLS-1$
+    public static final String PARTS_VDB = "/PartsSupplierJDBC.vdb"; //$NON-NLS-1$
     public static final String BQT_VDB = "/bqt.vdb"; //$NON-NLS-1$
 
     public static Command helpTranslate(String vdbFileName, String sql) {
@@ -50,7 +50,7 @@ public class TranslationHelper {
     public static TranslationUtility getTranslationUtility(String vdbFileName) {
     	TranslationUtility util = null;
     	if (PARTS_VDB.equals(vdbFileName)) {
-    		util = new TranslationUtility("PartsSupplier.vdb", TranslationHelper.class.getResource(vdbFileName)); //$NON-NLS-1$
+    		util = new TranslationUtility("PartsSupplierJDBC.vdb", TranslationHelper.class.getResource(vdbFileName)); //$NON-NLS-1$
     	} else if (BQT_VDB.equals(vdbFileName)){
     		util = FakeTranslationFactory.getInstance().getBQTTranslationUtility();
     	} else {
