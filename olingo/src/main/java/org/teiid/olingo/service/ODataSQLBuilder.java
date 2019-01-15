@@ -59,6 +59,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
@@ -461,13 +462,19 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     getUriInfo(), this.metadata, this.odata, this.nameGenerator, this.params,
                     this.parseService);
             Expression expr = visitor.getExpression(obitem.getExpression());
+            org.teiid.query.sql.lang.OrderByItem item = null;
             if (expr instanceof ElementSymbol) {
-                orderBy.addVariable(expr, !obitem.isDescending());
+                item = orderBy.addVariable(expr, !obitem.isDescending());
             }
             else {
                 AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
-                orderBy.addVariable(alias, !obitem.isDescending());
+                item = orderBy.addVariable(alias, !obitem.isDescending());
                 visitor.getEntityResource().addProjectedColumn(alias, EdmInt32.getInstance(), null, false);
+            }
+            if (obitem.isDescending()) {
+                item.setNullOrdering(NullOrdering.LAST);
+            } else {
+                item.setNullOrdering(NullOrdering.FIRST);
             }
         }
         return orderBy;

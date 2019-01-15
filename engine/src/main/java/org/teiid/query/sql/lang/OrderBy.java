@@ -115,8 +115,8 @@ public class OrderBy implements LanguageObject {
      * Adds a new variable to the list of order by elements.
      * @param element Element to add
      */
-    public void addVariable( Expression element ) {
-    	addVariable(element, ASC);
+    public OrderByItem addVariable( Expression element ) {
+    	return addVariable(element, ASC);
     }
 
     /**
@@ -125,10 +125,13 @@ public class OrderBy implements LanguageObject {
      * @param element Element to add
      * @param type True for ascending, false for descending
      */
-    public void addVariable( Expression element, boolean type ) {
+    public OrderByItem addVariable( Expression element, boolean type ) {
     	if(element != null) {
-            orderByItems.add(new OrderByItem(element, type));
+    	    OrderByItem result = new OrderByItem(element, type);
+            orderByItems.add(result);
+            return result;
         }
+    	return null;
     }
     
     public void acceptVisitor(LanguageVisitor visitor) {
