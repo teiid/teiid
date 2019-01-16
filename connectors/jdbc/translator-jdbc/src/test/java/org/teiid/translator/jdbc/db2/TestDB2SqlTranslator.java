@@ -46,7 +46,7 @@ public class TestDB2SqlTranslator {
     }
     
     public String getTestVDB() {
-        return UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"; //$NON-NLS-1$
+        return UnitTestUtil.getTestDataPath() + "/PartsSupplierJDBC.vdb"; //$NON-NLS-1$
     }
     
     public void helpTestVisitor(TranslationUtility util, String input, String expectedOutput) throws TranslatorException {
