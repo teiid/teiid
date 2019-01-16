@@ -17,8 +17,12 @@
  */
 package org.teiid.olingo.service;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import javax.servlet.ServletException;
@@ -37,6 +41,8 @@ import org.teiid.olingo.service.ODataSchemaBuilder.ODataSchemaInfo;
 import org.teiid.olingo.service.ODataSchemaBuilder.SchemaResolver;
 
 public class OlingoBridge {
+    
+    public static List<String> RESERVED = Arrays.asList("teiid", "edm", "core", "olingo-extensions"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     
     //the schema name is handled as case insensitive
     private ConcurrentSkipListMap<String, ODataHttpHandler> handlers = new ConcurrentSkipListMap<String, ODataHttpHandler>(String.CASE_INSENSITIVE_ORDER);
@@ -68,12 +74,23 @@ public class OlingoBridge {
             throws ServletException {
         final Map<String, ODataSchemaInfo> infoMap = new LinkedHashMap<>();
         
+        Set<String> aliases = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        aliases.addAll(RESERVED);
+        
         //process the base metadata structure
         for (Schema s : client.getMetadataStore().getSchemaList()) {
             if (!isVisible(vdb, s)) {
                  continue;   
             }
-            ODataSchemaInfo info = ODataSchemaBuilder.buildStructuralMetadata(vdb.getFullName(), s);
+            
+            //prevent collisions with the reserved, and then with any other schemas
+            int i = 1;
+            String alias = s.getName();
+            while (!aliases.add(alias)) {
+                alias = alias + "_" + i++; //$NON-NLS-1$
+            }
+            
+            ODataSchemaInfo info = ODataSchemaBuilder.buildStructuralMetadata(vdb.getFullName(), s, alias);
             infoMap.put(s.getName(), info);
             try {
                 info.edmProvider = new TeiidEdmProvider(baseUri, info.schema, 
@@ -94,7 +111,7 @@ public class OlingoBridge {
                 @Override
                 public ODataSchemaInfo getSchemaInfo(String name) {
                     ODataSchemaInfo result = infoMap.get(name);
-                    if (result != null) {
+                    if (result != null && info != result) {
                         //add a bi-directional relationship
                         info.edmProvider.addReferenceSchema(
                                 vdb.getFullName(), result.schema.getNamespace(), result.schema.getAlias(), result.edmProvider);

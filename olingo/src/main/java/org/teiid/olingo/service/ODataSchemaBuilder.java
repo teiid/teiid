@@ -53,7 +53,7 @@ public class ODataSchemaBuilder {
     public interface SchemaResolver {
         /**
          * Return the schema info or null if it is not visible
-         * @param schemaName
+         * @param schemaName the teiid schema name 
          * @return
          */
         ODataSchemaInfo getSchemaInfo(String schemaName);
@@ -73,17 +73,23 @@ public class ODataSchemaBuilder {
      * @return
      */
     public static CsdlSchema buildMetadata(String namespace, org.teiid.metadata.Schema teiidSchema) {
-        ODataSchemaInfo info = buildStructuralMetadata(namespace, teiidSchema);
-        buildNavigationProperties(teiidSchema, info.entityTypes, info.entitySets, null);
+        ODataSchemaInfo info = buildStructuralMetadata(namespace, teiidSchema, teiidSchema.getName());
+        buildNavigationProperties(teiidSchema, info.entityTypes, info.entitySets, new SchemaResolver() {
+            
+            @Override
+            public ODataSchemaInfo getSchemaInfo(String schemaName) {
+                return info;
+            }
+        });
         return info.schema;
     }
     
-    public static ODataSchemaInfo buildStructuralMetadata(String namespace, org.teiid.metadata.Schema teiidSchema) {
+    public static ODataSchemaInfo buildStructuralMetadata(String namespace, org.teiid.metadata.Schema teiidSchema, String alias) {
         try {
             ODataSchemaInfo info = new ODataSchemaInfo();
             String fullSchemaName = namespace+"."+teiidSchema.getName();
-            info.schema.setNamespace(fullSchemaName).setAlias(teiidSchema.getName());
-            buildEntityTypes(namespace, teiidSchema, info.schema, info.entitySets, info.entityTypes);
+            info.schema.setNamespace(fullSchemaName).setAlias(alias);
+            buildEntityTypes(teiidSchema, info.schema, info.entitySets, info.entityTypes);
             buildProcedures(teiidSchema, info.schema);
             return info;
         } catch (Exception e) {
@@ -91,41 +97,9 @@ public class ODataSchemaBuilder {
         }
     }
 
-    static CsdlEntitySet findEntitySet(CsdlSchema edmSchema, String enitityName) {
-        CsdlEntityContainer entityContainter = edmSchema.getEntityContainer();
-        for (CsdlEntitySet entitySet : entityContainter.getEntitySets()) {
-            if (entitySet.getName().equalsIgnoreCase(enitityName)) {
-                return entitySet;
-            }
-        }
-        return null;
-    }
-
-    static CsdlSchema findSchema(Map<String, CsdlSchema> edmSchemas, String schemaName) {
-        return edmSchemas.get(schemaName);
-    }
-
-    static CsdlEntityType findEntityType(Map<String, CsdlSchema> edmSchemas,
-            String schemaName, String enitityName) {
-        CsdlSchema schema = findSchema(edmSchemas, schemaName);
-        if (schema != null) {
-            for (CsdlEntityType type : schema.getEntityTypes()) {
-                if (type.getName().equalsIgnoreCase(enitityName)) {
-                    return type;
-                }
-            }
-        }
-        return null;
-    }
-
-    static CsdlEntityContainer findEntityContainer(Map<String, CsdlSchema> edmSchemas, String schemaName) {
-        CsdlSchema schema = edmSchemas.get(schemaName);
-        return schema.getEntityContainer();
-    }
-
-    static void buildEntityTypes(String namespace, org.teiid.metadata.Schema schema, CsdlSchema csdlSchema, Map<String, 
+    static void buildEntityTypes(org.teiid.metadata.Schema schema, CsdlSchema csdlSchema, Map<String, 
             CsdlEntitySet> entitySets, Map<String, CsdlEntityType> entityTypes) {
-        String fullSchemaName = namespace+"."+schema.getName();
+        String fullSchemaName = csdlSchema.getNamespace();
 
         for (Table table : schema.getTables().values()) {
 
@@ -176,7 +150,7 @@ public class ODataSchemaBuilder {
         // entity container is holder entity sets, association sets, function
         // imports
         CsdlEntityContainer entityContainer = new CsdlEntityContainer().setName(
-                schema.getName()).setEntitySets(
+                csdlSchema.getAlias()).setEntitySets(
                 new ArrayList<CsdlEntitySet>(entitySets.values()));
 
         // build entity schema
@@ -294,11 +268,14 @@ public class ODataSchemaBuilder {
 
     private static void addForwardNavigation(Map<String, CsdlEntityType> entityTypes,
             Map<String, CsdlEntitySet> entitySets, Table table, ForeignKey fk, boolean onetoone, SchemaResolver resolver) {
-        CsdlNavigationPropertyBinding navigationBinding = buildNavigationBinding(fk, resolver);
-        if (navigationBinding == null) {
+        Table pkTable = fk.getReferenceKey().getParent();
+        ODataSchemaInfo schema = resolver.getSchemaInfo(pkTable.getParent().getName());
+        if (schema == null) {
             return;
         }
-        CsdlNavigationProperty navigaton = buildNavigation(fk);
+        String fqn = schema.schema.getAlias() + '.' + pkTable.getName();
+        CsdlNavigationPropertyBinding navigationBinding = buildNavigationBinding(fk, pkTable, fqn);
+        CsdlNavigationProperty navigaton = buildNavigation(fk, fqn);
         String entityTypeName = table.getName();
         
         if (onetoone) {
@@ -329,13 +306,21 @@ public class ODataSchemaBuilder {
 
     private static void addReverseNavigation(Map<String, CsdlEntityType> entityTypes,
             Map<String, CsdlEntitySet> entitySets, Table table, ForeignKey fk, boolean onetoone, SchemaResolver resolver) {
-        CsdlNavigationPropertyBinding navigationBinding = buildReverseNavigationBinding(table,fk, resolver);
-        if (navigationBinding == null) {
+        ODataSchemaInfo schema = resolver.getSchemaInfo(table.getParent().getName());
+        if (schema == null) {
             return;
         }
-        CsdlNavigationProperty navigaton = buildReverseNavigation(table, fk);
+        Table pkTable = fk.getReferenceKey().getParent();
+        ODataSchemaInfo pkSchema = resolver.getSchemaInfo(pkTable.getParent().getName());
+        if (pkSchema == null) {
+            return;
+        }
+        
+        String fqn = schema.schema.getAlias() + '.' + table.getName();
+        CsdlNavigationPropertyBinding navigationBinding = buildReverseNavigationBinding(table, pkTable, fk, fqn);
+        CsdlNavigationProperty navigaton = buildReverseNavigation(table, fk, fqn);
         String entityTypeName = fk.getReferenceTableName();
-        String entitySchema = fk.getReferenceKey().getParent().getParent().getName();
+        String entitySchema = pkTable.getParent().getName();
         
         if (onetoone) {
             navigaton.setNullable(false);
@@ -348,51 +333,38 @@ public class ODataSchemaBuilder {
             entityType = entityTypes.get(entityTypeName);
             entitySet = entitySets.get(entityTypeName);
         } else {
-            ODataSchemaInfo schema = resolver.getSchemaInfo(entitySchema);
-            if (schema == null) {
-                return;
-            }
-            entityType = schema.entityTypes.get(entityTypeName);
-            entitySet = schema.entitySets.get(entityTypeName);
+            entityType = pkSchema.entityTypes.get(entityTypeName);
+            entitySet = pkSchema.entitySets.get(entityTypeName);
         }
         entityType.getNavigationProperties().add(navigaton);
         entitySet.getNavigationPropertyBindings().add(navigationBinding);
     }
     
-    private static CsdlNavigationPropertyBinding buildNavigationBinding(ForeignKey fk, SchemaResolver resolver) {
+    private static CsdlNavigationPropertyBinding buildNavigationBinding(ForeignKey fk, Table pkTable, String fqn) {
         CsdlNavigationPropertyBinding navigationBinding = new CsdlNavigationPropertyBinding();
         navigationBinding.setPath(fk.getName());
-        if (!fk.getParent().getParent().equals(fk.getReferenceKey().getParent().getParent())) {
-            ODataSchemaInfo schema = resolver.getSchemaInfo(fk.getReferenceKey().getParent().getParent().getName());
-            if (schema == null) {
-                return null;
-            }
-            navigationBinding.setTarget(fk.getReferenceKey().getParent().getFullName());
+        if (!fk.getParent().getParent().equals(pkTable.getParent())) {
+            navigationBinding.setTarget(fqn);
         } else {
-            navigationBinding.setTarget(fk.getReferenceKey().getParent().getName());
+            navigationBinding.setTarget(pkTable.getName());
         }
         return navigationBinding;
     }
     
-    private static CsdlNavigationPropertyBinding buildReverseNavigationBinding(Table table, ForeignKey fk, SchemaResolver resolver) {
+    private static CsdlNavigationPropertyBinding buildReverseNavigationBinding(Table table, Table pkTable, ForeignKey fk, String fqn) {
         CsdlNavigationPropertyBinding navigationBinding = new CsdlNavigationPropertyBinding();
         navigationBinding.setPath(table.getName()+"_"+fk.getName());
-        if (!table.getParent().equals(fk.getReferenceKey().getParent().getParent())) {
-            ODataSchemaInfo schema = resolver.getSchemaInfo(fk.getReferenceKey().getParent().getParent().getName());
-            if (schema == null) {
-                return null;
-            }
-            navigationBinding.setTarget(table.getFullName());
+        if (!table.getParent().equals(pkTable.getParent())) {
+            navigationBinding.setTarget(fqn);
         } else {
             navigationBinding.setTarget(table.getName());
         }
         return navigationBinding;
     }
 
-    private static CsdlNavigationProperty buildNavigation(ForeignKey fk) {
-        String refSchemaName = fk.getReferenceKey().getParent().getParent().getName();
+    private static CsdlNavigationProperty buildNavigation(ForeignKey fk, String fqn) {
         CsdlNavigationProperty navigaton = new CsdlNavigationProperty();
-        navigaton.setName(fk.getName()).setType(new FullQualifiedName(refSchemaName, fk.getReferenceTableName()));
+        navigaton.setName(fk.getName()).setType(new FullQualifiedName(fqn));
         
         ArrayList<CsdlReferentialConstraint> constrainsts = new ArrayList<CsdlReferentialConstraint>();
         for (int i = 0; i < fk.getColumns().size(); i++) {
@@ -406,12 +378,10 @@ public class ODataSchemaBuilder {
         return navigaton;
     }
     
-    private static CsdlNavigationProperty buildReverseNavigation(Table table, ForeignKey fk) {
-        String refSchemaName = table.getParent().getName();
-        
+    private static CsdlNavigationProperty buildReverseNavigation(Table table, ForeignKey fk, String fqn) {
         CsdlNavigationProperty navigaton = new CsdlNavigationProperty();
         navigaton.setName(table.getName() + "_" + fk.getName()).setType(
-                new FullQualifiedName(refSchemaName, table.getName()));
+                new FullQualifiedName(fqn));
         
         ArrayList<CsdlReferentialConstraint> constrainsts = new ArrayList<CsdlReferentialConstraint>();
         for (int i = 0; i < fk.getColumns().size(); i++) {
@@ -441,10 +411,10 @@ public class ODataSchemaBuilder {
             }
             
             if (isFuntion(proc)) {
-                buildFunction(schema.getName(), proc, complexTypes, functions, functionImports, csdlSchema);
+                buildFunction(proc, complexTypes, functions, functionImports, csdlSchema);
             }
             else {
-                buildAction(schema.getName(), proc, complexTypes, actions, actionImports, csdlSchema);
+                buildAction(proc, complexTypes, actions, actionImports, csdlSchema);
             }
         }
         csdlSchema.setComplexTypes(complexTypes);
@@ -523,7 +493,7 @@ public class ODataSchemaBuilder {
         return false;
     }    
 
-    static void buildFunction(String schemaName, Procedure proc,
+    static void buildFunction(Procedure proc,
             ArrayList<CsdlComplexType> complexTypes, ArrayList<CsdlFunction> functions,
             ArrayList<CsdlFunctionImport> functionImports, CsdlSchema csdlSchema) {
 
@@ -553,12 +523,12 @@ public class ODataSchemaBuilder {
         if (returnColumns != null) {
             CsdlComplexType complexType = buildComplexType(proc, returnColumns, csdlSchema);
             complexTypes.add(complexType);
-            FullQualifiedName odataType = new FullQualifiedName(schemaName, complexType.getName());
+            FullQualifiedName odataType = new FullQualifiedName(csdlSchema.getAlias(), complexType.getName());
             edmFunction.setReturnType((new CsdlReturnType().setType(odataType).setCollection(true)));
         }
 
         CsdlFunctionImport functionImport = new CsdlFunctionImport();
-        functionImport.setName(proc.getName()).setFunction(new FullQualifiedName(schemaName, proc.getName()));
+        functionImport.setName(proc.getName()).setFunction(new FullQualifiedName(csdlSchema.getAlias(), proc.getName()));
         addOperationAnnotations(proc, edmFunction, csdlSchema);
         functions.add(edmFunction);
         functionImports.add(functionImport);
@@ -603,7 +573,7 @@ public class ODataSchemaBuilder {
         return param;
     }
 
-    static void buildAction(String schemaName, Procedure proc,
+    static void buildAction(Procedure proc,
             ArrayList<CsdlComplexType> complexTypes,
             ArrayList<CsdlAction> actions,
             ArrayList<CsdlActionImport> actionImports, CsdlSchema csdlSchema) {
@@ -634,12 +604,12 @@ public class ODataSchemaBuilder {
             CsdlComplexType complexType = buildComplexType(proc, returnColumns, csdlSchema);
             complexTypes.add(complexType);
             edmAction.setReturnType((new CsdlReturnType()
-                    .setType(new FullQualifiedName(schemaName, complexType
+                    .setType(new FullQualifiedName(csdlSchema.getAlias(), complexType
                     .getName())).setCollection(true)));
         }
 
         CsdlActionImport actionImport = new CsdlActionImport();
-        actionImport.setName(proc.getName()).setAction(new FullQualifiedName(schemaName, proc.getName()));
+        actionImport.setName(proc.getName()).setAction(new FullQualifiedName(csdlSchema.getAlias(), proc.getName()));
         addOperationAnnotations(proc, edmAction, csdlSchema);
         actions.add(edmAction);
         actionImports.add(actionImport);

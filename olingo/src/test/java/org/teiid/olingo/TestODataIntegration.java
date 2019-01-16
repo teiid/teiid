@@ -3353,4 +3353,30 @@ public class TestODataIntegration {
         }
     }
     
+    @Test public void testReservedSchemaName() throws Exception {
+        String ddl = "CREATE VIEW pktable (\n" + 
+                "id integer primary key,\n" + 
+                "keyvalue string UNIQUE\n" + 
+                ") AS \n" + 
+                "SELECT 1 as id, 'a' as keyvalue\n";
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("teiid");
+            mmd.addSourceMetadata("DDL", ddl);
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/teiid/$metadata");
+
+            //fails if it collides with the teiid extension
+            assertEquals(200, response.getStatus());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
 }
