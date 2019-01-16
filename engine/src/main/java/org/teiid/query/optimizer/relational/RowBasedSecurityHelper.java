@@ -258,13 +258,23 @@ public class RowBasedSecurityHelper {
 				values = new HashMap<ElementSymbol, Expression>();
 				
     			Collection<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), planner.metadata);
-
+    			Collection<ElementSymbol> elems = null;
+    			
     			for (ElementSymbol elementSymbol : insertElmnts) {
     				Expression value = null;
     				int index = insert.getVariables().indexOf(elementSymbol);
     				if (index == -1) {
-    					value = ResolverUtil.getDefault(elementSymbol, planner.metadata);
-            			values.put(elementSymbol, value);
+    				    try {
+    				        value = ResolverUtil.getDefault(elementSymbol, planner.metadata);
+                            values.put(elementSymbol, value);
+    				    } catch (QueryResolverException e) {
+    				        if (elems == null) {
+    				            elems = ElementCollectorVisitor.getElements(filter, true);
+    				        }
+    				        if (elems.contains(elementSymbol)) {
+    				            throw new QueryProcessingException(QueryPlugin.Event.TEIID31295, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31295, elementSymbol));
+    				        }
+    				    }
     				} else {
     					value = (Expression) insert.getValues().get(index);
     					if (EvaluatableVisitor.isFullyEvaluatable(value, true)) {
