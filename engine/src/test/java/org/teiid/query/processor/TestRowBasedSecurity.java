@@ -257,6 +257,21 @@ public class TestRowBasedSecurity {
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
 	
+	@Test public void testInsertConstraintAutoIncrement() throws Exception {
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table g1 (e1 string, e2 integer not null auto_increment) options (updatable true)", "x", "pm1");
+        ProcessorPlan plan = helpGetPlan(helpParse("insert into pm1.g1 (e1) values ('user')"), tm, TestOptimizer.getGenericFinder(), context);
+        dataManager.addData("INSERT INTO pm1.g1 (e1) VALUES ('user')", new List<?>[] {Arrays.asList(1)});
+        helpProcess(plan, context, dataManager, null);
+    }
+	
+	@Test(expected=QueryPlannerException.class) public void testInsertConstraintAutoIncrement1() throws Exception {
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table g1 (e1 string not null auto_increment, e2 integer) options (updatable true)", "x", "pm1");
+        ProcessorPlan plan = helpGetPlan(helpParse("insert into pm1.g1 (e2) values (1)"), tm, TestOptimizer.getGenericFinder(), context);
+        helpProcess(plan, context, dataManager, null);
+    }
+	
 	/**
 	 * should succeed since it matches the condition
 	 */
