@@ -130,11 +130,6 @@
 		</dependency>
 
         <!-- Test dependencies -->
-	    <dependency>
-	      <groupId>org.teiid</groupId>
-	      <artifactId>cache-infinispan</artifactId>
-	      <scope>test</scope>
-	    </dependency>         
         <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-engine</artifactId>
