@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -105,7 +105,7 @@ public class TestMongoDBUpdateVisitor {
 	@Test
 	public void testInsert() throws Exception {
 		helpExecute("insert into users (id, user_id, age, status) values (1, 'johndoe', 34, 'A')", "users",
-				"{ \"user_id\" : \"johndoe\" , \"age\" : 34 , \"status\" : \"A\" , \"_id\" : 1}",
+				"{ \"_id\" : 1, \"user_id\" : \"johndoe\", \"age\" : 34, \"status\" : \"A\" }",
 				null, null, null);
 	}
 
@@ -122,7 +122,7 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute("insert into Products (ProductID, ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued) " +
 				"values (1, 'hammer', 34, 24, 12, 12.50, 3, 4, 2, 1)",
 				"Products",
-				"{ \"ProductName\" : \"hammer\" , \"SupplierID\" : 34 , \"CategoryID\" : 24 , \"QuantityPerUnit\" : \"12\" , \"UnitPrice\" : 12.5 , \"UnitsInStock\" : 3 , \"UnitsOnOrder\" : 4 , \"ReorderLevel\" : 2 , \"Discontinued\" : 1 , \"_id\" : 1 , \"Categories\" : { \"categoryK\" : \"categoryV\"} , \"Suppliers\" : { \"SuppliersK\" : \"SuppliersV\"}}",
+				"{ \"_id\" : 1, \"ProductName\" : \"hammer\", \"SupplierID\" : 34, \"CategoryID\" : 24, \"QuantityPerUnit\" : \"12\", \"UnitPrice\" : 12.5, \"UnitsInStock\" : 3, \"UnitsOnOrder\" : 4, \"ReorderLevel\" : 2, \"Discontinued\" : 1, \"Categories\" : { \"categoryK\" : \"categoryV\" }, \"Suppliers\" : { \"SuppliersK\" : \"SuppliersV\" } }",
 				null, null,	pull);
 	}
 
@@ -132,13 +132,13 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute("insert into OrderDetails (odID, ProductID, UnitPrice, Quantity, Discount) " +
 				"values (2, 3, 1.50, 12, 1.0)",
 				"Orders",
-				"{ \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"odID\" : 2 , \"ProductID\" : 3}}",
+				"{ \"_id\" : { \"odID\" : 2, \"ProductID\" : 3 }, \"UnitPrice\" : 1.5, \"Quantity\" : 12, \"Discount\" : 1.0 }",
 				null, buildKey("FK1", "Orders", "OrderDetails", "2"), null);
 	}
 
 	@Test
 	public void testUpdate() throws Exception {
-		helpExecute("update users set age = 48",  "users", "{ \"age\" : 48}", null, null, null);
+		helpExecute("update users set age = 48",  "users", "{ \"age\" : 48 }", null, null, null);
 	}
 
 	@Test
@@ -146,7 +146,7 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute(
 				"update users set user_id = 'billybob'",
 				"users",
-				"{ \"user_id\" : \"billybob\"}",
+				"{ \"user_id\" : \"billybob\" }",
 				null, null, null);
 	}
 
@@ -155,27 +155,27 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute(
 				"update users set user_id = 'billybob' WHERE age > 50",
 				"users",
-				"{ \"user_id\" : \"billybob\"}",
-				"{ \"age\" : { \"$gt\" : 50}}", null, null);
+				"{ \"user_id\" : \"billybob\" }",
+				"{ \"age\" : { \"$gt\" : 50 } }", null, null);
 	}
 
 	@Test
 	public void testDeleteWithWhere() throws Exception {
 		helpExecute("delete from users WHERE age > 50", "users", null,
-				"{ \"age\" : { \"$gt\" : 50}}", null, null);
+				"{ \"age\" : { \"$gt\" : 50 } }", null, null);
 	}
 
 	@Test
 	public void testUpdateEmbedddedInSimpleUpdate() throws Exception {
 		helpExecute("UPDATE OrderDetails SET UnitPrice = 14.50", "Orders",
-				"{ \"OrderDetails.$.UnitPrice\" : 14.5}", null,
+				"{ \"OrderDetails.$.UnitPrice\" : 14.5 }", null,
 				buildKey("FK1", "Orders", "OrderDetails", null), null);
 	}
 
 	@Test(expected=TranslatorException.class)
 	public void testUpdateMergeReferenceUpdate() throws Exception {
 		helpExecute("UPDATE OrderDetails SET ProductID = 4", "Orders",
-				"{ \"ProductID\" : 4}",
+				"{ \"ProductID\" : 4 }",
 				null, buildKey("FK1", "Orders", "OrderDetails", null),
 				null);
 	}
@@ -185,7 +185,7 @@ public class TestMongoDBUpdateVisitor {
 		this.docs = new LinkedHashMap<String, DBObject>();
 		this.docs.put("Products", new BasicDBObject("key", "value"));
 		helpExecute("UPDATE OrderDetails SET odID = 4",  "Orders",
-				"{ \"Products.ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4} , \"Products\" : { \"key\" : \"value\"}}",
+				"{ \"Products.ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4 } , \"Products\" : { \"key\" : \"value\" } }",
 				null, buildKey("FK1", "Orders", "OrderDetails", null), null);
 	}
 
@@ -199,7 +199,7 @@ public class TestMongoDBUpdateVisitor {
 		pull.add(buildKey("Suppliers", "Products", "Suppliers", null));
 
 		helpExecute("UPDATE Products SET CategoryID = 4",  "Products",
-				"{ \"CategoryID\" : 4 , \"Categories\" : { \"categoryK\" : \"categoryV\"}}",
+				"{ \"CategoryID\" : 4, \"Categories\" : { \"categoryK\" : \"categoryV\" } }",
 				null,null,pull);
 	}
 
@@ -209,8 +209,8 @@ public class TestMongoDBUpdateVisitor {
 		this.docs = new LinkedHashMap<String, DBObject>();
 
 		helpExecute("UPDATE Categories SET Description = 'change' WHERE CategoryID = 1",  "Categories",
-				"{ \"Description\" : \"change\"}",
-				"{ \"_id\" : 1}",
+				"{ \"Description\" : \"change\" }",
+				"{ \"_id\" : 1 }",
 				null,
 				null);
 	}
@@ -218,37 +218,37 @@ public class TestMongoDBUpdateVisitor {
 	@Test
 	public void testCompositeKeyInsert() throws Exception {
 		helpExecute("insert into G1 (e1, e2, e3) values (1,2,3)", "G1",
-				"{ \"e3\" : 3 , \"_id\" : { \"e1\" : 1 , \"e2\" : 2}}",
+				"{ \"_id\" : { \"e1\" : 1, \"e2\" : 2 }, \"e3\" : 3 }",
 				null, null, null);
 	}
 
 	@Test
 	@Ignore
 	public void testCompositeKeyUpdate() throws Exception {
-		helpExecute("update G1 set e2 = 48",  "G1", "{ \"_id.e2\" : 48}", null, null, null);
+		helpExecute("update G1 set e2 = 48",  "G1", "{ \"_id.e2\" : 48 }", null, null, null);
 	}
 
 	@Test
 	public void testCompositeKeyDeleteWithWhere() throws Exception {
 		helpExecute("delete from G1 WHERE e1 > 50", "G1", null,
-				"{ \"_id.e1\" : { \"$gt\" : 50}}", null, null);
+				"{ \"_id.e1\" : { \"$gt\" : 50 } }", null, null);
 	}
 
 	@Test
 	public void testCompositeFKKeyInsert() throws Exception {
 		helpExecute("insert into G2 (e1, e2, e3) values (1,2,3)", "G2",
-				"{ \"e1\" : 1 , \"e2\" : 2 , \"e3\" : 3}",
+				"{ \"e1\" : 1, \"e2\" : 2, \"e3\" : 3 }",
 				null, null, null);
 	}
 
 	@Test
 	public void testCompositeFKUpdate() throws Exception {
-		helpExecute("update G2 set e1=47, e2 = 48",  "G2", "{ \"e1\" : 47 , \"e2\" : 48}", null, null, null);
+		helpExecute("update G2 set e1=47, e2 = 48",  "G2", "{ \"e1\" : 47, \"e2\" : 48 }", null, null, null);
 	}
 
 	@Test
 	public void testCompositeFKUpdateNonKey() throws Exception {
-		helpExecute("update G2 set e3=0 where e2 = 48",  "G2", "{ \"e3\" : 0}", "{ \"e2\" : 48}", null, null);
+		helpExecute("update G2 set e3=0 where e2 = 48",  "G2", "{ \"e3\" : 0 }", "{ \"e2\" : 48 }", null, null);
 	}
 
 }

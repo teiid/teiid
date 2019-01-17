@@ -589,9 +589,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         	return;
         }
 
-        if (obj.getWhere() != null) {
-            append(obj.getWhere());
-        }
+        append(obj.getWhere());
 
         if (!this.onGoingExpression.isEmpty()) {
         	if (this.match != null) {
@@ -614,13 +612,9 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         	// TEIID-2841 - in ONE-2-ONE case $unwind works as filter
         }
 
-        if (obj.getGroupBy() != null) {
-            append(obj.getGroupBy());
-        }
+        append(obj.getGroupBy());
         
-        if (obj.getHaving() != null) {
-            append(obj.getHaving());
-        }
+        append(obj.getHaving());
 
         if (!this.onGoingExpression.isEmpty()) {
             this.having = (DBObject)this.onGoingExpression.pop();
@@ -644,13 +638,9 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         	this.group = null;
         }
 
-        if (obj.getOrderBy() != null) {
-            append(obj.getOrderBy());
-        }
+        append(obj.getOrderBy());
 
-        if (obj.getLimit() != null) {
-        	 append(obj.getLimit());
-        }
+        append(obj.getLimit());
     }
 
 	private ColumnDetail implicitProject(Expression teiidExpr, Object mongoExpr, ColumnDetail columnDetails, String projectedName) {

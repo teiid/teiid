@@ -33,8 +33,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.teiid.resource.api.ConnectionFactory;
-
 import org.bson.types.Binary;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobImpl;
@@ -56,6 +54,7 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.mongodb.MongoDBConnection;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -574,7 +573,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		    BasicDBList arrayValues = (BasicDBList)value;
             //array
 		    if (expectedClass.isArray() && !(arrayValues.get(0) instanceof BasicDBObject)) {
-		        Class arrayType = expectedClass.getComponentType();
+		        Class<?> arrayType = expectedClass.getComponentType();
 		        Object array = Array.newInstance(arrayType, arrayValues.size());		        
                 for (int i = 0; i < arrayValues.size(); i++) {
                     Object arrayItem = retrieveValue(arrayValues.get(i), arrayType, mongoDB, fqn, colName);

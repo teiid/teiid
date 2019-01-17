@@ -24,14 +24,17 @@ import java.util.Stack;
 
 import org.teiid.language.*;
 import org.teiid.language.AndOr.Operator;
-import org.teiid.language.Function;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MergeDetails.Association;
 import org.teiid.translator.mongodb.MongoDBUpdateExecution.RowInfo;
 
-import com.mongodb.*;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBObject;
+import com.mongodb.QueryBuilder;
 
 public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
@@ -370,41 +373,37 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
             return;
         }
 
-        try {
-            // this for the normal where clause
-            ColumnDetail leftExpr = getExpressionAlias(obj.getLeftExpression());
+        // this for the normal where clause
+        ColumnDetail leftExpr = getExpressionAlias(obj.getLeftExpression());
 
-            append(obj.getRightExpression());
+        append(obj.getRightExpression());
 
-            Object rightExpr = this.onGoingExpression.pop();
-            if (this.expressionMap.get(rightExpr) != null) {
-                rightExpr = this.expressionMap.get(rightExpr).getProjectedName();
-            }
-            // build pull criteria for delete; the pull criteria only applies in merge scenario
-            // and only columns in the embedded document.
-            boolean buildPullQuery = (includeInPullCriteria(obj.getLeftExpression()) && includeInPullCriteria(obj.getRightExpression()));
+        Object rightExpr = this.onGoingExpression.pop();
+        if (this.expressionMap.get(rightExpr) != null) {
+            rightExpr = this.expressionMap.get(rightExpr).getProjectedName();
+        }
+        // build pull criteria for delete; the pull criteria only applies in merge scenario
+        // and only columns in the embedded document.
+        boolean buildPullQuery = (includeInPullCriteria(obj.getLeftExpression()) && includeInPullCriteria(obj.getRightExpression()));
 
-            if (!buildPullQuery) {
-                QueryBuilder query = leftExpr.getQueryBuilder();
-                buildComparisionQuery(obj, rightExpr, query);
-                this.onGoingExpression.push(query.get());
-            }
-            else {
-                QueryBuilder pullQuery = leftExpr.getPullQueryBuilder();
-                buildComparisionQuery(obj, rightExpr, pullQuery);
-                this.onGoingPullCriteria.push(pullQuery.get());
-            }
+        if (!buildPullQuery) {
+            QueryBuilder query = leftExpr.getQueryBuilder();
+            buildComparisionQuery(obj, rightExpr, query);
+            this.onGoingExpression.push(query.get());
+        }
+        else {
+            QueryBuilder pullQuery = leftExpr.getPullQueryBuilder();
+            buildComparisionQuery(obj, rightExpr, pullQuery);
+            this.onGoingPullCriteria.push(pullQuery.get());
+        }
 
-            if (obj.getLeftExpression() instanceof ColumnReference) {
-                ColumnReference column = (ColumnReference)obj.getLeftExpression();
-                this.mongoDoc.updateReferenceColumnValue(column.getTable().getName(), column.getName(), rightExpr);
-            }
-        } catch (TranslatorException e) {
-            this.exceptions.add(e);
+        if (obj.getLeftExpression() instanceof ColumnReference) {
+            ColumnReference column = (ColumnReference)obj.getLeftExpression();
+            this.mongoDoc.updateReferenceColumnValue(column.getTable().getName(), column.getName(), rightExpr);
         }
     }
 
-    private boolean includeInPullCriteria(Expression expr) throws TranslatorException {
+    private boolean includeInPullCriteria(Expression expr) {
         if (!this.mongoDoc.isMerged()) {
             return false;
         }
@@ -476,18 +475,14 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
             super.visit(obj);
             return;
         }
-        try {
-            boolean buildPullQuery = includeInPullCriteria(obj.getLeftExpression());
-            if (buildPullQuery) {
-                ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
-                this.onGoingPullCriteria.push(buildInQuery(obj, exprAlias.getPullQueryBuilder()).get());
-            }
-            else {
-                ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
-                this.onGoingExpression.push(buildInQuery(obj, exprAlias.getQueryBuilder()).get());
-            }
-        } catch (TranslatorException e) {
-            this.exceptions.add(e);
+        boolean buildPullQuery = includeInPullCriteria(obj.getLeftExpression());
+        if (buildPullQuery) {
+            ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+            this.onGoingPullCriteria.push(buildInQuery(obj, exprAlias.getPullQueryBuilder()).get());
+        }
+        else {
+            ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+            this.onGoingExpression.push(buildInQuery(obj, exprAlias.getQueryBuilder()).get());
         }
     }
 
@@ -498,18 +493,14 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
             return;
         }
 
-        try {
-            boolean buildPullQuery = includeInPullCriteria(obj.getExpression());
-            if (buildPullQuery) {
-                ColumnDetail exprAlias = getExpressionAlias(obj.getExpression());
-                this.onGoingPullCriteria.push(buildIsNullQuery(obj, exprAlias.getPullQueryBuilder()).get());
-            }
-            else {
-                ColumnDetail exprAlias = getExpressionAlias(obj.getExpression());
-                this.onGoingExpression.push(buildIsNullQuery(obj, exprAlias.getQueryBuilder()).get());
-            }
-        } catch (TranslatorException e) {
-            this.exceptions.add(e);
+        boolean buildPullQuery = includeInPullCriteria(obj.getExpression());
+        if (buildPullQuery) {
+            ColumnDetail exprAlias = getExpressionAlias(obj.getExpression());
+            this.onGoingPullCriteria.push(buildIsNullQuery(obj, exprAlias.getPullQueryBuilder()).get());
+        }
+        else {
+            ColumnDetail exprAlias = getExpressionAlias(obj.getExpression());
+            this.onGoingExpression.push(buildIsNullQuery(obj, exprAlias.getQueryBuilder()).get());
         }
     }
 
@@ -520,18 +511,14 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
             return;
         }
 
-        try {
-            boolean buildPullQuery = includeInPullCriteria(obj.getLeftExpression());
-            if (buildPullQuery) {
-                ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
-                this.onGoingPullCriteria.push(buildLikeQuery(obj, exprAlias.getPullQueryBuilder()).get());
-            }
-            else {
-                ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
-                this.onGoingExpression.push(buildLikeQuery(obj, exprAlias.getQueryBuilder()).get());
-            }
-        } catch (TranslatorException e) {
-            this.exceptions.add(e);
+        boolean buildPullQuery = includeInPullCriteria(obj.getLeftExpression());
+        if (buildPullQuery) {
+            ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+            this.onGoingPullCriteria.push(buildLikeQuery(obj, exprAlias.getPullQueryBuilder()).get());
+        }
+        else {
+            ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+            this.onGoingExpression.push(buildLikeQuery(obj, exprAlias.getQueryBuilder()).get());
         }
     }
 }

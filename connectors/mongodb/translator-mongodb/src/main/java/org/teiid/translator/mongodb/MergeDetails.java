@@ -184,7 +184,7 @@ public class MergeDetails implements Cloneable {
 		if (this.id != null) {
 			clone.id = this.id.clone();
 		}
-		clone.referenceColumns = new ArrayList(this.referenceColumns);
+		clone.referenceColumns = new ArrayList<>(this.referenceColumns);
 		clone.columns = new ArrayList<String>(this.columns);
 		clone.embeddedTable = this.embeddedTable;
 		clone.association = this.association;

@@ -17,10 +17,19 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MergeDetails.Association;
 
@@ -179,7 +188,7 @@ class MongoDocument {
     	}
 	}
 
-	private void buildForeignKeyReferences() throws TranslatorException {
+	private void buildForeignKeyReferences() {
     	for (ForeignKey fk:this.table.getForeignKeys()) {
 			MergeDetails key = new MergeDetails(this);
 			key.setParentTable(fk.getReferenceTableName());

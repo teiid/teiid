@@ -18,8 +18,6 @@
 
 package org.teiid.resource.adapter.mongodb;
 
-import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.resource.ResourceException;
@@ -28,7 +26,12 @@ import org.teiid.core.BundleUtil;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.resource.spi.BasicConnection;
 
-import com.mongodb.*;
+import com.mongodb.DB;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 
 
 public class MongoDBConnectionImpl extends BasicConnection implements MongoDBConnection {
@@ -43,12 +46,12 @@ public class MongoDBConnectionImpl extends BasicConnection implements MongoDBCon
 			this.client = new MongoClient(servers, options);
 		}
 		else {
-			this.client = new MongoClient(servers, Arrays.asList(credential), options);
+			this.client = new MongoClient(servers, credential, options);
 		}
 		this.database = database;
 	}
 	
-    public MongoDBConnectionImpl(String database, MongoClientURI uri) throws UnknownHostException {
+    public MongoDBConnectionImpl(String database, MongoClientURI uri) {
         this.database = database;
         if (uri.getDatabase() != null) {
             this.database = database;
