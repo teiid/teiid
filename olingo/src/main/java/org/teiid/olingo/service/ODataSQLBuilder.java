@@ -952,9 +952,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 this.context = ndn;
             } else {
                 ComplexDocumentNode cdn = ComplexDocumentNode.buildComplexDocumentNode(
-                        operation, this.metadata,
-                        this.odata, this.nameGenerator, this.aliasedGroups,
-                        getUriInfo(), this.parseService);
+                        operation, this.metadata, this.nameGenerator);
                 cdn.setProcedureReturn(pp);
                 this.context = cdn;
             }

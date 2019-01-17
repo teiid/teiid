@@ -25,14 +25,10 @@ import org.apache.olingo.commons.api.edm.EdmOperation;
 import org.apache.olingo.commons.api.edm.EdmReturnType;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
-import org.apache.olingo.server.api.OData;
-import org.apache.olingo.server.api.uri.UriInfo;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
-import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.SPParameter;
@@ -49,10 +45,8 @@ public class ComplexDocumentNode extends DocumentNode {
     
     public static ComplexDocumentNode buildComplexDocumentNode(
             EdmOperation edmOperation, 
-            MetadataStore metadata, OData odata,
-            UniqueNameGenerator nameGenerator, boolean useAlias,
-            UriInfo uriInfo, URLParseService parseService)
-            throws TeiidProcessingException {
+            MetadataStore metadata, 
+            UniqueNameGenerator nameGenerator) {
         
         ComplexDocumentNode resource = new ComplexDocumentNode();
         
@@ -63,13 +57,13 @@ public class ComplexDocumentNode extends DocumentNode {
         Procedure procedure =  schema.getProcedure(edmOperation.getName());
         
         StoredProcedure storedQuery = new StoredProcedure();
-        storedQuery.setProcedureName(procedure.getFullName()); //$NON-NLS-1$
+        storedQuery.setProcedureName(procedure.getFullName()); 
         for (int i = 0; i < procedure.getParameters().size(); i++) {
             storedQuery.setParameter(new SPParameter(i+1, new Reference(i)));
         }
         
         String group = nameGenerator.getNextGroup();
-        SubqueryFromClause sfc = new SubqueryFromClause(group, storedQuery); //$NON-NLS-1$
+        SubqueryFromClause sfc = new SubqueryFromClause(group, storedQuery); 
                 
         resource.setGroupSymbol(new GroupSymbol(group));
         resource.setFromClause(sfc);

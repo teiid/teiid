@@ -17,12 +17,11 @@
  */
 package org.teiid.olingo.service;
 
-import static org.teiid.language.visitor.SQLStringVisitor.*;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
@@ -35,20 +34,15 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Table;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.common.ODataTypeManager;
 
 public class ODataSchemaBuilder {
+    
+    //not validating length - odata specifies up to 128 chars though
+    static Pattern NAME_PATTERN = Pattern.compile("[\\p{L}\\p{Nl}][\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}\\p{Cf}]{0,}"); //$NON-NLS-1$
     
     public interface SchemaResolver {
         /**
@@ -112,13 +106,14 @@ public class ODataSchemaBuilder {
             }
 
             String entityTypeName = table.getName();
+            
             CsdlEntityType entityType = new CsdlEntityType().setName(entityTypeName);
 
             // adding properties
             List<CsdlProperty> properties = new ArrayList<CsdlProperty>();
             for (Column c : table.getColumns()) {
                 boolean nullable = c.getNullType() == NullType.Nullable;
-                CsdlProperty property = buildProperty(c, isPartOfPrimaryKey(table, c.getName())?false:nullable);
+                CsdlProperty property = buildProperty(c, hasColumn(primaryKey, c.getName())?false:nullable);
                 addColumnAnnotations(c, property, csdlSchema);
                 properties.add(property);
             }
@@ -138,8 +133,8 @@ public class ODataSchemaBuilder {
 
             // entity set one for one entity type
             CsdlEntitySet entitySet = new CsdlEntitySet()
-                    .setName(table.getName())
-                    .setType(new FullQualifiedName(fullSchemaName, table.getName()))
+                    .setName(entityTypeName)
+                    .setType(new FullQualifiedName(fullSchemaName, entityTypeName))
                     .setIncludeInServiceDocument(true);
            
             // add entity types for entity schema
@@ -209,23 +204,10 @@ public class ODataSchemaBuilder {
         return property;
     }
     
-    static boolean isPartOfPrimaryKey(Table table, String columnName) {
-        KeyRecord pk = table.getPrimaryKey();
-        if (hasColumn(pk, columnName)) {
-            return true;
-        }
-        for (KeyRecord key:table.getUniqueKeys()) {
-            if (hasColumn(key, columnName)) {
-                return true;
-            }            
-        }
-        return false;
-    }
-    
     static boolean hasColumn(KeyRecord pk, String columnName) {
         if (pk != null) {
             for (Column column : pk.getColumns()) {
-                if (getRecordName(column).equals(columnName)) {
+                if (column.getName().equals(columnName)) {
                     return true;
                 }
             }
@@ -258,7 +240,10 @@ public class ODataSchemaBuilder {
             for (ForeignKey fk : table.getForeignKeys()) {
     
                 // check to see if fk is part of this table's pk, then it is 1 to 1 relation
-                boolean fkPKSame = sameColumnSet(getIdentifier(table), fk);
+                List<Column> setOne = getIdentifier(table).getColumns();
+                List<Column> setTwo = fk.getColumns();
+
+                boolean fkPKSame = setOne.equals(setTwo);
                 
                 addForwardNavigation(entityTypes, entitySets, table, fk, fkPKSame, resolver);
                 addReverseNavigation(entityTypes, entitySets, table, fk, fkPKSame, resolver);
@@ -311,7 +296,8 @@ public class ODataSchemaBuilder {
             return;
         }
         Table pkTable = fk.getReferenceKey().getParent();
-        ODataSchemaInfo pkSchema = resolver.getSchemaInfo(pkTable.getParent().getName());
+        String entitySchema = pkTable.getParent().getName();
+        ODataSchemaInfo pkSchema = resolver.getSchemaInfo(entitySchema);
         if (pkSchema == null) {
             return;
         }
@@ -320,7 +306,6 @@ public class ODataSchemaBuilder {
         CsdlNavigationPropertyBinding navigationBinding = buildReverseNavigationBinding(table, pkTable, fk, fqn);
         CsdlNavigationProperty navigaton = buildReverseNavigation(table, fk, fqn);
         String entityTypeName = fk.getReferenceTableName();
-        String entitySchema = pkTable.getParent().getName();
         
         if (onetoone) {
             navigaton.setNullable(false);
@@ -498,7 +483,8 @@ public class ODataSchemaBuilder {
             ArrayList<CsdlFunctionImport> functionImports, CsdlSchema csdlSchema) {
 
         CsdlFunction edmFunction = new CsdlFunction();
-        edmFunction.setName(proc.getName());
+        String procName = proc.getName();
+        edmFunction.setName(procName);
         edmFunction.setBound(false);
 
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();
@@ -528,7 +514,7 @@ public class ODataSchemaBuilder {
         }
 
         CsdlFunctionImport functionImport = new CsdlFunctionImport();
-        functionImport.setName(proc.getName()).setFunction(new FullQualifiedName(csdlSchema.getAlias(), proc.getName()));
+        functionImport.setName(procName).setFunction(new FullQualifiedName(csdlSchema.getAlias(), procName));
         addOperationAnnotations(proc, edmFunction, csdlSchema);
         functions.add(edmFunction);
         functionImports.add(functionImport);
@@ -578,7 +564,8 @@ public class ODataSchemaBuilder {
             ArrayList<CsdlAction> actions,
             ArrayList<CsdlActionImport> actionImports, CsdlSchema csdlSchema) {
         CsdlAction edmAction = new CsdlAction();
-        edmAction.setName(proc.getName());
+        String procName = proc.getName();
+        edmAction.setName(procName);
         edmAction.setBound(false);
 
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();        
@@ -609,7 +596,7 @@ public class ODataSchemaBuilder {
         }
 
         CsdlActionImport actionImport = new CsdlActionImport();
-        actionImport.setName(proc.getName()).setAction(new FullQualifiedName(csdlSchema.getAlias(), proc.getName()));
+        actionImport.setName(procName).setAction(new FullQualifiedName(csdlSchema.getAlias(), procName));
         addOperationAnnotations(proc, edmAction, csdlSchema);
         actions.add(edmAction);
         actionImports.add(actionImport);
@@ -631,40 +618,8 @@ public class ODataSchemaBuilder {
         return complexType;
     }
 
-    static List<String> getColumnNames(List<Column> columns) {
-        ArrayList<String> names = new ArrayList<String>();
-        for (Column c : columns) {
-            names.add(c.getName());
-        }
-        return names;
-    }
-
-    static boolean sameColumnSet(KeyRecord recordOne, KeyRecord recordTwo) {
-
-        if (recordOne == null || recordTwo == null) {
-            return false;
-        }
-
-        List<Column> setOne = recordOne.getColumns();
-        List<Column> setTwo = recordTwo.getColumns();
-
-        if (setOne.size() != setTwo.size()) {
-            return false;
-        }
-        for (int i = 0; i < setOne.size(); i++) {
-            Column one = setOne.get(i);
-            Column two = setTwo.get(i);
-            if (!one.getName().equals(two.getName())) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
     private static void addTableAnnotations(Table table, CsdlEntityType entityType, CsdlSchema csdlSchema) {
-        if (table.getAnnotation() != null) {
-            addStringAnnotation(entityType, "Core.Description", table.getAnnotation());
-        }
+        addCommonAnnotations(table, entityType);
         
         if (table.getCardinality() != -1) {
             addIntAnnotation(entityType, "teiid.CARDINALITY", table.getCardinality());
@@ -679,10 +634,6 @@ public class ODataSchemaBuilder {
             if (table.getMaterializedStageTable() != null) {
                 addStringAnnotation(entityType, "teiid.MATERIALIZED_STAGE_TABLE", table.getMaterializedStageTable().getFullName());
             }
-        }
-        
-        if (table.getNameInSource() != null) {
-            addStringAnnotation(entityType, "teiid.NAMEINSOURCE", table.getNameInSource());
         }
         
         if (table.getAccessPatterns() != null && !table.getAccessPatterns().isEmpty()) {
@@ -713,13 +664,7 @@ public class ODataSchemaBuilder {
 
     private static void addColumnAnnotations(Column column,
             CsdlProperty property, CsdlSchema csdlSchema) {
-        if (column.getAnnotation() != null) {
-            addStringAnnotation(property, "Core.Description", column.getAnnotation());
-        }
-        
-        if (column.getNameInSource() != null) {
-            addStringAnnotation(property, "teiid.NAMEINSOURCE", column.getNameInSource());
-        }
+        addCommonAnnotations(column, property);
         
         if (!column.isSelectable()) {
             addBooleanAnnotation(property, "teiid.SELECTABLE", column.isSelectable());
@@ -762,13 +707,7 @@ public class ODataSchemaBuilder {
     
     private static void addOperationAnnotations(Procedure proc,
             CsdlOperation operation, CsdlSchema csdlSchema) {
-        if (proc.getAnnotation() != null) {
-            addStringAnnotation(operation, "Core.Description", proc.getAnnotation());
-        }
-        
-        if (proc.getNameInSource() != null) {
-            addStringAnnotation(operation, "teiid.NAMEINSOURCE", proc.getNameInSource());
-        }
+        addCommonAnnotations(proc, operation);
         if (proc.getUpdateCount() != Procedure.AUTO_UPDATECOUNT) {
             addIntAnnotation(operation, "teiid.UPDATECOUNT", proc.getUpdateCount());
         }   
@@ -783,19 +722,29 @@ public class ODataSchemaBuilder {
     private static void addOperationParameterAnnotations(
             ProcedureParameter procedure, CsdlParameter parameter,
             CsdlSchema csdlSchema) {
-        if (procedure.getAnnotation() != null) {
-            addStringAnnotation(parameter, "Core.Description", procedure.getAnnotation());
-        }
-        
-        if (procedure.getNameInSource() != null) {
-            addStringAnnotation(parameter, "teiid.NAMEINSOURCE", procedure.getNameInSource());
-        }
+        addCommonAnnotations(procedure, parameter);
         
         // add all custom properties
         for (String str:procedure.getProperties().keySet()) {
             addTerm(normalizeTermName(str), new String[] {"Parameter"}, csdlSchema);
             addStringAnnotation(parameter, csdlSchema.getAlias()+"."+normalizeTermName(str), procedure.getProperties().get(str));
         } 
+    }
+
+    private static void addCommonAnnotations(AbstractMetadataRecord rec,
+            CsdlAnnotatable recipent) {
+        if (rec.getAnnotation() != null) {
+            addStringAnnotation(recipent, "Core.Description", rec.getAnnotation());
+        }
+        
+        if (rec.getNameInSource() != null) {
+            addStringAnnotation(recipent, "teiid.NAMEINSOURCE", rec.getNameInSource());
+        }
+        
+        if (!NAME_PATTERN.matcher(rec.getName()).matches()) {
+            LogManager.logDetail(LogConstants.CTX_ODATA,
+                    ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16063,rec.getFullName()));
+        }
     }    
     private static void addStringAnnotation(CsdlAnnotatable recipent, String term, String value) {
         CsdlAnnotation annotation = new CsdlAnnotation();
@@ -837,8 +786,8 @@ public class ODataSchemaBuilder {
             term.setType("Edm.String");
             schema.getTerms().add(term);            
         }
-        if (term.getAppliesTo().isEmpty() || !term.getAppliesTo().contains(appliesTo)) {
-            for (int i = 0; i < appliesTo.length; i++) {
+        for (int i = 0; i < appliesTo.length; i++) {
+            if (!term.getAppliesTo().contains(appliesTo[i])) {
                 term.getAppliesTo().add(appliesTo[i]);
             }
         }

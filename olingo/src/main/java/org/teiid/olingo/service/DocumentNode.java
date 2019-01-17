@@ -38,7 +38,6 @@ import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.core.uri.queryoption.expression.LiteralImpl;
 import org.teiid.core.TeiidException;
-import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
@@ -288,11 +287,7 @@ public class DocumentNode {
         }
         OrderBy orderBy = new OrderBy();
         // provide implicit ordering for cursor logic
-        KeyRecord record = this.table.getPrimaryKey();
-        if (record == null) {
-            // if PK is not available there MUST at least one unique key
-            record = this.table.getUniqueKeys().get(0);
-        }
+        KeyRecord record = ODataSchemaBuilder.getIdentifier(this.table);
         // provide implicit ordering for cursor logic
         for (Column column:record.getColumns()) {
             ElementSymbol expr = new ElementSymbol(column.getName(), this.groupSymbol);
@@ -457,8 +452,7 @@ public class DocumentNode {
 
     private static KeyInfo joinFK(Table currentTable, Table referenceTable, EdmNavigationProperty property) {
         for (ForeignKey fk : currentTable.getForeignKeys()) {
-            String refSchemaName = fk.getReferenceKey().getParent().getParent().getName();
-            if (!referenceTable.getParent().getName().equals(refSchemaName)
+            if (!referenceTable.getParent().equals(fk.getReferenceKey().getParent().getParent())
                     || !referenceTable.getName().equals(fk.getReferenceTableName())) {
                 continue;
             }
