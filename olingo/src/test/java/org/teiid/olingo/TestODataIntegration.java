@@ -3373,6 +3373,17 @@ public class TestODataIntegration {
 
             //fails if it collides with the teiid extension
             assertEquals(200, response.getStatus());
+            
+            response = http.newRequest(baseURL + "/northwind/teiid/pktable")
+                    .method("GET")
+                    .send();                        
+            assertEquals(200, response.getStatus());
+            
+            //escaped
+            response = http.newRequest(baseURL + "/northwind/te%69id/pktable")
+                    .method("GET")
+                    .send();                        
+            assertEquals(200, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

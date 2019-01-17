@@ -20,6 +20,7 @@ package org.teiid.olingo.web;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.ref.SoftReference;
+import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -181,7 +182,9 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (vdbName.isEmpty()) {
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16008, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
             }
-
+            
+            modelName = URLDecoder.decode(modelName, "UTF-8"); //$NON-NLS-1$
+            vdbName = URLDecoder.decode(vdbName, "UTF-8"); //$NON-NLS-1$
         } else {
         	if (this.initProperties.getProperty("vdb-name") == null) { //$NON-NLS-1$ 
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16018, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
