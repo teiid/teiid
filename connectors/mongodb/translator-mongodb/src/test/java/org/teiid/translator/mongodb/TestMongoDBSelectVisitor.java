@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -93,7 +93,7 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"select * from customers",
 				"Customers",
-				"{ \"_m0\" : \"$_id\" , \"_m1\" : \"$CompanyName\" , \"_m2\" : \"$ContactName\" , \"_m3\" : \"$ContactTitle\" , \"_m4\" : \"$Address\" , \"_m5\" : \"$City\" , \"_m6\" : \"$Region\" , \"_m7\" : \"$PostalCode\" , \"_m8\" : \"$Country\" , \"_m9\" : \"$Phone\" , \"_m10\" : \"$Fax\"}",
+				"{ \"_m0\" : \"$_id\", \"_m1\" : \"$CompanyName\", \"_m2\" : \"$ContactName\", \"_m3\" : \"$ContactTitle\", \"_m4\" : \"$Address\", \"_m5\" : \"$City\", \"_m6\" : \"$Region\", \"_m7\" : \"$PostalCode\", \"_m8\" : \"$Country\", \"_m9\" : \"$Phone\", \"_m10\" : \"$Fax\" }",
 				null);
     }
 
@@ -101,7 +101,7 @@ public class TestMongoDBSelectVisitor {
     public void testSelectColum() throws Exception {
 		helpExecute("select CompanyName, ContactName from customers",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
 				null);
     }
 
@@ -110,8 +110,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM customers WHERE CompanyName = 'A'",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"CompanyName\" : \"A\"}");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"CompanyName\" : \"A\" }");
     }
 
     @Test
@@ -119,8 +119,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM customers WHERE CompanyName = 'A' AND ContactName = 'B'",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"$and\" : [ { \"CompanyName\" : \"A\"} , { \"ContactName\" : \"B\"}]}");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"$and\" : [{ \"CompanyName\" : \"A\" }, { \"ContactName\" : \"B\" }] }");
     }
 
     @Test
@@ -128,8 +128,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM customers WHERE CompanyName = 'A' OR ContactName = 'B'",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"$or\" : [ { \"CompanyName\" : \"A\"} , { \"ContactName\" : \"B\"}]}");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"$or\" : [{ \"CompanyName\" : \"A\" }, { \"ContactName\" : \"B\" }] }");
     }
 
 
@@ -138,8 +138,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM customers WHERE (CompanyName = 'A' AND ContactName = 'B') OR (CompanyName = 'B' AND ContactName = 'A')",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"$or\" : [ { \"$and\" : [ { \"CompanyName\" : \"A\"} , { \"ContactName\" : \"B\"}]} , { \"$and\" : [ { \"CompanyName\" : \"B\"} , { \"ContactName\" : \"A\"}]}]}");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"$or\" : [{ \"$and\" : [{ \"CompanyName\" : \"A\" }, { \"ContactName\" : \"B\" }] }, { \"$and\" : [{ \"CompanyName\" : \"B\" }, { \"ContactName\" : \"A\" }] }] }");
     }
 
     @Test
@@ -147,8 +147,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM customers WHERE (CompanyName = 'A' OR ContactName = 'B') AND (CompanyName = 'B' OR ContactName = 'A')",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"$and\" : [ { \"$or\" : [ { \"CompanyName\" : \"A\"} , { \"ContactName\" : \"B\"}]} , { \"$or\" : [ { \"CompanyName\" : \"B\"} , { \"ContactName\" : \"A\"}]}]}");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"$and\" : [{ \"$or\" : [{ \"CompanyName\" : \"A\" }, { \"ContactName\" : \"B\" }] }, { \"$or\" : [{ \"CompanyName\" : \"B\" }, { \"ContactName\" : \"A\" }] }] }");
     }
 
     @Test
@@ -156,8 +156,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM customers WHERE CompanyName = 'A' OR CompanyName = 'B'",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"CompanyName\" : { \"$in\" : [ \"B\" , \"A\"]}}");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"CompanyName\" : { \"$in\" : [\"B\", \"A\"] } }");
     }
 
     @Test
@@ -165,8 +165,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM customers WHERE CompanyName IN('A', 'B')",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"CompanyName\" : { \"$in\" : [ \"A\" , \"B\"]}}");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"CompanyName\" : { \"$in\" : [\"A\", \"B\"] } }");
     }
 
     @Test
@@ -174,8 +174,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM customers WHERE CompanyName NOT IN ('A', 'B')",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"CompanyName\" : { \"$nin\" : [ \"A\" , \"B\"]}}");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"CompanyName\" : { \"$nin\" : [\"A\", \"B\"] } }");
     }
 
     @Test
@@ -183,8 +183,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM Customers WHERE ContactName IS NULL",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"ContactName\" :  null }");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"ContactName\" : null }");
     }
 
     @Test
@@ -192,16 +192,16 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT CompanyName, ContactName FROM Customers WHERE ContactName IS NOT NULL",
 				"Customers",
-				"{ \"_m0\" : \"$CompanyName\" , \"_m1\" : \"$ContactName\"}",
-				"{ \"ContactName\" : { \"$ne\" :  null }}");
+				"{ \"_m0\" : \"$CompanyName\", \"_m1\" : \"$ContactName\" }",
+				"{ \"ContactName\" : { \"$ne\" : null } }");
     }
 
     @Test
     public void testGtLt() throws Exception {
 		helpExecute(
 				"SELECT age,status FROM users WHERE age > 25 AND age <= 50",
-				"users", "{ \"_m0\" : \"$age\" , \"_m1\" : \"$status\"}",
-				"{ \"$and\" : [ { \"age\" : { \"$gt\" : 25}} , { \"age\" : { \"$lte\" : 50}}]}");
+				"users", "{ \"_m0\" : \"$age\", \"_m1\" : \"$status\" }",
+				"{ \"$and\" : [{ \"age\" : { \"$gt\" : 25 } }, { \"age\" : { \"$lte\" : 50 } }] }");
     }
 
     @Test
@@ -209,8 +209,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT user_id, age, status FROM users WHERE user_id like '%bc%'",
 				"users",
-				"{ \"_m0\" : \"$user_id\" , \"_m1\" : \"$age\" , \"_m2\" : \"$status\"}",
-				"{ \"user_id\" : { \"$regex\" : \"bc\"}}");
+				"{ \"_m0\" : \"$user_id\", \"_m1\" : \"$age\", \"_m2\" : \"$status\" }",
+				"{ \"user_id\" : { \"$regex\" : \"bc\", \"$options\" : \"\" } }");
     }
 
     @Test
@@ -218,8 +218,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT user_id, age, status FROM users WHERE user_id like 'bc%'",
 				"users",
-				"{ \"_m0\" : \"$user_id\" , \"_m1\" : \"$age\" , \"_m2\" : \"$status\"}",
-				"{ \"user_id\" : { \"$regex\" : \"^bc\"}}");
+				"{ \"_m0\" : \"$user_id\", \"_m1\" : \"$age\", \"_m2\" : \"$status\" }",
+				"{ \"user_id\" : { \"$regex\" : \"^bc\", \"$options\" : \"\" } }");
     }
 
     @Test
@@ -227,8 +227,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT user_id, age, status FROM users WHERE user_id like 'b%c'",
 				"users",
-				"{ \"_m0\" : \"$user_id\" , \"_m1\" : \"$age\" , \"_m2\" : \"$status\"}",
-				"{ \"user_id\" : { \"$regex\" : \"^b.*c$\"}}");
+				"{ \"_m0\" : \"$user_id\", \"_m1\" : \"$age\", \"_m2\" : \"$status\" }",
+				"{ \"user_id\" : { \"$regex\" : \"^b.*c$\", \"$options\" : \"\" } }");
     }
 
     @Test
@@ -236,8 +236,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				"SELECT user_id, age, status FROM users WHERE user_id NOT LIKE 'b%c'",
 				"users",
-				"{ \"_m0\" : \"$user_id\" , \"_m1\" : \"$age\" , \"_m2\" : \"$status\"}",
-				"{ \"user_id\" : { \"$not\" : { \"$regex\" : \"^b.*c$\"}}}");
+				"{ \"_m0\" : \"$user_id\", \"_m1\" : \"$age\", \"_m2\" : \"$status\" }",
+				"{ \"user_id\" : { \"$not\" : { \"$regex\" : \"^b.*c$\", \"$options\" : \"\" } } }");
     }
 
     @Test
@@ -264,30 +264,30 @@ public class TestMongoDBSelectVisitor {
     @Test
     public void testCountStar() throws Exception {
     	String query = "SELECT COUNT(*) AS allusers FROM users";
-		helpExecute(query, "users", "{ \"allusers\" : 1}", null,
-				"{ \"_id\" :  null  , \"allusers\" : { \"$sum\" : 1}}", null);
+		helpExecute(query, "users", "{ \"allusers\" : 1 }", null,
+				"{ \"_id\" : null, \"allusers\" : { \"$sum\" : 1 } }", null);
     }
 
     @Test
     public void testCountStarWithoutAlias() throws Exception {
     	String query = "SELECT COUNT(*) FROM users";
-		helpExecute(query, "users", "{ \"_m0\" : 1}", null,
-				"{ \"_id\" :  null  , \"_m0\" : { \"$sum\" : 1}}", null);
+		helpExecute(query, "users", "{ \"_m0\" : 1 }", null,
+				"{ \"_id\" : null, \"_m0\" : { \"$sum\" : 1 } }", null);
     }
 
     @Test
     public void testCountStarWithDistinct() throws Exception {
     	String query = "SELECT DISTINCT COUNT(*) FROM users";
-		helpExecute(query, "users", "{ \"_m0\" : 1}", null,
-				"{ \"_id\" :  null  , \"_m0\" : { \"$sum\" : 1}}", null);
+		helpExecute(query, "users", "{ \"_m0\" : 1 }", null,
+				"{ \"_id\" : null, \"_m0\" : { \"$sum\" : 1 } }", null);
     }
     @Test
     public void testDistinct() throws Exception {
     	String query = "SELECT DISTINCT user_id, age FROM users";
 		helpExecute(query, "users",
-				"{ \"_m0\" : \"$_id._m0\" , \"_m1\" : \"$_id._m1\"}", //project
+				"{ \"_m0\" : \"$_id._m0\", \"_m1\" : \"$_id._m1\" }", //project
 				null, 												  // match
-				"{ \"_id\" : { \"_m0\" : \"$user_id\" , \"_m1\" : \"$age\"}}", //group by
+				"{ \"_id\" : { \"_m0\" : \"$user_id\", \"_m1\" : \"$age\" } }", //group by
 				null); 												  // having
     }
 
@@ -298,9 +298,9 @@ public class TestMongoDBSelectVisitor {
     	MongoDBSelectVisitor visitor = helpExecute(
 				query,
 				"users",
-				"{ \"_m0\" : \"$_id._c0\" , \"age\" : \"$_id._c1\"}",
+				"{ \"_m0\" : \"$_id._c0\", \"age\" : \"$_id._c1\" }",
 				null,
-				"{ \"_id\" : { \"_c0\" : \"$user_id\" , \"_c1\" : \"$age\"}}",
+				"{ \"_id\" : { \"_c0\" : \"$user_id\", \"_c1\" : \"$age\" } }",
 				null);
     	assertEquals(Arrays.asList("_m0", "age"), visitor.selectColumnReferences);
     }
@@ -312,9 +312,9 @@ public class TestMongoDBSelectVisitor {
         MongoDBSelectVisitor visitor = helpExecute(
                 query,
                 "users",
-                "{ \"_m0\" : \"$_id._c0\" , \"_m1\" : 1}",
+                "{ \"_m0\" : \"$_id._c0\", \"_m1\" : 1 }",
                 null,
-                "{ \"_id\" : { \"_c0\" : \"$user_id\"} , \"_m1\" : { \"$sum\" : \"$age\"}}",
+                "{ \"_id\" : { \"_c0\" : \"$user_id\" }, \"_m1\" : { \"$sum\" : \"$age\" } }",
                 null);
         assertEquals(Arrays.asList("_m0", "_m1"), visitor.selectColumnReferences);
     }    
@@ -322,34 +322,34 @@ public class TestMongoDBSelectVisitor {
     @Test
     public void testSum() throws Exception {
     	String query = "SELECT SUM(age) as total FROM users";
-		helpExecute(query, "users", "{ \"total\" : 1}", null,
-				"{ \"total\" : { \"$sum\" : \"$age\"} , \"_id\" :  null }",
+		helpExecute(query, "users", "{ \"total\" : 1 }", null,
+				"{ \"_id\" : null, \"total\" : { \"$sum\" : \"$age\" } }",
 				null);
     }
 
     @Test
     public void testPlusOperatorWithAlias() throws Exception {
     	String query = "SELECT (age+age) as total FROM users";
-    	helpExecute(query, "users", "{ \"total\" : { \"$add\" : [ \"$age\" , \"$age\"]}}", null, null, null);
+    	helpExecute(query, "users", "{ \"total\" : { \"$add\" : [\"$age\", \"$age\"] } }", null, null, null);
     }
 
     @Test
     public void testPlusOperatorWithOutAlias() throws Exception {
     	String query = "SELECT (age+age) FROM users";
-    	helpExecute(query, "users", "{ \"_m0\" : { \"$add\" : [ \"$age\" , \"$age\"]}}", null, null, null);
+    	helpExecute(query, "users", "{ \"_m0\" : { \"$add\" : [\"$age\", \"$age\"] } }", null, null, null);
     }
 
     @Test
     public void testPlusOperatorInWhere() throws Exception {
     	String query = "SELECT age FROM users WHERE age > 5.0";
-    	helpExecute(query, "users", "{ \"_m0\" : \"$age\"}", "{ \"age\" : { \"$gt\" : 5}}");
+    	helpExecute(query, "users", "{ \"_m0\" : \"$age\" }", "{ \"age\" : { \"$gt\" : 5 } }");
     }
 
     @Test
     public void testFunction() throws Exception {
     	String query = "SELECT concat(user_id, user_id) FROM users";
 		helpExecute(query, "users",
-				"{ \"_m0\" : { \"$concat\" : [ \"$user_id\" , \"$user_id\"]}}",
+				"{ \"_m0\" : { \"$concat\" : [\"$user_id\", \"$user_id\"] } }",
 				null);
     }
     
@@ -357,7 +357,7 @@ public class TestMongoDBSelectVisitor {
     public void testSelectBooleanExpression() throws Exception {
     	String query = "SELECT (user_id = 'USER') as X1 FROM users";
 		helpExecute(query, "users",
-				"{ \"X1\" : { \"$cond\" : [ { \"$eq\" : [ \"$user_id\" , \"USER\"]} , true , false]}}",
+				"{ \"X1\" : { \"$cond\" : [{ \"$eq\" : [\"$user_id\", \"USER\"] }, true, false] } }",
 				null);
     }    
     
@@ -365,7 +365,7 @@ public class TestMongoDBSelectVisitor {
     public void testSelectBooleanExpression2() throws Exception {
     	String query = "SELECT (user_id > 'USER') as X1 FROM users";
 		helpExecute(query, "users",
-				"{ \"X1\" : { \"$cond\" : [ { \"$gt\" : [ \"$user_id\" , \"USER\"]} , true , false]}}",
+				"{ \"X1\" : { \"$cond\" : [{ \"$gt\" : [\"$user_id\", \"USER\"] }, true, false] } }",
 				null);
     } 
     
@@ -373,7 +373,7 @@ public class TestMongoDBSelectVisitor {
     public void testSelectBooleanExpression3() throws Exception {
     	String query = "SELECT (user_id = 'USER' OR user_id = 'user') as X1 FROM users";
 		helpExecute(query, "users",
-				"{ \"X1\" : { \"$cond\" : [ { \"user_id\" : { \"$in\" : [ \"user\" , \"USER\"]}} , true , false]}}",
+				"{ \"X1\" : { \"$cond\" : [{ \"user_id\" : { \"$in\" : [\"user\", \"USER\"] } }, true, false] } }",
 				null);
     }    
     
@@ -381,7 +381,7 @@ public class TestMongoDBSelectVisitor {
     public void testSelectBooleanExpression4() throws Exception {
     	String query = "SELECT (user_id = 'USER' AND age > 30) as X1 FROM users";
 		helpExecute(query, "users",
-				"{ \"X1\" : { \"$cond\" : [ { \"$and\" : [ { \"$eq\" : [ \"$user_id\" , \"USER\"]} , { \"$gt\" : [ \"$age\" , 30]}]} , true , false]}}",
+				"{ \"X1\" : { \"$cond\" : [{ \"$and\" : [{ \"$eq\" : [\"$user_id\", \"USER\"] }, { \"$gt\" : [\"$age\", 30] }] }, true, false] } }",
 				null);
     } 
 
@@ -389,7 +389,7 @@ public class TestMongoDBSelectVisitor {
     public void testNestedFunction() throws Exception {
     	String query = "SELECT concat(concat(user_id, user_id), user_id) FROM users";
 		helpExecute(query, "users",
-				"{ \"_m0\" : { \"$concat\" : [ { \"$concat\" : [ \"$user_id\" , \"$user_id\"]} , \"$user_id\"]}}",
+				"{ \"_m0\" : { \"$concat\" : [{ \"$concat\" : [\"$user_id\", \"$user_id\"] }, \"$user_id\"] } }",
 				null);
     }    
     
@@ -397,31 +397,31 @@ public class TestMongoDBSelectVisitor {
     public void testWhereReference() throws Exception {
     	String query = "SELECT age FROM users WHERE user_id = 'bob'";
 		helpExecute(query, "users",
-				"{ \"_m0\" : \"$age\"}",
-				"{ \"user_id\" : \"bob\"}");
+				"{ \"_m0\" : \"$age\" }",
+				"{ \"user_id\" : \"bob\" }");
     }
 
     @Test
     public void testSelectStarCompositeKey() throws Exception {
     	String query = "SELECT * from G1 where e1 = 50";
 		helpExecute(query, "G1",
-				"{ \"_m0\" : \"$_id.e1\" , \"_m1\" : \"$_id.e2\" , \"_m2\" : \"$e3\"}",
-				"{ \"_id.e1\" : 50}");
+				"{ \"_m0\" : \"$_id.e1\", \"_m1\" : \"$_id.e2\", \"_m2\" : \"$e3\" }",
+				"{ \"_id.e1\" : 50 }");
     }
 
     @Test
     public void testCompositeFKKeyWhere() throws Exception {
     	String query = "SELECT * from G2 where e2 = 50";
 		helpExecute(query, "G2",
-				"{ \"_m0\" : \"$e1\" , \"_m1\" : \"$e2\" , \"_m2\" : \"$e3\"}",
-				"{ \"e2\" : 50}");
+				"{ \"_m0\" : \"$e1\", \"_m1\" : \"$e2\", \"_m2\" : \"$e3\" }",
+				"{ \"e2\" : 50 }");
     }
     
     @Test
     public void testGeoWithinPloygonFunction() throws Exception {
     	String query = "SELECT mongo.geoWithin(user_id, 'LineString', ((cast(1.0 as double), cast(2.0 as double)), (cast(1.0 as double), cast(2.0 as double)))) FROM users";
 		helpExecute(query, "users",
-				"{ \"_m0\" : { \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"LineString\" , \"coordinates\" : [ [ [ 1.0 , 2.0] , [ 1.0 , 2.0]]]}}}}}",
+				"{ \"_m0\" : { \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"LineString\", \"coordinates\" : [[[1.0, 2.0], [1.0, 2.0]]] } } } } }",
 				null);
     }
     
@@ -429,7 +429,7 @@ public class TestMongoDBSelectVisitor {
     public void testGeoNearFunction() throws Exception {
     	String query = "SELECT mongo.geonear(user_id, (cast(1.0 as double), cast(2.0 as double)), 22, 10) FROM users";
 		helpExecute(query, "users",
-				"{ \"_m0\" : { \"user_id\" : { \"$near\" : { \"$geometry\" : { \"type\" : \"Point\" , \"coordinates\" : [ [ 1.0 , 2.0]]} , \"$maxDistance\" : 22 , \"$minDistance\" : 10}}}}",
+				"{ \"_m0\" : { \"user_id\" : { \"$near\" : { \"$geometry\" : { \"type\" : \"Point\", \"coordinates\" : [[1.0, 2.0]] }, \"$maxDistance\" : 22, \"$minDistance\" : 10 } } } }",
 				null);
     }   
     
@@ -437,8 +437,8 @@ public class TestMongoDBSelectVisitor {
     public void testGeoWithinPloygonFunctionInWhere() throws Exception {
     	String query = "SELECT user_id FROM users where mongo.geoWithin(user_id, 'LineString', ((cast(1.0 as double), cast(2.0 as double)), (cast(1.0 as double), cast(2.0 as double))))";
 		helpExecute(query, "users",
-				"{ \"_m1\" : \"$user_id\"}",
-				"{ \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"LineString\" , \"coordinates\" : [ [ [ 1.0 , 2.0] , [ 1.0 , 2.0]]]}}}}"				
+				"{ \"_m1\" : \"$user_id\" }",
+				"{ \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"LineString\", \"coordinates\" : [[[1.0, 2.0], [1.0, 2.0]]] } } } }"				
 				);
     }    
     
@@ -446,8 +446,8 @@ public class TestMongoDBSelectVisitor {
     public void testAliasPloygonFunctionInWhere() throws Exception {
     	String query = "SELECT user_id FROM users where mongo.geoPolygonWithin(user_id, 1.0, 2.0, 3.0, 4.0)";
 		helpExecute(query, "users",
-				"{ \"_m1\" : \"$user_id\"}",
-				"{ \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"Polygon\" , \"coordinates\" : [ [ [ 3.0 , 1.0] , [ 2.0 , 1.0] , [ 2.0 , 4.0] , [ 3.0 , 4.0] , [ 3.0 , 1.0]]]}}}}"				
+				"{ \"_m1\" : \"$user_id\" }",
+				"{ \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"Polygon\", \"coordinates\" : [[[3.0, 1.0], [2.0, 1.0], [2.0, 4.0], [3.0, 4.0], [3.0, 1.0]]] } } } }"				
 				);
     }     
 }

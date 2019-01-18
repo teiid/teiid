@@ -35,16 +35,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Function;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
-import org.teiid.language.TableReference;
+import org.teiid.language.*;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
@@ -62,7 +53,15 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.*;
+import com.mongodb.AggregationOptions;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.Cursor;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.QueryBuilder;
 
 @SuppressWarnings("nls")
 public class TestMongoDBQueryExecution {
@@ -70,7 +69,6 @@ public class TestMongoDBQueryExecution {
     private TranslationUtility utility;
     private static AggregationOptions options = AggregationOptions.builder()
             .batchSize(256)
-            .outputMode(AggregationOptions.OutputMode.CURSOR)
             .allowDiskUse(true)
             .build();
 
@@ -90,11 +88,11 @@ public class TestMongoDBQueryExecution {
     	this.utility = new TranslationUtility(metadata);
     }
 
-	private DBCollection helpExecute(String query, String[] expectedCollection, int expectedParameters) throws TranslatorException {
+	private DBCollection helpExecute(String query, String[] expectedCollection) throws TranslatorException {
 		Command cmd = this.utility.parseCommand(query);
-		return helpExecute(cmd, expectedCollection, expectedParameters);
+		return helpExecute(cmd, expectedCollection);
 	}    
-	private DBCollection helpExecute(Command cmd, String[] expectedCollection, int expectedParameters) throws TranslatorException {
+	private DBCollection helpExecute(Command cmd, String[] expectedCollection) throws TranslatorException {
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 		Mockito.stub(context.getBatchSize()).toReturn(256);
 		MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
@@ -105,20 +103,8 @@ public class TestMongoDBQueryExecution {
 			Mockito.stub(db.getCollection(collection)).toReturn(dbCollection);
 		}
 
-		AggregationOutput output = Mockito.mock(AggregationOutput.class);
-		Mockito.stub(output.results()).toReturn(new ArrayList<DBObject>());
-
-		ArrayList<DBObject> params = new ArrayList<DBObject>();
-		for (int i = 0; i < expectedParameters; i++) {
-			params.add(Mockito.any(DBObject.class));
-		}
-
-		Mockito.stub(dbCollection.aggregate(params.remove(0), params.toArray(new DBObject[params.size()]))).toReturn(output);
-
 		Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
 		Mockito.stub(connection.getDatabase()).toReturn(db);
-
-		Mockito.stub(db.getCollectionFromString(Mockito.anyString())).toReturn(dbCollection);
 
 		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context,
 		        this.utility.createRuntimeMetadata(), connection);
@@ -130,7 +116,7 @@ public class TestMongoDBQueryExecution {
 	public void testSimpleSelectNoAssosiations() throws Exception {
 		String query = "SELECT * FROM Customers";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 1);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id");
@@ -153,7 +139,7 @@ public class TestMongoDBQueryExecution {
 	public void testSimpleWhere() throws Exception {
 		String query = "SELECT CompanyName, ContactTitle FROM Customers WHERE Country='USA'";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CompanyName");
@@ -169,7 +155,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectEmbeddable() throws Exception {
 		String query = "SELECT CategoryName FROM Categories";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CategoryName");
@@ -183,7 +169,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectEmbeddableWithWhere_ON_NONPK() throws Exception {
 		String query = "SELECT CategoryName FROM Categories WHERE CategoryName = 'Drinks'";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CategoryName");
@@ -198,7 +184,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectEmbeddableWithWhere_ON_PK() throws Exception {
 		String query = "SELECT CategoryName FROM Categories WHERE CategoryID = 10";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CategoryName");
@@ -213,7 +199,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectFromMerged() throws Exception {
 		String query = "SELECT UnitPrice FROM OrderDetails";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$OrderDetails.UnitPrice");
@@ -228,7 +214,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectMergedWithWhere_ON_NON_PK() throws Exception {
 		String query = "SELECT Quantity FROM OrderDetails WHERE UnitPrice = '0.99'";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 3);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$OrderDetails.Quantity");
@@ -244,7 +230,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectMergedWithWhere_ON_NON_PK_one_to_one() throws Exception {
 		String query = "SELECT cust_id, zip FROM Address WHERE Street = 'Highway 100'";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id");
@@ -263,7 +249,7 @@ public class TestMongoDBQueryExecution {
 				"FROM customer c join address a " +
 				"on c.customer_id=a.cust_id";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
@@ -279,7 +265,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectMergedWithNOWhere_one_to_one() throws Exception {
 		String query = "SELECT cust_id, zip FROM Address";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id");
@@ -296,7 +282,7 @@ public class TestMongoDBQueryExecution {
 		String query = "select p.ProductName, c.CategoryName from Products p " +
 				"join Categories c on p.CategoryID = c.CategoryID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
@@ -314,7 +300,7 @@ public class TestMongoDBQueryExecution {
 				"JOIN Categories c on p.CategoryID = c.CategoryID " +
 				"WHERE p.CategoryID = 1 AND c.CategoryID = 1";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
@@ -337,7 +323,7 @@ public class TestMongoDBQueryExecution {
     	String query = "select T1.e1, T1.e2, T2.t2e1, T2.t2e2, T3.t3e1, T3.t3e2 from T1 "
     			+ "JOIN T2 ON T1.e1=T2.t2e1 JOIN T3 ON T2.t2e1 = T3.t3e1";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"T1", "T2", "T3"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"T1", "T2", "T3"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$e1");
@@ -360,7 +346,7 @@ public class TestMongoDBQueryExecution {
     public void testSelectNestedMerge()  throws Exception {
     	String query = "select * from payment";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$rental.payment._id");
@@ -383,7 +369,7 @@ public class TestMongoDBQueryExecution {
     			"Products p " +
     			"ON s.SupplierID = p.SupplierID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
@@ -403,7 +389,7 @@ public class TestMongoDBQueryExecution {
     			"Suppliers s " +
     			"ON s.SupplierID = p.SupplierID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
@@ -423,7 +409,7 @@ public class TestMongoDBQueryExecution {
     			"Products p " +
     			"ON s.SupplierID = p.SupplierID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
@@ -443,7 +429,7 @@ public class TestMongoDBQueryExecution {
     			"Suppliers s " +
     			"ON s.SupplierID = p.SupplierID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 1);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
@@ -462,7 +448,7 @@ public class TestMongoDBQueryExecution {
     			"Products p " +
     			"ON s.SupplierID = p.SupplierID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 1);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"});
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
 	    result.append( "_m1","$Suppliers.CompanyName");
@@ -481,7 +467,7 @@ public class TestMongoDBQueryExecution {
     			"Suppliers s " +
     			"ON s.SupplierID = p.SupplierID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
@@ -501,7 +487,7 @@ public class TestMongoDBQueryExecution {
     			"Notes n " +
     			"ON c.customer_id = n.CustomerId";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
@@ -522,7 +508,7 @@ public class TestMongoDBQueryExecution {
                 + "FROM N1 INNER JOIN N2 ON N1.e1 = N2.e1 "
                 + "ORDER BY c_0";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 3);
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "c_0","$_id"); // same expr
@@ -548,7 +534,7 @@ public class TestMongoDBQueryExecution {
     			"Notes n " +
     			"ON c.customer_id = n.CustomerId";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
@@ -575,7 +561,7 @@ public class TestMongoDBQueryExecution {
     			"Notes n " +
     			"ON c.customer_id = n.CustomerId";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
@@ -596,7 +582,7 @@ public class TestMongoDBQueryExecution {
     			"Customer c " +
     			"ON c.customer_id = n.CustomerId";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
@@ -622,7 +608,7 @@ public class TestMongoDBQueryExecution {
     	//"__NN_rental" : { "customer_id" : 1 , "name" : 1 , "__NN_rental" : { "$ifNull" : [ "$rental" , [ { }]]}}}}, { "$unwind" : "$__NN_Notes"}, { "$unwind" : "$__NN_rental"}, { "$project" : { "_m0" : "$name" , "_m1" : "$__NN_Notes.Comment" , "_m2" : "$__NN_rental.amount"}}],
 
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 4);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
@@ -656,7 +642,7 @@ public class TestMongoDBQueryExecution {
 	public void testSimpleGroupBy() throws Exception {
 		String query = "SELECT Country FROM Customers GROUP BY Country";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id._c0");
@@ -671,7 +657,7 @@ public class TestMongoDBQueryExecution {
 	public void testMultipleGroupBy() throws Exception {
 		String query = "SELECT Country,City FROM Customers GROUP BY Country,City";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"});
 
 	    BasicDBObject project = new BasicDBObject();
 	    project.append( "_m0","$_id._c0");
@@ -691,7 +677,7 @@ public class TestMongoDBQueryExecution {
 	public void testDistinctSingle() throws Exception {
 		String query = "SELECT DISTINCT Country FROM Customers";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id._m0");
@@ -706,7 +692,7 @@ public class TestMongoDBQueryExecution {
 	public void testDistinctMulti() throws Exception {
 		String query = "SELECT DISTINCT Country, City FROM Customers";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"});
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id._m0");
@@ -729,7 +715,7 @@ public class TestMongoDBQueryExecution {
 				"on c.customer_id=a.cust_id " +
 				"GROUP BY c.name, a.zip";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject project = new BasicDBObject();
 	    project.append( "_m0","$_id._c0");
@@ -755,7 +741,7 @@ public class TestMongoDBQueryExecution {
 				"ORDER BY c.name, a.zip " +
 				"limit 2";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 6);
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"});
 
 	    BasicDBObject project = new BasicDBObject();
 	    project.append( "_m0","$_id._c0");
@@ -783,7 +769,7 @@ public class TestMongoDBQueryExecution {
     public void testSumWithGroupBy() throws Exception {
     	String query = "SELECT SUM(age) as total FROM users GROUP BY user_id";
 
-    	DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 2);
+    	DBCollection dbCollection = helpExecute(query, new String[]{"users"});
     	BasicDBObject id = new BasicDBObject();
 	    id.append( "_c0","$user_id");
 
@@ -804,7 +790,7 @@ public class TestMongoDBQueryExecution {
     public void testSumWithGroupBy2() throws Exception {
     	String query = "SELECT user_id, status, SUM(age) as total FROM users GROUP BY user_id, status";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"users"});
 
 		BasicDBObject project = new BasicDBObject();
 	    project.append( "_m0","$_id._c0");
@@ -828,7 +814,7 @@ public class TestMongoDBQueryExecution {
     public void testSumWithGroupBy3() throws Exception {
     	String query = "SELECT user_id, SUM(age) as total FROM users GROUP BY user_id";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"users"});
 
 		BasicDBObject project = new BasicDBObject();
 	    project.append( "_m0","$_id._c0");
@@ -850,7 +836,7 @@ public class TestMongoDBQueryExecution {
     public void testAggregateWithHaving() throws Exception {
     	String query = "SELECT SUM(age) as total FROM users GROUP BY user_id HAVING SUM(age) > 250";
 
-    	DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 3);
+    	DBCollection dbCollection = helpExecute(query, new String[]{"users"});
 
 		BasicDBObject project = new BasicDBObject();
 	    project.append( "_m0",1);
@@ -863,7 +849,7 @@ public class TestMongoDBQueryExecution {
 
 	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$group", group),
-	    		new BasicDBObject("$match", QueryBuilder.start("_m0").greaterThan(250).get()),
+	    		new BasicDBObject("$match", QueryBuilder.start("_m0").greaterThan(new BasicDBObject("$numberLong", "250")).get()),
 				new BasicDBObject("$project", project));
 	    ArgumentCaptor<List> actualCapture = ArgumentCaptor.forClass(List.class);
 	    Mockito.verify(dbCollection).aggregate(actualCapture.capture(), Mockito.any(AggregationOptions.class));
@@ -874,7 +860,7 @@ public class TestMongoDBQueryExecution {
     public void testAggregateWithHavingAndWhere() throws Exception {
     	String query = "SELECT SUM(age) as total FROM users WHERE age > 45 GROUP BY user_id HAVING SUM(age) > 250";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 4);
+		DBCollection dbCollection = helpExecute(query, new String[]{"users"});
 
 		BasicDBObject project = new BasicDBObject();
 	    project.append( "_m0",1);
@@ -888,7 +874,7 @@ public class TestMongoDBQueryExecution {
 	    ArrayList<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$match", QueryBuilder.start("age").greaterThan(45).get()),
 	    		new BasicDBObject("$group", group),
-	    		new BasicDBObject("$match", QueryBuilder.start("_m0").greaterThan(250).get()),
+	    		new BasicDBObject("$match", QueryBuilder.start("_m0").greaterThan(new BasicDBObject("$numberLong", "250")).get()),
 				new BasicDBObject("$project", project));
 
 	    ArgumentCaptor<List> actualCapture = ArgumentCaptor.forClass(List.class);
@@ -910,7 +896,7 @@ public class TestMongoDBQueryExecution {
     public void testCountStar() throws Exception {
         String query = "SELECT count(*) FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBObject group = new BasicDBObject();
         group.append( "_id", null);
@@ -929,7 +915,7 @@ public class TestMongoDBQueryExecution {
     public void testCountOnColumn() throws Exception {
         String query = "SELECT count(CategoryName) FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBList eq = new BasicDBList();
         eq.add(0, "$CategoryName");
@@ -957,7 +943,7 @@ public class TestMongoDBQueryExecution {
     public void testCountOnmultipleDifferentColumns() throws Exception {
         String query = "SELECT count(CategoryName), avg(CategoryID) FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBList eq = new BasicDBList();
         eq.add(0, "$CategoryName");
@@ -987,7 +973,7 @@ public class TestMongoDBQueryExecution {
     public void testMultipleAggregateWithCountOnSameColumn() throws Exception {
         String query = "SELECT count(CategoryName), avg(CategoryName) FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
 
         BasicDBList eq = new BasicDBList();
@@ -1018,7 +1004,7 @@ public class TestMongoDBQueryExecution {
     public void testMultipleAggregateOnSameColumn() throws Exception {
         String query = "SELECT sum(CategoryName), avg(CategoryName) FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBObject group = new BasicDBObject();
         group.append( "_id", null);
@@ -1039,7 +1025,7 @@ public class TestMongoDBQueryExecution {
     public void testMultipleAggregateOnSameColumnWithGroupBy() throws Exception {
         String query = "SELECT sum(CategoryName), avg(CategoryName) FROM Categories Group By Picture";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBObject group = new BasicDBObject();
         group.append( "_id", new BasicDBObject("_c0", "$Picture"));
@@ -1060,7 +1046,7 @@ public class TestMongoDBQueryExecution {
     public void testMultipleAggregateOnSameColumn_withCountSTAR() throws Exception {
         String query = "SELECT count(*), avg(CategoryName) FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBObject group = new BasicDBObject();
         group.append( "_id", null);
@@ -1081,7 +1067,7 @@ public class TestMongoDBQueryExecution {
     public void testFunctionInWhere() throws Exception {
         String query = "SELECT CategoryName FROM Categories WHERE CONCAT(CategoryName, '2') = '2'";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         // { "$project" : { "_m0" : { "$concat" : [ "$CategoryName" , "2"]} , "_m1" : "$CategoryName"}},
         BasicDBList params = new BasicDBList();
@@ -1102,7 +1088,7 @@ public class TestMongoDBQueryExecution {
     public void testDateFunction() throws Exception {
         String query = "SELECT YEAR(e2) FROM TIME_TEST";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"TIME_TEST"}, 1);
+        DBCollection dbCollection = helpExecute(query, new String[]{"TIME_TEST"});
 
         BasicDBList params = new BasicDBList();
         params.add("$e2");
@@ -1128,7 +1114,7 @@ public class TestMongoDBQueryExecution {
     public void testSubStr() throws Exception {
         String query = "SELECT SUBSTRING(CategoryName, 3) FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         //{ "$subtract" : [ 3 , 1]}
         BasicDBList subtract = new BasicDBList();
@@ -1156,7 +1142,7 @@ public class TestMongoDBQueryExecution {
     public void testToLower() throws Exception {
         String query = "SELECT LCASE(CategoryName) FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         DBObject ne = buildNE("$CategoryName", null);
         BasicDBObject func = new BasicDBObject("$toLower", "$CategoryName");
@@ -1188,7 +1174,7 @@ public class TestMongoDBQueryExecution {
     public void testSubStr2() throws Exception {
         String query = "SELECT SUBSTRING(CategoryName, CategoryID, 4) FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBList subtract = new BasicDBList();
         subtract.add("$_id");
@@ -1216,7 +1202,7 @@ public class TestMongoDBQueryExecution {
     public void testSelectConstant() throws Exception {
         String query = "SELECT 'hit' FROM Categories";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", new BasicDBObject("$literal", "hit"));
@@ -1229,7 +1215,7 @@ public class TestMongoDBQueryExecution {
     public void testOffsetWithoutLimit() throws Exception {
         String query = "SELECT CategoryName FROM Categories OFFSET 45 ROWS";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", "$CategoryName");
@@ -1245,7 +1231,7 @@ public class TestMongoDBQueryExecution {
     public void testArrtyType() throws Exception {
         String query = "SELECT * FROM ArrayTest";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"ArrayTest"}, 1);
+        DBCollection dbCollection = helpExecute(query, new String[]{"ArrayTest"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", "$id");
@@ -1260,7 +1246,7 @@ public class TestMongoDBQueryExecution {
     public void testArrtyTypeInWhere() throws Exception {
         String query = "SELECT * FROM ArrayTest where column1 is not null";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"ArrayTest"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"ArrayTest"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", "$id");
@@ -1276,7 +1262,7 @@ public class TestMongoDBQueryExecution {
     public void testGeoFunctionInWhere() throws Exception {
         String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((cast(1.0 as double), cast(2.0 as double)),(cast(3.0 as double), cast(4.0 as double)))) or CategoryID=1";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"});
 
         BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
         builder.push("CategoryName");
@@ -1314,7 +1300,7 @@ public class TestMongoDBQueryExecution {
     	for (FunctionMethod fm: this.translator.getPushDownFunctions()) {
     		if (fm.getName().equalsIgnoreCase(name)) {
     			for (FunctionParameter fp:fm.getInputParameters()) {
-    				if (fp.getType().equals(DataTypeManager.DefaultDataTypes.GEOMETRY)) {
+    				if (fp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.GEOMETRY)) {
     					return fm;
     				}
     			}
@@ -1343,7 +1329,7 @@ public class TestMongoDBQueryExecution {
 		Comparison c = new Comparison(function, new Literal(true, Boolean.class), Comparison.Operator.EQ);
 		select.setWhere(c);
 		
-        DBCollection dbCollection = helpExecute(select, new String[]{"Categories"}, 2);
+        DBCollection dbCollection = helpExecute(select, new String[]{"Categories"});
 
         BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
         builder.push("CategoryName");
@@ -1361,14 +1347,14 @@ public class TestMongoDBQueryExecution {
     @Test(expected=TranslatorException.class)
     public void testGeoFunctionInWhereWithFalse() throws Exception {
         String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((cast(1.0 as double), cast(2.0 as double)),(cast(3.0 as double), cast(4.0 as double)))) = false";
-        helpExecute(query, new String[]{"Categories"}, 2);
+        helpExecute(query, new String[]{"Categories"});
     }
 
     @Test
     public void testAdd() throws Exception {
         String query = "SELECT SupplierID+1 FROM Suppliers";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"Suppliers"}, 1);
+        DBCollection dbCollection = helpExecute(query, new String[]{"Suppliers"});
         //{ "$project" : { "_m0" : { "$add" : [ "$_id" , 1]}}}
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0",new BasicDBObject("$add", buildObjectArray("$_id", 1)));
@@ -1430,8 +1416,6 @@ public class TestMongoDBQueryExecution {
 		Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
 		Mockito.stub(connection.getDatabase()).toReturn(db);
 
-		Mockito.stub(db.getCollectionFromString(Mockito.anyString())).toReturn(dbCollection);
-
 		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context, 
 				util.createRuntimeMetadata(), connection);
 		execution.execute();
@@ -1442,7 +1426,7 @@ public class TestMongoDBQueryExecution {
     public void testNestedMergeSelect_one_2_one() throws Exception {
         String query = "SELECT e1, e2, e3 FROM N3";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0","$_id");
@@ -1462,7 +1446,7 @@ public class TestMongoDBQueryExecution {
     public void testNestedMergeSelect_one_2_one_inner_joined() throws Exception {
         String query = "select N1.e1, N2.e2, N3.e3 FROM N1 JOIN N2 ON N1.e1=N2.e1 JOIN N3 ON N2.e1 = N3.e1";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0","$_id");
@@ -1483,7 +1467,7 @@ public class TestMongoDBQueryExecution {
     public void testNestedMergeSelect_one_2_many() throws Exception {
         String query = "SELECT e1, e2, e3 FROM N4 Where N4.e3 = 4";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0","$N2.N4._id");
@@ -1502,7 +1486,7 @@ public class TestMongoDBQueryExecution {
     public void testNestedMergeSelect_one_2_many_onid() throws Exception {
         String query = "SELECT e1, e2, e3 FROM N4 Where N4.e2 = 4";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0","$N2.N4._id");
@@ -1521,7 +1505,7 @@ public class TestMongoDBQueryExecution {
     public void testNestedMergeSelect_one_2_many_inner_joined() throws Exception {
         String query = "select N1.e1, N2.e2, N4.e3 FROM N1 JOIN N2 ON N1.e1=N2.e1 JOIN N4 ON N2.e1 = N4.e2 Order by N1.e1";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0","$_id");
@@ -1542,7 +1526,7 @@ public class TestMongoDBQueryExecution {
     public void testNestedMergeSelect_one_2_many2() throws Exception {
         String query = "select N2.*, N4.* FROM N2 LEFT OUTER JOIN N4 ON N2.e1 = N4.e2";
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"});
 
         // [{ "$project" : { "N2.e1" : 1 , "N2.e2" : 1 , "N2.e3" : 1 , "__NN_N4" : { "$ifNull" : [ "$N2.N4" , [ { }]]}}},
         //{ "$match" : { "N2" : { "$exists" : "true" , "$ne" :  null }}}, { "$unwind" : "$__NN_N4"}, { "$project" : { "c_0" : "$_id" , "c_1" : "$N2.e2" , "c_2" : "$N2.e3" , "c_3" : "$__NN_N4._id" , "c_4" : "$_id" , "c_5" : "$__NN_N4.e3"}}, { "$skip" : 0}, { "$limit" : 100}]
@@ -1577,7 +1561,7 @@ public class TestMongoDBQueryExecution {
                 + "LEFT JOIN N4 ON N2.e1 = N4.e2 ";
 
 
-        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"});
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0","$_id");

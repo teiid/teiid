@@ -17,7 +17,6 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,7 +37,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 
 import com.mongodb.AggregationOptions;
-import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -70,12 +68,6 @@ public class TestMongoDBDirectQueryExecution {
 		
 		Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
 		Mockito.stub(connection.getDatabase()).toReturn(db);
-		
-		AggregationOutput output = Mockito.mock(AggregationOutput.class);
-		Mockito.stub(output.results()).toReturn(new ArrayList<DBObject>());
-		
-		Mockito.stub(dbCollection.aggregate(Mockito.any(DBObject.class),Mockito.any(DBObject.class))).toReturn(output);
-		
 		
 		Argument arg = new Argument(Direction.IN, null, String.class, null);
 		arg.setArgumentValue(new Literal("MyTable;{$match:{\"id\":\"$1\"}};{$project:{\"_m0\":\"$user\"}}", String.class));

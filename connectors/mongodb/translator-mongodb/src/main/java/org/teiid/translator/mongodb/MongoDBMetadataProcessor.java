@@ -195,11 +195,11 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             }
             else {
                 column = table.getColumnByName(columnKey);
-            	String dataType = getDataType(((BasicDBList)value).get(0))+"[]";
+            	String dataType = getDataType(((BasicDBList)value).get(0))+"[]"; //$NON-NLS-1$
                 if (column == null) {
                     column = metadataFactory.addColumn(columnKey, dataType, table);
                     setNativeType(column, null);
-                } else if (!column.getRuntimeType().equals(dataType)) { //$NON-NLS-1$
+                } else if (!column.getRuntimeType().equals(dataType)) { 
                     //type conflict
                     MetadataFactory.setDataType(TypeFacility.RUNTIME_NAMES.OBJECT, column, metadataFactory.getDataTypes(), false);
                     column.setNativeType(null);

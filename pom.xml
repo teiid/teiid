@@ -51,7 +51,7 @@
         <version.commons-logging>1.1</version.commons-logging>
         <version.commons-net>3.5</version.commons-net>
 
-        <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
+        <version.de.flapdoodle.embed.mongo>2.2.0</version.de.flapdoodle.embed.mongo>
 
         <version.gdata-core>1.47.1</version.gdata-core>
         <version.hadoop-common>2.2.0</version.hadoop-common>
@@ -87,7 +87,7 @@
         <version.org.jboss.arquillian.testenricher>1.4.0.Final</version.org.jboss.arquillian.testenricher>
         <version.org.jboss.oreva>1.0.0</version.org.jboss.oreva>
         <version.org.mockito>1.10.19</version.org.mockito>
-        <version.org.mongodb.mongo-java-driver>3.6.3</version.org.mongodb.mongo-java-driver>
+        <version.org.mongodb.mongo-java-driver>3.9.1</version.org.mongodb.mongo-java-driver>
         <version.org.reflections>0.9.9</version.org.reflections>
         <version.org.springframework>3.2.12.RELEASE</version.org.springframework>
         <version.org.springframework.asm>3.1.4.RELEASE</version.org.springframework.asm>

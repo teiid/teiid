@@ -17,12 +17,10 @@
  */
 package org.teiid.resource.adapter.mongodb;
 
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.net.ssl.SSLSocketFactory;
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
@@ -75,11 +73,7 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         return new BasicConnectionFactory<MongoDBConnectionImpl>() {
             @Override
             public MongoDBConnectionImpl getConnection() throws ResourceException {
-                try {
-                    return new MongoDBConnectionImpl(MongoDBManagedConnectionFactory.this.database, getConnectionURI());
-                } catch (UnknownHostException e) {
-                    throw new ResourceException(e);
-                }
+                return new MongoDBConnectionImpl(MongoDBManagedConnectionFactory.this.database, getConnectionURI());
             }
         };
 		
@@ -120,7 +114,7 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         //if options needed then use URL format
         final MongoClientOptions.Builder builder = MongoClientOptions.builder();
         if (getSsl()) {
-            builder.socketFactory(SSLSocketFactory.getDefault());
+            builder.sslEnabled(true);
         }
         return builder.build();
 	}

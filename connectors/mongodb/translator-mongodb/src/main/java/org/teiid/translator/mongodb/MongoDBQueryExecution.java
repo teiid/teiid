@@ -31,7 +31,11 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.*;
+import com.mongodb.BasicDBObject;
+import com.mongodb.Cursor;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 
 public class MongoDBQueryExecution extends MongoDBBaseExecution implements ResultSetExecution {
 	private Select command;
@@ -120,8 +124,9 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 		if (this.results != null && this.results.hasNext()) {
 			DBObject result = this.results.next();
 			if (result != null) {
-				ArrayList row = new ArrayList();
-				for (int i = 0; i < this.visitor.selectColumns.size();i++) {
+			    int cols = this.visitor.selectColumns.size();
+				ArrayList<Object> row = new ArrayList<>(cols);
+				for (int i = 0; i < cols;i++) {
 					row.add(this.executionFactory.retrieveValue(result.get(this.visitor.selectColumns.get(i)), this.expectedTypes[i], this.mongoDB, this.visitor.selectColumns.get(i), this.visitor.selectColumnReferences.get(i)));
 				}
 				return row;
