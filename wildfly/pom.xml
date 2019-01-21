@@ -291,7 +291,6 @@
             <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
             <version>${version.org.wildfly.build-tools}</version>
         </dependency>
-            
         </dependencies>
 	</dependencyManagement>
   

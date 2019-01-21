@@ -91,8 +91,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jboss.spec.javax.servlet</groupId>
-            <artifactId>jboss-servlet-api_3.1_spec</artifactId>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
         
         <dependency>
@@ -148,12 +148,6 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>javax.servlet-api</artifactId>                
-                </exclusion>
-            </exclusions>            
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -187,10 +181,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-          <groupId>org.jboss.spec.javax.transaction</groupId>
-          <artifactId>jboss-transaction-api_1.2_spec</artifactId>
-          <scope>test</scope>
-        </dependency>        
+            <groupId>javax.transaction</groupId>
+            <artifactId>javax.transaction-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-runtime</artifactId>
