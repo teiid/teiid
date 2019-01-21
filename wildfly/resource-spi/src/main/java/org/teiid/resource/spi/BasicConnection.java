@@ -17,6 +17,7 @@
  */
 package org.teiid.resource.spi;
 
+import javax.resource.NotSupportedException;
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 import javax.resource.cci.ConnectionMetaData;
@@ -35,7 +36,7 @@ public abstract class BasicConnection implements Connection, org.teiid.resource.
 
 	@Override
 	public LocalTransaction getLocalTransaction() throws ResourceException {
-		return null;
+		throw new NotSupportedException();
 	}
 
 	@Override
