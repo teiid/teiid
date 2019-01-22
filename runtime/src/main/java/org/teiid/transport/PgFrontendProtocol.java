@@ -17,11 +17,6 @@
  */
 package org.teiid.transport;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -42,6 +37,11 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCServerRemote;
 import org.teiid.runtime.RuntimePlugin;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
 
 /**
  * Represents the messages going from PG ODBC Client --> back end Server  
@@ -271,6 +271,9 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         Object[] params = new Object[paramCount];
         for (int i = 0; i < paramCount; i++) {
             int paramLen = data.readInt();
+            if (paramLen == -1) {
+                continue;
+            }
             byte[] paramdata = createByteArray(paramLen);
             data.readFully(paramdata);
             

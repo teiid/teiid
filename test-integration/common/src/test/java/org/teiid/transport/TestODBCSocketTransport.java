@@ -299,6 +299,21 @@ public class TestODBCSocketTransport {
         ps.execute();
         assertEquals(1, ps.getUpdateCount());
     }
+    
+    @Test public void testPreparedNull() throws Exception {
+        Statement stmt = conn.createStatement();
+        stmt.execute("create temporary table foobar (id integer, optional varchar);");
+        
+        PreparedStatement ps = conn.prepareStatement("insert into foobar (id, optional) values (?, ?)");
+        ps.setInt(1, 1);
+        ps.setString(2, null);
+        ps.execute();
+        assertEquals(1, ps.getUpdateCount());
+        
+        ResultSet rs = stmt.executeQuery("select optional from foobar");
+        rs.next();
+        assertNull(rs.getString(1));
+    }
 	
 	@Test public void testPreparedError() throws Exception {
 		PreparedStatement stmt = conn.prepareStatement("select cast(? as integer)");
