@@ -50,6 +50,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.deployers.PgCatalogMetadataStore;
@@ -422,7 +423,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                             //to prevent closure
                             portalMap.remove(portalName); 
                         }
-        				client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
+        				client.sendCommandComplete("DECLARE CURSOR"); //$NON-NLS-1$		                            
         				completion.getResultsReceiver().receiveResults(0);
         			}
         		} catch (Throwable e) {
@@ -509,7 +510,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		Cursor cursor = this.cursorMap.remove(prepareName);
 		if (cursor != null) {
 			closePortal(cursor);
-			this.client.sendCommandComplete("CLOSE CURSOR", null); //$NON-NLS-1$
+			this.client.sendCommandComplete("CLOSE CURSOR"); //$NON-NLS-1$
 		}
 	}	
 	
@@ -535,14 +536,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     			try {
 	                if (future.get()) {
                 		List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-                		String tag = PgBackendProtocol.getCompletionTag(sql, null);
+                		String tag = PgBackendProtocol.getCompletionTag(sql);
                         client.sendResults(sql, stmt.getResultSet(), cols, completion, CursorDirection.FORWARD, -1, tag.equals("SELECT") || tag.equals("SHOW"), null); //$NON-NLS-1$ //$NON-NLS-2$
 	                } else {
 	                    if (autoCommit ^ connection.getAutoCommit()) {
 	                        //toggled autocommit, any portal is now invalid
 	                        closePortals(); 
 	                    }
-	                	client.sendUpdateCount(sql, stmt.getUpdateCount());
+	                    sendUpdateCount(sql, stmt);
 	                	updateSessionProperties();
 	                	completion.getResultsReceiver().receiveResults(1);
 	                }
@@ -554,6 +555,16 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     		}
 		});    	
     }	
+    
+    private void sendUpdateCount(final String sql,
+            final StatementImpl stmt) throws SQLException {
+        String keyword = SqlUtil.getKeyword(sql);
+        if (keyword.equalsIgnoreCase("INSERT")) { //$NON-NLS-1$
+            client.sendCommandComplete(keyword, 0, stmt.getUpdateCount());
+        } else {
+            client.sendCommandComplete(sql, stmt.getUpdateCount());
+        }
+    }
 	
 	@Override
 	public void prepare(String prepareName, String sql, int[] paramType) {
@@ -772,7 +783,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		                	query.rs = stmt.getResultSet();
 		                	sendCursorResults(query, maxRows);
 		                } else {
-		                	client.sendUpdateCount(query.prepared.sql, stmt.getUpdateCount());
+		                    sendUpdateCount(query.prepared.sql, stmt);
 		                	updateSessionProperties();
 		                	doneExecuting();
 		                }
@@ -1288,7 +1299,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    				String plan_name = m.group(1);
 		    				plan_name = normalizeName(plan_name);
 		    				closePreparedStatement(plan_name);
-		    				client.sendCommandComplete("DEALLOCATE", null); //$NON-NLS-1$
+		    				client.sendCommandComplete("DEALLOCATE"); //$NON-NLS-1$
 		    				results.getResultsReceiver().receiveResults(1);
 		    			}
 		    			else {
