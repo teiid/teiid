@@ -54,7 +54,6 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
-import org.teiid.logging.LogConstants;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.TestEmbeddedServer;
 import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
@@ -289,6 +288,17 @@ public class TestODBCSocketTransport {
 		ResultSet rs = stmt.executeQuery();
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}	
+	
+    @Test public void testInsertComplete() throws Exception {
+        Statement stmt = conn.createStatement();
+        stmt.execute("create temporary table foobar (id integer, optional varchar);");
+        
+        PreparedStatement ps = conn.prepareStatement("insert into foobar (id, optional) values (?, ?)");
+        ps.setInt(1, 1);
+        ps.setString(2, "a");
+        ps.execute();
+        assertEquals(1, ps.getUpdateCount());
+    }
 	
 	@Test public void testPreparedError() throws Exception {
 		PreparedStatement stmt = conn.prepareStatement("select cast(? as integer)");

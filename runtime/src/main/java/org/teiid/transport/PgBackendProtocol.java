@@ -397,11 +397,6 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	}
 
 	@Override
-	public void sendUpdateCount(String sql, int updateCount) {
-		sendCommandComplete(sql, updateCount);
-	}
-
-	@Override
 	public void statementClosed() {
 		startMessage('3');
 		sendMessage();
@@ -437,15 +432,16 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	}
 
 	@Override
-	public void sendCommandComplete(String sql, Integer count) {
+	public void sendCommandComplete(String sql, Integer... count) {
 		startMessage('C');
 		String tag = getCompletionTag(sql, count);
 		writeString(tag);
 		sendMessage();
 	}
 
-	public static String getCompletionTag(String sql, Integer count) {
+	public static String getCompletionTag(String sql, Integer... count) {
 		String tag;
+		boolean useCount = false;
 		if (StringUtil.startsWithIgnoreCase(sql, "BEGIN")) {
 		    tag = "BEGIN";
 		} else if (StringUtil.startsWithIgnoreCase(sql, "START TRANSACTION")) {
@@ -453,9 +449,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		} else if (sql.indexOf(' ') == -1 || sql.equals("CLOSE CURSOR")) {
 			//should already be a completion tag
 			tag = sql.toUpperCase();
-			if (count != null) {
-				tag += " " + count;
-			}
+			useCount = true;
 		} else if (StringUtil.startsWithIgnoreCase(sql, "SET ")) {
 			tag = "SET";
 		} else {
@@ -463,10 +457,13 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			if (tag.equals("EXEC") || tag.equals("CALL")) {
 				tag = "SELECT"; 
 			}
-			if (count != null && !(tag.equalsIgnoreCase("ROLLBACK") || tag.equalsIgnoreCase("SAVEPOINT") || tag.equalsIgnoreCase("RELEASE"))) {
-				tag += " " + count;
-			}
+			useCount = true;
 		}
+        if (useCount && count != null && !(tag.equalsIgnoreCase("ROLLBACK") || tag.equalsIgnoreCase("SAVEPOINT") || tag.equalsIgnoreCase("RELEASE"))) {
+            for (int i = 0; i < count.length; i++) {
+                tag += " " + count[i];
+            }
+        }
 		return tag;
 	}
 
