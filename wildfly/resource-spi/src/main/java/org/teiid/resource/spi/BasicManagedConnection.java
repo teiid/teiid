@@ -95,7 +95,27 @@ public class BasicManagedConnection implements ManagedConnection {
 
 	@Override
 	public LocalTransaction getLocalTransaction() throws ResourceException {
-		return null;
+	    javax.resource.cci.LocalTransaction localTxn = this.physicalConnection.getLocalTransaction();
+	    if (localTxn == null) {
+	        return null;
+	    }
+		return new LocalTransaction() {
+            
+            @Override
+            public void rollback() throws ResourceException {
+                localTxn.rollback();
+            }
+            
+            @Override
+            public void commit() throws ResourceException {
+                localTxn.commit();
+            }
+            
+            @Override
+            public void begin() throws ResourceException {
+                localTxn.begin();
+            }
+        };
 	}
 
 	@Override

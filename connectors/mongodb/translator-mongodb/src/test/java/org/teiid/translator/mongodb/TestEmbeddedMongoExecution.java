@@ -61,6 +61,11 @@ public class TestEmbeddedMongoExecution {
     	utility = new TranslationUtility(metadata);
     	
     	mongodb = new EmbeddedMongoDB();
+    	
+        MongoClient client = new MongoClient("localhost", 12345);
+        MongoDBConnection conn = getConnection(client);
+        translator.initCapabilities(conn);
+        conn.close();
     }
     
     @Before

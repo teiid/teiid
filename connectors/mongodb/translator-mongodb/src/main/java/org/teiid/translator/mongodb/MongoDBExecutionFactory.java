@@ -63,8 +63,10 @@ import org.teiid.util.Version;
 import com.mongodb.AggregationOptions;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBRef;
+import com.mongodb.MongoException;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
@@ -75,6 +77,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	public static final Version TWO_4 = Version.getVersion("2.4"); //$NON-NLS-1$
     public static final Version TWO_6 = Version.getVersion("2.6"); //$NON-NLS-1$
     public static final Version THREE_0 = Version.getVersion("3.0"); //$NON-NLS-1$
+    public static final Version FOUR_0 = Version.getVersion("4.0"); //$NON-NLS-1$
     
     public static final String FUNC_GEO_WITHIN = "geoWithin"; //$NON-NLS-1$
 	public static final String FUNC_GEO_INTERSECTS = "geoIntersects"; //$NON-NLS-1$
@@ -676,7 +679,39 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	    if (this.version.compareTo(TWO_4) < 0) {
 	        return AggregationOptions.builder().batchSize(batchSize).outputMode(AggregationOptions.OutputMode.INLINE).build();
 	    }
-        return AggregationOptions.builder().batchSize(batchSize).outputMode(AggregationOptions.OutputMode.CURSOR)
-                .allowDiskUse(useDisk()).build();
+	    if (this.version.compareTo(TWO_6) < 0) {
+	        return AggregationOptions.builder().batchSize(batchSize).outputMode(AggregationOptions.OutputMode.CURSOR)
+	                .allowDiskUse(useDisk()).build();
+	    }
+        return AggregationOptions.builder().batchSize(batchSize).allowDiskUse(useDisk()).build();
+	}
+	
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
+	    return true;
+	}
+	
+	@Override
+	public TransactionSupport getTransactionSupport() {
+	    if (this.version.compareTo(FOUR_0) < 0) {
+	        return TransactionSupport.NONE;
+	    }
+	    return TransactionSupport.LOCAL;
+	}
+	
+	@Override
+	public void initCapabilities(MongoDBConnection connection)
+	        throws TranslatorException {
+	    super.initCapabilities(connection);
+	    
+	    try {
+    	    CommandResult result = connection.getDatabase().command(new BasicDBObject("buildInfo", 1)); //$NON-NLS-1$
+    	    String stringVersion = (String) result.get("version"); //$NON-NLS-1$
+    	    if (stringVersion != null) {
+    	        this.version = Version.getVersion(stringVersion); 
+    	    }
+	    } catch (MongoException e) {
+	        //use the default
+	    }
 	}
 }
