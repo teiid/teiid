@@ -77,10 +77,7 @@ public interface ODBCClientRemote {
 	//	CommandComplete (B)
 	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, CursorDirection direction, int rowCount, boolean describeRows, short[] resultColumnFormat);
 	
-	void sendCommandComplete(String sql, Integer count);	
-
-	//	CommandComplete (B)
-	void sendUpdateCount(String sql, int updateCount);
+	void sendCommandComplete(String sql, Integer... count);	
 
 	//	ReadyForQuery (B)
 	void ready(boolean inTransaction, boolean failedTransaction);
