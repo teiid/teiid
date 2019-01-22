@@ -21,6 +21,7 @@ package org.teiid.resource.adapter.mongodb;
 import java.util.List;
 
 import javax.resource.ResourceException;
+import javax.resource.cci.LocalTransaction;
 
 import org.teiid.core.BundleUtil;
 import org.teiid.mongodb.MongoDBConnection;
@@ -31,7 +32,9 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCredential;
+import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.ClientSession;
 
 
 public class MongoDBConnectionImpl extends BasicConnection implements MongoDBConnection {
@@ -69,5 +72,44 @@ public class MongoDBConnectionImpl extends BasicConnection implements MongoDBCon
 		if (this.client != null) {
 			this.client.close();
 		}
+	}
+	
+	@Override
+	public LocalTransaction getLocalTransaction() throws ResourceException {
+	    try {
+	        ClientSession session = this.client.startSession();
+	        
+	        return new LocalTransaction() {
+	            
+	            @Override
+	            public void rollback() throws ResourceException {
+	                try {
+	                    session.abortTransaction();
+	                } catch (MongoException e) {
+	                    throw new ResourceException(e.getMessage(), e);
+	                }
+	            }
+	            
+	            @Override
+	            public void commit() throws ResourceException {
+	                try {
+                       session.commitTransaction();
+                    } catch (MongoException e) {
+                        throw new ResourceException(e.getMessage(), e);
+                    }
+	            }
+	            
+	            @Override
+	            public void begin() throws ResourceException {
+	                try {
+                       session.startTransaction();
+                    } catch (MongoException e) {
+                        throw new ResourceException(e.getMessage(), e);
+                    }
+	            }
+	        };
+	    } catch (MongoException e) {
+	        throw new ResourceException(e.getMessage(), e);
+	    }
 	}
 }

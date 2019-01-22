@@ -261,17 +261,22 @@ public class AdminFactory {
 		}
 
 		private void createConnectionFactory(String deploymentName,	String rarName, Properties properties)	throws AdminException {
-
+		    String transactionSupport = (String)properties.remove("transaction-support");
+		    
+		    if (transactionSupport == null) {
+		        transactionSupport = "NoTransaction";
+		    }
+		    
 			if (!getInstalledResourceAdaptorNames().contains(rarName)) {
 				///subsystem=resource-adapters/resource-adapter=fileDS:add
-				addArchiveResourceAdapter(rarName);
+				addArchiveResourceAdapter(rarName, transactionSupport);
 			}
 
 			//AS-4776 HACK - BEGIN
 			else {
 				// add duplicate resource adapter AS-4776 Workaround
 				String moduleName = getResourceAdapterModuleName(rarName);
-				addModuleResourceAdapter(deploymentName, moduleName);
+				addModuleResourceAdapter(deploymentName, moduleName, transactionSupport);
 				rarName = deploymentName;
 			}
 			//AS-4776 HACK - END
@@ -357,17 +362,17 @@ public class AdminFactory {
 		}
 
 		// /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar:add(archive=teiid-connector-ws.rar, transaction-support=NoTransaction)
-		private void addArchiveResourceAdapter(String rarName) throws AdminException {
+		private void addArchiveResourceAdapter(String rarName, String transactionSupport) throws AdminException {
 			cliCall("add", new String[] { "subsystem", "resource-adapters",
 					"resource-adapter", rarName },
-					new String[] { "archive", rarName, "transaction-support","NoTransaction" },
+					new String[] { "archive", rarName, "transaction-support", transactionSupport },
 					new ResultCallback());
 		}
 		
-		private void addModuleResourceAdapter(String rarName, String moduleName) throws AdminException {
+		private void addModuleResourceAdapter(String rarName, String moduleName, String transactionSupport) throws AdminException {
 			cliCall("add", new String[] { "subsystem", "resource-adapters",
 					"resource-adapter", rarName },
-					new String[] { "module", moduleName, "transaction-support","NoTransaction" },
+					new String[] { "module", moduleName, "transaction-support", transactionSupport },
 					new ResultCallback());			
 		}
 

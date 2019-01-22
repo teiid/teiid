@@ -82,7 +82,7 @@
 
          </connection-definition>
          
-         <transaction-support>NoTransaction</transaction-support>
+         <transaction-support>LocalTransaction</transaction-support>
         
         <authentication-mechanism>
             <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
