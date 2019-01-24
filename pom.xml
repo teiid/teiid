@@ -27,6 +27,9 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         
+        <!-- property to control building of wildfly so that it can be turned off for teiid core only builds -->
+        <!--wildfly>true</wildfly-->
+
         <version.javadoc.plugin>3.0.1</version.javadoc.plugin>
 
         <derby.version>10.2.1.6</derby.version>
@@ -173,11 +176,21 @@
 		</developer>
 	</developers>
 	<profiles>
+        <profile>
+        <id>default</id>
+        <activation>
+            <activeByDefault>true</activeByDefault>
+        </activation>
+        <modules>
+            <module>wildfly</module>
+        </modules>
+        </profile>
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
 	<profile>
 		<id>release</id>
 		<modules>
-			<module>build</module>
+ 			<module>build</module>
+            <module>wildfly</module>
 		</modules>
 	</profile>
       
@@ -185,6 +198,7 @@
 		<id>final-release</id>
 		<modules>
 			<module>build</module>
+            <module>wildfly</module>
 		</modules>
 		<build>
 			<plugins>
@@ -220,7 +234,36 @@
 			</plugins>
 		</build>
 	</profile>
-    
+    <profile>
+         <!--
+          This is for building the core teiid, without wildfly.  Also, don't do gpg signing.
+          -->
+      <id>core-release</id>
+      <modules>
+            <module>build</module>
+      </modules>
+		<build>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>${version.javadoc.plugin}</version>
+					<configuration>
+						<maxmemory>512m</maxmemory>
+						<!-- <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames> -->
+						<failOnError>false</failOnError>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</build>
+    </profile>
     <profile>
          <!--
           This is to enable faster build for development time.
@@ -231,7 +274,8 @@
         <skipTests>true</skipTests>
       </properties>
       <modules>
-        <module>build</module>
+            <module>build</module>
+            <module>wildfly</module>
       </modules>
     </profile>   
 	</profiles>
@@ -1562,8 +1606,7 @@
 		<module>eclipselink-platform</module>		
 		<module>olingo-common</module>
 		<module>olingo</module>
-                <module>connectors</module>
+        <module>connectors</module>
 		<module>saxon-xom</module>
-		<module>wildfly</module>
 	</modules>
 </project>
