@@ -267,6 +267,11 @@ public class TestSocketRemoting {
 				return serverInstance;
 			}
 			
+			@Override
+			public String resolveHostname(InetAddress addr) {
+			    return null;
+			}
+			
 		}, false, new UrlServerDiscovery(new TeiidURL("0.0.0.0", 1, false)), new Properties()); //$NON-NLS-1$
 		return connection;
 	}

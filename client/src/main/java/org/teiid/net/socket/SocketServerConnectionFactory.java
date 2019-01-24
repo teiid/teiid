@@ -20,6 +20,7 @@ package org.teiid.net.socket;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.util.Properties;
 
@@ -45,6 +46,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	private static SocketServerConnectionFactory INSTANCE;
 
     private ObjectChannelFactory channelFactory;
+    
+    private DefaultHostnameResolver resolver = new DefaultHostnameResolver();
 	
 	//config properties
 	private long synchronousTtl = 240000l;
@@ -114,6 +117,13 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 
 	public void setSynchronousTtl(long synchronousTTL) {
 		this.synchronousTtl = synchronousTTL;
+	}
+	
+	@Override
+	public String resolveHostname(InetAddress addr) {
+	    //only wait 100 milli seconds by default
+	    //this could be made configurable if needed
+	    return resolver.resolve(addr, 100);
 	}
 
 }

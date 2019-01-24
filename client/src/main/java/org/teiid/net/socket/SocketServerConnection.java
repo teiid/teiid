@@ -142,7 +142,7 @@ public class SocketServerConnection implements ServerConnection {
 
 		SocketServerInstance instance = this.serverInstance;
 		
-		updateConnectionProperties(connProps, instance.getLocalAddress(), true);
+        updateConnectionProperties(connProps, instance.getLocalAddress(), true, this.connectionFactory);
 
 		LogonResult newResult = null;
 
@@ -169,18 +169,21 @@ public class SocketServerConnection implements ServerConnection {
 		this.logonResult = newResult;
 	}
 	
-	public static void updateConnectionProperties(Properties connectionProperties, InetAddress addr, boolean setMac) {
+	public static void updateConnectionProperties(Properties connectionProperties, InetAddress addr, boolean setMac, HostnameResolver resolver) {
 		if (addr == null) {
 			return;
 		}
 		String address = addr.getHostAddress();
 		Object old = connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, address);
 		if (old == null || !address.equals(old)) {
-		    if (addr.isLoopbackAddress()) {
-		        connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
-		    } else {
-		        connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, "localhost"); //$NON-NLS-1$
+		    String hostname = null;
+		    if (resolver != null) {
+		        hostname = resolver.resolveHostname(addr);
 		    }
+		    if (hostname == null) {
+		        hostname = "unknown"; //$NON-NLS-1$
+		    }
+	        connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, hostname);
 			if (setMac) {
 				try {
 					NetworkInterface ni = NetworkInterface.getByInetAddress(addr);

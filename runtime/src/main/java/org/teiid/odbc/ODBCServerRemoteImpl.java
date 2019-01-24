@@ -309,7 +309,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			info.put(TeiidURL.CONNECTION.APP_NAME, applicationName);
 			
 			if (remoteAddress instanceof InetSocketAddress) {
-				SocketServerConnection.updateConnectionProperties(info, ((InetSocketAddress)remoteAddress).getAddress(), false);
+				//we currently don't pass a hostname resolver as
+			    //this is typically the hostname of the load balancer
+			    SocketServerConnection.updateConnectionProperties(info, ((InetSocketAddress)remoteAddress).getAddress(), false, null);
 			}
 			
 			this.connection =  driver.connect(url, info);

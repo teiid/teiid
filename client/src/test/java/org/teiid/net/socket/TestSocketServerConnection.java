@@ -130,7 +130,7 @@ public class TestSocketServerConnection {
 	@Test public void testSocketServerConnection_PropertiesClientHost() throws Throwable {
 		Properties p = new Properties();
 		
-		SocketServerConnection.updateConnectionProperties(p, InetAddress.getLocalHost(), true);
+		SocketServerConnection.updateConnectionProperties(p, InetAddress.getLocalHost(), true, null);
        
 		assertTrue(p.containsKey(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
 		assertTrue(p.containsKey(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
@@ -228,6 +228,11 @@ public class TestSocketServerConnection {
 				}
 				Mockito.stub(instance.isOpen()).toReturn(true);
 				return instance;
+			}
+			
+			@Override
+			public String resolveHostname(InetAddress addr) {
+			    return null;
 			}
 			
 		};
