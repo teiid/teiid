@@ -693,6 +693,11 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	
 	@Override
 	public TransactionSupport getTransactionSupport() {
+	    TransactionSupport transactionSupport = super.getTransactionSupport();
+        if (transactionSupport != TransactionSupport.XA) {
+	        //the user set something
+	        return transactionSupport;
+	    }
 	    if (this.version.compareTo(FOUR_0) < 0) {
 	        return TransactionSupport.NONE;
 	    }

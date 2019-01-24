@@ -4,6 +4,10 @@
         <resource-adapter id="mongodb">
             <module slot="main" id="org.jboss.teiid.resource-adapter.mongodb"/>
             <transaction-support>NoTransaction</transaction-support>
+             <!-- if you are using mongodb 4+ in a replica set you can use local transactions instead:
+             
+            <transaction-support>LocalTransaction</transaction-support> 
+            -->
             <connection-definitions>
                 <connection-definition class-name="org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory" 
                         jndi-name="java:/mongoDS" 
