@@ -467,16 +467,6 @@ public class AdminFactory {
 		}
 
 		
-		/**
-		 * Use this method to create JDBC driver based connection, XA-datasource or Resource Adapter.
-		 * Template Name defines the type of connection, if the template name is ends with "-xa" it is 
-		 * considered to be a XA based data source.
-		 * 
-		 * @param deploymentName This becomes the pool name, as well as the jndi name of the source
-		 * @param templateName type of source. See {@link getDataSourceNames} for all available types.
-		 * @param properties All properties needed to create a data source, like connection-url, user, password
-		 *        to see all the properties use {@link getTemplatePropertyDefinitions} to retrieve the full list 
-		 */
 		@Override
 		public void createDataSource(String deploymentName,	String templateName, Properties properties)	throws AdminException {
 			flush();
