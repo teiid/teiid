@@ -270,7 +270,7 @@ public class TestSocketRemoting {
 					throws CommunicationException, IOException {
 				return serverInstance;
 			}
-			
+
 			@Override
 			public void connected(SocketServerInstance instance,
 					SessionToken session) {
@@ -281,6 +281,11 @@ public class TestSocketRemoting {
 			public void disconnected(SocketServerInstance instance,
 					SessionToken session) {
 				
+			}
+			
+			@Override
+			public String resolveHostname(InetAddress addr) {
+			    return null;
 			}
 			
 		}, false, new UrlServerDiscovery(new TeiidURL("0.0.0.0", 1, false)), new Properties()); //$NON-NLS-1$

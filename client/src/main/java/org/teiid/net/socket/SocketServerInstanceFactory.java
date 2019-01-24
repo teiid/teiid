@@ -28,8 +28,7 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.HostInfo;
 
-
-public interface SocketServerInstanceFactory {
+public interface SocketServerInstanceFactory extends HostnameResolver {
 	
 	SocketServerInstance getServerInstance(HostInfo info) throws CommunicationException, IOException;
 	

@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.util.*;
 import java.util.concurrent.Future;
@@ -138,6 +139,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	
     private ObjectChannelFactory channelFactory;
 	private Timer pingTimer;
+
+    private DefaultHostnameResolver resolver = new DefaultHostnameResolver();
 	
 	private HashMap<HostInfo, Set<SessionToken>> sessions = new HashMap<HostInfo, Set<SessionToken>>();
 	
@@ -322,6 +325,13 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 
 	public void setSynchronousTtl(long synchronousTTL) {
 		this.synchronousTtl = synchronousTTL;
+	}
+	
+	@Override
+	public String resolveHostname(InetAddress addr) {
+	    //only wait 100 milli seconds by default
+	    //this could be made configurable if needed
+	    return resolver.resolve(addr, 100);
 	}
 
 	public int getMaxCachedInstances() {
