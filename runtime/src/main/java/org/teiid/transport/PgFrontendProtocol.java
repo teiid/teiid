@@ -50,15 +50,6 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 @SuppressWarnings("nls")
 public class PgFrontendProtocol extends ByteToMessageDecoder {
 
-	private static final int LO_CREAT =	957;
-	private static final int LO_OPEN = 952;
-	private static final int LO_CLOSE = 953;
-	private static final int LO_READ = 954;
-	private static final int LO_WRITE = 955;
-	private static final int LO_LSEEK = 956;
-	private static final int LO_TELL = 958;
-	private static final int LO_UNLINK = 964;
-	
 	private int maxObjectSize;
 	private Byte messageType;
 	private Integer dataLength;
@@ -270,12 +261,10 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         int paramCount = data.readShort();
         Object[] params = new Object[paramCount];
         for (int i = 0; i < paramCount; i++) {
-            int paramLen = data.readInt();
-            if (paramLen == -1) {
+            byte[] paramdata = readByteArray(data);
+            if (paramdata == null) {
                 continue;
             }
-            byte[] paramdata = createByteArray(paramLen);
-            data.readFully(paramdata);
             
             // the params can be either text or binary
             if (formatCodeCount == 0 || (formatCodeCount == 1 && formatCodes[0] == 0) || formatCodes[i] == 0) {
@@ -358,8 +347,17 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 	}	
 	
 	/**
-	 * LO functions are always binary, so I am ignoring the formats, return types. The below is not used
-	 * leaving for future if ever LO is revisited
+	 *  For this to eventually work, we need to provide the relevant functions - with reserved oids
+	 *     
+	private static final int LO_CREAT = 957;
+    private static final int LO_OPEN = 952;
+    private static final int LO_CLOSE = 953;
+    private static final int LO_READ = 954;
+    private static final int LO_WRITE = 955;
+    private static final int LO_LSEEK = 956;
+    private static final int LO_TELL = 958;
+    private static final int LO_UNLINK = 964;
+	 * 
 	 */
 	@SuppressWarnings("unused")
 	private Object buildFunctionCall(NullTerminatedStringDataInputStream data) throws IOException {
@@ -373,47 +371,28 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 		}
 		
 		// arguments	
-		data.readShort(); // ignore the param count; we know them by functions supported.
-		int oid = readInt(data);
-		switch(funcID) {
-		case LO_CREAT:
-			break;
-		case LO_OPEN:
-			int mode = readInt(data);
-			break;
-		case LO_CLOSE:
-			break;			
-		case LO_READ:
-			int length = readInt(data);
-			break;
-		case LO_WRITE:
-			byte[] contents = readByteArray(data);
-			break;
-		case LO_LSEEK:
-			int offset = readInt(data);
-			int where = readInt(data);
-			break;
-		case LO_TELL:
-			break;
-		case LO_UNLINK:			
-			break;		
+		short args = data.readShort(); 
+		
+		for (int i = 0; i < args; i++) {
+		    byte[] bytes = readByteArray(data);
 		}
-		this.odbcProxy.functionCall(oid);
+		
+		short resultFormat = data.readShort();
+		
+		this.odbcProxy.functionCall(funcID);
 		return message;
 	}	
 	
-	private int readInt(NullTerminatedStringDataInputStream data) throws IOException {
-		data.readInt(); // ignore this this is length always 4
-		return data.readInt();
-	}
-	
 	private byte[] readByteArray(NullTerminatedStringDataInputStream data) throws IOException {
 		int length = data.readInt();
-		if (length == -1 || length == 0) {
+		if (length == -1) {
 			return null;
 		}
 		byte[] content = createByteArray(length);
-		data.read(content, 0, length);
+		if (content.length == 0) {
+		    return content;
+		}
+		data.readFully(content);
 		return content;
 	}
 	
