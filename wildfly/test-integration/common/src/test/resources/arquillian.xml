@@ -10,7 +10,7 @@
         <configuration>
              <property name="jbossHome">${jbossHome}</property>
              <property name="serverConfig">${serverConfig}</property>
-             <property name="javaVmArguments">-Xmx2048m -Xms512m -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n</property>
+             <property name="javaVmArguments">-Xmx2048m -Xms512m -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n -Dteiid.some-property=true</property>
         
             <property name="allowConnectingToRunningServer">true</property>
             <property name="managementAddress">${node0:127.0.0.1}</property>

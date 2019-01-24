@@ -782,7 +782,7 @@ public class IntegrationTestDeployment {
 		String vdbName = "test";
 		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
 				"<vdb name=\"test\" version=\"1\">\n" + 
-				"    <property name=\"cache-metadata\" value=\"${teiid.vdb.UseConnectorMetadata:false}\" />\n" + 
+				"    <property name=\"some-property\" value=\"${teiid.some-property:false}\" />\n" + 
 				"    <model name=\"loopy\">\n" + 
 				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
 				"    </model>\n" + 
@@ -799,9 +799,9 @@ public class IntegrationTestDeployment {
 		AdminUtil.waitForVDBLoad(admin, vdbName, 1);
 		
 		VDB vdb = admin.getVDB(vdbName, 1);
-		String value = vdb.getPropertyValue("cache-metadata");
+		String value = vdb.getPropertyValue("some-property");
 
-		// see the arquillian.zml file in resources in the JVM proeprties section for the expected value
+		// see the arquillian.xml file in resources in the JVM properties section for the expected value
 		assertEquals("true", value);
 		
 		admin.undeploy("loopy.jar");
