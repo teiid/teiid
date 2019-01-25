@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.poi.util.LocaleUtil;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -322,7 +323,7 @@ public class TestExcelExecution {
         //typed as time
         assertEquals("[]", results.toString());
     }
-	
+    
 	@Test
 	public void testTime() throws Exception {
     	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
@@ -339,7 +340,10 @@ public class TestExcelExecution {
         assertEquals("[[10:12:14 AM]]", results.toString());
         
         
-        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New_York")); //$NON-NLS-1$
+        TimeZone timeZone = TimeZone.getTimeZone("America/New_York");
+        TimeZone defaultTz = TimeZone.getDefault();
+        TimestampWithTimezone.resetCalendar(timeZone); //$NON-NLS-1$
+        LocaleUtil.setUserTimeZone(timeZone);
         try {
             results = helpExecute(ddl, connection, "select \"time\" from Sheet1", false);
             //typed as string without formatting - SQL / Teiid format
@@ -348,6 +352,7 @@ public class TestExcelExecution {
             assertEquals("[[1899-12-31 10:12:14.0]]", results.toString());
         } finally {
             TimestampWithTimezone.resetCalendar(null);
+            LocaleUtil.setUserTimeZone(defaultTz);
         }
 	}	
 	
