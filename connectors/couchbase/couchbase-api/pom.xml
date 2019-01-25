@@ -5,7 +5,6 @@
       <artifactId>couchbase</artifactId>
       <version>12.1.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.teiid.connectors</groupId> 
     <artifactId>couchbase-api</artifactId>
     <name>Couchbase API</name>
     <description>The java API for the Couchbase</description>

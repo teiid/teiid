@@ -7,7 +7,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-odata4</artifactId>
-    <groupId>org.teiid.connectors</groupId>
     <name>OData4 Translator</name>
     <description>This translator provides access to OData V4 based data sources</description>
     

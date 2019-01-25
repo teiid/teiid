@@ -6,7 +6,6 @@
         <artifactId>file</artifactId>
         <version>12.1.0-SNAPSHOT</version>    
    </parent>
-    <groupId>org.teiid.connectors</groupId>
     <artifactId>translator-file</artifactId>
     <name>File Translator</name>
     <description>This translator provides access to the file system.</description>

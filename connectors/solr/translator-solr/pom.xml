@@ -7,7 +7,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-solr</artifactId>
-    <groupId>org.teiid.connectors</groupId>
     <name>Apache SOLR Translator</name>
     <description>This translator provides access to Apache SOLR</description>
     <dependencies>

@@ -7,7 +7,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-prestodb</artifactId>
-    <groupId>org.teiid.connectors</groupId>
     <name>PrestoDB Translator</name>
     <description>This translator provides access to PrestoDB</description>
     <dependencies>

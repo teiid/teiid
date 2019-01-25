@@ -7,7 +7,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-phoenix</artifactId>
-    <groupId>org.teiid.connectors</groupId>
     <name>Phoenix Translator</name>
     <description>This translator provides access to HBase via Phoenix</description>
     <dependencies>
