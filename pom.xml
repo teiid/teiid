@@ -23,7 +23,7 @@
 	    <version.org.jboss.integration-platform>6.0.0.CR30</version.org.jboss.integration-platform>
         <!--version.org.jboss.as>7.5.0.Final-redhat-15</version.org.jboss.as-->
         <version.org.jboss.as>7.5.17.Final-redhat-2</version.org.jboss.as>
-        <version.com.google.guava>13.0.1</version.com.google.guava>     <!--  bom 13.0.1 -->
+        <version.com.google.guava>14.0.1</version.com.google.guava>     <!--  bom 13.0.1 -->
         <version.jaxen>1.1.4</version.jaxen> <!-- NOTE changing to use bom version of 1.1.3 will cause a build issue in teiid-engine -->
         <!--version.commons-codec>1.9</version.commons-codec-->   <!-- bom version of 1.4 -->
         <version.org.antlr>4.5</version.org.antlr>   <!-- bom 3.5 -->  
@@ -57,7 +57,7 @@
         <version.com.h2database>1.3.152</version.com.h2database>  <!-- bom 1.3.168 -->
         
         
-        <version.io.dropwizard.metrics.metrics-core>3.2.2</version.io.dropwizard.metrics.metrics-core>
+        <version.com.codahale.metrics.metrics-core>3.0.2</version.com.codahale.metrics.metrics-core>
         <version.org.jboss.spec.jboss-javaee-6.0>1.0.0.Final</version.org.jboss.spec.jboss-javaee-6.0>
         <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
         
@@ -122,7 +122,7 @@
     	    	
     	<derby.version>10.2.1.6</derby.version>
 		<mysql.connector.version>5.1.5</mysql.connector.version>
-        <version.cassandra-driver-core>3.5.1</version.cassandra-driver-core>
+        <version.cassandra-driver-core>2.1.3</version.cassandra-driver-core>
  	   
  	    
  	    <!--  Test only dependencies -->
@@ -1319,9 +1319,9 @@
                 <version>${version.cassandra-driver-core}</version>                
             </dependency>
             <dependency>
-                <groupId>io.dropwizard.metrics</groupId>
+                <groupId>com.codahale.metrics</groupId>
                 <artifactId>metrics-core</artifactId>
-                <version>${version.io.dropwizard.metrics.metrics-core}</version>                
+                <version>${version.com.codahale.metrics.metrics-core}</version>                
             </dependency>      
             <dependency>
               <groupId>org.apache.httpcomponents</groupId>
