@@ -3,7 +3,7 @@
   <parent>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-parent</artifactId>
-      <version>28</version>
+      <version>31</version>
       <relativePath />
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -16,8 +16,8 @@
   
   <properties>
         <site.url>http://teiid.io</site.url>
-        <version.org.wildfly>14.0.1.Final</version.org.wildfly>
-	    <version.org.wildfly.core>6.0.2.Final</version.org.wildfly.core>
+        <version.org.wildfly>15.0.1.Final</version.org.wildfly>
+	    <version.org.wildfly.core>7.0.0.Final</version.org.wildfly.core>
 	    <version.org.wildfly.arquillian>2.1.1.Final</version.org.wildfly.arquillian>
         <version.org.wildfly.build-tools>1.2.10.Final</version.org.wildfly.build-tools>
         <version.org.jboss.arquillian.testenricher>1.4.0.Final</version.org.jboss.arquillian.testenricher>

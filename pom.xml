@@ -39,8 +39,8 @@
         <version.cassandra-driver-core>3.5.1</version.cassandra-driver-core>
         <version.com.couchbase.client>2.4.2</version.com.couchbase.client>
         <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
-        <version.com.fasterxml.jackson.core>2.8.11</version.com.fasterxml.jackson.core>
-        <version.com.fasterxml.jackson.dataformat>2.8.11</version.com.fasterxml.jackson.dataformat>
+        <version.com.fasterxml.jackson.core>2.9.5</version.com.fasterxml.jackson.core>
+        <version.com.fasterxml.jackson.dataformat>2.9.5</version.com.fasterxml.jackson.dataformat>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.com.force.api.41>41.0.0</version.com.force.api.41>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
@@ -83,8 +83,7 @@
         <version.org.dbunit>2.2</version.org.dbunit>
         <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
         <version.org.eclipse.persistence>2.5.0</version.org.eclipse.persistence>
-        <version.org.hibernate.javax.persistence.hibernate-jpa-2.1-api>1.0.2.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.1-api>
-        <version.org.jboss.arquillian.testenricher>1.4.0.Final</version.org.jboss.arquillian.testenricher>
+        <version.org.hibernate.javax.persistence.hibernate-jpa-2.1-api>1.0.2.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.1-api><version.org.mockito>1.10.19</version.org.mockito>
         <version.org.jboss.oreva>1.0.0</version.org.jboss.oreva>
         <version.org.mockito>1.10.19</version.org.mockito>
         <version.org.mongodb.mongo-java-driver>3.9.1</version.org.mongodb.mongo-java-driver>
@@ -1308,12 +1307,12 @@
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-core</artifactId>
-                <version>9.3.1.Final</version>
+                <version>9.4.3.Final</version>
             </dependency> 
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-commons</artifactId>
-                <version>9.3.1.Final</version>       
+                <version>9.4.3.Final</version>       
             </dependency>  
             
             <dependency>
@@ -1387,7 +1386,7 @@
            <dependency>
                <groupId>io.reactivex.rxjava2</groupId>
                <artifactId>rxjava</artifactId>
-               <version>2.1.6</version>
+               <version>2.2.0</version>
            </dependency>
            
            <dependency>
@@ -1405,7 +1404,7 @@
            <dependency>
                <groupId>org.hibernate</groupId>
                <artifactId>hibernate-core</artifactId>
-               <version>5.3.6.Final</version>
+               <version>5.3.7.Final</version>
            </dependency>
            
            <dependency>
@@ -1453,7 +1452,7 @@
            <dependency>
                <groupId>org.jboss.resteasy</groupId>
                <artifactId>resteasy-jaxrs</artifactId>
-               <version>3.6.1.Final</version>
+               <version>3.6.2.Final</version>
            </dependency>
 
            <dependency>

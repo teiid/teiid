@@ -21,7 +21,7 @@
 	<name>Common Integration Tests</name>
 	<description>Common Integration tests that do not require external dependencies</description>
 	<properties>
-	   <skip.arquillian>false</skip.arquillian>
+	   <arquillian.vmArgs>-Xmx2048m -Xms512m -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n -Dteiid.some-property=true</arquillian.vmArgs>
 	</properties>
     <dependencies>
         <dependency>
@@ -94,7 +94,6 @@
         <dependency>
             <groupId>org.jboss.arquillian.testenricher</groupId>
             <artifactId>arquillian-testenricher-initialcontext</artifactId>
-            <version>${version.org.jboss.arquillian.testenricher}</version>
         </dependency>
         <dependency>
             <groupId>org.wildfly.arquillian</groupId>
@@ -163,7 +162,7 @@
             <jdk>[11.0,)</jdk>
         </activation>
         <properties>
-            <skip.arquillian>true</skip.arquillian>
+            <arquillian.vmArgs>-Dteiid.some-property=true -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n -server -Xms512m -Xmx2048m -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true  --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED --add-exports=jdk.unsupported/sun.reflect=ALL-UNNAMED --add-modules=java.se</arquillian.vmArgs>
         </properties>    
     </profile>
     <profile>
@@ -227,18 +226,19 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>arquillian</id>
+                                <id>default-test</id>
                                 <goals>
                                     <goal>test</goal>
                                 </goals>
                                 <configuration>
-                                    <skipTests>${skip.arquillian}</skipTests>
                                     <systemPropertyVariables>
                                         <jbossHome>${project.build.directory}/teiid-${project.version}</jbossHome>
                                         <serverConfig>standalone-teiid.xml</serverConfig>
+                                        <javaVmArguments>${arquillian.vmArgs}</javaVmArguments>
                                     </systemPropertyVariables>
                                     <includes>
                                         <include>**/IntegrationTest*</include>
+                                        <include>**/Test*</include>
                                     </includes>
                                 </configuration>
                             </execution>
