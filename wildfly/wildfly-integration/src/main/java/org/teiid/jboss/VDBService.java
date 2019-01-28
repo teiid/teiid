@@ -119,7 +119,6 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		}
 	    
 	    createConnectorManagers(cmr, repo, this.vdb);
-		final ServiceBuilder<Void> vdbService = addVDBFinishedService(context);
 		this.vdbListener = new VDBLifeCycleListener() {
 			@Override
 			public void added(String name, CompositeVDB cvdb) {
@@ -140,7 +139,9 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				repositories.put("index", new IndexMetadataRepository()); //$NON-NLS-1$ 
 				VDBMetaData vdbInstance = cvdb.getVDB();
 				if (vdbInstance.getStatus().equals(Status.ACTIVE)) {
-					vdbService.install();
+				    //need to construct/install the service in a single thread
+				    final ServiceBuilder<Void> vdbService = addVDBFinishedService(context);
+			        vdbService.install();
 				}				
 			}
 		};
