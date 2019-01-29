@@ -18,19 +18,21 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.core.util.NamedThreadFactory;
@@ -60,6 +62,8 @@ import org.teiid.query.QueryPlugin;
  * That is a flaw with attempting to reuse, rather than create threads.  
  * TODO: bounded queuing - we never bothered bounding in the past with our worker pools, but reasonable
  * defaults would be a good idea.
+ * 
+ * TODO: a {@link ForkJoinPool} is a simple replacement, but we'd loose the prioritization queue.
  */
 public class ThreadReuseExecutor implements TeiidExecutor {
 	
@@ -67,6 +71,9 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		
 		final static int NO_WAIT_PRIORITY = 0;
 		
+		/**
+		 * The execution priority - higher is lower
+		 */
 		int getPriority();
 		
 		long getCreationTime();
@@ -75,11 +82,14 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		
 	}
 	
-	public static class RunnableWrapper implements PrioritizedRunnable {
+	private static AtomicLong ID_GEN = new AtomicLong();
+	
+	public static class RunnableWrapper implements PrioritizedRunnable, Comparable<RunnableWrapper> {
 		Runnable r;
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		long creationTime;
 		int priority;
+		long id = ID_GEN.getAndIncrement();
 		
 		public RunnableWrapper(Runnable r) {
 			if (r instanceof PrioritizedRunnable) {
@@ -88,6 +98,8 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 				priority = pr.getPriority();
 				workContext = pr.getDqpWorkContext();
 			} else {
+			    //this will be considered optional work that will only get completed
+			    //when the queue is drained
 				creationTime = System.currentTimeMillis();
 				priority = Integer.MAX_VALUE;
 			}
@@ -117,6 +129,16 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 			return workContext;
 		}
 
+        @Override
+        public int compareTo(RunnableWrapper o) {
+            int comp = Integer.compare(this.priority, o.priority);
+            if (comp != 0) {
+                return comp;
+            }
+            //don't use creation time, only the id as that will get reset with each queuing
+            return Long.compare(this.id, o.id);
+        }
+
 	}
 	
 	private final ThreadPoolExecutor tpe; 
@@ -129,20 +151,38 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	private volatile int completedCount;
 	private Object poolLock = new Object();
 	private AtomicInteger threadCounter = new AtomicInteger();
-	private Set<Thread> threads = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<Thread, Boolean>()));
+	private Set<Thread> threads = Collections.newSetFromMap(new ConcurrentHashMap<Thread, Boolean>());
 	
 	private String poolName;
 	private int maximumPoolSize;
-	private Queue<PrioritizedRunnable> queue = new PriorityQueue<PrioritizedRunnable>(11, new Comparator<PrioritizedRunnable>() {
-		@Override
-		public int compare(PrioritizedRunnable pr1, PrioritizedRunnable pr2) {
-			int result = pr1.getPriority() - pr2.getPriority();
-			if (result == 0) {
-				return Long.signum(pr1.getCreationTime() - pr2.getCreationTime());
-			}
-			return result;
-		}
-	});
+	private Queue<RunnableWrapper> queue = new AbstractQueue<RunnableWrapper>() {
+	    private ConcurrentSkipListSet<RunnableWrapper> set = new ConcurrentSkipListSet<>();
+	    @Override
+	    public Iterator<RunnableWrapper> iterator() {
+	        return set.iterator();
+	    }
+	    @Override
+	    public int size() {
+	        return set.size();
+	    }
+	    public boolean isEmpty() {
+	        return set.isEmpty();
+	    }
+        @Override
+        public boolean offer(RunnableWrapper e) {
+            set.add(e); //TODO: add size limitation
+            return true;
+        }
+        @Override
+        public RunnableWrapper peek() {
+            return set.first();
+        }
+        @Override
+        public RunnableWrapper poll() {
+            return set.pollFirst();
+        }
+    };
+    
 	private long warnWaitTime = 500;
 	
 	public ThreadReuseExecutor(String name, int maximumPoolSize) {
@@ -166,7 +206,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		executeDirect(new RunnableWrapper(command));
 	}
 
-	private void executeDirect(final PrioritizedRunnable command) {
+	private void executeDirect(final RunnableWrapper command) {
 		synchronized (poolLock) {
 			checkForTermination();
 			submittedCount++;
@@ -279,19 +319,11 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		return stats;
 	}
 	
-	public boolean hasWork() {
-		synchronized (poolLock) {
-			return this.getSubmittedCount() - this.getCompletedCount() > 0 && !this.isTerminated();
-		}
-	}
-
 	public List<Runnable> shutdownNow() {
 		this.shutdown();
 		synchronized (poolLock) {
-			synchronized (threads) {
-				for (Thread t : threads) {
-					t.interrupt();
-				}
+			for (Thread t : threads) {
+				t.interrupt();
 			}
 			List<Runnable> result = new ArrayList<Runnable>(queue);
 			queue.clear();
