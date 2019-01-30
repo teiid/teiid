@@ -18,15 +18,14 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -155,33 +154,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	
 	private String poolName;
 	private int maximumPoolSize;
-	private Queue<RunnableWrapper> queue = new AbstractQueue<RunnableWrapper>() {
-	    private ConcurrentSkipListSet<RunnableWrapper> set = new ConcurrentSkipListSet<>();
-	    @Override
-	    public Iterator<RunnableWrapper> iterator() {
-	        return set.iterator();
-	    }
-	    @Override
-	    public int size() {
-	        return set.size();
-	    }
-	    public boolean isEmpty() {
-	        return set.isEmpty();
-	    }
-        @Override
-        public boolean offer(RunnableWrapper e) {
-            set.add(e); //TODO: add size limitation
-            return true;
-        }
-        @Override
-        public RunnableWrapper peek() {
-            return set.first();
-        }
-        @Override
-        public RunnableWrapper poll() {
-            return set.pollFirst();
-        }
-    };
+	private Queue<RunnableWrapper> queue = new PriorityBlockingQueue<RunnableWrapper>(11);
     
 	private long warnWaitTime = 500;
 	
@@ -207,8 +180,8 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	}
 
 	private void executeDirect(final RunnableWrapper command) {
+	    checkForTermination();
 		synchronized (poolLock) {
-			checkForTermination();
 			submittedCount++;
 			boolean atMaxThreads = activeCount == maximumPoolSize;
 			if (atMaxThreads) {
@@ -282,16 +255,12 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		return activeCount;
 	}
 	
-	public int getSubmittedCount() {
+	public long getSubmittedCount() {
 		return submittedCount;
 	}
 	
-	public int getCompletedCount() {
+	public long getCompletedCount() {
 		return completedCount;
-	}
-	
-	public int getPoolSize() {
-		return activeCount;
 	}
 	
 	public boolean isTerminated() {
@@ -304,6 +273,10 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	
 	public int getLargestPoolSize() {
 		return this.highestActiveCount;
+	}
+	
+	public int getQueued() {
+        return queue.size();
 	}
 	
 	public WorkerPoolStatisticsMetadata getStats() {
