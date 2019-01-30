@@ -287,6 +287,13 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	}
     	return 0;
     }
+    
+    public int getTotalOutOfDiskErrors() {
+        if (fsm != null) {
+            return fsm.getOutOfDiskErrorCount();
+        }
+        return 0;
+    }
 
 	public long getHeapBufferInUseKb() {
 		return bufferMgr.getActiveBatchBytes()/1024;

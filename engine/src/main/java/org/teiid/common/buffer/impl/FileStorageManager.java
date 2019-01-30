@@ -54,6 +54,8 @@ public class FileStorageManager implements StorageManager {
 	
 	private AtomicLong sample = new AtomicLong();
 	
+	private AtomicInteger outOfDiskCount = new AtomicInteger();
+	
 	private class FileInfo {
     	private File file;
         private RandomAccessFile fileData;       // may be null if not open
@@ -160,6 +162,7 @@ public class FileStorageManager implements StorageManager {
 					AutoCleanupUtil.doCleanup(false);
 					used = usedBufferSpace.get() + bytesUsed;
 					if (used > maxBufferSpace) {
+					    outOfDiskCount.getAndIncrement();
 						throw new OutOfDiskException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
 					}
 				}
@@ -176,6 +179,7 @@ public class FileStorageManager implements StorageManager {
 				if (used > maxBufferSpace) {
 					fileAccess.setLength(currentLength);
 					usedBufferSpace.addAndGet(-bytesUsed);
+					outOfDiskCount.getAndIncrement();
 					throw new OutOfDiskException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
 				}
 			}
@@ -293,6 +297,10 @@ public class FileStorageManager implements StorageManager {
     public long getUsedBufferSpace() {
 		return usedBufferSpace.get();
 	}
+    
+    public int getOutOfDiskErrorCount() {
+        return outOfDiskCount.get();
+    }
     
     /**
      * Set the max amount of buffer space in bytes

@@ -105,4 +105,43 @@ class Teiid implements TeiidBean {
         }
     }
 
+    @Override
+    public double getPercentBufferDiskSpaceInUse() {
+        long maxDiskBufferSpaceMb = this.bufferService.getMaxDiskBufferSpaceMb();
+        if (maxDiskBufferSpaceMb == 0) {
+            return 0;
+        }
+        return this.bufferService.getUsedDiskBufferSpaceMb()/maxDiskBufferSpaceMb;
+    }
+    
+    @Override
+    public int getTotalOutOfDiskErrors() {
+        return this.bufferService.getTotalOutOfDiskErrors();
+    }
+
+    @Override
+    public int getActiveEngineThreadCount() {
+        return this.dqp.getProcessWorkerPool().getActiveCount();
+    }
+
+    @Override
+    public int getQueuedEngineWorkItems() {
+        return this.dqp.getProcessWorkerPool().getQueued();
+    }
+
+    @Override
+    public int getLongRunningRequestCount() {
+        return this.dqp.getLongRunningRequestCount();
+    }
+    
+    @Override
+    public int getWaitingRequestsCount() {
+        return this.dqp.getWaitingPlanCount();
+    }
+
+    @Override
+    public long getTotalRequestsProcessed() {
+        return this.dqp.getTotalPlansProcessed();
+    }
+
 }

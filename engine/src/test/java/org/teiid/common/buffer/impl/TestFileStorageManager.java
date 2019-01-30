@@ -88,7 +88,11 @@ public class TestFileStorageManager {
         String tsID = "0";     //$NON-NLS-1$
         // Add one batch
         FileStore store = sm.createFileStore(tsID);
-        writeBytes(store);
+        try {
+            writeBytes(store);
+        } finally {
+            assertEquals(1, sm.getOutOfDiskErrorCount());
+        }
     }
     
     @Test(expected=IOException.class) public void testMaxSpaceSplit() throws Exception {
@@ -101,6 +105,7 @@ public class TestFileStorageManager {
         try {
         	writeBytes(store);
         } finally {
+            assertEquals(1, sm.getOutOfDiskErrorCount());
         	assertEquals(0, sm.getUsedBufferSpace());
         }
     }

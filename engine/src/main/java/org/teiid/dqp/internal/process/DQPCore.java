@@ -33,6 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.transaction.xa.Xid;
 
@@ -119,10 +120,11 @@ public class DQPCore implements DQP {
 	private Map<String, ClientState> clientState = new ConcurrentHashMap<String, ClientState>();
     
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS;
-    private int currentlyActivePlans;
+    private volatile int currentlyActivePlans;
+    private AtomicLong totalPlansProcessed = new AtomicLong();
     private int userRequestSourceConcurrency;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
-    private int maxWaitingPlans = 0;
+    private volatile int maxWaitingPlans = 0;
 	private AuthorizationValidator authorizationValidator;
 	
 	private EnhancedTimer cancellationTimer;
@@ -191,6 +193,17 @@ public class DQPCore implements DQP {
     
     public List<RequestMetadata> getLongRunningRequests(){
     	return buildRequestInfos(requests.keySet(), System.currentTimeMillis() - this.config.getQueryThresholdInMilli() );
+    }
+    
+    public int getLongRunningRequestCount(){
+        long longRunningQueryThreshold = System.currentTimeMillis() - this.config.getQueryThresholdInMilli();
+        int count = 0;
+        for (RequestWorkItem holder : requests.values()) {
+            if(!holder.isCanceled() && (holder.getProcessingTimestamp() < longRunningQueryThreshold)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private List<RequestMetadata> buildRequestInfos(Collection<RequestID> ids, long longRunningQueryThreshold) {
@@ -387,6 +400,7 @@ public class DQPCore implements DQP {
         	}
         	workItem.active = false;
     		currentlyActivePlans--;
+    		totalPlansProcessed.incrementAndGet();
 			if (!waitingPlans.isEmpty()) {
 				RequestWorkItem work = waitingPlans.remove();
 				startActivePlan(work, true);
@@ -399,6 +413,10 @@ public class DQPCore implements DQP {
     
     public int getActivePlanCount() {
     	return this.currentlyActivePlans;
+    }
+    
+    public long getTotalPlansProcessed() {
+        return this.totalPlansProcessed.get();
     }
     
     public boolean blockOnOutputBuffer(RequestWorkItem item) {
@@ -414,13 +432,13 @@ public class DQPCore implements DQP {
     }
     
     public int getWaitingPlanCount() {
-    	return waitingPlans.size();
+        synchronized (waitingPlans) {
+            return waitingPlans.size();
+        }
     }
     
     public int getMaxWaitingPlanWatermark() {
-        synchronized (waitingPlans) {
-            return this.maxWaitingPlans;
-        }
+        return this.maxWaitingPlans;
     }
     
     void removeRequest(final RequestWorkItem workItem) {
@@ -487,6 +505,10 @@ public class DQPCore implements DQP {
 	
     public WorkerPoolStatisticsMetadata getWorkerPoolStatistics() {
     	return this.processWorkerPool.getStats();
+    }
+    
+    public TeiidExecutor getProcessWorkerPool() {
+        return processWorkerPool;
     }
            
     public void terminateSession(String sessionId) {
