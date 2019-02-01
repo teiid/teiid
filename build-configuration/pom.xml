@@ -166,4 +166,26 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
+        
+    <profiles>
+      <profile>		
+		<id>final-release</id>
+        <build>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
+      </profile>
+    </profiles>
 </project>
