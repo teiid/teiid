@@ -215,6 +215,11 @@ specified and isSourceRequired should return false (see setSourceRequired).  If 
 
 See the Admin Guide for more on configuration and installation.
 
+<h4>from 12.0</h4>
+<ul>
+    <li><a href="https://issues.jboss.org/browse/TEIID-5642">TEIID-5642</a> The generic sql query procedure for generated REST wars will not be exposed by default.  The schema/model must have the property {http://teiid.org/rest}sqlquery set to true.</li>
+</ul>
+
 <h4>from 11.2</h4>
 <ul>
    <li><a href="https://issues.jboss.org/browse/TEIID-5584">TEIID-5584</a> org.teiid.enforceSingleMaxBufferSizeEstimate now defaults to false.  Rather the biggest memory consumers among sessions will be killed by default in the event of running out of disk space.</li>

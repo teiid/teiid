@@ -163,7 +163,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 		return byteStream.toByteArray();
 	}
 
-	protected byte[] getBootstrapServletClass(String vdbName, String desc, String version, String[] schamas, String baseUrl, String packages, Boolean scan) {
+	protected byte[] getBootstrapServletClass(String vdbName, String desc, String version, String[] schamas, String baseUrl, String packages, boolean scan) {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         MethodVisitor mv;
         AnnotationVisitor av0;
@@ -443,8 +443,12 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 			}
 		}    	
 		
-		buildQueryProcedure(vdbName, vdbVersion, modelName, "xml", cw, passthroughAuth);
-		buildQueryProcedure(vdbName, vdbVersion, modelName, "json", cw, passthroughAuth);
+		//don't expose a general interface by default
+		String sqlQuery = schema.getProperty(REST_NAMESPACE+"sqlquery", false); 
+		if (sqlQuery != null && Boolean.valueOf(sqlQuery)) {
+    		buildQueryProcedure(vdbName, vdbVersion, modelName, "xml", cw, passthroughAuth);
+    		buildQueryProcedure(vdbName, vdbVersion, modelName, "json", cw, passthroughAuth);
+    	}
     	
     	cw.visitEnd();
 
@@ -565,22 +569,19 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
         
     	if(useMultipart)
     	{
-    	    av0 = mv.visitAnnotation("Ljavax/ws/rs/Consumes;", true);
-    	    {
-    	    AnnotationVisitor av1 = av0.visitArray("value");
-    	    av1.visit(null, "multipart/form-data");
-    	    av1.visitEnd();
-    	    }
-    	    av0.visitEnd();
-        }
-        
-    	if(!useMultipart) {
+    	    addConsumes(mv, "multipart/form-data");
+        } else {
         	// post only accepts Form inputs, not path params
+    	    boolean get = method.toUpperCase().equals("GET");
+    	    if (paramsSize > 0 && !get) {
+    	        addConsumes(mv, "application/x-www-form-urlencoded");
+    	    }
+    	    
         	HashSet<String> pathParms = getPathParameters(uri);
         	for (int i = 0; i < paramsSize; i++)
         	{
                 String paramType = "Ljavax/ws/rs/FormParam;";
-                if (method.toUpperCase().equals("GET")) {
+                if (get) {
                     paramType = "Ljavax/ws/rs/QueryParam;";
                 }
                 if (pathParms.contains(params.get(i).getName())){
@@ -667,6 +668,17 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     	}
     	}
 	}
+
+    private void addConsumes(MethodVisitor mv, String contentType) {
+        AnnotationVisitor av0;
+        av0 = mv.visitAnnotation("Ljavax/ws/rs/Consumes;", true);
+        {
+        AnnotationVisitor av1 = av0.visitArray("value");
+        av1.visit(null, contentType);
+        av1.visitEnd();
+        }
+        av0.visitEnd();
+    }
 	
 	private void buildQueryProcedure(String vdbName, String vdbVersion, String modelName, String context, ClassWriter cw, boolean passthroughAuth) {
 		MethodVisitor mv;
@@ -682,6 +694,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 			}
 			av0.visitEnd();
 			}
+			addConsumes(mv, "application/x-www-form-urlencoded");
 			{
 			av0 = mv.visitAnnotation("Ljavax/ws/rs/POST;", true);
 			av0.visitEnd();

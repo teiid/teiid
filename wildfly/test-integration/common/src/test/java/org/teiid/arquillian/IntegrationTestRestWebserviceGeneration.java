@@ -138,6 +138,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		    try {
         		String response1 = httpCall("http://localhost:8080/sample2_1/swagger.yaml", "GET", null);
         		assertNotEquals(response, response1);
+        		break;
 		    } catch (TeiidRuntimeException e) {
 		        if (i == retries) {
 		            throw e;
@@ -248,7 +249,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
                 .addBinaryBody("p1", Base64.encodeBytes("<root><p4>bar</p4></root>".getBytes("UTF-8")).getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
                 .build();		
 		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/binarypost");
-		assertEquals("response did not match expected", "", response);
+		assertTrue("response did not match expected", response.contains("RESTEASY003065"));
 
 		params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode(Base64.encodeBytes("<root><p4>bar</p4></root>".getBytes("UTF-8")), "UTF-8");
 		response = httpCall("http://localhost:8080/sample_1/View/binarypost", "POST", params);

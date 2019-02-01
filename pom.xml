@@ -60,7 +60,7 @@
         <version.google-api-client>1.23.0</version.google-api-client>
 
         <version.io.dropwizard.metrics.metrics-core>3.2.2</version.io.dropwizard.metrics.metrics-core>
-        <version.io.swagger>1.5.17</version.io.swagger>
+        <version.io.swagger>1.5.21</version.io.swagger>
 
         <version.javax.validation>1.1.0.Final</version.javax.validation>
         <version.jts>1.13</version.jts>

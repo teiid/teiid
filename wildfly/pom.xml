@@ -203,7 +203,7 @@
            <dependency>
                <groupId>org.jboss.resteasy</groupId>
                <artifactId>resteasy-multipart-provider</artifactId>
-               <version>3.6.1.Final</version>
+               <version>3.6.2.Final</version>
            </dependency>
             
             <!-- ====== -->            
