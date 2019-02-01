@@ -14,7 +14,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid Build Configuration Parent</name>
 
-    <version>11.2.2</version>
+    <version>11.2.3-SNAPSHOT</version>
 	<description>Parent Pom for Teiid build configuration</description>
     
     
@@ -166,9 +166,4 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
-        
-
-  <scm>
-    <tag>teiid-parent-11.2.2</tag>
-  </scm>
 </project>

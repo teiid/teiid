@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.teiid.connectors</groupId>
         <artifactId>file</artifactId>
-        <version>11.2.2</version>
+        <version>11.2.3-SNAPSHOT</version>
     </parent>
     <groupId>org.teiid.connectors</groupId>
     <modelVersion>4.0.0</modelVersion>
