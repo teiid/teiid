@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
+import org.apache.olingo.server.api.ODataHandler;
 import org.apache.olingo.server.api.ODataHttpHandler;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.LRUCache;
@@ -53,6 +54,7 @@ import org.teiid.odata.api.Client;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.service.LocalClient;
 import org.teiid.olingo.service.OlingoBridge;
+import org.teiid.olingo.service.OlingoBridge.HandlerInfo;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -64,7 +66,9 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             .synchronizedMap(new LRUCache<VDBKey, SoftReference<OlingoBridge>>());
     private volatile boolean listenerRegistered = false;
     //default odata behavior requires explicit versioning
-    private String defaultVdbVersion = "1"; //$NON-NLS-1$ 
+    private String defaultVdbVersion = "1"; //$NON-NLS-1$
+    
+    protected OpenApiHandler openApiHandler;
     
     @Override
     public void init(FilterConfig config) throws ServletException {
@@ -96,6 +100,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             props.setProperty(name, config.getInitParameter(name));
         }
         this.initProperties = props;
+        this.openApiHandler = new OpenApiHandler(config.getServletContext());
     }
     
     public String getDefaultVdbVersion() {
@@ -233,7 +238,16 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         try {
             Connection connection = client.open();
             registerVDBListener(client, connection);
-            ODataHttpHandler handler = context.getHandler(baseURI, client, modelName);
+            HandlerInfo handlerInfo = context.getHandlers(baseURI, client, modelName);
+            ODataHandler handler = handlerInfo.oDataHttpHandler;
+            
+            if (this.openApiHandler.isOpenApiMetadataRequest(((HttpServletRequest)request).getMethod(), uri)) {
+                //TODO: check for something like /odata4/vdb/model/foo/openapi.json
+                openApiHandler.processOpenApiMetadata(httpRequest, key, uri, modelName,
+                        response, handlerInfo.serviceMetadata, null);
+                return;
+            }
+            
             httpRequest.setAttribute(ODataHttpHandler.class.getName(), handler);
             httpRequest.setAttribute(Client.class.getName(), client);
             chain.doFilter(httpRequest, response);

@@ -42,13 +42,23 @@ import org.teiid.olingo.service.ODataSchemaBuilder.SchemaResolver;
 
 public class OlingoBridge {
     
+    public static class HandlerInfo {
+        public final ODataHttpHandler oDataHttpHandler;
+        public final ServiceMetadata serviceMetadata;
+
+        HandlerInfo(ODataHttpHandler handler, ServiceMetadata serviceMetadata) {
+            this.oDataHttpHandler = handler;
+            this.serviceMetadata = serviceMetadata;
+        }
+    }
+    
     public static List<String> RESERVED = Arrays.asList("teiid", "edm", "core", "olingo-extensions"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     
     //the schema name is handled as case insensitive
-    private ConcurrentSkipListMap<String, ODataHttpHandler> handlers = new ConcurrentSkipListMap<String, ODataHttpHandler>(String.CASE_INSENSITIVE_ORDER);
+    private ConcurrentSkipListMap<String, HandlerInfo> handlers = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
     
-    public ODataHttpHandler getHandler(String baseUri, Client client, String schemaName) throws ServletException {
-        ODataHttpHandler handler = this.handlers.get(schemaName);
+    public HandlerInfo getHandlers(String baseUri, Client client, String schemaName) throws ServletException {
+        HandlerInfo handler = this.handlers.get(schemaName);
         if (handler != null) {
             return handler;
         }
@@ -130,7 +140,7 @@ public class OlingoBridge {
             ServiceMetadata metadata = odata.createServiceMetadata(edmProvider, edmProvider.getReferences());
             ODataHttpHandler handler = odata.createHandler(metadata);
             handler.register(new TeiidServiceHandler(entry.getKey()));
-            this.handlers.put(entry.getKey(), handler);
+            this.handlers.put(entry.getKey(), new HandlerInfo(handler, metadata));
         }
     }
     
