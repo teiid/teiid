@@ -89,16 +89,22 @@ public class OpenApiHandler {
      * @param modelName
      * @param response
      * @param serviceMetadata
-     * @param parameters optional overrides for template parameters 
+     * @param parameters optional overrides for template parameters
+     * @return true if this is an open api metadata request 
      * @throws TeiidProcessingException
      */
-    public void processOpenApiMetadata(HttpServletRequest httpRequest, VDBKey key, String uri,
+    public boolean processOpenApiMetadata(HttpServletRequest httpRequest, VDBKey key, String uri,
             String modelName, ServletResponse response, ServiceMetadata serviceMetadata, Map<String, String> parameters)
             throws TeiidProcessingException {
+        if (!this.isOpenApiMetadataRequest(httpRequest.getMethod(), uri)) {
+            return false;
+        }
+
+        //TODO: check for something like /odata4/vdb/model/foo/openapi.json
         try {
             List<? extends Object> cacheKey = Arrays.asList(key, modelName);
             File f = cachedMetadata.get(cacheKey);
-            if (f == null) {
+            if (f == null || !f.exists()) {
                 Transformer transformer = templates.newTransformer();
                 transformer.setParameter(SCHEME, httpRequest.getScheme()); 
                 transformer.setParameter(HOST, httpRequest.getServerName()+":"+httpRequest.getServerPort()); //$NON-NLS-1$ 
@@ -132,7 +138,7 @@ public class OpenApiHandler {
                 | IOException e) {
             throw new TeiidProcessingException(e);
         }
-
+        return true;
     }
 
 }

@@ -241,10 +241,8 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             HandlerInfo handlerInfo = context.getHandlers(baseURI, client, modelName);
             ODataHandler handler = handlerInfo.oDataHttpHandler;
             
-            if (this.openApiHandler.isOpenApiMetadataRequest(((HttpServletRequest)request).getMethod(), uri)) {
-                //TODO: check for something like /odata4/vdb/model/foo/openapi.json
-                openApiHandler.processOpenApiMetadata(httpRequest, key, uri, modelName,
-                        response, handlerInfo.serviceMetadata, null);
+            if (openApiHandler.processOpenApiMetadata(httpRequest, key, uri, modelName,
+                    response, handlerInfo.serviceMetadata, null)) {
                 return;
             }
             
