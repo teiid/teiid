@@ -92,7 +92,7 @@
         <version.org.springframework.asm>3.1.4.RELEASE</version.org.springframework.asm>
         
         <version.net.oauth.core>20100527</version.net.oauth.core>
-        <version.net.sourceforge.saxon>9.8.0-7</version.net.sourceforge.saxon>
+        <version.net.sourceforge.saxon>9.8.0-14</version.net.sourceforge.saxon>
         <version.noggit>0.6</version.noggit>
         <version.postgresql>42.1.4</version.postgresql>
         <version.proj4j>0.1.0</version.proj4j>

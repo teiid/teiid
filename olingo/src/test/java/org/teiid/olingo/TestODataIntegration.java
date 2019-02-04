@@ -207,6 +207,7 @@ public class TestODataIntegration {
     private static HttpClient http = new HttpClient();
     private static UnitTestLocalClient localClient;
     private LoopbackExecutionFactory ef;
+    private int port;
 
     @Before
     public void before() throws Exception {
@@ -256,7 +257,7 @@ public class TestODataIntegration {
         }), "/*", EnumSet.allOf(DispatcherType.class));
         server.setHandler(context);
         server.start();
-        int port = connector.getLocalPort();
+        port = connector.getLocalPort();
         http.start();
         baseURL = "http://localhost:"+port+contextPath;        
     }
@@ -290,6 +291,29 @@ public class TestODataIntegration {
                 UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")).replace("${baseurl}", baseURL),
                 response.getContentAsString());        
     }
+    
+    @Test
+    public void testOpenApi2Metadata() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/swagger.json");
+        assertEquals(200, response.getStatus());
+        assertEquals(ObjectConverterUtil.convertFileToString(
+                UnitTestUtil.getTestDataFile("loopy-vm1-metadata-swagger.json")).replace("${host}", "localhost:"+port),
+                response.getContentAsString());
+        
+        //cached fetch
+        response = http.GET(baseURL + "/loopy/vm1/swagger.json");
+        assertEquals(200, response.getStatus());
+        assertEquals(ObjectConverterUtil.convertFileToString(
+                UnitTestUtil.getTestDataFile("loopy-vm1-metadata-swagger.json")).replace("${host}", "localhost:"+port),
+                response.getContentAsString());
+        
+        response = http.GET(baseURL + "/loopy/pm1/swagger.json");
+        assertEquals(200, response.getStatus());
+        assertEquals(ObjectConverterUtil.convertFileToString(
+                UnitTestUtil.getTestDataFile("loopy-pm1-metadata-swagger.json")).replace("${host}", "localhost:"+port),
+                response.getContentAsString());
+    }
+    
     @Test
     public void testSystemMetadata() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/SYS/$metadata");
