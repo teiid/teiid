@@ -57,6 +57,7 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.CacheStatistics;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -3412,6 +3413,34 @@ public class TestODataIntegration {
             localClient = null;
             teiid.undeployVDB("northwind");
         }
+    }
+    
+    @Test public void testTypeMetadata() throws Exception {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("x");
+        mmd.setModelType(Type.VIRTUAL);
+        mmd.addSourceMetadata("ddl", "create view v (col1, col2, col3, col4, col5 primary key, col6, col7, col8, col9, col10,"
+                + "col11, col12, col13, col14, col15, col16, col17, col18, col19, col20,"
+                + "col21, col22, col23, col24, col25, col26, col27, col28, col29, col30,"
+                + "col31, col32, col33, col34, col35, col36, col37, col38, col39) as select null, cast(null as xml), cast(null as boolean), cast(null as byte), cast(null as short), cast(null as integer) as pk, cast(null as long),"
+                + " cast(null as float), cast(null as double), cast(null as bigdecimal), cast(null as biginteger), cast(null as time), cast(null as date), cast(null as timestamp), cast(null as varbinary), "
+                + " cast(null as char), cast(null as string), cast(null as clob), cast(null as blob), cast(null as json), "
+                + " cast(null as xml[]), cast(null as boolean[]), cast(null as byte[]), cast(null as short[]), cast(null as integer[]), cast(null as long[]), cast(null as bigdecimal[]), cast(null as biginteger[]), "
+                + " cast(null as float[]), cast(null as double[]), cast(null as time[]), cast(null as date[]), cast(null as timestamp[]), cast(null as varbinary[]), "
+                + " cast(null as char[]), cast(null as string[]), cast(null as clob[]), cast(null as blob[]), cast(null as json[]);");
+        teiid.deployVDB("northwind", mmd);
+
+        localClient = getClient(teiid.getDriver(), "northwind", new Properties());
+        
+        ContentResponse response = http.GET(baseURL + "/northwind/x/$metadata");
+
+        assertEquals(200, response.getStatus());
+        
+        response = http.GET(baseURL + "/northwind/x/swagger.json");
+        
+        assertEquals(ObjectConverterUtil.convertFileToString(
+                UnitTestUtil.getTestDataFile("all-types-swagger.json")).replace("${host}", "localhost:"+port),
+                response.getContentAsString());
     }
     
 }

@@ -983,7 +983,7 @@
     <xsl:param name="inParameter" select="false()" />
     <xsl:param name="inResponse" select="false()" />
     <xsl:param name="suffix" select="null" />
-    <xsl:variable name="noArray" select="$inParameter" />
+    <xsl:variable name="noArray" select="true()" />
     <xsl:variable name="nullable">
       <xsl:call-template name="nullableFacetValue">
         <xsl:with-param name="type" select="$type" />
@@ -1107,7 +1107,8 @@
           <xsl:when test="not($target/@Scale) or $target/@Scale='0'">
             <xsl:text>,"multipleOf":1</xsl:text>
           </xsl:when>
-          <xsl:when test="number($target/@Scale)=$target/@Scale">
+          <!-- limit the multiple of as several conversion tools to yaml won't properly convert small numbers -->
+          <xsl:when test="number($target/@Scale)=$target/@Scale and not(number($target/@Scale) > 323)">
             <xsl:text>,"multipleOf":1.0e-</xsl:text>
             <xsl:value-of select="$target/@Scale" />
           </xsl:when>

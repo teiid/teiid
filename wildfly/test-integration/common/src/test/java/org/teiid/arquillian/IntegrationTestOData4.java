@@ -161,7 +161,6 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         admin.undeploy("test-vdb.xml");
     }
     
-    // TEIID-3914 - test the olingo-patch work
     @Test public void testCompositeKeyTimestamp() throws Exception {
         String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
                 "<vdb name=\"Loopy\" version=\"1\">\n" + 
@@ -186,6 +185,13 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         client.header("Content-Type", "application/json");
         response = client.post("{\"a\":\"b\", \"b\":\"2000-02-02T22:22:22Z\"}");
         assertEquals(304, response.getStatus());
+
+        
+        client = WebClient.create("http://localhost:8080/odata4/Loopy/m/swagger.json");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        response = client.get();
+        String metadata = ObjectConverterUtil.convertToString((InputStream)response.getEntity());
+        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata4-swagger.json")), metadata);
         
         admin.undeploy("loopy-vdb.xml");
     }

@@ -165,10 +165,10 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		mmd.setModelType(Type.VIRTUAL);
 		mmd.addSourceMetadata("ddl", "create view v as select null, cast(null as xml), cast(null as boolean), cast(null as byte), cast(null as short), cast(null as integer), cast(null as long),"
 				+ " cast(null as float), cast(null as double), cast(null as bigdecimal), cast(null as biginteger), cast(null as time), cast(null as date), cast(null as timestamp), cast(null as varbinary), "
-				+ " cast(null as char), cast(null as string), cast(null as clob), cast(null as blob), "
+				+ " cast(null as char), cast(null as string), cast(null as clob), cast(null as blob), cast(null as json), "
 				+ " cast(null as xml[]), cast(null as boolean[]), cast(null as byte[]), cast(null as short[]), cast(null as integer[]), cast(null as long[]), cast(null as bigdecimal[]), cast(null as biginteger[]), "
 				+ " cast(null as float[]), cast(null as double[]), cast(null as time[]), cast(null as date[]), cast(null as timestamp[]), cast(null as varbinary[]), "
-				+ " cast(null as char[]), cast(null as string[]), cast(null as clob[]), cast(null as blob[])");
+				+ " cast(null as char[]), cast(null as string[]), cast(null as clob[]), cast(null as blob[]), cast(null as json[])");
 		server.deployVDB("x", mmd);
 		
 		this.internalConnection.close();
