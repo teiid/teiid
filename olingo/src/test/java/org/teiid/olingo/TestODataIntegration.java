@@ -318,7 +318,7 @@ public class TestODataIntegration {
     @Test
     public void testSystemMetadata() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/SYS/$metadata");
-        assertEquals(200, response.getStatus());
+        assertEquals(404, response.getStatus());
     }
 
     @Test
@@ -820,7 +820,7 @@ public class TestODataIntegration {
     @Test
     public void testMetadataVisibility() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/PM2/G1");
-        assertEquals(500, response.getStatus());
+        assertEquals(404, response.getStatus());
     }
         
     @Test 

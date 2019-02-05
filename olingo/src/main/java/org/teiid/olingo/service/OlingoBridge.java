@@ -34,6 +34,7 @@ import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.core.OData4Impl;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.Schema;
 import org.teiid.odata.api.Client;
 import org.teiid.olingo.ODataPlugin;
@@ -57,7 +58,7 @@ public class OlingoBridge {
     //the schema name is handled as case insensitive
     private ConcurrentSkipListMap<String, HandlerInfo> handlers = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
     
-    public HandlerInfo getHandlers(String baseUri, Client client, String schemaName) throws ServletException {
+    public HandlerInfo getHandlers(String baseUri, Client client, String schemaName) throws ServletException, TeiidProcessingException {
         HandlerInfo handler = this.handlers.get(schemaName);
         if (handler != null) {
             return handler;
@@ -66,7 +67,7 @@ public class OlingoBridge {
         
         org.teiid.metadata.Schema teiidSchema = client.getMetadataStore().getSchema(schemaName);
         if (teiidSchema == null || !isVisible(vdb, teiidSchema)) {
-            throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16022));
+            throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16022));
         }
         
         synchronized (this) {
@@ -148,7 +149,8 @@ public class OlingoBridge {
         String schemaName = schema.getName();
         Model model = vdb.getModel(schemaName);
         if (model == null) {
-            return true;
+            //system models are not visible by default
+            return false;
         }
         return model.isVisible();
     }    
