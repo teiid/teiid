@@ -1484,8 +1484,7 @@
            <dependency>
                <groupId>org.apache.thrift</groupId>
                <artifactId>libthrift</artifactId>
-               <!-- for accumulo support -->
-               <version>0.9.3</version>
+               <version>0.11.0</version>
            </dependency>
            
            <dependency>
