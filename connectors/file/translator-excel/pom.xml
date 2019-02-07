@@ -10,6 +10,10 @@
     <name>Excel Translator</name>
     <description>This translator provides access to the Excel data.</description>
     
+    <properties>
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

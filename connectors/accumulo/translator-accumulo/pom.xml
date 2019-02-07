@@ -5,10 +5,20 @@
 		<artifactId>accumulo</artifactId>
 		<version>12.1.0-SNAPSHOT</version>
 	</parent>
-	<groupId>org.teiid.connectors</groupId>
 	<artifactId>translator-accumulo</artifactId>
 	<name>Accumulo translator</name>
 	<description>Integrates the query engine with Accumulo</description>
+	
+	<properties>
+	   <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
+	        
+	        2. There are a lot of duplicates/conflicts between hadoop and accumulo, that we aren't going to resolve here.
+	   -->
+	   <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+
+	   <basepom.check.fail-dependency-versions-check>false</basepom.check.fail-dependency-versions-check>
+       <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
+	</properties>
 
 	<dependencies>
 		<dependency>
@@ -42,13 +52,6 @@
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-common</artifactId>
-			<exclusions>
-			     <exclusion>
-			         <!-- removed for Java 9 -->
-			         <artifactId>jdk.tools</artifactId>
-			         <groupId>jdk.tools</groupId>
-			     </exclusion>
-			</exclusions>
 		</dependency> 
 		<dependency>
 			<groupId>org.apache.thrift</groupId>

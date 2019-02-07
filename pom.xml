@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <!-- TODO: replace with basepom --> 
-    <!-- <parent>
-      <groupId>org.jboss</groupId>
-      <artifactId>jboss-parent</artifactId>
-      <version>28</version>
-      <relativePath />
-    </parent> -->
+    <parent>
+        <groupId>org.basepom</groupId>
+        <artifactId>basepom-oss</artifactId>
+        <version>25</version>
+    </parent>
     
     <modelVersion>4.0.0</modelVersion>
 	<groupId>org.teiid</groupId>
@@ -23,7 +21,33 @@
 	    <victims.updates>weekly</victims.updates>
             
         <jdk.min.version>1.8</jdk.min.version>
-      
+        
+        <basepom.git-id.skip>false</basepom.git-id.skip>
+        <basepom.check.skip-checkstyle>true</basepom.check.skip-checkstyle>
+        <basepom.check.skip-license>true</basepom.check.skip-license>
+        <basepom.check.skip-findbugs>true</basepom.check.skip-findbugs>
+        <!-- some modules, especially on a build server will exceed the 30 second default -->
+        <basepom.test.timeout>600</basepom.test.timeout>
+        
+        <!-- without separating some of the odata / web tests as integration tests 
+             that launch jetty with an embedded server, we need more memory for everything
+        -->
+        <basepom.test.memory>1024m</basepom.test.memory>
+
+        <!-- the tests under java 11 fail with the default version -->
+        <dep.plugin.jacoco.version>0.8.3</dep.plugin.jacoco.version>
+        
+        <!-- from syndesis.io -->
+        <!-- Don't fork based on cores, doesn't work nicely in the cloud -->
+	    <basepom.test.fork-count>1</basepom.test.fork-count>
+	    <basepom.failsafe.fork-count>1</basepom.failsafe.fork-count>
+	    <basepom.failsafe.reuse-vm>true</basepom.failsafe.reuse-vm>
+	    <!-- takes a really long time -->
+        <basepom.check.skip-dependency-versions-check>true</basepom.check.skip-dependency-versions-check>
+        <dep.plugin.surefire.version>2.21.0</dep.plugin.surefire.version> <!-- SUREFIRE-1422 -->
+        <dep.plugin.failsafe.version>2.21.0</dep.plugin.failsafe.version> <!-- SUREFIRE-1422 -->
+        <!-- end from syndesis.io -->
+        
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
@@ -48,10 +72,11 @@
         <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>      
         
         <version.commons-configuration>1.6</version.commons-configuration>
-        <version.commons-logging>1.1</version.commons-logging>
+        <version.commons-logging>1.2</version.commons-logging>
         <version.commons-net>3.5</version.commons-net>
 
         <version.de.flapdoodle.embed.mongo>2.2.0</version.de.flapdoodle.embed.mongo>
+        <version.de.flapdoodle.embed.process>2.1.2</version.de.flapdoodle.embed.process>
 
         <version.gdata-core>1.47.1</version.gdata-core>
         <version.hadoop-common>2.6.4</version.hadoop-common>
@@ -83,11 +108,12 @@
         <version.org.dbunit>2.2</version.org.dbunit>
         <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
         <version.org.eclipse.persistence>2.5.0</version.org.eclipse.persistence>
+        <version.org.eclipse.persistence.javax>2.1.0</version.org.eclipse.persistence.javax>
         <version.org.hibernate.javax.persistence.hibernate-jpa-2.1-api>1.0.2.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.1-api><version.org.mockito>1.10.19</version.org.mockito>
         <version.org.jboss.oreva>1.0.0</version.org.jboss.oreva>
         <version.org.mockito>1.10.19</version.org.mockito>
         <version.org.mongodb.mongo-java-driver>3.9.1</version.org.mongodb.mongo-java-driver>
-        <version.org.reflections>0.9.9</version.org.reflections>
+        <version.org.reflections>0.9.11</version.org.reflections>
         <version.org.springframework>3.2.12.RELEASE</version.org.springframework>
         <version.org.springframework.asm>3.1.4.RELEASE</version.org.springframework.asm>
         
@@ -103,7 +129,6 @@
         <version.sun.jaxb>2.3.0</version.sun.jaxb>      
         <version.swagger-parser>1.0.33</version.swagger-parser>
 
-        <version.xerces>2.11.0</version.xerces>
         <version.xml-apis>1.4.01</version.xml-apis>
 
         <version.zookeeper>3.4.10</version.zookeeper>
@@ -177,6 +202,9 @@
         <activation>
             <activeByDefault>true</activeByDefault>
         </activation>
+        <properties>
+            <basepom.check.skip-dependency-versions-check>false</basepom.check.skip-dependency-versions-check>
+        </properties>
         <modules>
             <module>wildfly</module>
         </modules>
@@ -196,6 +224,9 @@
 			<module>build</module>
 			<module>wildfly</module>
 		</modules>
+		<properties>
+            <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
+        </properties>
 		<build>
 			<plugins>
 				<plugin>
@@ -237,6 +268,9 @@
 		<modules>
 			<module>build</module>
 		</modules>
+		<properties>
+            <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
+        </properties>
 		<build>
 			<plugins>
 				<plugin>
@@ -261,10 +295,13 @@
 	</profile>
 	<profile>
 		<!-- This is to enable faster build for development time. -->
+		<!-- TODO: copy the flash profile from syndesis - there's a lot of other plugins to
+		     turned off directly -->
 		<id>dev</id>
 		<properties>
 			<maven.javadoc.skip>true</maven.javadoc.skip>
 			<skipTests>true</skipTests>
+			<basepom.check.skip-all>true</basepom.check.skip-all>
 		</properties>
 		<modules>
 			<module>build</module>
@@ -518,7 +555,7 @@
             <scope>test</scope>
         </dependency>
    </dependencies>
-	    <dependencyManagement>
+   <dependencyManagement>
         <dependencies>
 
             <dependency>
@@ -566,6 +603,110 @@
                 <groupId>com.datastax.cassandra</groupId>
                 <artifactId>cassandra-driver-core</artifactId>
                 <version>${version.cassandra-driver-core}</version>
+                <exclusions>
+	                <exclusion>
+	                    <groupId>org.apache.httpcomponents</groupId>
+	                    <artifactId>httpcore</artifactId>
+	                </exclusion>            
+	                <exclusion>
+	                    <groupId>org.apache.thrift</groupId>
+	                    <artifactId>libthrift</artifactId>
+	                </exclusion>            
+	                 <exclusion>
+	                    <artifactId>cassandra-thrift</artifactId>
+	                    <groupId>org.apache.cassandra</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>commons-lang</artifactId>
+	                    <groupId>commons-lang</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>servlet-api</artifactId>
+	                    <groupId>javax.servlet</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>httpclient</artifactId>
+	                    <groupId>org.apache.httpcomponents</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>lz4</artifactId>
+	                    <groupId>net.jpountz.lz4</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>compress-lzf</artifactId>
+	                    <groupId>com.ning</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>commons-cli</artifactId>
+	                    <groupId>commons-cli</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>commons-codec</artifactId>
+	                    <groupId>commons-codec</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>antlr</artifactId>
+	                    <groupId>org.antlr</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>avro</artifactId>
+	                    <groupId>org.apache.cassandra.deps</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>jamm</artifactId>
+	                    <groupId>com.github.stephenc</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>jline</artifactId>
+	                    <groupId>jline</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>json-simple</artifactId>
+	                    <groupId>com.googlecode.json-simple</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>snakeyaml</artifactId>
+	                    <groupId>org.yaml</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>snaptree</artifactId>
+	                    <groupId>edu.stanford.ppl</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>jbcrypt</artifactId>
+	                    <groupId>org.mindrot</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>high-scale-lib</artifactId>
+	                    <groupId>
+	                        com.github.stephenc.high-scale-lib
+	                    </groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>netty</artifactId>
+	                    <groupId>io.netty</groupId>
+	                 </exclusion>
+	                 <!-- <exclusion>
+	                    <artifactId>slf4j-api</artifactId>
+	                    <groupId>org.slf4j</groupId>
+	                 </exclusion> -->
+	                 <exclusion>
+	                    <artifactId>log4j</artifactId>
+	                    <groupId>log4j</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>slf4j-log4j12</artifactId>
+	                    <groupId>org.slf4j</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>org.codehaus.jackson</artifactId>
+	                    <groupId>jackson-core-asl</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                    <artifactId>org.codehaus.jackson</artifactId>
+	                    <groupId>jackson-mapper-asl</groupId>
+	                 </exclusion>                 
+	            </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml</groupId>
@@ -707,10 +848,17 @@
                 <artifactId>commons-net</artifactId>
                 <version>${version.commons-net}</version>
             </dependency>
+            
             <dependency>
                 <groupId>de.flapdoodle.embed</groupId>
                 <artifactId>de.flapdoodle.embed.mongo</artifactId>
                 <version>${version.de.flapdoodle.embed.mongo}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>de.flapdoodle.embed</groupId>
+                <artifactId>de.flapdoodle.embed.process</artifactId>
+                <version>${version.de.flapdoodle.embed.process}</version>
             </dependency>
 
             <dependency>
@@ -835,6 +983,13 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-common</artifactId>
                 <version>${version.hadoop-common}</version>
+                <exclusions>
+	                 <exclusion>
+	                     <!-- removed for Java 9 -->
+	                     <artifactId>jdk.tools</artifactId>
+	                     <groupId>jdk.tools</groupId>
+	                 </exclusion>
+                 </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.olingo</groupId>
@@ -908,6 +1063,13 @@
                 <groupId>org.apache.xmlbeans</groupId>
                 <artifactId>xmlbeans</artifactId>
                 <version>${version.org.apache.xmlbeans}</version>
+                <exclusions>
+                    <!-- rely on xml-apis instead -->
+                    <exclusion>
+                        <groupId>stax</groupId>
+                        <artifactId>stax-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.arrahtec</groupId>
@@ -973,6 +1135,11 @@
                 <version>${version.org.eclipse.persistence}</version>
             </dependency>
             <dependency>
+                <groupId>org.eclipse.persistence</groupId>
+                <artifactId>javax.persistence</artifactId>
+                <version>${version.org.eclipse.persistence.javax}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-core</artifactId>
                 <version>${version.hamcrest}</version>
@@ -1021,6 +1188,10 @@
                         <groupId>org.eclipse.persistence</groupId>
                         <artifactId>eclipselink</artifactId>
                     </exclusion>
+                    <exclusion>
+			            <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
+			            <groupId>org.jboss.spec.javax.ws.rs</groupId>
+			        </exclusion>
                     <!-- <exclusion> <groupId>joda-time</groupId> <artifactId>joda-time</artifactId> 
                         </exclusion> -->
                 </exclusions>
@@ -1330,11 +1501,6 @@
             </dependency>
 
             <dependency>
-                <groupId>xerces</groupId>
-                <artifactId>xercesImpl</artifactId>
-                <version>${version.xerces}</version>
-            </dependency>
-            <dependency>
                 <groupId>xml-apis</groupId>
                 <artifactId>xml-apis</artifactId>
                 <version>${version.xml-apis}</version>
@@ -1346,6 +1512,12 @@
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-core</artifactId>
                 <version>9.4.3.Final</version>
+                <exclusions>
+		            <exclusion>
+		                <groupId>org.jboss.spec.javax.transaction</groupId>
+		                <artifactId>jboss-transaction-api_1.2_spec</artifactId>
+		            </exclusion>
+		        </exclusions>
             </dependency> 
             <dependency>
                 <groupId>org.infinispan</groupId>
@@ -1362,21 +1534,6 @@
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging</artifactId>
                 <version>3.3.2.Final</version>       
-            </dependency>  
-            <dependency>
-                <groupId>org.jboss.marshalling</groupId>
-                <artifactId>jboss-marshalling-river</artifactId>
-                <version>2.0.6.Final</version>      
-            </dependency>  
-            <dependency>
-                <groupId>org.jboss.marshalling</groupId>
-                <artifactId>jboss-marshalling</artifactId>
-                <version>2.0.6.Final</version>      
-            </dependency>  
-            <dependency>
-                <groupId>org.jboss.marshalling</groupId>
-                <artifactId>jboss-marshalling-osgi</artifactId>
-                <version>2.0.5.Final</version>      
             </dependency>  
             
             <dependency>
@@ -1416,21 +1573,12 @@
            </dependency>
            
            <dependency>
+               <!-- TODO: get this from the infinispan bom
+                    not explicitly used in Teiid, but referenced by Teiid Spring Boot    
+                 -->
                <groupId>com.github.ben-manes.caffeine</groupId>
                <artifactId>caffeine</artifactId>
                <version>2.6.2</version>
-           </dependency>
-           
-           <dependency>
-               <groupId>io.reactivex.rxjava2</groupId>
-               <artifactId>rxjava</artifactId>
-               <version>2.2.0</version>
-           </dependency>
-           
-           <dependency>
-               <groupId>org.jboss</groupId>
-               <artifactId>staxmapper</artifactId>
-               <version>1.3.0.Final</version>
            </dependency>
            
            <dependency>
@@ -1443,6 +1591,12 @@
                <groupId>org.hibernate</groupId>
                <artifactId>hibernate-core</artifactId>
                <version>5.3.7.Final</version>
+               <exclusions>
+                   <exclusion>
+                       <groupId>org.jboss.spec.javax.transaction</groupId>
+                       <artifactId>jboss-transaction-api_1.2_spec</artifactId>
+                   </exclusion>
+               </exclusions>
            </dependency>
            
            <dependency>
@@ -1478,7 +1632,7 @@
            <dependency>
                <groupId>org.apache.httpcomponents</groupId>
                <artifactId>httpclient</artifactId>
-               <version>4.5.2</version>
+               <version>4.5.4</version>
            </dependency>
            
            <dependency>
@@ -1491,6 +1645,24 @@
                <groupId>org.jboss.resteasy</groupId>
                <artifactId>resteasy-jaxrs</artifactId>
                <version>3.6.2.Final</version>
+               <exclusions>
+                   <exclusion>
+                       <groupId>org.jboss.spec.javax.ws.rs</groupId>
+                       <artifactId>jboss-jaxrs-api_2.1_spec</artifactId>
+                   </exclusion>
+                   <exclusion>
+                       <groupId>javax.activation</groupId>
+                       <artifactId>activation</artifactId>
+                   </exclusion>
+                   <exclusion>
+                       <groupId>org.jboss.spec.javax.xml.bind</groupId>
+                       <artifactId>jboss-jaxb-api_2.3_spec</artifactId>
+                   </exclusion>
+                   <exclusion>
+                       <groupId>org.jboss.spec.javax.annotation</groupId>
+                       <artifactId>jboss-annotations-api_1.2_spec</artifactId>
+                   </exclusion>
+               </exclusions>
            </dependency>
 
            <dependency>
@@ -1524,10 +1696,9 @@
             </dependency>       
             <dependency>
                 <groupId>javax.activation</groupId>
-                <artifactId>activation</artifactId>
-                <version>1.1.1</version>
+                <artifactId>javax.activation-api</artifactId>
+                <version>1.2.0</version>
             </dependency>
-                      
             <dependency>
                 <groupId>javax.ws.rs</groupId>
                 <artifactId>javax.ws.rs-api</artifactId>
@@ -1556,7 +1727,7 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.7.22</version>
+                <version>1.7.25</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

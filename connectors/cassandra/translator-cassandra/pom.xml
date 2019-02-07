@@ -5,10 +5,15 @@
       <version>12.1.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.teiid.connectors</groupId>
   <artifactId>translator-cassandra</artifactId>
   <name>Cassandra CQL translator</name>
   <description>Integrates the query engine with CQL.</description>
+  
+  <properties>
+      <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
+      -->
+      <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+  </properties>
   
   <dependencies>
         <dependency>
@@ -22,110 +27,6 @@
         <dependency>
 			<groupId>com.datastax.cassandra</groupId>
 			<artifactId>cassandra-driver-core</artifactId>
-			<exclusions>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpcore</artifactId>
-                </exclusion>            
-                <exclusion>
-                    <groupId>org.apache.thrift</groupId>
-                    <artifactId>libthrift</artifactId>
-                </exclusion>            
-			     <exclusion>
-			     	<artifactId>cassandra-thrift</artifactId>
-			     	<groupId>org.apache.cassandra</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>commons-lang</artifactId>
-			     	<groupId>commons-lang</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>servlet-api</artifactId>
-			     	<groupId>javax.servlet</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>httpclient</artifactId>
-			     	<groupId>org.apache.httpcomponents</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>lz4</artifactId>
-			     	<groupId>net.jpountz.lz4</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>compress-lzf</artifactId>
-			     	<groupId>com.ning</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>commons-cli</artifactId>
-			     	<groupId>commons-cli</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>commons-codec</artifactId>
-			     	<groupId>commons-codec</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>antlr</artifactId>
-			     	<groupId>org.antlr</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>avro</artifactId>
-			     	<groupId>org.apache.cassandra.deps</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>jamm</artifactId>
-			     	<groupId>com.github.stephenc</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>jline</artifactId>
-			     	<groupId>jline</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>json-simple</artifactId>
-			     	<groupId>com.googlecode.json-simple</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>snakeyaml</artifactId>
-			     	<groupId>org.yaml</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>snaptree</artifactId>
-			     	<groupId>edu.stanford.ppl</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>jbcrypt</artifactId>
-			     	<groupId>org.mindrot</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>high-scale-lib</artifactId>
-			     	<groupId>
-			     		com.github.stephenc.high-scale-lib
-			     	</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>netty</artifactId>
-			     	<groupId>io.netty</groupId>
-			     </exclusion>
-			     <!-- <exclusion>
-			     	<artifactId>slf4j-api</artifactId>
-			     	<groupId>org.slf4j</groupId>
-			     </exclusion> -->
-			     <exclusion>
-			     	<artifactId>log4j</artifactId>
-			     	<groupId>log4j</groupId>
-			     </exclusion>
-			     <exclusion>
-			     	<artifactId>slf4j-log4j12</artifactId>
-			     	<groupId>org.slf4j</groupId>
-			     </exclusion>
-                 <exclusion>
-                    <artifactId>org.codehaus.jackson</artifactId>
-                    <groupId>jackson-core-asl</groupId>
-                 </exclusion>
-                 <exclusion>
-                    <artifactId>org.codehaus.jackson</artifactId>
-                    <groupId>jackson-mapper-asl</groupId>
-                 </exclusion>                 
-			</exclusions>
 		</dependency>     
 		<dependency>
           <groupId>com.google.guava</groupId>
@@ -135,10 +36,6 @@
           <groupId>io.dropwizard.metrics</groupId>
           <artifactId>metrics-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-        </dependency>        
     </dependencies>
     
     <build>

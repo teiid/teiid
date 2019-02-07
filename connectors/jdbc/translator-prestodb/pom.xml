@@ -21,6 +21,10 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-admin</artifactId>
         </dependency>   
         <dependency>
             <groupId>org.teiid.connectors</groupId>

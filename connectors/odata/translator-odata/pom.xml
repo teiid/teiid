@@ -10,6 +10,11 @@
     <name>Odata Translator</name>
     <description>This translator provides access to Odata based data sources</description>
     
+    <properties>
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>
@@ -42,6 +47,22 @@
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.activation</groupId>
+            <artifactId>javax.activation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-admin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.ws</groupId>
+            <artifactId>jaxws-api</artifactId>
         </dependency>
     </dependencies>
 

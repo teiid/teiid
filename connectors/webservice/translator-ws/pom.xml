@@ -9,6 +9,12 @@
     <artifactId>translator-ws</artifactId>
     <name>Web service Translator</name>
     <description>This translator provides access to Web Services.</description>
+    
+    <properties>
+        <!-- there is a duplicate resource in several of the javax jars -->
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>
@@ -27,12 +33,16 @@
 		    <artifactId>json-simple</artifactId>
 		</dependency>
         <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-        </dependency>
-        <dependency>
           <groupId>wsdl4j</groupId>
           <artifactId>wsdl4j</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>javax.activation</groupId>
+          <artifactId>javax.activation-api</artifactId>
         </dependency>        
     </dependencies>
 

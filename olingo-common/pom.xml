@@ -13,10 +13,15 @@
     </licenses>
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.teiid</groupId>
     <artifactId>teiid-olingo-common</artifactId>
     <name>teiid-olingo-common</name>
     <description>Teiid OData4 Common module</description>
+    
+    <properties>
+	    <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
+	    -->
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+    </properties>
     
     <dependencies>
 
@@ -48,6 +53,11 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
         </dependency> 
                 
     </dependencies>

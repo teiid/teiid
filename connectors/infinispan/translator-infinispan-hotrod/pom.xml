@@ -10,6 +10,11 @@
 	<name>Infinispan Protobuf Translator</name>
 	<description>This translator is using protobuf based schema to access the Infinispan cache</description>
 
+    <properties>
+        <!-- protobuf and infinispan duplicates -->
+        <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
+    </properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.teiid</groupId>
@@ -51,17 +56,10 @@
 			<groupId>com.squareup</groupId>
 			<artifactId>protoparser</artifactId>
 		</dependency>
-		<!-- test dependencies -->
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging</artifactId>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+            <groupId>org.infinispan.protostream</groupId>
+            <artifactId>protostream</artifactId>
+        </dependency>     
 	</dependencies>
 
 	<build>

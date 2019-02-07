@@ -41,16 +41,8 @@
 			<artifactId>teiid-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.teiid</groupId>
-			<artifactId>teiid-common-core</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.force.api</groupId>
 			<artifactId>force-partner-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.force.api</groupId>
-			<artifactId>force-wsc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.teiid.connectors</groupId>

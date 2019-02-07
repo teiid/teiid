@@ -10,6 +10,17 @@
     <name>JPA2 Translator</name>
     <description>This translator provides access to any JPA based entities</description>
     
+    <properties>
+       <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.  It also complains both ways
+               about javax.persistence
+            
+            2. There are a lot of duplicates/conflicts with javax.persistence - there are three versions in play.
+       -->
+       <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+
+       <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>
@@ -40,7 +51,7 @@
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
-        </dependency>     
+        </dependency>
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>eclipselink</artifactId>

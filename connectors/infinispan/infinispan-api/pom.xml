@@ -10,6 +10,12 @@
 	<name>Infinispan API</name>
 	<description>This defines the common API for Infinispan</description>
 
+    <properties>
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+        <!-- duplicates in infinispan jars -->
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.teiid</groupId>
@@ -43,6 +49,10 @@
 			<groupId>com.squareup</groupId>
 			<artifactId>protoparser</artifactId>
 		</dependency>
+		<dependency>
+            <groupId>org.infinispan.protostream</groupId>
+            <artifactId>protostream</artifactId>
+        </dependency>
 	</dependencies>
 
 	<build>

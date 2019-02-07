@@ -10,6 +10,12 @@
     <name>teiid-olingo</name>
     <description>Teiid OData4 Server module</description>
     
+    <properties>
+	    <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
+	    -->
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+    </properties>
+    
     <build>
         <plugins>
             <plugin>
@@ -74,6 +80,16 @@
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-server-api</artifactId>
         </dependency>
+        
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-api</artifactId>
+        </dependency>        
+
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-core</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.olingo</groupId>
@@ -99,6 +115,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
+        
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
                 
         <!--  runtime dependencies -->
 
@@ -122,12 +143,17 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
         </dependency>
-                                
+        
         <!-- aalto-xml runtime dependency -->
 		<dependency>
 		    <groupId>org.codehaus.woodstox</groupId>
 		    <artifactId>stax2-api</artifactId>
 		</dependency>
+		
+		<dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
@@ -179,10 +205,6 @@
             <artifactId>teiid-metadata</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.transaction</groupId>
-            <artifactId>javax.transaction-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.teiid</groupId>

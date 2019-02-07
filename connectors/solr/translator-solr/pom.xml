@@ -9,6 +9,13 @@
     <artifactId>translator-solr</artifactId>
     <name>Apache SOLR Translator</name>
     <description>This translator provides access to Apache SOLR</description>
+    
+    <properties>
+	    <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
+	    -->
+	    <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>
@@ -29,10 +36,6 @@
         <dependency>
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
-        </dependency>        
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
         </dependency>        
         <dependency>
             <groupId>org.teiid.connectors</groupId>

@@ -16,6 +16,11 @@
     <artifactId>cache-infinispan</artifactId>
     <description>Infinispan based cache</description>
     
+    <properties>
+        <!--  duplicate features.xml in infinispan jars  -->
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>  
+    
     <dependencies>
 
     <dependency>
@@ -24,15 +29,10 @@
     </dependency>
     
     <dependency>
-        <groupId>com.github.ben-manes.caffeine</groupId>
-        <artifactId>caffeine</artifactId>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-commons</artifactId>
     </dependency>
     
-    <dependency>
-        <groupId>io.reactivex.rxjava2</groupId>
-        <artifactId>rxjava</artifactId>
-    </dependency>
-
     <dependency>
         <groupId>org.teiid</groupId>
         <artifactId>teiid-engine</artifactId>
@@ -46,6 +46,11 @@
     <dependency>
         <groupId>org.teiid</groupId>
         <artifactId>teiid-common-core</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>javax.transaction</groupId>
+      <artifactId>javax.transaction-api</artifactId>
     </dependency>                    
 	</dependencies>
 
