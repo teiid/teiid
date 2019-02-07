@@ -23,10 +23,6 @@
 			<groupId>org.teiid</groupId>
 			<artifactId>teiid-admin</artifactId>
 		</dependency>
-        <dependency>
-            <groupId>javax.transaction</groupId>
-            <artifactId>javax.transaction-api</artifactId>
-        </dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>

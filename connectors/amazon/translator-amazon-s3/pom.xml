@@ -9,6 +9,12 @@
     <artifactId>translator-amazon-s3</artifactId>
     <name>S3 Translator</name>
     <description>This translator provides access to the S3 file system.</description>
+    
+    <properties>
+        <!-- there is a duplicate resource in several of the javax jars -->
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

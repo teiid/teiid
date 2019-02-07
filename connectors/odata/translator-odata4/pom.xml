@@ -10,11 +10,16 @@
     <name>OData4 Translator</name>
     <description>This translator provides access to OData V4 based data sources</description>
     
+    <properties>
+	   <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
+	        2. There are duplicate resources in the javax jars
+	   -->
+	   <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+	   
+	   <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+	</properties>
+    
     <dependencies>
-        <dependency>
-            <groupId>org.teiid</groupId>
-            <artifactId>teiid-common-core</artifactId>
-        </dependency>    
         <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-olingo-common</artifactId>
@@ -43,8 +48,29 @@
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-client-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.activation</groupId>
+            <artifactId>javax.activation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.ws</groupId>
+            <artifactId>jaxws-api</artifactId>
+        </dependency>
+        <dependency>
+	      <groupId>org.teiid</groupId>
+	      <artifactId>teiid-engine</artifactId>
+	    </dependency>    
         
         <!-- Rutime dependencies -->
+        
 		<dependency>
 		    <groupId>commons-io</groupId>
 		    <artifactId>commons-io</artifactId>

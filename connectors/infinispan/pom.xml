@@ -28,6 +28,12 @@
 	            <groupId>org.infinispan</groupId>
 	            <artifactId>infinispan-core</artifactId>
 	            <version>${version.org.infinispan}</version>
+	            <exclusions>
+	                <exclusion>
+	                    <groupId>org.jboss.spec.javax.transaction</groupId>
+	                    <artifactId>jboss-transaction-api_1.1_spec</artifactId>
+	                </exclusion>
+	            </exclusions>
             </dependency>
             
             <dependency>
@@ -59,20 +65,6 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.1</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 	<modules>
 		<module>infinispan-api</module>

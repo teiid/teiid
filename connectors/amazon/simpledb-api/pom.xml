@@ -5,10 +5,17 @@
 	<artifactId>amazon</artifactId>
         <version>12.1.0-SNAPSHOT</version>
 	</parent>
-	<groupId>org.teiid.connectors</groupId>
 	<artifactId>simpledb-api</artifactId>	
 	<name>SimpleDB API</name>
 	<description>This is API for communicating with SimpleDB</description>
+	<properties>
+	    <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
+	    -->
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+    <!-- 
+    <basepom.check.fail-dependency-versions-check>false</basepom.check.fail-dependency-versions-check>
+    <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>-->
+    </properties>
 	<dependencies>
 		<dependency>
 			<groupId>com.amazonaws</groupId>

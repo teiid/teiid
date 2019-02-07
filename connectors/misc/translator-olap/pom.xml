@@ -9,6 +9,13 @@
     <artifactId>translator-olap</artifactId>
     <name>OLAP Translator</name>
     <description>This translator provides access to Query Analysis Cubes</description>
+    <properties>
+        <!-- the xmla dependency -->
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+        <!-- resource overlap in the olap jars -->
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>

@@ -9,18 +9,34 @@
 	<name>Eclipselink DatabasePlatform</name>
 	<description>Teiid Eclipselink DatabasePlatform</description>
 
+	<properties>
+	    <!-- turned off dup finder with dups across the eclipse jars -->
+	    <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
+    </properties>
+
 	<dependencies>
 	
 		<dependency>
 			<groupId>org.eclipse.persistence</groupId>
 			<artifactId>eclipselink</artifactId>
 		</dependency>
+		
+		<dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>javax.persistence</artifactId>
+        </dependency>
         
 		<dependency>
 			<groupId>org.teiid</groupId>
 			<artifactId>teiid-client</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+            <scope>test</scope>
+        </dependency>
 		
 		<dependency>
 			<groupId>org.teiid</groupId>
@@ -39,6 +55,12 @@
 			<artifactId>translator-file</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>file-api</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.teiid</groupId>

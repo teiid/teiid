@@ -13,10 +13,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.teiid</groupId>
-			<artifactId>teiid-common-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.teiid</groupId>
 			<artifactId>teiid-api</artifactId>
 		</dependency>
 	</dependencies>

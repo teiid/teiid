@@ -6,7 +6,6 @@
 	<artifactId>amazon</artifactId>
         <version>12.1.0-SNAPSHOT</version>
 	</parent>
-	<groupId>org.teiid.connectors</groupId>
 	<artifactId>translator-simpledb</artifactId>
 	<name>Amazon SimpleDB Translator</name>
 	<description>This translator provides access to Amazon SimpleDB Database</description>
@@ -23,6 +22,10 @@
 		<dependency>
 			<groupId>org.teiid.connectors</groupId>
 			<artifactId>simpledb-api</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>com.amazonaws</groupId>
+		    <artifactId>aws-java-sdk-simpledb</artifactId>
 		</dependency>
 	</dependencies>
 	<build>
