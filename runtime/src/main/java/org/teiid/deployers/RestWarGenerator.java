@@ -23,6 +23,6 @@ import org.teiid.adminapi.impl.VDBMetaData;
 
 public interface RestWarGenerator {
 	static final String REST_NAMESPACE = "{http://teiid.org/rest}"; //$NON-NLS-1$
-	byte[] getContent(VDBMetaData vdb) throws IOException;
+	byte[] getContent(VDBMetaData vdb, String fullName) throws IOException;
 	boolean hasRestMetadata(VDBMetaData vdb);
 }

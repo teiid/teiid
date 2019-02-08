@@ -98,11 +98,10 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 	}
 	
 	@Override
-	public byte[] getContent(VDBMetaData vdb) throws IOException  {
+	public byte[] getContent(VDBMetaData vdb, String fullName) throws IOException  {
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		
 		Properties props = new Properties();
-		String fullName = vdb.getName() + "_" + vdb.getVersion();
 				
 		props.setProperty("${context-name}", fullName);
 		props.setProperty("${vdb-name}", vdb.getName());

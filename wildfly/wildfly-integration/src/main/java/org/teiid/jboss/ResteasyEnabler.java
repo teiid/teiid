@@ -32,6 +32,7 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.jboss.AdminFactory;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.RestWarGenerator;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -40,6 +41,8 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
 public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
+    
+    private static String VERSION_DELIM = PropertiesUtils.getHierarchicalProperty("org.teiid.rest.versionDelim", "_"); //$NON-NLS-1$ //$NON-NLS-2$
     
 	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
 	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
@@ -76,7 +79,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
 				@Override
 				public void run() {
 					try {
-						byte[] warContents = generator.getContent(vdb);
+						byte[] warContents = generator.getContent(vdb, warName);
 						if (!vdb.getStatus().equals(Status.ACTIVE)) {
 							return;
 						}
@@ -103,7 +106,9 @@ public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
 	}
 	
 	private String buildName(String name, String version) {
-		return name+"_"+version +".war"; //$NON-NLS-1$ //$NON-NLS-2$
+	    
+	    
+		return name+VERSION_DELIM+version +".war"; //$NON-NLS-1$
 	}
 	
 	@Override

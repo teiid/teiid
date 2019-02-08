@@ -93,7 +93,7 @@ public class TestRestWebArchiveBuilder {
         
         VDBMetaData vdb = getTestVDBMetaData();
         RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
-        byte[] contents = builder.getContent(vdb);
+        byte[] contents = builder.getContent(vdb, "vdb");
         
         ArrayList<String> files = new ArrayList<String>();
         files.add("WEB-INF/web.xml");
@@ -205,6 +205,6 @@ public class TestRestWebArchiveBuilder {
 		vdb.getVDB().addModel(model);
 		
 		RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
-		builder.getContent(vdb.getVDB());
+		builder.getContent(vdb.getVDB(), "vdb");
 	}
 }
