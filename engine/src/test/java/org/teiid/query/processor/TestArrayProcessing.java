@@ -25,6 +25,7 @@ import static org.teiid.query.resolver.TestResolver.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -257,6 +258,19 @@ public class TestArrayProcessing {
 	    
 	}
 	
+    @Test public void testQuantifiedCompareProcessingNull() throws Exception {
+        String sql = "select e2 from g1, g2 where g1.e1 = some (g2.x)"; //$NON-NLS-1$
+        Command command = helpParse(sql);
+        ProcessorPlan pp = TestProcessor.helpGetPlan(command, RealMetadataFactory.fromDDL(""
+                + "create foreign table g1 (e1 string, e2 integer);"
+                + "create foreign table g2 (x string[]);"
+                , "x", "y"), TestOptimizer.getGenericFinder());
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.e1, g_0.e2 FROM y.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("c", 2));
+        dataManager.addData("SELECT g_0.x FROM y.g2 AS g_0", Collections.singletonList(null), Arrays.asList(new ArrayImpl("a", "b")));
+        TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList(1)});
+    }
+	
 	@Test public void testNestedArrayAgg() throws Exception {
 		String sql = "select array_agg((e1, e2)) from pm1.g1"; //$NON-NLS-1$
 		Command command = helpParse(sql);
@@ -299,6 +313,7 @@ public class TestArrayProcessing {
         dataManager.addData("SELECT pm1.g1.e1, (pm1.g1.e2, pm1.g1.e3) FROM pm1.g1", Arrays.asList("a", new ArrayImpl(1, false)));
         TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", new ArrayImpl(1, false))});
     }
+    
 	
 	/**
 	 * TODO

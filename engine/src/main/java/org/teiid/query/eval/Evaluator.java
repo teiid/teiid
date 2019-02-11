@@ -566,9 +566,11 @@ public class Evaluator {
         	final Object[] vals;
         	if (array instanceof Object[]) {
 				vals = (Object[])array;
-			} else {
+			} else if (array != null){
 				ArrayImpl arrayImpl = (ArrayImpl)array;
 				vals = arrayImpl.getValues();
+			} else {
+			    return result;
 			}
         	valueIter = new ValueIterator() {
 				int index = 0;
