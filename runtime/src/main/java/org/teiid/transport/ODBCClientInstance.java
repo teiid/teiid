@@ -50,7 +50,7 @@ public class ODBCClientInstance implements ChannelListener{
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODBC, MessageLevel.TRACE)) {
-					LogManager.logTrace(LogConstants.CTX_ODBC, "invoking client method:", method.getName(), Arrays.deepToString(args)); //$NON-NLS-1$
+					LogManager.logTrace(LogConstants.CTX_ODBC, "invoking client method:", ODBCClientInstance.this, method.getName(), Arrays.deepToString(args)); //$NON-NLS-1$
 				}
 				ServiceInvocationStruct message = new ServiceInvocationStruct(args, method.getName(),ODBCServerRemote.class);
 				channel.write(message);
@@ -67,6 +67,7 @@ public class ODBCClientInstance implements ChannelListener{
 						break;
 					}
 	        		if (!server.isErrorOccurred() || request.struct.methodName.equals("sync")) { //$NON-NLS-1$
+	        		    System.out.println(ODBCClientInstance.this + " " + request.struct.methodName);
 	        			processMessage(request.struct);
 	        		}
 				}
