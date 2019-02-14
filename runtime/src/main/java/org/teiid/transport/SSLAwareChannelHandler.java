@@ -21,6 +21,20 @@
  */
 package org.teiid.transport;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.SocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+import org.teiid.net.socket.ObjectChannel;
+import org.teiid.runtime.RuntimePlugin;
+
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
@@ -30,23 +44,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.GenericFutureListener;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.SocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
-import org.teiid.logging.MessageLevel;
-import org.teiid.net.socket.ObjectChannel;
-import org.teiid.runtime.RuntimePlugin;
 
 
 /**
@@ -86,50 +83,18 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 			throw new UnsupportedOperationException();
 		}
 
-		public Future<?> write(Object msg) {
-			final ChannelFuture future = channel.write(msg);
-			channel.flush();
-			future.addListener(completionListener);
-			return new Future<Void>() {
-
-				@Override
-				public boolean cancel(boolean arg0) {
-					return future.cancel(arg0);
-				}
-
-				@Override
-				public Void get() throws InterruptedException,
-						ExecutionException {
-					future.await();
-					if (!future.isSuccess()) {
-						throw new ExecutionException(future.cause());
-					}
-					return null;
-				}
-
-				@Override
-				public Void get(long arg0, TimeUnit arg1)
-						throws InterruptedException, ExecutionException,
-						TimeoutException {
-					if (future.await(arg0, arg1)) {
-						if (!future.isSuccess()) {
-							throw new ExecutionException(future.cause());
-						}
-						return null;
-					}
-					throw new TimeoutException();
-				}
-
-				@Override
-				public boolean isCancelled() {
-					return future.isCancelled();
-				}
-
-				@Override
-				public boolean isDone() {
-					return future.isDone();
-				}
-			};
+		public synchronized Future<?> write(Object msg) {
+		    //see https://github.com/netty/netty/issues/3887
+		    //    https://issues.jboss.org/browse/TEIID-5658
+		    //submit directly to the event loop to maintain ordering
+			return channel.eventLoop().submit(new Runnable() {
+                
+                @Override
+                public void run() {
+                    final ChannelFuture future = channel.writeAndFlush(msg);
+                    future.addListener(completionListener);
+                }
+            });
 		}
 	}
 	
