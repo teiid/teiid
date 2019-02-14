@@ -149,6 +149,14 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		}
 		
 		private boolean processRow(ResultsFuture<Boolean> future) {
+		    //synchronize the local state as this can be
+            //used by both nio and the engine threads
+		    synchronized (PgBackendProtocol.this) {
+                return processRowInternal(future);
+            }
+		}
+		
+		private boolean processRowInternal(ResultsFuture<Boolean> future) {
 			nextFuture = null;
 			boolean processNext = true;
 			try {
@@ -224,12 +232,18 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		try {
 			Method m = this.clientProxy.findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
 			try {
-				m.invoke(this, serviceStruct.args);
+			    //synchronize the local state as this can be
+			    //used by both nio and the engine threads
+			    synchronized (this) {
+	                m.invoke(this, serviceStruct.args);
+                }
 			} catch (InvocationTargetException e) {
 				throw e.getCause();
 			}		
 		} catch (Throwable e) {
-			terminate(e);
+		    synchronized (this) {
+	            terminate(e);
+            }
 		}
 	}
 		
