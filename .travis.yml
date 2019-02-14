@@ -3,14 +3,13 @@ sudo: false
 jdk:
     - openjdk8
     - openjdk11
-stages:
-  - name: script
-    # require the branch name to be master (note for PRs this is the base branch name)
-    if: $TRAVIS_EVENT_TYPE != cron
 before_install:
 - cp settings.xml $HOME/.m2/settings.xml
 install: mvn -P release install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-script: mvn -P arquillian-tests test -B
+test: 
+  script: mvn -P arquillian-tests test -B
+  on:
+    condition: $TRAVIS_EVENT_TYPE != cron
 cache:
   directories:
   - $HOME/.m2

@@ -153,7 +153,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	public synchronized void reset() {
+	public void reset() {
 		super.reset();
 		if (this.reader != null) {
 			try {
@@ -275,7 +275,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private void process() throws TeiidProcessingException {
 		while (true) {
 			synchronized (this) {
-				if (isBatchFull() || this.reader == null) {
+				if (isBatchFull()) {
 					return;
 				}
 				StringBuilder line = readLine(lineWidth, table.isFixedWidth());

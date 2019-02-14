@@ -112,7 +112,7 @@ public class TestODBCSocketTransport {
 		
 	}
 	
-	static FakeOdbcServer odbcServer = new FakeOdbcServer();
+	private static FakeOdbcServer odbcServer = new FakeOdbcServer();
 	
 	@BeforeClass public static void oneTimeSetup() throws Exception {
 		odbcServer.start(Mode.LEGACY);
@@ -321,7 +321,7 @@ public class TestODBCSocketTransport {
 		try {
 			stmt.executeQuery();
 		} catch (SQLException e) {
-			assertTrue(e.getMessage(), e.getMessage().contains("Error converting"));
+			assertTrue(e.getMessage().contains("Error converting"));
 		}
 	}
 	
@@ -330,7 +330,7 @@ public class TestODBCSocketTransport {
 		try {
 			stmt.executeQuery();
 		} catch (SQLException e) {
-			assertTrue(e.getMessage(), e.getMessage().contains("Parsing error"));
+			assertTrue(e.getMessage().contains("Parsing error"));
 		}
 	}
 	
@@ -778,10 +778,10 @@ public class TestODBCSocketTransport {
 	@Test public void testRegClass() throws Exception {
         Statement s = conn.createStatement();
         ResultSet rs = s.executeQuery("select '\"pg_catalog.pg_class\"'::regclass");
-        assertTrue(rs.next());
+        rs.next();
         int oid = rs.getInt(1);
         rs = s.executeQuery("select oid from pg_class where relname='pg_class'");
-        assertTrue(rs.next());
+        rs.next();
         int oid1 = rs.getInt(1);
         assertEquals(oid, oid1);
     }
