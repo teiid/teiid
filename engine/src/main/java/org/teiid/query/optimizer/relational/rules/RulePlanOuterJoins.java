@@ -253,62 +253,10 @@ public class RulePlanOuterJoins implements OptimizerRule {
             }
             
             //check for left outer join ordering, such that we can combine for pushdown
-            if (checkLeftOrdering(metadata, capabilitiesFinder, analysisRecord,
-                    context, join)) {
-                continue;
-            }
+            checkLeftOrdering(metadata, capabilitiesFinder, analysisRecord,
+                    context, join);
             
-            if (!join.getProperty(Info.JOIN_TYPE).equals(JoinType.JOIN_LEFT_OUTER)) {
-                continue;
-            }
-            
-            PlanNode childJoin = null;
-            PlanNode other = null;
-            PlanNode left = join.getFirstChild();
-            PlanNode right = join.getLastChild();
-
-            if (left.getType() == NodeConstants.Types.JOIN && left.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER) {
-                childJoin = left;
-                other = right;
-            } else {
-                continue;
-            }
-            
-            List<Criteria> joinCriteria = (List<Criteria>) join.getProperty(Info.JOIN_CRITERIA);
-            if (!isCriteriaValid(joinCriteria, metadata, join)) {
-                continue;
-            }
-            
-            List<Criteria> childJoinCriteria = (List<Criteria>) childJoin.getProperty(Info.JOIN_CRITERIA);
-            if (!isCriteriaValid(childJoinCriteria, metadata, childJoin) || join.hasBooleanProperty(Info.PRESERVE)) {
-                continue;
-            }
-            
-            //there are 1 form we can take
-            // (a b) c -> a (b c)
-            Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(joinCriteria);
-            if (Collections.disjoint(groups, FrameUtil.findJoinSourceNode(childJoin.getFirstChild()).getGroups())) {
-                //rearrange
-                PlanNode newParent = RulePlanJoins.createJoinNode();
-                newParent.setProperty(Info.JOIN_TYPE, JoinType.JOIN_LEFT_OUTER);
-                PlanNode newChild = RulePlanJoins.createJoinNode();
-                newChild.setProperty(Info.JOIN_TYPE, JoinType.JOIN_LEFT_OUTER);
-                joins.remove(childJoin);
-                //a (b c)
-                newChild.addFirstChild(childJoin.getLastChild());
-                //promote the hints to the new parent
-                //so that makedep b can be honored
-                RulePlaceAccess.copyProperties(newChild.getFirstChild(), newChild);
-                newChild.addLastChild(other);
-                newChild.setProperty(Info.JOIN_CRITERIA, joinCriteria);
-                newParent.addFirstChild(childJoin.getFirstChild());
-                newParent.addLastChild(newChild);
-                newParent.setProperty(Info.JOIN_CRITERIA, childJoinCriteria);
-                updateGroups(newChild);
-                updateGroups(newParent);
-                join.getParent().replaceChild(join, newParent);
-                changedAny = true;
-            }
+            //we don't need to do further reordering at this point as it can be handled after join planning
         }
         return changedAny;
     }
@@ -381,8 +329,9 @@ public class RulePlanOuterJoins implements OptimizerRule {
                 join.addLastChild(right);
                 join.getGroups().clear();
                 updateGroups(join);
-                parent.getGroups().clear();
-                updateGroups(parent);
+                //update left an parent to pick up new groups
+                updateGroups(left);
+                updateGroups(left.getParent());
                 return true;
             }
         }
@@ -395,3 +344,4 @@ public class RulePlanOuterJoins implements OptimizerRule {
     }
     
 }
+
