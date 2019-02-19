@@ -24,6 +24,7 @@ import static org.teiid.query.processor.TestProcessor.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -1604,7 +1605,27 @@ public class TestJoinOptimization {
                 RealMetadataFactory.example1Cached(),
                 new String[] {
                     "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", 
-                    "SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM (pm1.g1 AS g_0 INNER JOIN pm1.g3 AS g_1 ON g_0.e1 = g_1.e1) LEFT OUTER JOIN pm1.g2 AS g_2 ON g_0.e1 = g_2.e1 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                    "SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM (pm1.g1 AS g_0 INNER JOIN pm1.g3 AS g_1 ON g_0.e1 = g_1.e1) LEFT OUTER JOIN pm1.g2 AS g_2 ON g_0.e1 = g_2.e1 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$        
+     }
+	
+	@Test public void testLeftOuterAssocitivtyWithStarJoinProjection() throws Exception {
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g3.e1 from pm1.g1 "
+                + "left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 "
+                + "left outer join pm1.g3 on pm1.g1.e1 = pm1.g3.e1 "
+                + "left outer join pm1.g2 on pm1.g1.e1 = pm1.g2.e1 "
+                + "left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1",
+                RealMetadataFactory.example1Cached(),
+                new String[] {
+                    "SELECT g_0.e1 AS c_0, g_1.e1 AS c_1 FROM (pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g3 AS g_1 ON g_0.e1 = g_1.e1) LEFT OUTER JOIN pm1.g2 AS g_2 ON g_0.e1 = g_2.e1 ORDER BY c_0",    
+                    "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+                    "SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(false);
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Collections.singletonList(null)});
      }
 	
 	@Test public void testLeftOuterAssocitivtyWithStarJoinWithPreserve() throws Exception {
