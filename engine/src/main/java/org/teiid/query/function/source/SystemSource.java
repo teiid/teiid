@@ -29,6 +29,7 @@ import org.teiid.core.types.GeometryType;
 import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -197,11 +198,11 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addTrimFunction();
 
         addFunctions(JSONFunctionMethods.class);
-        addLibrary(GeometryFunctionMethods.class.getName(), null);
-        addLibrary(GeographyFunctionMethods.class.getName(), null);
+        addLibrary(GeometryFunctionMethods.class.getName(), null, true);
+        addLibrary(GeographyFunctionMethods.class.getName(), null, true);
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
-        if (addLibrary(XMLSystemFunctions.class.getName(), null)) {
+        if (addLibrary(XMLSystemFunctions.class.getName(), null, true)) {
             // xml functions
             addXpathValueFunction();
             addXslTransformFunction();
@@ -210,7 +211,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
             addXmlPi();
             addJsonToXml();
         }
-        addLibrary("org.teiid.dataquality.OSDQFunctions", "osdq."); //$NON-NLS-1$ //$NON-NLS-2$
+        addLibrary("org.teiid.dataquality.OSDQFunctions", "osdq.", false); //$NON-NLS-1$ //$NON-NLS-2$
         
 		try {
 			FunctionMethod fm = MetadataFactory.createFunctionFromMethod("st_extent", GeometryUtils.Extent.class.getMethod("addInput", GeometryType.class)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -222,7 +223,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 		}
     }
     
-    private boolean addLibrary(String className, String prefix) {
+    private boolean addLibrary(String className, String prefix, boolean warn) {
         try {
             Class<?> osdqFunctions = Class.forName(className, false, 
                     this.getClass().getClassLoader());
@@ -230,7 +231,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
             return true;
         } catch (ClassNotFoundException|NoClassDefFoundError e) {
             // ignore the add
-            LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31263, className, e.getMessage()));
+            LogManager.log(warn?MessageLevel.INFO:MessageLevel.DETAIL, LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31263, className, e));
         }
         return false;
     }
