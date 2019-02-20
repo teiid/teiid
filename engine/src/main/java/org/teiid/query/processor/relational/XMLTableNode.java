@@ -81,7 +81,7 @@ import net.sf.saxon.value.StringValue;
  * When streaming the results will be fully built and stored in a buffer
  * before being returned
  */
-public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProcessor {
+public class XMLTableNode extends SubqueryAwareRelationalNode {
 
 	private static Map<Class<?>, BuiltInAtomicType> typeMapping = new HashMap<Class<?>, BuiltInAtomicType>();
 	
@@ -260,10 +260,23 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				}
 			}
 			Runnable r = new Runnable() {
+			    TupleBuffer b = buffer;
 				@Override
 				public void run() {
 					try {
-						XQueryEvaluator.evaluateXQuery(table.getXQueryExpression(), contextItem, parameters, XMLTableNode.this, getContext());
+						XQueryEvaluator.evaluateXQuery(table.getXQueryExpression(), contextItem, parameters, new RowProcessor() {
+                            
+                            @Override
+                            public void processRow(NodeInfo row) {
+                                synchronized (XMLTableNode.this) {
+                                    if (b != buffer) {
+                                        //if the buffer has changed we've been reset
+                                        throw EARLY_TERMINATION; 
+                                    }
+                                    XMLTableNode.this.processRow(row);
+                                }
+                            }
+                        }, getContext());
 					} catch (TeiidRuntimeException e) {
 						if (e != EARLY_TERMINATION) {
 							asynchException = e;
@@ -392,8 +405,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		return SequenceTool.convertToJava(value);
 	}
 	
-	@Override
-	public synchronized void processRow(NodeInfo row) {
+	public void processRow(NodeInfo row) {
 		if (isClosed()) {
 			throw EARLY_TERMINATION;
 		}
