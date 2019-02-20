@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.locationtech.jts.geom.*;
 import org.osgeo.proj4j.CRSFactory;
 import org.osgeo.proj4j.CoordinateReferenceSystem;
 import org.osgeo.proj4j.CoordinateTransform;
@@ -32,8 +33,6 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.GeometryType;
 import org.teiid.jdbc.TeiidConnection;
 import org.teiid.query.QueryPlugin;
-
-import com.vividsolutions.jts.geom.*;
 
 /**
  * Wrapper around proj4j library to transform geometries to different coordinate

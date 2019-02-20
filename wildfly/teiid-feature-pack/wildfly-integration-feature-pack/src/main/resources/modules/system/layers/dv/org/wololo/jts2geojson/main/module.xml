@@ -7,7 +7,7 @@
     	<artifact name="${org.wololo:jts2geojson}"/>
     </resources>
     <dependencies>
-        <module name="com.vividsolutions.jts" />
+        <module name="org.locationtech.jts" />
         <module name="com.fasterxml.jackson.core.jackson-core"/>
         <module name="com.fasterxml.jackson.core.jackson-databind"/>
         <module name="com.fasterxml.jackson.core.jackson-annotations"/>

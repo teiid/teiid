@@ -28,13 +28,12 @@ import org.apache.olingo.commons.api.edm.geo.MultiPoint;
 import org.apache.olingo.commons.api.edm.geo.MultiPolygon;
 import org.apache.olingo.commons.api.edm.geo.Point;
 import org.apache.olingo.commons.api.edm.geo.Polygon;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LinearRing;
 import org.teiid.core.types.AbstractGeospatialType;
 import org.teiid.core.types.GeographyType;
 import org.teiid.query.function.GeometryUtils;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LinearRing;
 
 class Olingo2Teiid {
     
@@ -61,12 +60,12 @@ class Olingo2Teiid {
     public static Geometry convertToJTS(Geospatial geospatial) {
         if (geospatial instanceof Point) {
             Point point = (Point) geospatial;
-            com.vividsolutions.jts.geom.Point result = 
+            org.locationtech.jts.geom.Point result = 
                     GeometryUtils.GEOMETRY_FACTORY.createPoint(new Coordinate(point.getX(), point.getY(), point.getZ()));
             return result;
         } else if (geospatial instanceof LineString) {
             LineString lineString = (LineString) geospatial;
-            com.vividsolutions.jts.geom.LineString result = 
+            org.locationtech.jts.geom.LineString result = 
                     GeometryUtils.GEOMETRY_FACTORY.createLineString(convertLineStringToPoints(lineString));
             return result;
         } else if (geospatial instanceof Polygon) {
@@ -75,24 +74,24 @@ class Olingo2Teiid {
         } else if (geospatial instanceof MultiPoint) {
             MultiPoint multipoint = (MultiPoint)geospatial;
             Coordinate[] coords = convertLineStringToPoints(multipoint);
-            com.vividsolutions.jts.geom.MultiPoint result = GeometryUtils.GEOMETRY_FACTORY.createMultiPoint(coords);
+            org.locationtech.jts.geom.MultiPoint result = GeometryUtils.GEOMETRY_FACTORY.createMultiPoint(coords);
             return result;
         } else if (geospatial instanceof MultiLineString) {
             MultiLineString multiLineString = (MultiLineString)geospatial;
-            List<com.vividsolutions.jts.geom.LineString> vals = new ArrayList<>();
+            List<org.locationtech.jts.geom.LineString> vals = new ArrayList<>();
             for (LineString lineString : multiLineString) {
                 vals.add(GeometryUtils.GEOMETRY_FACTORY.createLineString(convertLineStringToPoints(lineString)));
             }
             return GeometryUtils.GEOMETRY_FACTORY.createGeometryCollection(
-                    vals.toArray(new com.vividsolutions.jts.geom.LineString[vals.size()]));
+                    vals.toArray(new org.locationtech.jts.geom.LineString[vals.size()]));
         } else if (geospatial instanceof MultiPolygon) {
             MultiPolygon multiPolygon = (MultiPolygon)geospatial;
-            ArrayList<com.vividsolutions.jts.geom.Polygon> vals = new ArrayList<>();
+            ArrayList<org.locationtech.jts.geom.Polygon> vals = new ArrayList<>();
             for (Polygon val : multiPolygon) {
                 vals.add(convertPolygon(val));
             }
             return GeometryUtils.GEOMETRY_FACTORY.createMultiPolygon(
-                    vals.toArray(new com.vividsolutions.jts.geom.Polygon[vals.size()]));
+                    vals.toArray(new org.locationtech.jts.geom.Polygon[vals.size()]));
         } else if (geospatial instanceof GeospatialCollection) {
             GeospatialCollection geometryCollection = (GeospatialCollection)geospatial;
             ArrayList<Geometry> vals = new ArrayList<>();
@@ -105,7 +104,7 @@ class Olingo2Teiid {
         }
     }
 
-    static private com.vividsolutions.jts.geom.Polygon convertPolygon(
+    static private org.locationtech.jts.geom.Polygon convertPolygon(
             Polygon polygon) throws AssertionError {
         Coordinate[] coords = convertLineStringToPoints(polygon.getExterior());
         LinearRing shell = GeometryUtils.GEOMETRY_FACTORY.createLinearRing(coords);

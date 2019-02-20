@@ -135,10 +135,10 @@
 		</dependency>
 		
         <dependency>
-            <groupId>com.vividsolutions</groupId>
-            <artifactId>jts</artifactId>
-        </dependency>		
-		
+            <groupId>org.locationtech.jts</groupId>
+            <artifactId>jts-core</artifactId>
+        </dependency>
+        
 		<dependency>
 			<groupId>org.wildfly.core</groupId>
 			<artifactId>wildfly-subsystem-test-framework</artifactId>

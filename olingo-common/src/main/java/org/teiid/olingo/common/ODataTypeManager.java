@@ -59,7 +59,7 @@ import org.teiid.metadata.BaseColumn;
 import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.TranslatorException;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 
 public class ODataTypeManager {
 

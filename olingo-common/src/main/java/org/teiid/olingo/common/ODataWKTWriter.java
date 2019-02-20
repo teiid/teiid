@@ -29,10 +29,9 @@ import java.io.Writer;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDouble;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.util.Assert;
 import org.teiid.core.TeiidRuntimeException;
-
-import com.vividsolutions.jts.geom.*;
-import com.vividsolutions.jts.util.Assert;
 
 /**
  * Writes the Well-Known Text representation of a {@link Geometry}.

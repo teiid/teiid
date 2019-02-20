@@ -60,7 +60,7 @@
         <module name="org.jgroups"/>
         <module name="nu.xom"/>
         <module name="net.sf.saxon"/>
-        <module name="com.vividsolutions.jts"/>
+        <module name="org.locationtech.jts"/>
         <module name="org.osgeo.proj4j"/>
         <module name="org.wololo.jts2geojson"/>
         <module name="org.jboss.dmr" /> <!-- Admin -->        
