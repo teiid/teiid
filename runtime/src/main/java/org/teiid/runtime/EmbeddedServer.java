@@ -101,7 +101,6 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
-import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
@@ -830,7 +829,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			//that index is the default metadata repo
 			for (String s : resources.getEntriesPlusVisibilities().keySet()) {
 				if (s.endsWith(VDBResources.INDEX_EXT)) {
-					defaultRepo = new IndexMetadataRepository();
+					defaultRepo = createIndexMetadataRepository();
 					break;
 				}
 			}
@@ -846,6 +845,15 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			throw new VirtualDatabaseException(RuntimePlugin.Event.valueOf(e.getCode()), e.getMessage());
 		}
 	}
+
+    private MetadataRepository<?, ?> createIndexMetadataRepository()
+            throws VirtualDatabaseException {
+        try {
+            return (MetadataRepository<?, ?>) ReflectionHelper.create("org.teiid.metadata.index.IndexMetadataRepository", null, this.getClass().getClassLoader()); //$NON-NLS-1$
+        } catch (TeiidException e) {
+            throw new VirtualDatabaseException(e);
+        }
+    }
 	
 	@Override
 	protected MetadataRepository<?, ?> getMetadataRepository(String repoType)
@@ -853,7 +861,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if ("index".equals(repoType)) { //$NON-NLS-1$
 			//return a new instance since the repos are globally scoped
 			//this does not support MMX style index files organized by type
-			return new IndexMetadataRepository(); 
+			return createIndexMetadataRepository(); 
 		}
 		return super.getMetadataRepository(repoType);
 	}

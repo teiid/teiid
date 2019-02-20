@@ -33,10 +33,6 @@
     </dependency>
     <dependency>
       <groupId>org.teiid</groupId>
-      <artifactId>teiid-metadata</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
@@ -95,6 +91,11 @@
     <dependency>
         <groupId>xml-apis</groupId>
         <artifactId>xml-apis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
+      <scope>test</scope>
     </dependency>    
     <dependency>
         <groupId>org.postgresql</groupId>
