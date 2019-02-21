@@ -56,17 +56,23 @@ public class ConvertVDB {
     public static void main(String[] args) throws Exception {
         
         if (args.length < 1) {
-            System.out.println("usage: CovertVDB /path/to/file-vdb.xml");
+            System.out.println("usage: CovertVDB /path/to/file-vdb.xml [/path/to/writefile-vdb.ddl]");
             System.exit(0);
         }
 
         File f = new File(args[0]);
         if (!f.exists()) {
-            System.out.println("vdb file does not exist");
+            System.out.println("vdb file " + f.getAbsolutePath() + " does not exist");
+            return;
         }
         
         if (f.getName().toLowerCase().endsWith(".xml")) {
-            System.out.println(convert(f));
+			if (args.length > 1 && args[1] != null) {
+				System.out.println("Writing to file " + args[1]);
+				ObjectConverterUtil.write(convert(f).toCharArray(), new File(args[1]).getAbsolutePath() );
+			} else {
+				System.out.println(convert(f));
+			}
         } else {
             System.out.println("Unknown file type supplied, only .XML based VDBs are supported");
         }
