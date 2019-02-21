@@ -317,6 +317,19 @@ public class TestEmbeddedServer {
 		}
 	}
 	
+	@Test(expected=VirtualDatabaseException.class) public void testDeployInformationSchema() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        es.start(ec);
+        
+        ModelMetaData mmd1 = new ModelMetaData();
+        mmd1.setName("information_schema");
+        mmd1.setModelType(Type.VIRTUAL);
+        mmd1.addSourceMetadata("DDL", "create view v as select 1;");
+
+        es.deployVDB("test", mmd1);
+    }
+	
 	@Test public void testDeploy() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		ec.setUseDisk(false);

@@ -28,6 +28,8 @@ public interface CoreConstants {
     
     public static final String ODBC_MODEL = "pg_catalog"; //$NON-NLS-1$
     
+    public static final String INFORMATION_SCHEMA = "information_schema"; //$NON-NLS-1$
+    
     /**
      * Constant for the anonymous Teiid system username  
      */

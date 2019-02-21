@@ -37,6 +37,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
@@ -62,6 +63,8 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 public abstract class AbstractVDBDeployer {
+    
+    public static final boolean ALLOW_INFORMATION_SCHEMA = Boolean.valueOf(PropertiesUtils.getHierarchicalProperty("org.teiid.allow_information_schema", Boolean.FALSE.toString())); //$NON-NLS-1$
 	
 	/**
 	 * A wrapper to add a stateful text config
@@ -102,7 +105,8 @@ public abstract class AbstractVDBDeployer {
 			if (model.getModelType() != Type.OTHER && (model.getName() == null || model.getName().indexOf('.') >= 0) 
 					|| model.getName().equalsIgnoreCase(CoreConstants.SYSTEM_MODEL)
 					|| model.getName().equalsIgnoreCase(CoreConstants.SYSTEM_ADMIN_MODEL)
-					|| model.getName().equalsIgnoreCase(CoreConstants.ODBC_MODEL)) {
+					|| model.getName().equalsIgnoreCase(CoreConstants.ODBC_MODEL)
+					|| (!ALLOW_INFORMATION_SCHEMA && model.getName().equalsIgnoreCase(CoreConstants.INFORMATION_SCHEMA))) {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40121, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40121, model.getName(), deployment.getName(), deployment.getVersion()));
 			}
 			if (model.isSource() && model.getSourceNames().isEmpty()) {
