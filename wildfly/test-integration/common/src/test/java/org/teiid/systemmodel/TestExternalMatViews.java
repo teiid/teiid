@@ -717,6 +717,56 @@ public class TestExternalMatViews {
 	}	
 	
     @Test
+    public void testQueryTruncation() throws Exception {
+        HardCodedExecutionFactory hcef = setupData(server);
+        ModelMetaData sourceModel = setupSourceModel();
+        
+        ModelMetaData matViewModel = setupMatViewModel();
+        
+        StringBuilder sb = new StringBuilder("CREATE table MAT_V5 (col integer primary key");
+        int cols = 200;
+        for (int i = 0; i < cols; i++) {
+            sb.append(",some_long_col_name_").append(i).append(" integer");
+        }
+        sb.append(", loadnum bigint)");
+
+        Connection conn = h2DataSource.getConnection();
+        conn.createStatement().execute(sb.toString());
+        conn.close();
+        
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        sb = new StringBuilder("CREATE VIEW v1 (col integer primary key");
+        for (int i = 0; i < cols; i++) {
+            sb.append(",some_long_col_name_").append(i).append(" integer");
+        }
+        sb.append(") OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V5', "
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'THROW_EXCEPTION', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
+                + "AS select col");
+        for (int i = 0; i < cols; i++) {
+            sb.append(",").append(i);
+        }
+        sb.append(" from source.physicalTbl");
+        viewModel.addSourceMetadata("DDL", sb.toString());
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);     
+        
+        Connection admin = server.createConnection("jdbc:teiid:comp");
+        
+        Statement stmt = admin.createStatement();
+        
+        stmt.execute("call sysadmin.loadMatView('view1', 'v1')");
+        stmt.execute("call sysadmin.updateMatView('view1', 'v1', 'true')");
+        
+        stmt.executeQuery("select * from v1");
+        
+        admin.close();
+    }
+	
+    @Test
     public void testInternalWriteThroughMativew() throws Exception {
         HardCodedExecutionFactory hcef = setupData(true, server);
         ModelMetaData sourceModel = setupSourceModel();

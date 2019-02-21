@@ -293,7 +293,7 @@ BEGIN
         
         IF (VARIABLES.loadScript IS null)
         BEGIN
-            DECLARE string columns = (SELECT cast(string_agg('"' || replace(Name, '"', '""') || '"', ',') as string) FROM SYS.Columns WHERE SchemaName = loadMatView.schemaName  AND TableName = loadMatView.viewName);
+            DECLARE clob columns = (SELECT string_agg('"' || replace(Name, '"', '""') || '"', ',') FROM SYS.Columns WHERE SchemaName = loadMatView.schemaName  AND TableName = loadMatView.viewName);
             
             IF (VARIABLES.loadNumColumn IS null)
             BEGIN
@@ -302,8 +302,8 @@ BEGIN
             END
             ELSE
             BEGIN
-                DECLARE string columnNames = '(' || columns || ', ' || VARIABLES.loadNumColumn || ')';
-                DECLARE string columnValues = columns || ', ' || VARIABLES.loadNumber;
+                DECLARE clob columnNames = '(' || columns || ', ' || VARIABLES.loadNumColumn || ')';
+                DECLARE clob columnValues = columns || ', ' || cast(VARIABLES.loadNumber as string);
                 EXECUTE IMMEDIATE 'UPSERT INTO ' || matViewStageTable || VARIABLES.columnNames || ' SELECT '|| VARIABLES.columnValues || ' FROM ' || schemaName || '.' || viewName || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
                 VARIABLES.rowsUpdated = VARIABLES.ROWCOUNT; 
                 EXECUTE IMMEDIATE 'DELETE FROM ' || matViewStageTable || ' WHERE ' || VARIABLES.loadNumColumn || ' < ' || VARIABLES.loadNumber;
@@ -453,7 +453,7 @@ BEGIN
 	DECLARE string updateStmtWithCardinality = 'UPDATE ' || VARIABLES.statusTable || ' SET LoadState = DVARS.LoadState, valid = DVARS.valid, Updated = DVARS.updated, Cardinality = DVARS.cardinality, LoadNumber = DVARS.loadNumber, NodeName = DVARS.nodeName ' ||  VARIABLES.updateCriteria;
 
     BEGIN ATOMIC
-        DECLARE string columns = (SELECT cast(string_agg('"' || replace(Name, '"', '""') || '"', ',') as string) FROM SYS.Columns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName);
+        DECLARE clob columns = (SELECT string_agg('"' || replace(Name, '"', '""') || '"', ',') FROM SYS.Columns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName);
         IF(loadNumColumn IS null)
         BEGIN
             EXECUTE IMMEDIATE 'DELETE FROM ' || targetSchemaName || '.' || matViewTable || ' as ' || replace(viewName, '.', '_') || '  WHERE ' ||  refreshCriteria;
@@ -465,8 +465,8 @@ BEGIN
         END
         ELSE
         BEGIN 
-            DECLARE string columnNames = '(' || columns || ', ' || VARIABLES.loadNumColumn || ')';
-            DECLARE string columnValues = columns || ', ' || (VARIABLES.loadNumber + 1);
+            DECLARE clob columnNames = '(' || columns || ', ' || VARIABLES.loadNumColumn || ')';
+            DECLARE clob columnValues = columns || ', ' || cast(VARIABLES.loadNumber + 1 as string);
             EXECUTE IMMEDIATE 'UPSERT INTO ' || targetSchemaName || '.' || matViewTable || columnNames || ' SELECT ' || VARIABLES.columnValues || ' FROM '|| schemaName || '.' || viewName || ' WHERE ' || refreshCriteria || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
             VARIABLES.rowsUpdated = VARIABLES.ROWCOUNT;
             VARIABLES.updatedCardinality = VARIABLES.updatedCardinality + VARIABLES.ROWCOUNT;

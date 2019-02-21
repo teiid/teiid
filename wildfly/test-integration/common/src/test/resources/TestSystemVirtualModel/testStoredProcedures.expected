@@ -1,8 +1,8 @@
 string                                                             clob                                                             
 Name                                                               Body                                                             
-loadMatView                                                        Clob[12318]                                                      
+loadMatView                                                        Clob[12312]                                                      
 matViewStatus                                                      Clob[3119]                                                       
-updateMatView                                                      Clob[8874]                                                       
+updateMatView                                                      Clob[8868]                                                       
 updateStaleCount                                                   Clob[3512]                                                       
 Row Count : 4
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName      getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
