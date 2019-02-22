@@ -258,6 +258,16 @@
 						</execution>
 					</executions>
 				</plugin>
+				<plugin>
+					<groupId>org.sonatype.plugins</groupId>
+					<artifactId>nexus-staging-maven-plugin</artifactId>
+					<extensions>true</extensions>
+					<configuration>
+						<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+						<serverId>oss.sonatype.org</serverId>
+						<autoReleaseAfterClose>true</autoReleaseAfterClose>
+					</configuration>
+				</plugin>
 			</plugins>
 		</build>
 	</profile>
@@ -334,15 +344,12 @@
                 <artifactId>gwt-maven-plugin</artifactId>
                 <version>${version.com.google.gwt}</version>
             </plugin>
-            <plugin>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <configuration>
-                        <!-- During release:perform, enable the "final-release" profile -->
-                        <releaseProfiles>final-release</releaseProfiles>
-                        <goals>deploy</goals>
-                    </configuration>
-            </plugin>
             
+            <plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.3</version>
+		    </plugin>            
 		</plugins>
 	</pluginManagement>
 	<plugins>
@@ -529,6 +536,7 @@
 				<!-- During release:perform, enable the "release" profile -->
 				<releaseProfiles>final-release</releaseProfiles>
 				<goals>deploy</goals>
+				<autoVersionSubmodules>true</autoVersionSubmodules>
 			</configuration>
 		</plugin>
 	</plugins>
