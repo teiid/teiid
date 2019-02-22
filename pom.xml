@@ -343,7 +343,13 @@
 				<groupId>org.sonatype.plugins</groupId>
 				<artifactId>nexus-staging-maven-plugin</artifactId>
 				<version>1.6.3</version>
-		    </plugin>            
+		    </plugin>       
+		    
+		    <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.2.2</version>
+		    </plugin>
 		</plugins>
 	</pluginManagement>
 	<plugins>
