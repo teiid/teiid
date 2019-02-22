@@ -18,6 +18,8 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
+import java.util.List;
+
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.common.buffer.BlockedException;
@@ -34,6 +36,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -63,7 +66,11 @@ public final class RuleCleanCriteria implements OptimizerRule {
 	private boolean clean(PlanNode plan, boolean removeAllPhantom)
 			throws TeiidComponentException {
 		boolean pushRaiseNull = false;
-		plan.setProperty(Info.OUTPUT_COLS, null);
+		List<? extends Expression> outputCols = (List<? extends Expression>) plan.setProperty(Info.OUTPUT_COLS, null);
+		if (outputCols != null) {
+		    //save the approximate total 
+		    plan.setProperty(Info.APPROXIMATE_OUTPUT_COLUMNS, outputCols.size());
+		}
         for (PlanNode node : plan.getChildren()) {
         	pushRaiseNull |= clean(node, removeAllPhantom);
         }

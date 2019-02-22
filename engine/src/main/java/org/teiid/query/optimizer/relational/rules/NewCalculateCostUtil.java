@@ -750,7 +750,7 @@ public class NewCalculateCostUtil {
 		return colStats;
 	}
 
-	private static List<? extends Expression> getOutputCols(PlanNode node,
+	static List<? extends Expression> getOutputCols(PlanNode node,
 			QueryMetadataInterface metadata) throws QueryMetadataException,
 			TeiidComponentException {
 		List<Expression> outputCols =(List<Expression>)node.getProperty(Info.OUTPUT_COLS);

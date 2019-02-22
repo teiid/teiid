@@ -174,6 +174,7 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, new Integer(srcCaps.getMaxDependentInPredicates()));
         tgtCaps.setSourceProperty(Capability.CONNECTOR_ID, connectorID);
         tgtCaps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(srcCaps.getMaxFromGroups()));
+        tgtCaps.setSourceProperty(Capability.MAX_QUERY_PROJECTED_COLUMNS, srcCaps.getMaxProjectedColumns());
         tgtCaps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, srcCaps.getSupportedJoinCriteria());
         tgtCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, srcCaps.getDefaultNullOrder());
         tgtCaps.setSourceProperty(Capability.COLLATION_LOCALE, srcCaps.getCollationLocale());

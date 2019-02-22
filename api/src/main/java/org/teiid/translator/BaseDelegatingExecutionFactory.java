@@ -143,6 +143,19 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		maxFromGroups = value;
 	}
 	
+    Integer maxProjectedColumns;
+    @TranslatorProperty(display = "Max projected columns allowed", description = "The number of columns supported in projected select clause", advanced = true)
+    @Override
+    public int getMaxProjectedColumns() {
+        if (maxProjectedColumns != null) {
+            return maxProjectedColumns;
+        }
+        return delegate.getMaxProjectedColumns();
+    }
+    public void setMaxProjectedColumns(int value) {
+        maxProjectedColumns = value;
+    }
+	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, C conn)
 			throws TranslatorException {

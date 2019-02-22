@@ -916,6 +916,17 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		    return null;
 		}
 		
+		int maxColumns = CapabilitiesUtil.getMaxProjectedColumns(modelID, metadata, capFinder);
+		
+		if (maxColumns != -1) {
+		    int colCount0 = getNumberOfOutputCols(metadata, children.get(0));
+		    int colCount1 = getNumberOfOutputCols(metadata, children.get(1));
+		    
+		    if (colCount0 + colCount1 > maxColumns) {
+		        return null;
+		    }
+		}
+		
 		if (crits != null && !crits.isEmpty()) {
 			if (considerOptional) {
 				for (CompareCriteria criteria : thetaCriteria) {
@@ -936,6 +947,31 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		}
 		
 		return modelID;
+    }
+
+    /**
+     * Try to get the number of output columns without requiring a rerun of assign output elements
+     * TODO: if we can't get the actual or approximate columns, we may assume too many
+     * @param metadata
+     * @param node
+     * @return
+     * @throws QueryMetadataException
+     * @throws TeiidComponentException
+     */
+    private static int getNumberOfOutputCols(QueryMetadataInterface metadata,
+            PlanNode node)
+            throws QueryMetadataException, TeiidComponentException {
+        Integer colCount = null;
+        List<? extends Expression> outputCols0 = (List<? extends Expression>) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
+        if (outputCols0 == null) {
+            colCount = (Integer)node.getProperty(Info.APPROXIMATE_OUTPUT_COLUMNS);
+            if (colCount == null) {
+                colCount = NewCalculateCostUtil.getOutputCols(node, metadata).size();
+            }
+        } else {
+            colCount = outputCols0.size();
+        }
+        return colCount;
     }
 
 	static boolean isConformed(QueryMetadataInterface metadata,

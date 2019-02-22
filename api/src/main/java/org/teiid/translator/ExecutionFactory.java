@@ -91,6 +91,7 @@ public class ExecutionFactory<F, C> {
 	}
 
 	public static final int DEFAULT_MAX_FROM_GROUPS = -1;
+	public static final int DEFAULT_MAX_PROJECTED_COLUMNS = -1;
 	public static final int DEFAULT_MAX_IN_CRITERIA_SIZE = -1;
 
 	private static final TypeFacility TYPE_FACILITY = new TypeFacility();
@@ -899,6 +900,15 @@ public class ExecutionFactory<F, C> {
      */
     public int getMaxFromGroups() {
     	return DEFAULT_MAX_FROM_GROUPS;
+    }
+    
+    /**
+     * The number of columns supported in projected select clause.  Added for a postgresql limitation. 
+     * @since 12.1
+     * @return the maximum number of columns in the projected select clause or -1 if there is no limit
+     */
+    public int getMaxProjectedColumns() {
+        return DEFAULT_MAX_PROJECTED_COLUMNS;
     }
     
     /**

@@ -424,11 +424,6 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     };
     
     @Override
-    public int getMaxFromGroups() {
-        return DEFAULT_MAX_FROM_GROUPS;
-    } 
-    
-    @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }

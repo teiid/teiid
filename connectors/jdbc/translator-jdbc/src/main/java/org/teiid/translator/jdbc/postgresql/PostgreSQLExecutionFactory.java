@@ -1042,4 +1042,10 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         return super.retrieveValue(results, columnIndex, expectedType);
     }
     
+    @Override
+    public int getMaxProjectedColumns() {
+        //in practice this could be lower depending on the block size, so it may need to be settable
+        return 1600;
+    }
+    
 }

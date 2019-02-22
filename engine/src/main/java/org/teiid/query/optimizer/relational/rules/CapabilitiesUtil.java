@@ -418,6 +418,11 @@ public class CapabilitiesUtil {
     throws QueryMetadataException, TeiidComponentException {
     	return getIntProperty(Capability.MAX_QUERY_FROM_GROUPS, modelID, metadata, capFinder);
     }
+    
+    public static int getMaxProjectedColumns(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    throws QueryMetadataException, TeiidComponentException {
+        return getIntProperty(Capability.MAX_QUERY_PROJECTED_COLUMNS, modelID, metadata, capFinder);
+    }
 
     public static SupportedJoinCriteria getSupportedJoinCriteria(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
         if (metadata.isVirtualModel(modelID)){

@@ -43,6 +43,10 @@ public interface SourceCapabilities {
          */
         MAX_QUERY_FROM_GROUPS,
         /**
+         * Max number of columns appearing in a select clause
+         */
+        MAX_QUERY_PROJECTED_COLUMNS,
+        /**
          * @since 6.1.0
          */
         JOIN_CRITERIA_ALLOWED,
