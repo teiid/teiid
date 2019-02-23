@@ -1123,6 +1123,10 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.1.vw.x_RSParam)\",\"value\":[{\"b\":2}]}", 
                     response.getContentAsString());
+            
+            //xml not supported
+            response = http.GET(baseURL + "/northwind/vw/x(i=1)?$format=xml");
+            assertEquals(400, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -1588,6 +1592,12 @@ public class TestODataIntegration {
                     .send();
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"},\"y@odata.navigationLink\":\""+u+"y('ABCDEFG')\"}]}", response.getContentAsString());
+            
+            // xml is not supported
+            response = http.newRequest(baseURL + "/northwind/m/$crossjoin(x,y)?$format=xml")
+                    .method("GET")
+                    .send();
+            assertEquals(400, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

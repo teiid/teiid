@@ -51,8 +51,13 @@ public class EdmComplexResponse extends ServiceResponse {
             ContextURL contextURL, boolean referencesOnly,
             ODataResponse response) throws ContentNegotiatorException,
             SerializerException {
+        ContentType contentType = request.getResponseContentType();
+        if (!contentType.isCompatible(ContentType.APPLICATION_JSON)) {
+            throw new SerializerException("Unsupported format for complex response: " + contentType.toContentTypeString(), //$NON-NLS-1$
+                    SerializerException.MessageKeys.UNSUPPORTED_FORMAT, contentType.toContentTypeString());
+        }
         return new EdmComplexResponse(request.getServiceMetaData(), response,
-                new TeiidODataJsonSerializer(request.getResponseContentType()), 
+                new TeiidODataJsonSerializer(contentType), 
                 request.getResponseContentType(), request.getPreferences(), contextURL);
     }
 

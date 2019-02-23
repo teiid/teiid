@@ -892,6 +892,10 @@ public class TeiidServiceHandler implements ServiceHandler {
             EdmComplexResponse complexResponse = EdmComplexResponse.getInstance(
                     request, builder.build(), false, response);
             sendResults(request, queryResponse, complexResponse);
+        } catch (ODataApplicationException e) {
+            throw e;
+        } catch (ODataLibraryException e) {
+            throw e;
         } catch (Exception e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
