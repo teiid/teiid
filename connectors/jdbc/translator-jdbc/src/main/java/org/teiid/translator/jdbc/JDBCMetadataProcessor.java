@@ -88,6 +88,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	private String tableNamePattern;
 	private String catalog;
 	private String schemaPattern;	
+	private String schemaName;
 	private boolean importApproximateIndexes = true;
 	private boolean widenUnsingedTypes = true;
 	private boolean quoteNameInSource = true;
@@ -180,6 +181,17 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			}
 		}
 		
+		if (this.schemaName != null) {
+			String escapeStr = metadata.getSearchStringEscape();
+			String escapedSchemaName = this.schemaName;
+			if (escapeStr != null) {
+				escapedSchemaName = escapedSchemaName.replace(escapeStr, escapeStr+escapeStr);
+				escapedSchemaName = escapedSchemaName.replace("_", escapeStr+"_");
+				escapedSchemaName = escapedSchemaName.replace("%", escapeStr+"%");
+			}
+			this.schemaPattern = escapedSchemaName;
+		}
+		
 		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata, conn);
 		HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
 		
@@ -188,7 +200,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         }).distinct().count() > 0) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR,
                     JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11029));
-        } else if (this.schemaPattern == null) {
+        } else if (this.schemaPattern == null && this.schemaName == null) {
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11027));
         }
 		
@@ -1029,6 +1041,10 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		this.schemaPattern = schema;
 	}
 	
+	public void setSchemaName(String schema) {
+		this.schemaName = schema;
+	}
+	
 	public void setUseProcedureSpecificName(boolean useProcedureSpecificName) {
 		this.useProcedureSpecificName = useProcedureSpecificName;
 	}
@@ -1115,6 +1131,11 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         return schemaPattern;
     }
 
+    @TranslatorProperty(display="Schema Name", category=PropertyType.IMPORT, description="an exact schema name; must match the schema name as it is stored in the database; Takes precedence over schemaPatten if supplied.")
+    public String getSchemaName() {
+        return schemaName;
+    }    
+    
     @TranslatorProperty(display="Import Approximate Indexes", category=PropertyType.IMPORT, description="true to import approximate index information. when true, result is allowed to reflect approximate or out of data values; when false, results are requested to be accurate")
     public boolean isImportApproximateIndexes() {
         return importApproximateIndexes;
