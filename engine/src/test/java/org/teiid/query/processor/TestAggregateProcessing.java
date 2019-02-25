@@ -875,13 +875,13 @@ public class TestAggregateProcessing {
 
 		// Create expected results
 		List[] expected = new List[] {
-				Arrays.asList(3, 2),
+				Arrays.asList(3, 3),
 		};
 
 		// Construct data manager with data
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		
-		dataManager.addData("SELECT g_0.e1 AS c_0, COUNT(g_0.e2) AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 1), Arrays.asList("b", 2)});
 		dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 6), Arrays.asList("b", 5)});
 		
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
@@ -1458,6 +1458,102 @@ public class TestAggregateProcessing {
         HardcodedDataManager hdm = new HardcodedDataManager();
         hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", Arrays.asList("a"));
         helpProcess(plan, hdm, new List[] {Arrays.asList(1l)});
+    }
+    
+    @Test public void testMultipleCountWithLeftOuter() throws Exception {
+        String sql = "select\n" + 
+                "    count(a.e2)\n" + 
+                "   , count(b.e1)\n" + 
+                "from pm1.g1 a\n" + 
+                "left join pm2.g1 b on a.e1 = b.e1"; //$NON-NLS-1$
+
+        CommandContext cc = TestProcessor.createCommandContext();
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        BasicSourceCapabilities aggregateCapabilities = TestAggregatePushdown.getAggregateCapabilities();
+        
+        ProcessorPlan plan = helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(aggregateCapabilities));
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata, cc, aggregateCapabilities);
+        
+        hdm.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0", Arrays.asList("a", 1), Arrays.asList("a", 2), Arrays.asList("b", 1));
+        hdm.addData("SELECT g_0.e1 AS c_0 FROM g1 AS g_0 ORDER BY c_0", Arrays.asList("a"), Arrays.asList("a"), Arrays.asList("c"));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(5, 4)});
+        
+        sql = "select\n" + 
+                "    count(b.e1)\n" + 
+                "   , count(a.e2)\n" + 
+                "from pm1.g1 a\n" + 
+                "left outer join pm2.g1 b on a.e1 = b.e1"; //$NON-NLS-1$
+
+        plan = helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(aggregateCapabilities));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(4, 5)});
+    }
+    
+    @Test public void testMultipleCountWithInner() throws Exception {
+        String sql = "select\n" + 
+                "    count(a.e2)\n" + 
+                "   , count(b.e1)\n" + 
+                "from pm1.g1 a\n" + 
+                "inner join pm2.g1 b on a.e1 = b.e1"; //$NON-NLS-1$
+
+        CommandContext cc = TestProcessor.createCommandContext();
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        BasicSourceCapabilities aggregateCapabilities = TestAggregatePushdown.getAggregateCapabilities();
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(aggregateCapabilities), 
+                new String[] {"SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", 
+                        "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata, cc, aggregateCapabilities);
+        
+        hdm.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0", Arrays.asList("a", 1), Arrays.asList("a", 2), Arrays.asList("b", 1));
+        hdm.addData("SELECT g_0.e1 AS c_0 FROM g1 AS g_0 ORDER BY c_0", Arrays.asList("a"), Arrays.asList("a"), Arrays.asList("c"));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(4, 4)});
+        
+        sql = "select\n" + 
+                "    count(b.e1)\n" + 
+                "   , count(a.e2)\n" + 
+                "from pm1.g1 a\n" + 
+                "inner join pm2.g1 b on a.e1 = b.e1"; //$NON-NLS-1$
+
+        plan = helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(aggregateCapabilities));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(4, 4)});
+    }
+    
+    @Test public void testSingleCountWithLeftOuter() throws Exception {
+        String sql = "select\n" + 
+                "    count(a.e1)\n" + 
+                "from pm1.g1 a\n" + 
+                "left outer join pm2.g1 b on a.e1 = b.e1"; //$NON-NLS-1$
+
+        CommandContext cc = TestProcessor.createCommandContext();
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        BasicSourceCapabilities aggregateCapabilities = TestAggregatePushdown.getAggregateCapabilities();
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(aggregateCapabilities), 
+                new String[] {"SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", 
+                        "SELECT g_0.e1 AS c_0, COUNT(g_0.e1) AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata, cc, aggregateCapabilities);
+        
+        hdm.addData("SELECT g_0.e1 AS c_0, COUNT(g_0.e1) AS c_1 FROM g1 AS g_0 GROUP BY g_0.e1 ORDER BY c_0", Arrays.asList("a", 2), Arrays.asList("b", 1));
+        hdm.addData("SELECT g_0.e1 AS c_0 FROM g1 AS g_0 ORDER BY c_0", Arrays.asList("a"), Arrays.asList("a"), Arrays.asList("c"));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(5)});
+        
+        sql = "select\n" + 
+                "    count(b.e1)\n" + 
+                "from pm1.g1 a\n" + 
+                "left outer join pm2.g1 b on a.e1 = b.e1"; //$NON-NLS-1$
+
+        plan = helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(aggregateCapabilities));
+        hdm = new HardcodedDataManager(metadata, cc, aggregateCapabilities);
+        
+        hdm.addData("SELECT g_0.e1 AS c_0, COUNT(g_0.e1) AS c_1 FROM g1 AS g_0 GROUP BY g_0.e1 ORDER BY c_0", Arrays.asList("a", 2), Arrays.asList("c", 1));
+        hdm.addData("SELECT g_0.e1 AS c_0 FROM g1 AS g_0 ORDER BY c_0", Arrays.asList("a"), Arrays.asList("a"), Arrays.asList("b"));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(4)});
     }
     
 }

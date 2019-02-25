@@ -978,12 +978,12 @@ public class TestAggregatePushdown {
                                         0,      // DependentSelect
                                         0,      // DependentProject
                                         0,      // DupRemove
-                                        2,      // Grouping
+                                        1,      // Grouping
                                         0,      // NestedLoopJoinStrategy
                                         1,      // MergeJoinStrategy
                                         0,      // Null
                                         0,      // PlanExecution
-                                        1,      // Project
+                                        2,      // Project
                                         0,      // Select
                                         0,      // Sort
                                         0       // UnionAll
@@ -1607,3 +1607,4 @@ public class TestAggregatePushdown {
     }
 
 }
+
