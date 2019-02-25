@@ -409,7 +409,12 @@ public class MetadataFactory extends NamespaceContainer {
 	private void assignColumn(Table table, ColumnSet<?> columns, String columnName) {
 		Column column = table.getColumnByName(columnName);
 		if (column == null) {
-			throw new MetadataException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, table.getFullName(), columnName));
+		    if (table.getColumns() != null && table.getColumns().size() > 0) {
+	            throw new MetadataException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, table.getFullName(), columnName));
+		    }
+		    //if this is an unresolved view, then just save the column name for now
+		    column = new Column();
+		    column.setName(columnName);
 		}
 		columns.getColumns().add(column);
 	}

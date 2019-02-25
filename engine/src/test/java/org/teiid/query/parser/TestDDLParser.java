@@ -39,8 +39,10 @@ import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseStore.Mode;
 import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.MetadataValidator;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
 
 //import static org.junit.Assert.*;
@@ -1772,5 +1774,68 @@ public class TestDDLParser {
         
         Database db = helpParse(ddl);
         assertEquals("true", db.getProperty("{http://teiid.org/rest}auto-generate", false));
+    }
+    
+    @Test
+    public void testViewConstraintWithoutColumns() throws Exception {
+        String ddl = "create view v as select 1 as c1, 2 as c2;\n" + 
+                "alter view v add primary key (c1);";
+        
+        MetadataFactory s = helpParse(ddl, "S1");
+        
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("myVDB"); //$NON-NLS-1$
+        ModelMetaData modelOne = new ModelMetaData();
+        modelOne.setName("S1"); //$NON-NLS-1$
+        vdb.addModel(modelOne);
+        
+        
+        MetadataStore mds = new MetadataStore();
+        
+        s.mergeInto(mds);
+        
+        KeyRecord primaryKey = mds.getSchema("S1").getTable("v").getPrimaryKey();
+        //not yet known
+        assertNull(primaryKey.getColumns().get(0).getParent());
+        
+        TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mds, "myVDB");
+        vdb.addAttchment(QueryMetadataInterface.class, tm);
+
+        ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
+        
+        assertFalse(report.hasItems());
+        
+        primaryKey = mds.getSchema("S1").getTable("v").getPrimaryKey();
+        //should be resolved
+        assertNotNull(primaryKey.getColumns().get(0).getParent());
+    }
+    
+    @Test
+    public void testViewConstraintWithoutColumnsFails() throws Exception {
+        String ddl = "create view v as select 1 as c1, 2 as c2;\n" + 
+                "alter view v add primary key (c3);";
+        
+        MetadataFactory s = helpParse(ddl, "S1");
+        
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("myVDB"); //$NON-NLS-1$
+        ModelMetaData modelOne = new ModelMetaData();
+        modelOne.setName("S1"); //$NON-NLS-1$
+        vdb.addModel(modelOne);
+        
+        MetadataStore mds = new MetadataStore();
+        
+        s.mergeInto(mds);
+        
+        KeyRecord primaryKey = mds.getSchema("S1").getTable("v").getPrimaryKey();
+        //not yet known
+        assertNull(primaryKey.getColumns().get(0).getParent());
+        
+        TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mds, "myVDB");
+        vdb.addAttchment(QueryMetadataInterface.class, tm);
+
+        ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
+        
+        assertTrue(report.hasItems());
     }
 }

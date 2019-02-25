@@ -27,6 +27,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
@@ -605,6 +606,20 @@ public class MetadataValidator {
         					
                             if (command instanceof SetQuery) {
                                 MetaDataProcessor.updateMetadataAcrossBranches((SetQuery) command, t.getColumns(), metadata);
+                            }
+                            
+                            for (KeyRecord key : t.getAllKeys()) {
+                                List<Column> columns = key.getColumns();
+                                List<Column> newColumns = new ArrayList<>(columns.size());
+                                for (int i = 0; i < columns.size(); i++) {
+                                    Column c = columns.get(i);
+                                    Column column = t.getColumnByName(c.getName());
+                                    if (column == null) {
+                                        log(report, model, QueryPlugin.Util.gs(DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, t.getFullName(), c.getName())));
+                                    }
+                                    newColumns.add(column);
+                                }
+                                key.setColumns(newColumns);
                             }
     				    } else {
     				       //infer the types if needed
