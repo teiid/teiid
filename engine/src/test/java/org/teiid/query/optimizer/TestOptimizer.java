@@ -6128,6 +6128,17 @@ public class TestOptimizer {
                
     }
     
+    @Test public void testMaxProjectedColumns() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setSourceProperty(Capability.MAX_QUERY_PROJECTED_COLUMNS, 2);
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        helpPlan("select pm2.g1.e1, pm2.g1.e2, pm2.g2.e1 FROM pm2.g1 CROSS JOIN pm2.g2", example1(), null, capFinder, //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm2.g2 AS g_0", "SELECT g_0.e1, g_0.e2 FROM pm2.g1 AS g_0"}, true ); //$NON-NLS-1$ //$NON-NLS-2$
+               
+    }
+    
     @Test public void testCase6249() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
