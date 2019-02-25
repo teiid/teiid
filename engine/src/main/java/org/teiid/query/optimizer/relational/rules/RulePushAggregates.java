@@ -721,14 +721,21 @@ public class RulePushAggregates implements
 
         Set<PlanNode> possibleTargetNodes = new LinkedHashSet<PlanNode>(aggregateMap.keySet());
         possibleTargetNodes.addAll(groupingMap.keySet());
+        int cardinalityDependent = 0;
         for (Map.Entry<PlanNode, List<AggregateSymbol>> entry : aggregateMap.entrySet()) {
     		if (AggregateSymbol.areAggregatesCardinalityDependent(entry.getValue())) {
+                cardinalityDependent++;
+                if (cardinalityDependent > 1) {
+                    //we are not handling this case yet - the aggregate map expressions
+                    //are more complicated as we aggregate on one side. the
+                    //other side to be a multiple of the other 
+                    return;
+                }
         		//can't change the cardinality on the other side of the join - 
     			//unless it's a 1-1 join, in which case this optimization isn't needed
     			//TODO: make a better choice if there are multiple targets
     			possibleTargetNodes.clear();
     			possibleTargetNodes.add(entry.getKey());
-    			break;
         	}        		
     	}
         
