@@ -253,7 +253,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     private void writeEntry(String name, ZipOutputStream out, byte[] contents) throws IOException {
 		ZipEntry e = new ZipEntry(name); 
 		out.putNextEntry(e);
-		FileUtils.write(new ByteArrayInputStream(contents), out, 1024);
+		ObjectConverterUtil.write(out, new ByteArrayInputStream(contents), -1, false);
 		out.closeEntry();
 	}
 
