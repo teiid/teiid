@@ -347,11 +347,14 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			case Types.INTEGER:
 				sqlType = Types.BIGINT;
 				break;
+			case Types.BIGINT:
+			    sqlType = Types.NUMERIC;
+			    break;
 			}
 		}
 		return sqlType;
 	}
-	
+    
 	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Connection conn) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
@@ -592,7 +595,11 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		if (type == Types.BIT && precision > 1) {
 			type = Types.BINARY;
 		}
+		boolean wasBigInt = type == Types.BIGINT;
 		type = checkForUnsigned(type, typeName);
+		if (useIntegralTypes && wasBigInt && (type == Types.NUMERIC || type == Types.DECIMAL)) {
+            return TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
+        }
 		String result = TypeFacility.getDataTypeNameFromSQLType(type);
         if (importLargeAsLob) {
             if (result.equals(TypeFacility.RUNTIME_NAMES.STRING) && precision > DataTypeManager.MAX_STRING_LENGTH) {

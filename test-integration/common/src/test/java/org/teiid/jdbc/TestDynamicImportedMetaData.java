@@ -26,6 +26,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -471,5 +472,47 @@ public class TestDynamicImportedMetaData {
     	c = t.getColumnByName("x");
     	assertEquals(10, c.getPrecision());
     	assertEquals(2, c.getScale());
+    }
+    
+    public final class TypeMixin {
+        public ResultSet getTypeInfo() throws SQLException {
+            try {
+                Connection conn = server.createConnection("jdbc:teiid:test");
+                return conn.createStatement().executeQuery("select 'long', " +Types.BIGINT + ", null, null, null, null, null, null, null, true");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } 
+        }
+    }
+    
+    @Test public void testUBigInt() throws Exception {
+        MetadataFactory mf = createMetadataFactory("x", new Properties());
+        
+        Table x = mf.addTable("x");
+        
+        mf.addColumn("x", DataTypeManager.DefaultDataTypes.LONG, x);
+        
+        MetadataStore ms = mf.asMetadataStore();
+        
+        server.deployVDB("test", ms);
+        Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+        
+        Properties importProperties = new Properties();
+        importProperties.setProperty("importer.useQualifiedName", Boolean.FALSE.toString());
+        
+        DatabaseMetaData dbmd = (DatabaseMetaData) SimpleMock.createSimpleMock(new Object[] {new TypeMixin(), conn.getMetaData()}, new Class[] {DatabaseMetaData.class});
+        Connection c = Mockito.mock(Connection.class);
+        Mockito.stub(c.getMetaData()).toReturn(dbmd);
+        
+        mf = getMetadata(importProperties, c);
+        Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("X");
+        assertEquals("bigdecimal", t.getColumnByName("x").getRuntimeType());
+        assertEquals(19, t.getColumnByName("x").getPrecision());
+        
+        importProperties.setProperty("importer.useIntegralTypes", Boolean.TRUE.toString());
+        
+        mf = getMetadata(importProperties, c);
+        t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("X");
+        assertEquals("biginteger", t.getColumnByName("x").getRuntimeType());
     }
 }
