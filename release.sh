@@ -7,7 +7,7 @@
 version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 version=`echo $version | cut -d'-' -f 1`
 
-mvn -B -DreleaseVersion=version -P release release:prepare
+mvn -B -DreleaseVersion=$version -P release release:prepare
 mvn release:perform
 
 if [ "$1" = "full" ]; then
