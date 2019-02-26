@@ -32,8 +32,7 @@ import org.teiid.core.util.HashCodeUtil;
  * Function signatures are unique with respect to their name, # of arguments, 
  * and type of arguments. Return type and argument names are not uniqueness
  * factors.  This class makes no attempt to validate the data put into it, 
- * particularly with respect to null values.  The 
- * {@link FunctionMetadataValidator} can be used to validate this object.</p>
+ * particularly with respect to null values.
  *
  * Attributes:
  * <UL>
@@ -71,11 +70,11 @@ public class FunctionMethod extends AbstractMetadataRecord {
 	public enum PushDown {CAN_PUSHDOWN, CANNOT_PUSHDOWN, MUST_PUSHDOWN, SYNTHETIC};
     
     /**
-     * DETERMINISTIC -> normal deterministic functions
-     * vdb -> lookup (however lookup values can be flushed at any time), current_database
-     * session -> env, user
-     * command -> command payload
-     * never -> rand, etc.
+     * DETERMINISTIC - normal deterministic functions
+     * vdb - lookup (however lookup values can be flushed at any time), current_database
+     * session - env, user
+     * command - command payload
+     * never - rand, etc.
      * 
      * Anything at a session level and above is treated as deterministic.
      * This is not quite correct for lookup or env.  Only in extremely rare
@@ -165,7 +164,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
     /**
      * Get category of method
      * @return Category
-     * @see FunctionCategoryConstants
      */
     public String getCategory() { 
         return this.category;
@@ -174,7 +172,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
     /**
      * Set category of method
      * @param category Category
-     * @see FunctionCategoryConstants
      */
     public void setCategory(String category) { 
         this.category = category;

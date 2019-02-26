@@ -64,7 +64,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                 
     /**
      * Gets the name of a group or element from the RuntimeMetadata
-     * @param id the id of the group or element
      * @return the name of that element or group as defined in the source
      */
     protected String getName(AbstractMetadataRecord object) {

@@ -111,7 +111,6 @@ public final class ApplicationInfo implements Serializable {
      * information.  The initial intent is to write this information
      * to a file at VM startup time for debugging purposes and ensuring
      * patches are applied. 
-     * @param outputstream
      * @since 4.2
      */
     public String getClasspathInfo() {

@@ -140,7 +140,6 @@ public class Schema extends AbstractMetadataRecord {
 	
 	/**
 	 * Get a function by uid
-	 * @param funcName
 	 * @return
 	 */
 	public FunctionMethod getFunction(String uid) {

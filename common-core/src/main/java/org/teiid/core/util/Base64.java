@@ -18,8 +18,6 @@
 
 package org.teiid.core.util;
 
-import java.util.Arrays;
-
 /**
  * <p>Encodes and decodes to and from Base64 notation.</p>
  * <p>Homepage: <a href="http://iharder.net/base64">http://iharder.net/base64</a>.</p>
@@ -47,7 +45,7 @@ import java.util.Arrays;
  *   Base64.InputStream class to encode and decode on the fly which uses
  *   less memory than encoding/decoding an entire file into memory before writing.</li>
  *  <li>v2.2.1 - Fixed bug using URL_SAFE and ORDERED encodings. Fixed bug
- *   when using very small files (~< 40 bytes).</li>
+ *   when using very small files (~&lt; 40 bytes).</li>
  *  <li>v2.2 - Added some helper methods for encoding/decoding directly from
  *   one file to the next. Also added a main() method to support command line
  *   encoding/decoding from one file to the next. Also added these Base64 dialects:

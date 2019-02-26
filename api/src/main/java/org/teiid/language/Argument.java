@@ -56,7 +56,7 @@ public class Argument extends BaseLanguageObject implements MetadataReference<Pr
     /**
      * Typical constructor for an in/in out parameter
      * @param direction
-     * @param type
+     * @param value
      * @param metadataObject
      */
     public Argument(Direction direction, Literal value, ProcedureParameter metadataObject) {

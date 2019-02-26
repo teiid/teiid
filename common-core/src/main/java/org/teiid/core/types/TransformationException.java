@@ -51,7 +51,7 @@ public class TransformationException extends TeiidProcessingException {
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
-     * @param code A code denoting the exception
+     * @param message A message describing the exception
      * @param e An exception to nest within this one
      */
     public TransformationException( Exception e, String message ) {

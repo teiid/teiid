@@ -9,6 +9,9 @@
   <artifactId>teiid-api</artifactId>
   <name>Teiid API</name>
   <description>API for creating Translators and other extensions to Teiid</description>
+  <properties>
+    <basepom.check.fail-javadoc>true</basepom.check.fail-javadoc>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.teiid</groupId>

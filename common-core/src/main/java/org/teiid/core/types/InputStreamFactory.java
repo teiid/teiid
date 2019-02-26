@@ -58,7 +58,6 @@ public abstract class InputStreamFactory implements Source {
 	
     /**
      * Get a new InputStream
-     * @return
      */
     public abstract InputStream getInputStream() throws IOException;
     

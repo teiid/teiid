@@ -165,7 +165,7 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 	}
 
 	/**
-	 * Get the type.  Represents the component type if {@link #getArrayDimensions()} > 0 
+	 * Get the type.  Represents the component type if {@link #getArrayDimensions()} &gt; 0 
 	 * @return
 	 */
     public Datatype getDatatype() {

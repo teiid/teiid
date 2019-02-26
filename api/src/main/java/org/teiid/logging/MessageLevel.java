@@ -18,7 +18,11 @@
 
 package org.teiid.logging;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Constants that define the level of the messages that are to be recorded
@@ -150,7 +154,7 @@ public final class MessageLevel {
      *    <code>MessageLevel.WARNING</code>,
      *    <code>MessageLevel.INFO</code>,
      *    <code>MessageLevel.DETAIL</code>, or
-     *    <code>MessageLevel.TRACE.
+     *    <code>MessageLevel.TRACE</code>.
      * @throws IllegalArgumentException if the level is out of range.
      */
     public static boolean isMessageLevelValid( int newMessageLevel ) {
@@ -161,7 +165,7 @@ public final class MessageLevel {
      * Utility method for knowing what is the lower boundary for
      * a valid message level.
      * @return int message level
-     * @see #validUpperMessageLevel
+     * @see #NONE
      */
     public static int getValidLowerMessageLevel() {
     	return MessageLevel.NONE;
@@ -171,7 +175,7 @@ public final class MessageLevel {
      * Utility method for knowing what is the upper boundary for
      * a valid message level.
      * @return int message level
-     * @see #validLowerMessageLevel
+     * @see #TRACE
      */
     public static int getValidUpperMessageLevel() {
     	return MessageLevel.TRACE;

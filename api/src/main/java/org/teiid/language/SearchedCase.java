@@ -24,7 +24,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
  * Represents a searched CASE expression:
- * <br/> CASE WHEN criteria THEN expression ... END
+ * <br> CASE WHEN criteria THEN expression ... END
  */
 public class SearchedCase extends BaseLanguageObject implements Expression {
 	

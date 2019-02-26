@@ -104,7 +104,7 @@ public interface ExecutionContext {
     Serializable getCommandPayload();
     
     /**
-     * @deprecated see {@link #getCommandPayload()
+     * @deprecated see {@link #getCommandPayload()}
      * @return
      */
     Serializable getExecutionPayload();

@@ -44,7 +44,7 @@ public class ForeignKey extends KeyRecord {
     }
 
     /**
-     * @param object
+     * @param keyID
      */
     public void setUniqueKeyID(String keyID) {
         uniqueKeyID = keyID;
@@ -70,7 +70,7 @@ public class ForeignKey extends KeyRecord {
      * Note: does not need to be directly called.  The engine can resolve the
      * referenced key if {@link #setReferenceColumns(List)} and {@link #setReferenceTableName(String)}
      * are used.
-     * @param primaryKey,  the primary key or unique key referenced by this foreign key
+     * @param primaryKey the primary key or unique key referenced by this foreign key
      */
     public void setReferenceKey(KeyRecord primaryKey) {
     	this.primaryKey = primaryKey;
@@ -92,7 +92,7 @@ public class ForeignKey extends KeyRecord {
 
     /**
      * 
-     * @param primaryKey,  the primary key or unique key referenced by this foreign key
+     * @param primaryKey the primary key or unique key referenced by this foreign key
      * @deprecated
      * @see #setReferenceKey(KeyRecord)
      */

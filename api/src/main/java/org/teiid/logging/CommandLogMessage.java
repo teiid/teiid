@@ -253,7 +253,6 @@ public class CommandLogMessage {
 	/**
 	 * The source command issued.  It's up to each source as to what the representation is.
 	 * Only set for the {@link Event#SOURCE}
-	 * @param sourceCommand
 	 */
 	public Object[] getSourceCommand() {
 		return sourceCommand;

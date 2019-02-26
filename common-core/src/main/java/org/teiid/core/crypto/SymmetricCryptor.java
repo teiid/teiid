@@ -78,7 +78,7 @@ public class SymmetricCryptor extends BasicCryptor {
     /**
      * Creates a SymmetricCryptor using the supplied URL contents as the key
      *  
-     * @param key
+     * @param keyResource URL to the key
      * @return a new SymmetricCryptor
      * @throws CryptoException
      * @throws IOException 

@@ -73,7 +73,6 @@ public abstract class Streamable<T> implements Externalizable {
     
     /**
      * Returns the cached length.  May be binary or character based.
-     * @return
      */
     public long getLength() {
 		return length;

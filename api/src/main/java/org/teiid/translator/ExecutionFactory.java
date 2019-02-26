@@ -37,7 +37,6 @@ import org.teiid.language.SetQuery;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.api.Connection;
@@ -751,7 +750,7 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
-     * Support indicates connector can accept queries with searched CASE WHEN <criteria> ... END
+     * Support indicates connector can accept queries with searched CASE WHEN criteria ... END
      * @since 4.0
      */
     public boolean supportsSearchedCaseExpressions() {
@@ -816,7 +815,7 @@ public class ExecutionFactory<F, C> {
      * Get a list of {@link FunctionMethod}s that will be contributed to the SYS schema.  
      * To avoid conflicts with system functions, the function name should contain a 
      * qualifier - typically &lt;translator name&gt;.&lt;function name&gt; 
-     * @see ExecutionFactory#addPushDownFunction(String, String, FunctionParameter, FunctionParameter...)
+     * @see ExecutionFactory#addPushDownFunction(String, String, String, String...)
      * @return
      */
     public List<FunctionMethod> getPushDownFunctions(){
@@ -1052,8 +1051,6 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
-     * 
-     * @param function
      * @return true if the window frame clause is supported
      */
     public boolean supportsWindowFrameClause() {

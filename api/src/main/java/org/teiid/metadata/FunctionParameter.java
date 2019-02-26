@@ -22,8 +22,7 @@ package org.teiid.metadata;
 /**
  * A function parameter defines the name and description of an input or output
  * parameter for a function.  The name should not be null, but that is not 
- * verified by this class.  Validation of this object can be done with the 
- * {@link FunctionMetadataValidator}.  The type string used in the function
+ * verified by this class.  The type string used in the function
  * parameter should be one of the standard type names defined in 
  * {@link org.teiid.core.types.DataTypeManager.DefaultDataTypes}.
  */

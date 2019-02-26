@@ -121,7 +121,7 @@ public final class JDBCSQLTypeInfo {
     /**
      * This method is used to obtain a short indicating JDBC SQL type for any object.
      * The short values that give the type info are from java.sql.Types.
-     * @param Name of the teiid type.
+     * @param typeName of the teiid type.
      * @return A short value representing SQL Type for the given java type.
      */
     public static final int getSQLType(String typeName) {
@@ -145,7 +145,7 @@ public final class JDBCSQLTypeInfo {
     /**
      * Get sql Type from java class type name.  This should not be called with runtime types
      * as Clob and Blob are represented by ClobType and BlobType respectively.
-     * @param typeName
+     * @param className
      * @return int
      */
     public static final int getSQLTypeFromClass(String className) {
@@ -166,7 +166,7 @@ public final class JDBCSQLTypeInfo {
     /**
      * Get the sql type from the given runtime type 
      * @param type
-     * @return
+     * @return the SQL type code
      */
     public static final int getSQLTypeFromRuntimeType(Class<?> type) {
     	if (type == null) {
@@ -186,7 +186,7 @@ public final class JDBCSQLTypeInfo {
      * This method is used to obtain a the java class name given an int value
      * indicating JDBC SQL type. The int values that give the type info are from
      * java.sql.Types.
-     * @param int value giving the SQL type code.
+     * @param jdbcSQLType value giving the SQL type code.
      * @return A String representing the java class name for the given SQL Type.
      */
     public static final String getJavaClassName(int jdbcSQLType) {

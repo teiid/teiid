@@ -150,7 +150,6 @@ public class ObjectToAnyTransform extends Transform {
 	/**
 	 * Convert a primitive class to the corresponding object class
 	 * @param clazz
-	 * @return
 	 */
 	public static Class<?> convertPrimitiveToObject(Class<?> clazz) {
 		if (!clazz.isPrimitive()) {

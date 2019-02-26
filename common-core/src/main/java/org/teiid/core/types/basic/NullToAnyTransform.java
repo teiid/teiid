@@ -24,7 +24,7 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.Assertion;
 
 /**
- * This class can do a simple null-->anything.  
+ * This class can do a simple null to anything.  
  * Incoming value must be null and outgoing value is the same.  
  * This is purely for type purposes.
  */

@@ -53,7 +53,6 @@ public class BundleUtil {
     /**
      * Return the {@link BundleUtil} for the class.  The bundle must be in the same package or a parent package of the class.
      * @param clazz
-     * @return
      */
     public static BundleUtil getBundleUtil(Class<?> clazz) {
     	String packageName = clazz.getPackage().getName();

@@ -83,7 +83,7 @@ public class ExternalizeUtil {
     /**
      * Writes the key-value pairs of the given map to the output.
      * @param out the output instance
-     * @param list reference to a Map. Can be null.
+     * @param map reference to a Map. Can be null.
      * @throws IOException
      */
     public static void writeMap(ObjectOutput out, Map<?, ?> map) throws IOException {

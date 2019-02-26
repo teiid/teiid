@@ -51,8 +51,6 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <version.javadoc.plugin>${dep.plugin.javadoc.version}</version.javadoc.plugin>
-
         <derby.version>10.2.1.6</derby.version>
         <mysql.connector.version>5.1.5</mysql.connector.version>
         
@@ -226,26 +224,10 @@
 		</modules>
 		<properties>
             <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
+            <basepom.check.fail-javadoc>false</basepom.check.fail-javadoc>
         </properties>
 		<build>
 			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>${version.javadoc.plugin}</version>
-					<configuration>
-						<maxmemory>512m</maxmemory>
-						<!-- <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames> -->
-						<failOnError>false</failOnError>
-					</configuration>
-					<executions>
-						<execution>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
 				<plugin>
 					<artifactId>maven-gpg-plugin</artifactId>
 					<executions>
@@ -280,28 +262,8 @@
 		</modules>
 		<properties>
             <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
+            <basepom.check.fail-javadoc>false</basepom.check.fail-javadoc>
         </properties>
-		<build>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>${version.javadoc.plugin}</version>
-					<configuration>
-						<maxmemory>512m</maxmemory>
-						<!-- <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames> -->
-						<failOnError>false</failOnError>
-					</configuration>
-					<executions>
-						<execution>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-			</plugins>
-		</build>
 	</profile>
 	<profile>
 		<!-- This is to enable faster build for development time. -->
@@ -309,8 +271,6 @@
 		     turned off directly -->
 		<id>dev</id>
 		<properties>
-			<maven.javadoc.skip>true</maven.javadoc.skip>
-			<skipTests>true</skipTests>
 			<basepom.check.skip-all>true</basepom.check.skip-all>
 		</properties>
 		<modules>
@@ -350,6 +310,18 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.2.2</version>
 		    </plugin>
+		    
+		    <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</pluginManagement>
 	<plugins>

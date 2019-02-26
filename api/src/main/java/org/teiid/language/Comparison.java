@@ -23,7 +23,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
  * Represents a comparison between two expressions connected with
- * one of the following operators: =, <>, <, <=, >, >=.
+ * one of the following operators: =, &lt;&gt;, &lt;, &lt;=, &gt;, &gt;=.
  */
 public class Comparison extends Condition implements Predicate {
 

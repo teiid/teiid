@@ -72,7 +72,6 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
     /**
      * This is a utility method for a common use of this visitor, which is to collect
      * all elements in an object tree.
-     * @param type Language object type to look for
      * @param object Root of the language object tree
      * @return Collection of IElement of the specified type
      */
@@ -83,7 +82,6 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
     /**
      * This is a utility method for a common use of this visitor, which is to collect
      * all groups in an object tree.
-     * @param type Language object type to look for
      * @param object Root of the language object tree
      * @return Collection of IGroup of the specified type
      */
@@ -94,7 +92,6 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
     /**
      * This is a utility method for a common use of this visitor, which is to collect
      * all groups used by all elements in an object tree.
-     * @param type Language object type to look for
      * @param object Root of the language object tree
      * @return Set of IGroup
      */

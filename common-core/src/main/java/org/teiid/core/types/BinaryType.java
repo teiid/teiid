@@ -52,7 +52,6 @@ public final class BinaryType implements Comparable<BinaryType> {
 	/**
 	 * Get the byte value at a given index
 	 * @param index
-	 * @return
 	 */
 	public byte getByte(int index) {
 		return bytes[index]; 

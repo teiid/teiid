@@ -103,7 +103,7 @@ public final class PropertiesUtils {
      * </code></pre>
      * will fail <i>if</i> <code>b</code> had been constructed with a default
      * <code>Properties</code> object.  Those defaults would be lost and
-     * not added to <code>a</code>.</p>
+     * not added to <code>a</code>.
      *
      * <p>The above code could be correctly performed with this method,
      * like this:
@@ -119,7 +119,7 @@ public final class PropertiesUtils {
      * added to <code>a</code> using its <code>setProperty</code> method -
      * these new properties will overwrite any pre-existing ones of the same
      * name.
-     * </p>
+     * 
      *
      * @param addToThis This Properties object is modified; the properties
      * of the other parameter are added to this.  The added property values
@@ -649,7 +649,6 @@ public final class PropertiesUtils {
      * Search for the property first in the environment, then in the system properties
      * @param key
      * @param defaultValue
-     * @param clazz
      * @return
      */
     public static String getHierarchicalProperty(String key, String defaultValue) {

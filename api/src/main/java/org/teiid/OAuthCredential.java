@@ -19,7 +19,7 @@ package org.teiid;
 
 public interface OAuthCredential {
     /**
-     * Get Authorization Header for the OAuth 1.0a & OAuth 2.0 specification
+     * Get Authorization Header for the OAuth 1.0a &amp; OAuth 2.0 specification
      * @param resourceURI - protected resource that is being accessed
      * @param httpMethod - for ex: GET, PUT
      * @return Authorization header for HTTP call. 

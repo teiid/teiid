@@ -95,7 +95,7 @@ public class TeiidRuntimeException extends RuntimeException {
      * exception is a {@link TeiidException} or a MetaMatrixRuntimeException, the code will
      * be set to the exception's code.
      * @param e       The exception to chain to this exception
-     * @param code    The error code
+     * @param event    The error code
      * @param message The error message
      */
     public TeiidRuntimeException(BundleUtil.Event event, final Throwable e, final String message) {

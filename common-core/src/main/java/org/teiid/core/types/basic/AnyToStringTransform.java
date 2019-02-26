@@ -23,7 +23,7 @@ import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
 /**
- * This class can be subclassed to do a simple anything-->String by
+ * This class can be subclassed to do a simple anything to String by
  * just calling toString().  Just extend and implement getSouceType().
  */
 public class AnyToStringTransform extends Transform {

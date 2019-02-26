@@ -37,9 +37,9 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import junit.framework.AssertionFailedError;
-
 import org.junit.Assert;
+
+import junit.framework.AssertionFailedError;
 
 /**
  * This class contains static methods that are routinely and commonly used in many test cases, and related to methods to test
@@ -338,7 +338,7 @@ public class UnitTestUtil {
      * whether the two hash codes must be equivalent or different.
      * </p>
      * 
-     * @param boolean
+     * @param shouldBeEqual
      *            true if the two comparable objects should be equivalent; or false otherwise
      * @param obj1
      *            the reference to the first Object; may be null

@@ -115,7 +115,7 @@ public class TypeFacility {
     
     /**
      * Get the Class constant for the given String runtime type name
-     * <br/>IMPORTANT: only considered the default runtime types
+     * <br>IMPORTANT: only considered the default runtime types
      */
     public static Class<?> getDataTypeClass(String type) {
     	return DataTypeManager.getDataTypeClass(type);    	

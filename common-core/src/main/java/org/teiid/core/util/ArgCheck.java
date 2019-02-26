@@ -28,7 +28,7 @@ import org.teiid.core.CorePlugin;
  * This class contains a set of static utility methods for checking method arguments.
  * It contains many of the common checks that are done, such as checking that an 
  * Object is non-null, checking the range of a value, etc.  All of these methods
- * throw {@link #java.lang.IllegalArgumentException}.
+ * throw {@link java.lang.IllegalArgumentException}.
  */
 public class ArgCheck {
 
@@ -54,19 +54,19 @@ public class ArgCheck {
 	// ########################## int METHODS ###################################
 
     /**
-     * Check that the value is non-negative (>=0). 
+     * Check that the value is non-negative (&gt;=0). 
      * @param value Value
-     * @throws IllegalArgumentException If value is negative (<0)
+     * @throws IllegalArgumentException If value is negative (&lt;0)
      */
 	public static final void isNonNegative(int value) {
 		isNonNegative(value,null);
 	}
 
     /**
-     * Check that the value is non-negative (>=0). 
+     * Check that the value is non-negative (&gt;=0). 
      * @param value Value
      * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is negative (<0)
+     * @throws IllegalArgumentException If value is negative (&lt;0)
      */
 	public static final void isNonNegative(int value, String message) {
 		if(value < 0) {
@@ -78,19 +78,19 @@ public class ArgCheck {
 	}
 
     /**
-     * Check that the value is non-positive (<=0). 
+     * Check that the value is non-positive (&lt;=0). 
      * @param value Value
-     * @throws IllegalArgumentException If value is positive (>0)
+     * @throws IllegalArgumentException If value is positive (&gt;0)
      */
 	public static final void isNonPositive(int value) {
 	    isNonPositive(value,null);
 	}
 
     /**
-     * Check that the value is non-positive (<=0). 
+     * Check that the value is non-positive (&lt;=0). 
      * @param value Value
      * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is positive (>0)
+     * @throws IllegalArgumentException If value is positive (&gt;0)
      */
 	public static final void isNonPositive(int value, String message) {
 	    if(value > 0) {
@@ -102,19 +102,19 @@ public class ArgCheck {
 	}
 
     /**
-     * Check that the value is negative (<0). 
+     * Check that the value is negative (&lt;0). 
      * @param value Value
-     * @throws IllegalArgumentException If value is non-negative (>=0)
+     * @throws IllegalArgumentException If value is non-negative (&gt;=0)
      */
 	public static final void isNegative(int value) {
 	    isNegative(value,null);
 	}
 
     /**
-     * Check that the value is negative (<0). 
+     * Check that the value is negative (&lt;0). 
      * @param value Value
      * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is non-negative (>=0)
+     * @throws IllegalArgumentException If value is non-negative (&gt;=0)
      */
 	public static final void isNegative(int value, String message) {
 	    if(value >= 0) {
@@ -126,19 +126,19 @@ public class ArgCheck {
 	}
 
     /**
-     * Check that the value is positive (>0). 
+     * Check that the value is positive (&gt;0). 
      * @param value Value
-     * @throws IllegalArgumentException If value is non-positive (<=0)
+     * @throws IllegalArgumentException If value is non-positive (&lt;=0)
      */
 	public static final void isPositive(int value) {
 	    isPositive(value,null);
 	}
 
     /**
-     * Check that the value is positive (>0). 
+     * Check that the value is positive (&gt;0). 
      * @param value Value
      * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is non-positive (<=0)
+     * @throws IllegalArgumentException If value is non-positive (&lt;=0)
      */
 	public static final void isPositive(int value, String message) {
 	    if(value <= 0) { 
@@ -152,19 +152,19 @@ public class ArgCheck {
 	// ########################## long METHODS ###################################
 
     /**
-     * Check that the value is non-negative (>=0). 
+     * Check that the value is non-negative (&gt;=0). 
      * @param value Value
-     * @throws IllegalArgumentException If value is negative (<0)
+     * @throws IllegalArgumentException If value is negative (&lt;0)
      */
 	public static final void isNonNegative(long value) {
 	    isNonNegative(value,null);
 	}
 
     /**
-     * Check that the value is non-negative (>=0). 
+     * Check that the value is non-negative (&gt;=0). 
      * @param value Value
      * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is negative (<0)
+     * @throws IllegalArgumentException If value is negative (&lt;0)
      */
 	public static final void isNonNegative(long value, String message) {
 		if(value < 0) {
@@ -176,19 +176,19 @@ public class ArgCheck {
 	}
 
     /**
-     * Check that the value is non-positive (<=0). 
+     * Check that the value is non-positive (&lt;=0). 
      * @param value Value
-     * @throws IllegalArgumentException If value is positive (>0)
+     * @throws IllegalArgumentException If value is positive (&gt;0)
      */
 	public static final void isNonPositive(long value) {
 	    isNonPositive(value,null);
 	}
 
     /**
-     * Check that the value is non-positive (<=0). 
+     * Check that the value is non-positive (&lt;=0). 
      * @param value Value
      * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is positive (>0)
+     * @throws IllegalArgumentException If value is positive (&gt;0)
      */
 	public static final void isNonPositive(long value, String message) {
 	    if(value > 0) {
@@ -200,19 +200,19 @@ public class ArgCheck {
 	}
 
     /**
-     * Check that the value is negative (<0). 
+     * Check that the value is negative (&lt;0). 
      * @param value Value
-     * @throws IllegalArgumentException If value is non-negative (>=0)
+     * @throws IllegalArgumentException If value is non-negative (&gt;=0)
      */
 	public static final void isNegative(long value) {
 	    isNegative(value,null);
 	}
 
     /**
-     * Check that the value is negative (<0). 
+     * Check that the value is negative (&lt;0). 
      * @param value Value
      * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is non-negative (>=0)
+     * @throws IllegalArgumentException If value is non-negative (&gt;=0)
      */
 	public static final void isNegative(long value, String message) {
 	    if(value >= 0) {
@@ -224,19 +224,19 @@ public class ArgCheck {
 	}
 
     /**
-     * Check that the value is positive (>0). 
+     * Check that the value is positive (&gt;0). 
      * @param value Value
-     * @throws IllegalArgumentException If value is non-positive (<=0)
+     * @throws IllegalArgumentException If value is non-positive (&lt;=0)
      */
 	public static final void isPositive(long value) {
 	    isPositive(value,null);
 	}
 
     /**
-     * Check that the value is positive (>0). 
+     * Check that the value is positive (&gt;0). 
      * @param value Value
      * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is non-positive (<=0)
+     * @throws IllegalArgumentException If value is non-positive (&lt;=0)
      */
 	public static final void isPositive(long value, String message) {
 	    if(value <= 0) { 
@@ -250,7 +250,7 @@ public class ArgCheck {
 	// ########################## String METHODS ###################################
 
     /**
-     * Check that the string is non-null and has length > 0
+     * Check that the string is non-null and has length &gt; 0
      * @param value Value
      * @throws IllegalArgumentException If value is null or length == 0
      */
@@ -259,7 +259,7 @@ public class ArgCheck {
 	}
 
     /**
-     * Check that the string is non-null and has length > 0
+     * Check that the string is non-null and has length &gt; 0
      * @param value Value
      * @param message Exception message if check fails
      * @throws IllegalArgumentException If value is null or length == 0

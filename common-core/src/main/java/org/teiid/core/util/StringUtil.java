@@ -464,7 +464,7 @@ public final class StringUtil {
 	 * Unescape the given string
 	 * @param string
 	 * @param quoteChar
-	 * @param useAsciiExcapes
+	 * @param useAsciiEscapes
 	 * @param sb a scratch buffer to use
 	 * @return
 	 */

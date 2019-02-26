@@ -87,7 +87,7 @@ public class BasicCryptor implements Cryptor {
     /**
      * Decrypt the ciphertext to yield the original cleartext.
      * @param ciphertext The text to be encrypted, in byte form
-     * @param The decrypted cleartext, in byte form
+     * @return The decrypted cleartext, in byte form
      */
     public synchronized byte[] decrypt( byte[] ciphertext ) throws CryptoException {
         try {
@@ -170,7 +170,7 @@ public class BasicCryptor implements Cryptor {
     /**
      * Encrypt the cleartext in byte array format.
      * @param cleartext The text to be encrypted, in byte form
-     * @param The encrypted ciphertext, in byte form
+     * @return The encrypted ciphertext, in byte form
      */
     public byte[] encrypt( byte[] cleartext ) throws CryptoException {
         return encrypt(cleartext, 0, cleartext.length);

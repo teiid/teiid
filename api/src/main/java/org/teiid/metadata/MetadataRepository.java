@@ -35,7 +35,6 @@ public interface MetadataRepository<F,C> {
 	 * @param executionFactory may be null if loading a virtual source
 	 * @param connectionFactory may be null if source is not available
 	 * @param text the text used to configure the load
-	 * @return
 	 * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
 	 */
 	public default void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory, String text) throws TranslatorException {
@@ -47,7 +46,6 @@ public interface MetadataRepository<F,C> {
 	 * @param factory
 	 * @param executionFactory may be null if loading a virtual source
 	 * @param connectionFactory may be null if source is not available
-	 * @return
 	 * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
 	 */
 	public default void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException {

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -160,7 +159,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     
     /**
      * Return the extension properties for this record - may be unmodifiable
-     * if {@link #setProperties(LinkedHashMap)} or {@link #setProperty(String, String)}
+     * if {@link #setProperties(Map)} or {@link #setProperty(String, String)}
      * has not been called.
      * @return
      */

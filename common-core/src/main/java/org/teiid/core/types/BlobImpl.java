@@ -46,7 +46,7 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
 	
     /**
      * Creates a MMBlob object with the <code>valueID</code>.
-     * @param valueID reference to value chunk in data source.
+     * @param streamFactory reference to value chunk in data source.
      */
     public BlobImpl(InputStreamFactory streamFactory) {
     	super(streamFactory);

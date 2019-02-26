@@ -217,7 +217,6 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	/**
 	 * Returns the encoding or null if it cannot be determined
 	 * @param xml
-	 * @return
 	 */
 	public static String getEncoding(SQLXML xml) {
 		try {

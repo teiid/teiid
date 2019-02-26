@@ -249,10 +249,6 @@ public interface EventDistributor {
      * <br>For a delete only the oldValues are provided.
      * <br>For an update both are provided.
      * @return a {@link ResultsFuture} if execution has started, or null if no execution has started
-     * @param vdbName
-     * @param vdbVersion
-     * @param schema
-     * @param tableNames
      */
     ResultsFuture<?> dataModification(String vdbName, String vdbVersion, String schema, String tableName, Object[] oldValues, Object[] newValues, String[] columnNames);
 }

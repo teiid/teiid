@@ -99,8 +99,8 @@ public final class Assertion {
 
     /**
      * Verifies that the specified value is an instance of the specified class.
-     * @param value            The value to verify
-     * @param exprectedClass   The class of which the value must be an instance
+     * @param object            The value to verify
+     * @param expectedClass   The class of which the value must be an instance
      * @param name             The text identifying the name or type of value
      * @throws ClassCastException If the value is not an instance of the specified class.
      * @since 2.1

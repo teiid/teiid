@@ -417,7 +417,7 @@ public class DataTypeManager {
 
 	/**
 	 * Get data type class.
-	 * <br/>IMPORTANT: only valid for default runtime types
+	 * <br>IMPORTANT: only valid for default runtime types
 	 * 
 	 * @param name
 	 * 		Data type name

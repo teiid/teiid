@@ -442,10 +442,9 @@ public class MetadataFactory extends NamespaceContainer {
 	 * if reference table is is another schema, they will be resolved during validation.
 	 * @param name
 	 * @param columnNames
-	 * @param referencedColumnNames, may be null to indicate that the primary key should be used.
+	 * @param referencedColumnNames may be null to indicate that the primary key should be used.
 	 * @param referenceTable - schema qualified reference table name, can be from another schema
 	 * @param table
-	 * @param addUniqueConstraint - if true, if the referenced table columns do not match with either PK, or FK then a UNIQUE index on reference table is created.
 	 * @return
 	 * @throws MetadataException
 	 */
@@ -696,7 +695,6 @@ public class MetadataFactory extends NamespaceContainer {
 	 * To be called if the MetadataFactory is deserialized to set the canonical system
 	 * type value.
 	 * @param dt
-	 * @param builtin
 	 */
 	public void correctDatatypes(Map<String, Datatype> dt) {
 		this.dataTypes = dt;

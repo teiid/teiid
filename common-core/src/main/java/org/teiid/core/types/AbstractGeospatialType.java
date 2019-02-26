@@ -71,7 +71,6 @@ public abstract class AbstractGeospatialType extends BlobType {
     
     /**
      * Get the Object model representation of the geospatial value
-     * @return
      */
     public synchronized Object getGeoCache() {
         if (geoCache == null) {
@@ -86,7 +85,6 @@ public abstract class AbstractGeospatialType extends BlobType {
     
     /**
      * Set the Object model representation of the geospatial value
-     * @return
      */
     public synchronized void setGeoCache(Object objectReference) {
         if (objectReference == null) {

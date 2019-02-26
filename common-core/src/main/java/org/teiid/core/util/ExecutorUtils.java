@@ -32,7 +32,6 @@ public class ExecutorUtils {
 	 * inactivity.
 	 * @param nThreads
 	 * @param name
-	 * @return
 	 */
     public static ExecutorService newFixedThreadPool(int nThreads, String name) {
         return newFixedThreadPool(nThreads, Integer.MAX_VALUE, name);

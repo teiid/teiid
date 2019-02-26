@@ -46,6 +46,7 @@ import java.lang.reflect.Proxy;
  * Each message is submitted with one of the following levels (determined
  * by the particular method used to submit the message), sorted from the
  * least detailed to the greatest:
+ * <ul>
  * <li><b>Critical</b>:  This level of message is generally
  *      used to record an event or error that must be recorded (if any logging
  *      is used).  If it is used to record an error, it generally means that the
@@ -68,6 +69,7 @@ import java.lang.reflect.Proxy;
  *      logging level, used to trace system execution for really nasty problems.
  *      At this level, logging will be so verbose that the system performance
  *      may be affected.</li>
+ * </ul>
  * <p>
  * The context for a message is any application-specified String.  Again, only
  * those message contexts that match those in the LogManager's configuration will
@@ -257,7 +259,7 @@ public final class LogManager {
      * destination will the message be recorded.
      * @param context the context for this log message (for example, the component
      * that is generating this message).
-     * @param msgParts the individual parts of the log message; the message is
+     * @param msgPart the individual parts of the log message; the message is
      * not logged if this parameter is null
      */
     public static void logDetail(String context, Object msgPart) {

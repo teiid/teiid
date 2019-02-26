@@ -9,6 +9,9 @@
 	<artifactId>teiid-common-core</artifactId>
 	<name>Common Core</name>
 	<description>Core shared library</description>
+	<properties>
+	   <basepom.check.fail-javadoc>true</basepom.check.fail-javadoc>
+	</properties>
 	<build>
 		<plugins>
 		    <!-- Specify the compiler options and settings -->
