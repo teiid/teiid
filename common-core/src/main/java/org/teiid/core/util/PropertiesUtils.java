@@ -29,7 +29,6 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -383,71 +382,6 @@ public final class PropertiesUtils {
             }            
         }
 
-
-    }
-
-    public static void print( java.io.PrintStream stream, Properties props ) {
-        if (props != null) {
-            Collection sorted = sortPropertiesForPrinting(props);
-            for (Iterator it=sorted.iterator(); it.hasNext(); ) {
-                String value = (String) it.next();
-                stream.println(value);
-            }
-        }
-    }
-
-    private static final String NEWLINE = "\n"; //$NON-NLS-1$
-    /**
-     * Sorts the properties and returns a collection of entries
-     * where each entry can be printed.  Each entry will print in the
-     * format of: Property: <code>name</code> = <code>value</code>
-     */
-
-    private static final String APREFIX = "Property '"; //$NON-NLS-1$
-    private static final String AEQUAL = "'='"; //$NON-NLS-1$
-    private static final String ASUFFIX = "'"; //$NON-NLS-1$
-    private static final String TAB = "\t"; //$NON-NLS-1$
-
-    public static Collection sortPropertiesForPrinting(Properties props) {
-
-        Collection sortedProps = new ArrayList(props.size());
-
-        List names = new ArrayList();
-        Enumeration enumeration = props.propertyNames();
-        while ( enumeration.hasMoreElements() ) {
-            String name = (String) enumeration.nextElement();
-            names.add(name);
-        }
-        Collections.sort(names);
-
-        StringBuffer sb;
-
-        for (Iterator nIt=names.iterator(); nIt.hasNext(); ) {
-          String name = (String) nIt.next();
-
-          String value = null;
-          if (PasswordMaskUtil.doesNameEndWithPasswordSuffix(name)){
-                value = PasswordMaskUtil.MASK_STRING;
-          } else {
-                value = props.getProperty(name);
-                value= saveConvert(value, false);
-          }
-
-          name = saveConvert(name, true);
-
-          sb = new StringBuffer(APREFIX);
-
-          sb.append(name);
-          sb.append(TAB);
-          sb.append(AEQUAL);
-          sb.append(value);
-          sb.append(ASUFFIX);
-
-//          sortedProps.add(APREFIX + name + TAB + AEQUAL + value + ASUFFIX);
-          sortedProps.add(sb.toString());
-        }
-
-        return sortedProps;
 
     }
 

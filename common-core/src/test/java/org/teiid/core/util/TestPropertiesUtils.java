@@ -51,45 +51,6 @@ public class TestPropertiesUtils {
     //===================================================================
 
     
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#print(String, Properties, String header)}
-     * and {@link org.teiid.core.util.utils.PropertiesUtils#load(String)}
-     * and {@link org.teiid.core.util.utils.PropertiesUtils#loadHeader(String)}
-     */
-    @Test public void testPrintLoadWithHeader() throws Exception {
-        Properties props1 = make(MAP_C, null, !UNMODIFIABLE);
-        
-        //print to file
-        PropertiesUtils.print(TEMP_FILE, props1, "header"); //$NON-NLS-1$
-        
-        //load from file
-        Properties props2 = PropertiesUtils.load(TEMP_FILE);
-        assertEquals("Expected props1 to be equal to props2", props1, props2); //$NON-NLS-1$
-        
-        String header = PropertiesUtils.loadHeader(TEMP_FILE);
-        assertEquals("header", header); //$NON-NLS-1$
-    }
-    
-    
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#print(String, Properties)}
-     * and {@link org.teiid.core.util.utils.PropertiesUtils#load(String)}
-     * and {@link org.teiid.core.util.utils.PropertiesUtils#loadHeader(String)}
-     */
-    @Test public void testPrintLoadWithoutHeader() throws Exception {
-        Properties props1 = make(MAP_C, null, !UNMODIFIABLE);
-        
-        //print to file
-        PropertiesUtils.print(TEMP_FILE, props1); 
-        
-        //load from file
-        Properties props2 = PropertiesUtils.load(TEMP_FILE);
-        assertEquals("Expected props1 to be equal to props2", props1, props2); //$NON-NLS-1$
-    }
-    
-    
-    
-    
 	// ################ putAll(Properties, Properties) ###########################
 
     @Test public void testPutAllWithDefaults(){
