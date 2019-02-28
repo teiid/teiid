@@ -120,7 +120,7 @@ BEGIN
     END
     
     DECLARE string scope = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE');
-    IF ((scope IS NOT null) AND (scope = 'FULL'))
+    IF (scope = 'FULL')
     BEGIN
         vdbVersion = '0';
     END      
@@ -179,7 +179,7 @@ BEGIN
     END     
 
     DECLARE string scope = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE');
-    IF ((scope IS NOT null) AND (scope = 'FULL'))
+    IF (scope = 'FULL')
     BEGIN
         vdbVersion = '0';
     END
@@ -375,7 +375,7 @@ BEGIN
     END     
 
     DECLARE string scope = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE');
-    IF ((scope IS NOT null) AND (scope = 'FULL'))
+    IF (scope = 'FULL')
     BEGIN
         vdbVersion = '0';
     END
@@ -518,7 +518,7 @@ BEGIN
     END     
 
     DECLARE string scope = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE');
-    IF ((scope IS NOT null) AND (scope = 'FULL'))
+    IF (scope = 'FULL')
     BEGIN
         vdbVersion = '0';
     END

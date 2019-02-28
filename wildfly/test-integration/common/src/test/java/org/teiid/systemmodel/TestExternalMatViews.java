@@ -21,22 +21,19 @@ package org.teiid.systemmodel;
 import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
-import java.io.PrintWriter;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Properties;
-import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
+import org.h2.jdbcx.JdbcConnectionPool;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -147,8 +144,10 @@ public class TestExternalMatViews {
 	}
 	
 	@AfterClass
-	public static void afterClass() {
-		
+	public static void afterClass() throws SQLException {
+	    Connection c = h2DataSource.getConnection();
+        c.createStatement().execute("DROP ALL OBJECTS");
+        c.close();
 	}
 	
 	@Before 
@@ -648,48 +647,8 @@ public class TestExternalMatViews {
 		return sourceModel;
 	}	
 
-	private static DataSource getDatasource() throws SQLException {
-		final org.h2.Driver h2Driver = new org.h2.Driver();
-		final Properties props = new Properties();		
-		DataSource ds = new DataSource() {
-			@Override
-			public PrintWriter getLogWriter() throws SQLException {
-				return null;
-			}
-			@Override
-			public int getLoginTimeout() throws SQLException {
-				return 0;
-			}
-			@Override
-			public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-				return null;
-			}
-			@Override
-			public void setLogWriter(PrintWriter out) throws SQLException {
-			}
-			@Override
-			public void setLoginTimeout(int seconds) throws SQLException {
-			}
-			@Override
-			public boolean isWrapperFor(Class<?> iface) throws SQLException {
-				return false;
-			}
-
-			@Override
-			public <T> T unwrap(Class<T> iface) throws SQLException {
-				return null;
-			}
-
-			@Override
-			public Connection getConnection() throws SQLException {
-				return h2Driver.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", props);
-			}
-			@Override
-			public Connection getConnection(String username, String password) throws SQLException {
-				return h2Driver.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", props);
-			}
-		};
-		return ds;
+	private static DataSource getDatasource() {
+		return JdbcConnectionPool.create("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "sa");
 	}
 	
 	@Test
@@ -904,7 +863,9 @@ public class TestExternalMatViews {
         rs = c.createStatement().executeQuery("SELECT LoadState, Nodename FROM Status WHERE VDBName = 'comp'");
         rs.next();
         assertEquals("LOADED", rs.getString(1));
-        assertEquals("server2", rs.getString(2));        
+        assertEquals("server2", rs.getString(2));
+        
+        server2.stop();
     }
     
     @Test
