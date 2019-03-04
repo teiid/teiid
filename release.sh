@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 # simple release script
 # ./release.sh [full]
 # full will also build/release the javadocs and releasenotes
