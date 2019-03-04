@@ -628,7 +628,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	/**
 	 * Adds a definition of the {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.
 	 * Only {@link ExecutionFactory} classes with a {@link Translator} annotation can be referenced by {@link #addTranslator(String, String, Map)}
-	 * @param ef
+	 * @param clazz
 	 * @throws TranslatorException 
 	 */
 	public void addTranslator(Class<? extends ExecutionFactory> clazz) throws TranslatorException {
@@ -671,9 +671,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	
 	/**
      * Add a named {@link ExecutionFactory}. NOTE: Only this single instance will be shared for all usage.
+     * See {@link #addTranslator(String, String, Map)} or {@link #addTranslator(Class)}
      * @param name
      * @param ef the already started ExecutionFactory
-     * @see {@link #addTranslator(String, String, Map)} or {@link #addTranslator(Class)}
      */
     public void addTranslator(String name, ExecutionFactory<?, ?> ef) {
         translators.put(name, ef);
@@ -718,7 +718,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	
 	/**
 	 * Deploy a vdb.xml file.  The name and version will be derived from the xml.
-	 * @param is, which will be closed by this deployment
+	 * @param is which will be closed by this deployment
 	 * @throws TranslatorException 
 	 * @throws ConnectorManagerException 
 	 * @throws VirtualDatabaseException 
@@ -730,8 +730,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	
 	/**
 	 * Deploy a vdb.xml file.  The name and version will be derived from the xml.
-	 * @param is, which will be closed by this deployment
-	 * @param ddl, true if the file contents are DDL
+	 * @param is which will be closed by this deployment
+	 * @param ddl true if the file contents are DDL
 	 * @throws TranslatorException 
 	 * @throws ConnectorManagerException 
 	 * @throws VirtualDatabaseException 
@@ -924,7 +924,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	
     public void undeployVDB(String vdbName, String version) {
         checkStarted();
-        this.repo.removeVDB(vdbName, version); //$NON-NLS-1$
+        this.repo.removeVDB(vdbName, version);
     }
 	
 
