@@ -73,6 +73,16 @@
 						</execution>
 					</executions>
 				</plugin>
+				<plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                        <serverId>oss.sonatype.org</serverId>
+                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    </configuration>
+                </plugin>
 			</plugins>
 		</build>
 	</profile>
