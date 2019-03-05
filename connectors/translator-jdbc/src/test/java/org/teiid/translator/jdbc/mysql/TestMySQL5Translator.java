@@ -82,4 +82,13 @@ public class TestMySQL5Translator {
         String output = "SELECT COLA_MARKETS.MKT_ID FROM COLA_MARKETS WHERE st_contains(GeomFromWKB(?, 8307), COLA_MARKETS.SHAPE) = 1"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+    
+    @Test public void testTimestampLiteral() throws Exception {
+        String input = "SELECT {ts '1970-01-01 00:00:00.123456789'}"; //$NON-NLS-1$
+        String output = "SELECT {ts '1970-01-01 00:00:00.123456789'}"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
 }

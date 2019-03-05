@@ -181,4 +181,13 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     public boolean supportsAggregatesDistinct() {
         return true;
     }
+    
+    @Override
+    public int getTimestampNanoPrecision() {
+        //the conversion routines won't error out even if additional
+        //digits are included prior to 5.6.4.  After 5.6.4
+        //we'll just let mysql do the truncating or rounding
+        return 9;
+    }
+        
 }
