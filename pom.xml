@@ -274,6 +274,7 @@
 		     turned off directly -->
 		<id>dev</id>
 		<properties>
+		    <skipTests>true</skipTests>
 			<basepom.check.skip-all>true</basepom.check.skip-all>
 		</properties>
 		<modules>
