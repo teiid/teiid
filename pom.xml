@@ -48,6 +48,9 @@
         <dep.plugin.failsafe.version>2.21.0</dep.plugin.failsafe.version> <!-- SUREFIRE-1422 -->
         <!-- end from syndesis.io -->
         
+        <!-- since we auto-release, we want to push the changes -->
+        <basepom.release.push-changes>true</basepom.release.push-changes>
+        
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
