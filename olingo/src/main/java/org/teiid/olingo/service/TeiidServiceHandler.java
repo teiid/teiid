@@ -162,6 +162,8 @@ public class TeiidServiceHandler implements ServiceHandler {
         try {
             Query query = visitor.selectQuery();
             queryResponse = executeQuery(request, request.isCountRequest(), visitor, query);
+        } catch (ODataApplicationException|ODataLibraryException e) {
+            throw e;
         } catch (Throwable e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -711,6 +713,8 @@ public class TeiidServiceHandler implements ServiceHandler {
                 Query query = visitor.selectQuery();
                 queryResponse = (OperationResponseImpl)executeQuery(request, request.isCountRequest(), visitor, query);            
             }
+        } catch (ODataApplicationException|ODataLibraryException e) {
+            throw e;
         } catch (Throwable e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -960,6 +964,8 @@ public class TeiidServiceHandler implements ServiceHandler {
         try {
             Query query = visitor.selectQuery();
             queryResponse = (EntityCollectionResponse)executeQuery(request, request.isCountRequest(), visitor, query);
+        } catch (ODataApplicationException|ODataLibraryException e) {
+            throw e;
         } catch (Exception e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),

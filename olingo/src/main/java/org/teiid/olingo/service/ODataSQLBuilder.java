@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.olingo.commons.api.data.Entity;
@@ -36,9 +37,12 @@ import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmOperation;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.ex.ODataRuntimeException;
+import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmInt32;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.OData;
+import org.apache.olingo.server.api.ODataApplicationException;
+import org.apache.olingo.server.api.ODataLibraryException;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.uri.*;
 import org.apache.olingo.server.api.uri.queryoption.*;
@@ -92,7 +96,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     private final MetadataStore metadata;
     private boolean prepared = true;
     private final ArrayList<SQLParameter> params = new ArrayList<SQLParameter>();
-    private final ArrayList<TeiidException> exceptions = new ArrayList<TeiidException>();
+    private final ArrayList<Exception> exceptions = new ArrayList<Exception>();
     private DocumentNode context;
     private SkipOption skipOption;
     private TopOption topOption;
@@ -126,9 +130,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 visitor.nameGenerator = nameGenerator;
                 visitor.visit(uriInfo);
                 return visitor.selectQuery();
-            } catch (UriParserException e) {
-                throw new TeiidException(e);
-            } catch (UriValidationException e) {
+            } catch (ODataApplicationException|ODataLibraryException e) {
                 throw new TeiidException(e);
             }
         }    
@@ -172,10 +174,20 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         return this.navigation;
     }
 
-    public Query selectQuery() throws TeiidException {
+    public Query selectQuery() throws TeiidException, ODataLibraryException, ODataApplicationException {
         
     	if (!this.exceptions.isEmpty()) {
-            throw this.exceptions.get(0);
+            Exception e = this.exceptions.get(0);
+            if (e instanceof ODataLibraryException) {
+                throw (ODataLibraryException)e;
+            }
+            if (e instanceof ODataApplicationException) {
+                throw (ODataApplicationException)e;
+            }
+            if (e instanceof TeiidException) {
+                throw (TeiidException)e;
+            }
+            throw new TeiidException(e);
         }
 
         Query query = this.context.buildQuery();
@@ -794,17 +806,17 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     
     @Override
     public void visit(UriInfoService info) {
-        this.exceptions.add(new TeiidException("UriInfoService NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriInfoService Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
     public void visit(UriInfoAll info) {
-        this.exceptions.add(new TeiidException("UriInfoAll NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriInfoAll Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
     public void visit(UriInfoBatch info) {
-        this.exceptions.add(new TeiidException("UriInfoBatch NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriInfoBatch Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
@@ -857,7 +869,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     @Override
     public void visit(UriInfoMetadata info) {
-        this.exceptions.add(new TeiidException("UriInfoMetadata NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriInfoMetadata Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
@@ -868,18 +880,27 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     @Override
     public void visit(FormatOption info) {
     }
+    
+    @Override
+    public void visit(UriInfoResource info) {
+        super.visit(info);
+        ApplyOption apply = info.getApplyOption();
+        if (apply != null) {
+            visit(apply);
+        }
+    }
+    
+    public void visit(ApplyOption apply) {
+        this.exceptions.add(new ODataApplicationException("Apply Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+    }
 
     @Override
     public void visit(UriInfoEntityId info) {
         
         try {
             visit(buildUriInfo(new URI(info.getIdOption().getValue()), this.baseURI, this.serviceMetadata, this.odata));
-        } catch (UriParserException e) {
-            this.exceptions.add(new TeiidException(e));
-        } catch (URISyntaxException e) {
-            this.exceptions.add(new TeiidException(e));
-        } catch (UriValidationException e) {
-            this.exceptions.add(new TeiidException(e));
+        } catch (ODataLibraryException|URISyntaxException e) {
+            this.exceptions.add(e);
         }
         
         visit(info.getSelectOption());
@@ -922,7 +943,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     @Override
     public void visit(UriResourceRoot info) {
-        this.exceptions.add(new TeiidException("UriResourceRoot NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriResourceRoot Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
@@ -963,32 +984,32 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     
     @Override
     public void visit(UriResourceIt info) {
-        this.exceptions.add(new TeiidException("UriResourceIt NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriResourceIt Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
     public void visit(UriResourceLambdaAll info) {
-        this.exceptions.add(new TeiidException("UriResourceLambdaAll NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriResourceLambdaAll Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
     public void visit(UriResourceLambdaAny info) {
-        this.exceptions.add(new TeiidException("UriResourceLambdaAll NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriResourceLambdaAll Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
     public void visit(UriResourceLambdaVariable info) {
-        this.exceptions.add(new TeiidException("UriResourceLambdaVariable NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriResourceLambdaVariable Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
     public void visit(UriResourceSingleton info) {
-        this.exceptions.add(new TeiidException("UriResourceSingleton NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriResourceSingleton Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     @Override
     public void visit(UriResourceComplexProperty info) {
-        this.exceptions.add(new TeiidException("UriResourceComplexProperty NotSupported"));
+        this.exceptions.add(new ODataApplicationException("UriResourceComplexProperty Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
     }
 
     public void setOperationParameterValueProvider(

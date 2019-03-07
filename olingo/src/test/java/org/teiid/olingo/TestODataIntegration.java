@@ -3453,4 +3453,9 @@ public class TestODataIntegration {
                 response.getContentAsString());
     }
     
+    @Test public void testAggregationFails() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$apply=aggregate(e3%20with%20sum%20as%20Total)");
+        assertEquals(501, response.getStatus());
+    }
+    
 }
