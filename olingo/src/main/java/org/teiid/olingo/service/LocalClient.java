@@ -71,7 +71,7 @@ public class LocalClient implements Client {
     private volatile VDBMetaData vdb;
     private final String vdbName;
     private final String vdbVersion;
-    private ConnectionImpl connection;
+    protected ConnectionImpl connection;
     private Properties properties;
 
     public LocalClient(String vdbName, String vdbVersion, Properties properties) {
