@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.apache.olingo.commons.api.data.Entity;
@@ -37,7 +36,6 @@ import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmOperation;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.ex.ODataRuntimeException;
-import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmInt32;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.OData;
@@ -806,17 +804,17 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     
     @Override
     public void visit(UriInfoService info) {
-        this.exceptions.add(new ODataApplicationException("UriInfoService Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriInfoService Not Implemented"));
     }
 
     @Override
     public void visit(UriInfoAll info) {
-        this.exceptions.add(new ODataApplicationException("UriInfoAll Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriInfoAll Not Implemented"));
     }
 
     @Override
     public void visit(UriInfoBatch info) {
-        this.exceptions.add(new ODataApplicationException("UriInfoBatch Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriInfoBatch Not Implemented"));
     }
 
     @Override
@@ -869,7 +867,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     @Override
     public void visit(UriInfoMetadata info) {
-        this.exceptions.add(new ODataApplicationException("UriInfoMetadata Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriInfoMetadata Not Implemented"));
     }
 
     @Override
@@ -891,7 +889,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     }
     
     public void visit(ApplyOption apply) {
-        this.exceptions.add(new ODataApplicationException("Apply Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("Apply Not Implemented"));
     }
 
     @Override
@@ -943,7 +941,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     @Override
     public void visit(UriResourceRoot info) {
-        this.exceptions.add(new ODataApplicationException("UriResourceRoot Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriResourceRoot Not Implemented"));
     }
 
     @Override
@@ -984,32 +982,32 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     
     @Override
     public void visit(UriResourceIt info) {
-        this.exceptions.add(new ODataApplicationException("UriResourceIt Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriResourceIt Not Implemented"));
     }
 
     @Override
     public void visit(UriResourceLambdaAll info) {
-        this.exceptions.add(new ODataApplicationException("UriResourceLambdaAll Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriResourceLambdaAll Not Implemented"));
     }
 
     @Override
     public void visit(UriResourceLambdaAny info) {
-        this.exceptions.add(new ODataApplicationException("UriResourceLambdaAll Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriResourceLambdaAll Not Implemented"));
     }
 
     @Override
     public void visit(UriResourceLambdaVariable info) {
-        this.exceptions.add(new ODataApplicationException("UriResourceLambdaVariable Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriResourceLambdaVariable Not Implemented"));
     }
 
     @Override
     public void visit(UriResourceSingleton info) {
-        this.exceptions.add(new ODataApplicationException("UriResourceSingleton Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriResourceSingleton Not Implemented"));
     }
 
     @Override
     public void visit(UriResourceComplexProperty info) {
-        this.exceptions.add(new ODataApplicationException("UriResourceComplexProperty Not Implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.getDefault()));
+        this.exceptions.add(new TeiidNotImplementedException("UriResourceComplexProperty Not Implemented"));
     }
 
     public void setOperationParameterValueProvider(
