@@ -998,7 +998,16 @@ public class TeiidServiceHandler implements ServiceHandler {
         } else if (ex instanceof TeiidProcessingException) {
             error.setException((TeiidProcessingException)ex);
             error.setCode(((TeiidProcessingException)ex).getCode());
-            error.setStatusCode(400);
+            Throwable cause = ex.getCause();
+            if (cause != null && cause != ex) {
+                cause = getRoot(cause);
+            }
+            if (cause == null || cause instanceof TeiidProcessingException 
+                    || !(cause instanceof TeiidException || cause instanceof TeiidRuntimeException)) {
+                error.setStatusCode(400);
+            } else {
+                error.setStatusCode(500);
+            }
             logLevel = MessageLevel.WARNING;
         } else if (ex instanceof TeiidException) {
             error.setException((TeiidException)ex);
