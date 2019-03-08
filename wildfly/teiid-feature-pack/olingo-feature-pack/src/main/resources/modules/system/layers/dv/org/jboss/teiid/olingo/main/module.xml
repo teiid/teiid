@@ -18,7 +18,6 @@
         <module name="org.jboss.teiid.admin"/>
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid"/>
-        <module name="org.apache.commons.commons-lang3"/>
     </dependencies>
 
 </module>

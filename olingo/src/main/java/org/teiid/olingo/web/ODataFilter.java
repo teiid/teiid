@@ -36,8 +36,10 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.server.api.ODataHandler;
@@ -48,6 +50,7 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.json.simple.JSONParser;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.odata.api.Client;
@@ -123,20 +126,47 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     static void writeError(ServletRequest request, TeiidProcessingException e,
             HttpServletResponse httpResponse, int statusCode) throws IOException {
         httpResponse.setStatus(statusCode);
-        ContentType contentType = ContentType.parse(request.getContentType());
+        String format = request.getParameter("$format"); //$NON-NLS-1$
+        if (format == null) {
+            //TODO: could also look at the accepts header
+            ContentType contentType = ContentType.parse(request.getContentType());
+            if (contentType == null || contentType.isCompatible(ContentType.APPLICATION_JSON)) {
+                format = "json"; //$NON-NLS-1$
+            } else {
+                format = "xml"; //$NON-NLS-1$
+            }
+        }
         PrintWriter writer = httpResponse.getWriter();
         String code = e.getCode()==null?"":e.getCode(); //$NON-NLS-1$
         String message = e.getMessage()==null?"":e.getMessage(); //$NON-NLS-1$
-        if (contentType == null || contentType.isCompatible(ContentType.APPLICATION_JSON)) {
+        if (format.equalsIgnoreCase("json")) { //$NON-NLS-1$
         	httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_JSON.toContentTypeString());
-        	writer.write("{ \"error\": { \"code\": \""+StringEscapeUtils.escapeJson(code)+"\", \"message\": \""+StringEscapeUtils.escapeJson(message)+"\" } }"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        	writer.write("{ \"error\": { \"code\": \""); //$NON-NLS-1$
+        	JSONParser.escape(code, writer);
+        	writer.write("\", \"message\": \""); //$NON-NLS-1$
+        	JSONParser.escape(message, writer);
+        	writer.write("\" } }"); //$NON-NLS-1$ 
         } else {
-            httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_XML.toContentTypeString()); 
-        	writer.write("<m:error xmlns:m=\"http://docs.oasis-open.org/odata/ns/metadata\"><m:code>"+StringEscapeUtils.escapeXml10(code)+"</m:code><m:message>"+StringEscapeUtils.escapeXml10(message)+"</m:message></m:error>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            try {
+                httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_XML.toContentTypeString());
+                XMLStreamWriter xmlStreamWriter = XMLOutputFactory.newInstance().createXMLStreamWriter(writer);
+                xmlStreamWriter.writeStartElement("m", "error", "http://docs.oasis-open.org/odata/ns/metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                xmlStreamWriter.writeNamespace("m", "http://docs.oasis-open.org/odata/ns/metadata"); //$NON-NLS-1$ //$NON-NLS-2$
+                xmlStreamWriter.writeStartElement("m", "code", "http://docs.oasis-open.org/odata/ns/metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                xmlStreamWriter.writeCharacters(code);
+                xmlStreamWriter.writeEndElement();
+                xmlStreamWriter.writeStartElement("m", "message", "http://docs.oasis-open.org/odata/ns/metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                xmlStreamWriter.writeCharacters(message);
+                xmlStreamWriter.writeEndElement();
+                xmlStreamWriter.writeEndElement();
+                xmlStreamWriter.flush();
+            } catch (XMLStreamException x) {
+                throw new IOException(x);
+            }
         }
         writer.close();
     }
-
+    
     public void internalDoFilter(ServletRequest request, ServletResponse response,
             FilterChain chain) throws IOException, ServletException, TeiidProcessingException {
 

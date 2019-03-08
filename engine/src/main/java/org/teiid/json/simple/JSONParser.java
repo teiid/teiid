@@ -9,7 +9,6 @@ package org.teiid.json.simple;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.Writer;
 import java.util.LinkedList;
 
 
@@ -26,7 +25,7 @@ public class JSONParser {
      * @param sb
      * @throws IOException 
      */
-    public static void escape(CharSequence s, Writer sb) throws IOException {
+    public static void escape(CharSequence s, Appendable sb) throws IOException {
                 for(int i=0;i<s.length();i++){
                         char ch=s.charAt(i);
                         switch(ch){
@@ -106,8 +105,6 @@ public class JSONParser {
      * Reset the parser to the initial state with a new character reader.
      * 
      * @param in - The new character reader.
-     * @throws IOException
-     * @throws ParseException
      */
 	public void reset(Reader in){
 		lexer.yyreset(in);

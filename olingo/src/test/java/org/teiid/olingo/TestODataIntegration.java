@@ -821,6 +821,12 @@ public class TestODataIntegration {
     public void testMetadataVisibility() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/PM2/G1");
         assertEquals(404, response.getStatus());
+        assertEquals("{ \"error\": { \"code\": \"\", \"message\": \"TEIID16022 Unknown Schema or Schema is not visible in VDB\" } }", response.getContentAsString());
+        
+        response = http.newRequest(baseURL + "/loopy/PM2/G1?$format=xml").send();
+        assertEquals(404, response.getStatus());
+        assertEquals("<m:error xmlns:m=\"http://docs.oasis-open.org/odata/ns/metadata\"><m:code></m:code><m:message>"
+                + "TEIID16022 Unknown Schema or Schema is not visible in VDB</m:message></m:error>", response.getContentAsString());
     }
         
     @Test 
