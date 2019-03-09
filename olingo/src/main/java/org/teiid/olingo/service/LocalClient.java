@@ -24,11 +24,17 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -73,11 +79,17 @@ public class LocalClient implements Client {
     private final String vdbVersion;
     protected ConnectionImpl connection;
     private Properties properties;
+    private Map<Object, Future<Boolean>> loading;
+    
+    private Object loadingKey;
+    private ResultSet toCache;
+    private CompletableFuture<Boolean> loadingFinished;
 
-    public LocalClient(String vdbName, String vdbVersion, Properties properties) {
+    public LocalClient(String vdbName, String vdbVersion, Properties properties, Map<Object, Future<Boolean>> loading) {
         this.vdbName = vdbName;
         this.vdbVersion = vdbVersion;
         this.properties = properties;
+        this.loading = loading;
     }
         
     private long getCacheTime() {
@@ -95,8 +107,19 @@ public class LocalClient implements Client {
 
     @Override
     public void close() throws SQLException {
-        if (this.connection != null) {
-            this.connection.close();
+        try {
+            if (this.toCache != null) {
+                //will force the entry to cache or is effectively a no-op when already cached
+                this.toCache.last();
+            }
+        } finally {
+            if (loadingFinished != null) {
+                loadingFinished.complete(true);
+                loading.remove(loadingKey);
+            }
+            if (this.connection != null) {
+                this.connection.close();
+            }
         }
     }    
     
@@ -195,12 +218,6 @@ public class LocalClient implements Client {
             boolean calculateTotalSize, Integer skipOption, Integer topOption,
             String nextOption, int pageSize, final QueryResponse response)  throws SQLException {
         boolean cache = pageSize > 0; 
-        if (cache) {
-            CacheHint hint = new CacheHint();
-            hint.setTtl(getCacheTime());
-            hint.setScope(CacheDirective.Scope.USER);
-            query.setCacheHint(hint);
-        }
         
         boolean getCount = false; 
         getCount = calculateTotalSize;
@@ -214,7 +231,7 @@ public class LocalClient implements Client {
         ConnectionImpl conn = getConnection();
         String sessionId = conn.getServerConnection().getLogonResult().getSessionID();
         
-        Integer nextSkip = null; 
+        Integer toSkip = null; 
         Integer savedEntityCount = null;
         if (nextOption != null) {
             if (cache) {
@@ -225,7 +242,7 @@ public class LocalClient implements Client {
                             ODataPlugin.Event.TEIID16062));
                 }
                 try {
-                    nextSkip = Integer.parseInt(st.nextToken());
+                    toSkip = Integer.parseInt(st.nextToken());
                     if (st.hasMoreTokens()) {
                         savedEntityCount = Integer.parseInt(st.nextToken());
                     }
@@ -236,11 +253,71 @@ public class LocalClient implements Client {
             }
             getCount = false; // the URL might have $count=true, but ignore it.
         }
+        
+        int count = 0;
+        int expectedEnd = 0;
+        
+        if (!getCount && cache) {
+            //to prevent long initial requests, we want to
+            //only work over windows of at most 64 pages
+            pageSize = Math.min(pageSize, 2<<24);
+            int resultWindow = pageSize<<6;
+            int windows = 0;
+            
+            if (toSkip != null) {
+                windows = toSkip/resultWindow;
+                toSkip = toSkip%resultWindow;
+                count = windows*resultWindow;
+            }
+            expectedEnd = count + resultWindow;
+            
+            //TODO: apply limit/offset in a prepared statement
+            if (query.getLimit() != null) {
+                int offset = count + (skipOption!=null?skipOption:0);
+                int limit = Math.min(resultWindow, topOption!=null?topOption:Integer.MAX_VALUE);
+                if (offset != 0) {
+                    query.getLimit().setOffset(new Constant(offset));
+                }
+                if (limit != Integer.MAX_VALUE) {
+                    query.getLimit().setRowLimit(new Constant(limit));
+                }
+            } else {
+                query.setLimit(new Limit(count==0?null:new Constant(count), new Constant(resultWindow)));
+            }
+        }
+        
+        if (cache) {
+            CacheHint hint = new CacheHint();
+            hint.setTtl(getCacheTime());
+            hint.setScope(CacheDirective.Scope.USER);
+            query.setCacheHint(hint);
+        }
+        
         String sql = query.toString();
         if (cache && !Boolean.valueOf(conn.getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE))) {
             sql += " /* "+ sessionId +" */"; //$NON-NLS-1$ //$NON-NLS-2$
         }
         LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
+        
+        if (cache) {
+            this.loadingKey = Arrays.asList(sql, parameters);
+            Future<?> future = loading.get(this.loadingKey);
+            if (future != null) {
+                try {
+                    future.get(5, TimeUnit.MINUTES);
+                } catch (InterruptedException e) {
+                    Thread.interrupted();
+                    throw new TeiidRuntimeException(e);
+                } catch (ExecutionException e) {
+                    throw new TeiidRuntimeException(e);
+                } catch (TimeoutException e) {
+                    //this is a good indication that what is being done
+                    //is not the right approach.  materialization or other approaches are needed
+                    LogManager.logDetail(LogConstants.CTX_ODATA, "Waited 5 minutes for the initial load of", sql, //$NON-NLS-1$
+                            ".  You should consider higher level caching such as materialization"); //$NON-NLS-1$
+                }
+            }
+        }
         
         final PreparedStatement stmt = conn.prepareStatement(sql, 
                 cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, 
@@ -256,12 +333,11 @@ public class LocalClient implements Client {
         final ResultSet rs = stmt.executeQuery();
                     
         //skip to the initial position
-        int count = 0;
         int entityCount = 0;
         int skipSize = 0;
         
         //skip based upon the skip value
-        if (nextSkip == null) {            
+        if (toSkip == null) {            
             if (skipOption != null && skipOption > 0 && !skipAndTopApplied) {                
                 int s = skipEntities(rs, skipOption);
                 count += s;
@@ -270,7 +346,7 @@ public class LocalClient implements Client {
             }                        
         } else {
         //skip based upon the skipToken
-            skipSize += nextSkip;
+            skipSize += toSkip;
             if (skipSize > 0) {
                 count += skip(cache, rs, skipSize);
             }            
@@ -292,10 +368,7 @@ public class LocalClient implements Client {
         //build the results
         int i = 0;
         int nextCount = count;
-        while(true) {            
-            if (!rs.next()) {
-                break;
-            }
+        while(rs.next()) {            
             count++;
             i++;
             entityCount++;
@@ -326,10 +399,11 @@ public class LocalClient implements Client {
                 if (end < Math.min(top, count)) {
                     response.setNextToken(nextToken(cache, sessionId, end, entityCount));
                 }
-            } else if (count != nextCount){
+            } else if (i > size || count == expectedEnd){
                 response.setNextToken(nextToken(cache, sessionId, end, null));
-                //will force the entry to cache or is effectively a no-op when already cached
-                rs.last();    
+                this.loadingFinished = new CompletableFuture<>();
+                this.loading.put(loadingKey, loadingFinished);
+                this.toCache = rs;
             }
         }
     }

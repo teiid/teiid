@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.concurrent.Future;
 
 import javax.servlet.DispatcherType;
 
@@ -142,8 +143,8 @@ public class TestODataIntegration {
 
 		UnitTestLocalClient(String vdbName, String vdbVersion,
 				Properties properties, Properties properties2,
-				TeiidDriver driver, String vdb) {
-			super(vdbName, vdbVersion, properties);
+				TeiidDriver driver, String vdb, Map<Object, Future<Boolean>> loading) {
+			super(vdbName, vdbVersion, properties, loading);
 			this.properties = properties2;
 			this.driver = driver;
 			this.vdb = vdb;
@@ -242,6 +243,7 @@ public class TestODataIntegration {
     	TimestampWithTimezone.resetCalendar(null);
         server.stop();
         teiid.stop();
+        assertEquals(0, loading.size());
     }
 
     private static void deployVDB() throws IOException,
@@ -826,8 +828,10 @@ public class TestODataIntegration {
         assertEquals(201, response.getStatus());
     }    
     
+    Map<Object, Future<Boolean>> loading = new HashMap<>();
+    
     private UnitTestLocalClient getClient(final TeiidDriver driver, final String vdb, final Properties properties) {
-        return new UnitTestLocalClient(vdb, "1", properties, properties, driver, vdb);
+        return new UnitTestLocalClient(vdb, "1", properties, properties, driver, vdb, loading);
     }
     
     @Test

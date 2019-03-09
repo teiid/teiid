@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -70,6 +72,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     private volatile boolean listenerRegistered = false;
     //default odata behavior requires explicit versioning
     private String defaultVdbVersion = "1"; //$NON-NLS-1$
+    private Map<Object, Future<Boolean>> loadingQueries = new ConcurrentHashMap<>();
     
     protected OpenApiHandler openApiHandler;
     
@@ -279,6 +282,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             httpRequest.setAttribute(ODataHttpHandler.class.getName(), handler);
             httpRequest.setAttribute(Client.class.getName(), client);
             chain.doFilter(httpRequest, response);
+            response.flushBuffer();
         } catch(SQLException e) {
             throw new TeiidProcessingException(e);
         } finally {
@@ -310,7 +314,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     }
     
     public Client buildClient(String vdbName, String version, Properties props) {
-        return new LocalClient(vdbName, version, props);        
+        return new LocalClient(vdbName, version, props, loadingQueries);        
     }
         
     @Override
