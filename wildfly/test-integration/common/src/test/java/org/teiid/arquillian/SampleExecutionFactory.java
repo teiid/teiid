@@ -90,7 +90,7 @@ public class SampleExecutionFactory extends LoopbackExecutionFactory {
 				}
 			};
     	}
-        return new LoopbackExecution(command, this);
+        return new LoopbackExecution(command, this, executionContext);
     }   
 	
 }

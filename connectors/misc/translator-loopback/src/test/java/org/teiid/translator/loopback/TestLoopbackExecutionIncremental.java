@@ -18,13 +18,13 @@
 
 package org.teiid.translator.loopback;
 
+import static org.junit.Assert.*;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
@@ -109,14 +109,27 @@ public class TestLoopbackExecutionIncremental  {
     }
     @Test
     public void testConstructIncrementedString(){
-    	Assert.assertEquals("A",LoopbackExecution.constructIncrementedString(1));
-    	Assert.assertEquals("ABC",LoopbackExecution.constructIncrementedString(3));
-    	Assert.assertEquals("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZA",LoopbackExecution.constructIncrementedString(53));
+    	assertEquals("A",LoopbackExecution.constructIncrementedString(1));
+    	assertEquals("ABC",LoopbackExecution.constructIncrementedString(3));
+    	assertEquals("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZA",LoopbackExecution.constructIncrementedString(53));
     }
     @Test
     public void testIncrementString(){
-    	Assert.assertEquals("A100",LoopbackExecution.incrementString("ABCD",new BigInteger("100")));
-    	Assert.assertEquals("ABCD",LoopbackExecution.incrementString("ABCD",new BigInteger("0")));
+    	assertEquals("A100",LoopbackExecution.incrementString("ABCD",new BigInteger("100")));
+    	assertEquals("ABCD",LoopbackExecution.incrementString("ABCD",new BigInteger("0")));
+    }
+    
+    /**
+     * Shows that we'll use the connector limit over the row limit, and apply the offset
+     * @throws Exception
+     */
+    @Test
+    public void testQueryWithLimitOffset() throws Exception {
+        Object[][] expected = new Object[90][1];
+        for (int i = 0; i < expected.length; i++) {
+            expected[i] = new Object[] {i+10};
+        }
+        TestHelper.helpTestQuery(true, "SELECT intkey FROM BQT1.SmallA LIMIT 10, 300", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), 0, 100, expected); //$NON-NLS-1$
     }
     
 }

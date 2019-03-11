@@ -125,7 +125,7 @@ public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
     		throws TranslatorException {
-        return new LoopbackExecution(command, this);
+        return new LoopbackExecution(command, this, executionContext);
     }   
     
 	@Override

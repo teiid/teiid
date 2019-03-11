@@ -28,15 +28,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
+import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
+import org.teiid.language.Expression;
 import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Column;
 import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -53,18 +58,22 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     private String staticStringValue = ""; //$NON-NLS-1$
         
     // Execution state
-    private Random randomNumber = new Random();
+    private Random randomNumber = new Random(0);
     private List<Object> row;
     private List<Class<?>> types;
+    private List<Integer> lengths;
     private boolean waited = false;
     private int rowsReturned = 0;
     private int rowsNeeded = 1;
 	private BigInteger rowNumber = BigInteger.ZERO;
+	private int batchSize = 256;
     
-    public LoopbackExecution(Command command, LoopbackExecutionFactory config) {
+    public LoopbackExecution(Command command, LoopbackExecutionFactory config, ExecutionContext context) {
         this.config = config;
         this.command = command;
-            
+        if (context != null) {
+            this.batchSize = context.getBatchSize();
+        }
         staticStringValue = constructIncrementedString(config.getCharacterValuesSize());
     }
     
@@ -95,6 +104,10 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             // Wait a random amount of time up to waitTime milliseconds
             int randomTimeToWait = randomNumber.nextInt(this.config.getWaitTime());
 
+            if (rowsReturned > 0) {
+                randomTimeToWait/=2;
+            }
+            
             // If we're asynch and the wait time was longer than the poll interval,
             // then just say we don't have results instead
             if(this.config.getPollIntervalInMilli() >= 0 && randomTimeToWait > this.config.getPollIntervalInMilli()) {
@@ -109,13 +122,16 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             }
             waited = true;
         }
-                
+                        
         List<Object> resultRow = row;
         if(rowsReturned < this.rowsNeeded && resultRow.size() > 0) {
             rowsReturned++;            
             if (config.getIncrementRows()) {
             	rowNumber = rowNumber.add(BigInteger.ONE);
         		generateRow();
+            }
+            if (waited && (rowsReturned%batchSize)==0) {
+                waited = false;
             }
             return resultRow;
         }
@@ -141,7 +157,11 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         if (command instanceof QueryExpression) {
             QueryExpression queryCommand = (QueryExpression)command;
             if (queryCommand.getLimit() != null) {
-            	this.rowsNeeded = queryCommand.getLimit().getRowLimit();
+            	int limit = queryCommand.getLimit().getRowLimit();
+            	int offset = queryCommand.getLimit().getRowOffset();
+            	this.rowsNeeded -= offset;
+            	this.rowsNeeded = Math.min(rowsNeeded, limit);
+            	this.rowNumber = BigInteger.valueOf(offset);
             }
         }
         
@@ -183,7 +203,10 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         // Get select columns and lookup the types in metadata
         if(command instanceof QueryExpression) {
             QueryExpression query = (QueryExpression) command;
-            types = Arrays.asList(query.getColumnTypes());  
+            types = Arrays.asList(query.getColumnTypes());
+            lengths = query.getProjectedQuery().getDerivedColumns().stream()
+                    .map(d -> getExpressionLength(d.getExpression()))
+                    .collect(Collectors.toList());
             return;
         }
         if (command instanceof Call) {
@@ -192,6 +215,16 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         }
         types = new ArrayList<Class<?>>(1);
         types.add(Integer.class);
+    }
+    
+    private static int getExpressionLength(Expression ex) {
+        if (ex instanceof ColumnReference) {
+            Column c = ((ColumnReference)ex).getMetadataObject();
+            if (c != null) {
+                return c.getLength();
+            }
+        }
+        return -1;
     }
     
     public static final Long DAY_SECONDS=86400L;
@@ -203,14 +236,15 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 	private void generateRow() {
 		List<Object> newRow = new ArrayList<Object>(types.size());
 		String incrementedString = incrementString(staticStringValue,rowNumber);
-		for (Class<?> type : types) {
-			Object val = getVal(incrementedString, type);
+		for (int i = 0; i < types.size(); i++) {
+		    Class<?> type = types.get(i);
+			Object val = getVal(incrementedString, type, i);
 			newRow.add(val);
 		}
 		row = newRow;
 	}
 
-	Object getVal(String incrementedString, Class<?> type) {
+	Object getVal(String incrementedString, Class<?> type, int index) {
 		Object val;
 		if (type.equals(Integer.class)) {
 			val = rowNumber.intValue();
@@ -244,9 +278,15 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 			val = this.config.getTypeFacility().convertToRuntimeType(incrementedString.getBytes());
 		} else if (type.isArray()) {
 			val = Array.newInstance(type.getComponentType(), 1);
-			Array.set(val, 0, getVal(incrementedString, type.getComponentType()));
+			Array.set(val, 0, getVal(incrementedString, type.getComponentType(), index));
 		} else {
 			val = incrementedString;
+            if (lengths != null) {
+                int length = lengths.get(index);
+                if (length > -1) {
+                    val = incrementedString.substring(0, Math.min(length, incrementedString.length()));
+                }
+            }
 		}
 		return val;
 	}
