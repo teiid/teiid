@@ -24,6 +24,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -258,6 +260,8 @@ public class LocalClient implements Client {
         int expectedEnd = 0;
         
         if (!getCount && cache) {
+            int offsetParam = 0;
+            int limitParam = 0;
             //to prevent long initial requests, we want to
             //only work over windows of at most 64 pages
             pageSize = Math.min(pageSize, 2<<24);
@@ -273,17 +277,20 @@ public class LocalClient implements Client {
             
             //TODO: apply limit/offset in a prepared statement
             if (query.getLimit() != null) {
-                int offset = count + (skipOption!=null?skipOption:0);
-                int limit = Math.min(resultWindow, topOption!=null?topOption:Integer.MAX_VALUE);
-                if (offset != 0) {
-                    query.getLimit().setOffset(new Constant(offset));
-                }
-                if (limit != Integer.MAX_VALUE) {
-                    query.getLimit().setRowLimit(new Constant(limit));
-                }
+                offsetParam = count + (skipOption!=null?skipOption:0);
+                limitParam = Math.min(resultWindow, topOption!=null?topOption:Integer.MAX_VALUE);
             } else {
-                query.setLimit(new Limit(count==0?null:new Constant(count), new Constant(resultWindow)));
+                offsetParam = count;
+                limitParam = resultWindow;
             }
+            if (parameters == null) {
+                parameters = new ArrayList<>();
+            } else {
+                parameters = new ArrayList<>(parameters);
+            }
+            query.setLimit(new Limit(new Reference(parameters.size()), new Reference(parameters.size()+1)));
+            parameters.add(new SQLParameter(offsetParam, Types.INTEGER));
+            parameters.add(new SQLParameter(limitParam, Types.INTEGER));
         }
         
         if (cache) {
@@ -295,6 +302,7 @@ public class LocalClient implements Client {
         
         String sql = query.toString();
         if (cache && !Boolean.valueOf(conn.getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE))) {
+            //TODO: this means that prepared plan entries are not reused
             sql += " /* "+ sessionId +" */"; //$NON-NLS-1$ //$NON-NLS-2$
         }
         LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
