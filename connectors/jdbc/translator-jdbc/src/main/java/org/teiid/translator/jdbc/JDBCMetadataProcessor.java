@@ -185,7 +185,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		
         if (tables.stream().map((t) -> {
             return Arrays.asList(t.catalog, t.schema);
-        }).distinct().count() > 0) {
+        }).distinct().count() > 1) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR,
                     JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11029));
         } else if (this.schemaPattern == null) {
