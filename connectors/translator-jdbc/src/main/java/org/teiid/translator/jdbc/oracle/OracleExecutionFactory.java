@@ -32,15 +32,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.teiid.GeometryInputSource;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
@@ -128,6 +132,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	static final class FixedCharType {}
 	static int FIXED_CHAR_TYPE = 999;
 	
+	/*
+     * handling for varchar bindings
+     */
+    static final class VarcharType {}
+    
+    protected Map<Class<?>, Integer> customTypeCodes = new HashMap<Class<?>, Integer>();
+	
 	private boolean oracleSuppliedDriver = true;
 	
 	private OracleFormatFunctionModifier parseModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
@@ -140,7 +151,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public void start() throws TranslatorException {
         super.start();
-        
+        customTypeCodes.put(VarcharType.class, Types.VARCHAR);
+        customTypeCodes.put(FixedCharType.class, FIXED_CHAR_TYPE);
+        customTypeCodes.put(RefCursorType.class, CURSOR_TYPE);
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
@@ -380,8 +393,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
     	if (command instanceof Insert) {
+    	    Insert insert = (Insert)command;
     		try {
-				handleInsertSequences((Insert)command);
+				handleInsertSequences(insert);
+				correctInsertTypes(insert);
 			} catch (TranslatorException e) {
 				throw new RuntimeException(e);
 			}
@@ -463,6 +478,43 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 			parts.add(limit.getRowLimit());
 		}
 		return parts;
+    }
+
+    private void correctInsertTypes(Insert insert) {
+        List<ColumnReference> columns = insert.getColumns();
+        if (!(insert.getValueSource() instanceof ExpressionValueSource)) {
+            return;
+        }
+        ExpressionValueSource evs = (ExpressionValueSource)insert.getValueSource();
+        List<Expression> expressions = evs.getValues();
+        for (int i = 0; i < columns.size(); i++) {
+            ColumnReference cr = columns.get(i);
+            if (cr.getMetadataObject() == null) {
+                continue;
+            }
+            if (!isCharacterType(cr.getType())) {
+                continue;
+            }
+            String nativeType = cr.getMetadataObject().getNativeType();
+            if (nativeType == null || StringUtil.startsWithIgnoreCase(nativeType, "N")) { //$NON-NLS-1$
+                continue;
+            }
+            Expression ex = expressions.get(i);
+            if (ex instanceof Literal) {
+                Literal l = (Literal)ex;
+                if (!l.isBindEligible()) {
+                    continue;
+                }
+                l.setType(VarcharType.class);
+                Object value = l.getValue();
+                if (value != null && isNonAscii(value.toString())) {
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Inserting a string with non-ascii characters into a varchar column, replacement characters will be used."); //$NON-NLS-1$   
+                }
+            }
+            if (ex instanceof Parameter) {
+                ((Parameter)ex).setType(VarcharType.class);
+            }
+        }
     }
     
 	private boolean isDual(NamedTable table) {
@@ -587,8 +639,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
        
     @Override
     public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
-    	if (paramType == FixedCharType.class) {
-    		stmt.setObject(i, param, FIXED_CHAR_TYPE);
+        Integer code = customTypeCodes.get(paramType);
+        if (code != null) {
+    		stmt.setObject(i, param, code);
     		return;
     	}
     	super.bindValue(stmt, param, paramType, i);
