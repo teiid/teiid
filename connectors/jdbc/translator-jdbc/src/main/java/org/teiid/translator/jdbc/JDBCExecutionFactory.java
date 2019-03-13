@@ -1054,7 +1054,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @param param
      * @param paramType
      * @param i
-     * @param cal
      * @throws SQLException
      */
     public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
@@ -1771,15 +1770,18 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 */
 	protected boolean isNonAscii(Expression obj) {
         if (obj == null 
-                || !(obj.getType() == TypeFacility.RUNTIME_TYPES.STRING || obj.getType() == TypeFacility.RUNTIME_TYPES.CHAR 
-                || obj.getType() == TypeFacility.RUNTIME_TYPES.CLOB || obj.getType() == TypeFacility.RUNTIME_TYPES.JSON)) {
+                || !isCharacterType(obj.getType())) {
             return false;
         }
         if (obj instanceof ColumnReference) {
             ColumnReference cr = (ColumnReference)obj;
-            return cr.getMetadataObject() != null 
-                    && (StringUtil.startsWithIgnoreCase(cr.getMetadataObject().getNativeType(), "N")); //$NON-NLS-1$
-            
+            if (cr.getMetadataObject() != null) {
+                String nativeType = cr.getMetadataObject().getNativeType();
+                if (nativeType != null) {
+                    return StringUtil.startsWithIgnoreCase(nativeType, "N"); //$NON-NLS-1$
+                }
+            }
+            return false;
         }
         if (obj.getType() == TypeFacility.RUNTIME_TYPES.CLOB || obj.getType() == TypeFacility.RUNTIME_TYPES.JSON) {
             return true;
@@ -1819,6 +1821,16 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         };
         v.visitNode(obj);
         return result[0];
+    }
+
+	/**
+	 * 
+	 * @param type
+	 * @return true if type is for characters
+	 */
+    protected boolean isCharacterType(Class<?> type) {
+        return type == TypeFacility.RUNTIME_TYPES.STRING || type == TypeFacility.RUNTIME_TYPES.CHAR 
+        || type == TypeFacility.RUNTIME_TYPES.CLOB || type == TypeFacility.RUNTIME_TYPES.JSON;
     }
 	
 	/**

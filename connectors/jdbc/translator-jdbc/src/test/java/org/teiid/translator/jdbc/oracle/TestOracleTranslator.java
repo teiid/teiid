@@ -34,6 +34,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.CommandContext;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
@@ -64,6 +65,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCProcedureExecution;
 import org.teiid.translator.jdbc.JDBCQueryExecution;
+import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
@@ -1364,6 +1366,33 @@ public class TestOracleTranslator {
                 "select timestampadd(sql_tsi_year, -10, now())", //$NON-NLS-1$
                 null,
                 "SELECT ADD_MONTHS(now(), -120) FROM DUAL"); //$NON-NLS-1$
+    }
+    
+    @Test public void testUnicodeInsertToVarchar() throws Exception {
+        String sql = "insert into char_test values ('Ā')"; //$NON-NLS-1$
+               
+        String ddl = "create foreign table char_test (name string options (native_type 'varchar'));";
+        
+        TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        
+        CommandBuilder commandBuilder = new CommandBuilder(tm);
+        Command command = commandBuilder.getCommand(sql);
+        for (Literal l : CollectorVisitor.collectObjects(Literal.class, command)) {
+            l.setBindEligible(true);
+        }
+        
+        Connection connection = Mockito.mock(Connection.class);
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        Mockito.stub(ps.executeUpdate()).toReturn(1);
+        Mockito.stub(connection.prepareStatement("INSERT INTO char_test (name) VALUES (?)")).toReturn(ps); //$NON-NLS-1$
+        OracleExecutionFactory ef = new OracleExecutionFactory();
+        ef.start();
+        
+        ExecutionContext executionContext = Mockito.mock(ExecutionContext.class);
+        Mockito.stub(executionContext.getCommandContext()).toReturn(Mockito.mock(CommandContext.class));
+        JDBCUpdateExecution update = new JDBCUpdateExecution(command, connection, executionContext,  ef);
+        update.execute();
+        Mockito.verify(ps, Mockito.times(1)).setObject(1, "Ā", Types.VARCHAR);
     }
     
 }
