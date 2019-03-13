@@ -24,10 +24,6 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-  <li><a href="https://issues.jboss.org/browse/TEIID-5580">TEIID-5580</a> <a href="https://issues.jboss.org/browse/TEIID-2957">TEIID-2957</a> Mongodb improvements to support 4.x and local / one phase commit transactions.</li>
-  <li><a href="https://issues.jboss.org/browse/TEIID-5629">TEIID-5629</a> Upgraded to WildFly 15.0.1.</li>
-  <li><a href="https://issues.jboss.org/browse/TEIID-5555">TEIID-5555</a> OpenAPI metadata generation for OData.</li>
-  <li>Many component upgrades and dependency updates to - jts, apache accumulo, apache poi, jackson-databind, and others as part of the WildFly upgrade.</li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -296,6 +292,7 @@ See the Admin Guide for more on configuration and installation.
 
 <h2><a name="Other">Other Issues</a></h2>
 <ul>
+    <li><a href="https://issues.jboss.org/browse/TEIID-5687">TEIID-5687</a> - Querying NCHAR values in Oracle using prepared statements and unicode values will result in the value being converted to extended ascii instead.</li> 
     <li><a href="https://issues.jboss.org/browse/TEIID-1281">TEIID-1281</a> - Negative start indexing is not supported by DB2 and Derby databases.  Usage of the Teiid SUBSTRING against these sources should not use negative start values.
     <li><a href="https://issues.jboss.org/browse/TEIID-1008">TEIID-1008</a> - Most versions of Oracle and MySQL do not support deeply nested correlated references.  There is currently no workaround for this issue.
 	<li>For compatibility with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 
@@ -319,7 +316,7 @@ See the Admin Guide for more on configuration and installation.
 	</li>
 	<li>TEIID-3808 - The Informix driver handling of timezone information is inconsistent - even if the databaseTimezone translator property is set.  Consider ensuring that the Informix server and the application server are in the same timezone.  
 	<li>TEIID-3805 - SAP Hana returns an empty string rather than null for the substring function when the from index is larger than the string length.
-	<li>TEIID-3816 - Informix can return incorrect results for subquery comparisons involving a boolean value and a subquery that has only a single row.  If you encounter such a scneario and need Teiid to compensate, then please open an issue.
+	<li>TEIID-3816 - Informix can return incorrect results for subquery comparisons involving a boolean value and a subquery that has only a single row.  If you encounter such a scenario and need Teiid to compensate, then please open an issue.
 </ul>
 
 <h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>
