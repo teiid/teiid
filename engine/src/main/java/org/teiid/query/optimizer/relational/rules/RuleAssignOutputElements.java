@@ -219,7 +219,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		    case NodeConstants.Types.SORT:
 	    		//correct expression positions and update the unrelated flag
 		    	OrderBy order = (OrderBy) root.getProperty(NodeConstants.Info.SORT_ORDER);
-		    	if (order != null && (oldOutput == null || !oldOutput.equals(outputElements))) {
+		    	//must rerun with unrelated, otherwise we'll drop that required input
+		    	if (order != null && (oldOutput == null || !oldOutput.equals(outputElements) || root.hasBooleanProperty(Info.UNRELATED_SORT))) {
 			    	outputElements = new ArrayList<Expression>(outputElements);
 			    	boolean hasUnrelated = false;
 			    	for (OrderByItem item : order.getOrderByItems()) {

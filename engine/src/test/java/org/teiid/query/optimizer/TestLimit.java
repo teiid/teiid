@@ -1038,9 +1038,9 @@ public class TestLimit {
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
          
-        String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 limit 2"; //$NON-NLS-1$
+        String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 limit 20000"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 LIMIT 2"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 LIMIT 20000"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
@@ -1085,7 +1085,7 @@ public class TestLimit {
                 0,      // Null
                 0,      // PlanExecution
                 1,      // Project
-                0,      // Select
+                1,      // Select
                 1,      // Sort
                 0       // UnionAll
         }, NODE_TYPES);
@@ -1184,9 +1184,9 @@ public class TestLimit {
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
          
-        String sql = "select pm1.g1.e1, pm1.g1.e2, pm1.g2.e3 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 left outer join pm1.g2 on pm1.g1.e2 = pm1.g2.e2 order by pm1.g1.e4 limit 3,3"; //$NON-NLS-1$
+        String sql = "select pm1.g1.e1, pm1.g1.e2, pm1.g2.e3 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 left outer join pm1.g2 on pm1.g1.e2 = pm1.g2.e2 order by pm1.g1.e4 limit 3,3000"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e4 FROM pm1.g1 ORDER BY pm1.g1.e4 LIMIT 6", "SELECT pm1.g2.e2, pm1.g2.e3 FROM pm1.g2 ORDER BY pm1.g2.e2"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e4 FROM pm1.g1 ORDER BY pm1.g1.e4 LIMIT 3003", "SELECT pm1.g2.e2, pm1.g2.e3 FROM pm1.g2 ORDER BY pm1.g2.e2"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 3,      // Access
@@ -1207,7 +1207,7 @@ public class TestLimit {
         }, NODE_TYPES);
         
         HardcodedDataManager hdm = new HardcodedDataManager();
-        hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e4 FROM pm1.g1 ORDER BY pm1.g1.e4 LIMIT 6", Arrays.asList(null, 4, null), Arrays.asList("a", 5, false), Arrays.asList("c", 6, false), Arrays.asList(null, 1, true), Arrays.asList("a", 2, true), Arrays.asList("c", 3, true));
+        hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e4 FROM pm1.g1 ORDER BY pm1.g1.e4 LIMIT 3003", Arrays.asList(null, 4, null), Arrays.asList("a", 5, false), Arrays.asList("c", 6, false), Arrays.asList(null, 1, true), Arrays.asList("a", 2, true), Arrays.asList("c", 3, true));
         hdm.addData("SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", Arrays.asList((String)null), Arrays.asList("a"), Arrays.asList("c"));
         hdm.addData("SELECT pm1.g2.e2, pm1.g2.e3 FROM pm1.g2 ORDER BY pm1.g2.e2", Arrays.asList(1, 1.0), Arrays.asList(2, 2.0));
         TestProcessor.helpProcess(plan, hdm, new List[] {
@@ -1241,7 +1241,7 @@ public class TestLimit {
                 0,      // Null
                 0,      // PlanExecution
                 3,      // Project
-                0,      // Select
+                1,      // Select
                 2,      // Sort
                 1       // UnionAll
         }, NODE_TYPES);
@@ -1289,7 +1289,7 @@ public class TestLimit {
                 0,      // Null
                 0,      // PlanExecution
                 1,      // Project
-                0,      // Select
+                1,      // Select
                 1,      // Sort
                 0       // UnionAll
         }, NODE_TYPES);
@@ -1307,7 +1307,7 @@ public class TestLimit {
     
     @Test public void testPushSortOverAliases() throws Exception {
 		String sql = "select column_a, column_b from (select sum(column_a) over (partition by key_column) as column_a, key_column from a ) a left outer join ( "
-				+ " select sum(column_b) over (partition by key_column) as column_b, key_column from b) b on a.key_column = b.key_column order by column_a desc limit 10";
+				+ " select sum(column_b) over (partition by key_column) as column_b, key_column from b) b on a.key_column = b.key_column order by column_a desc";
 		
 		
 		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table a (column_a integer, key_column string primary key);"
@@ -1320,6 +1320,22 @@ public class TestLimit {
 		hdm.addData("SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0", Arrays.asList("a", 1));
 		TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1l, 1l)});
 	}
+    
+    @Test public void testPushSortOverAliasesWithLimit() throws Exception {
+        String sql = "select column_a, column_b from (select sum(column_a) over (partition by key_column) as column_a, key_column from a ) a left outer join ( "
+                + " select sum(column_b) over (partition by key_column) as column_b, key_column from b) b on a.key_column = b.key_column order by column_a desc limit 10";
+        
+        
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table a (column_a integer, key_column string primary key);"
+                + " create foreign table b (column_b integer, key_column string primary key);", "x", "y");
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0 WHERE g_0.key_column IN (<dependent values>)", "SELECT g_0.key_column, g_0.column_a FROM y.a AS g_0"}, TestOptimizer.getGenericFinder(false), ComparisonMode.EXACT_COMMAND_STRING);
+                
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.key_column, g_0.column_a FROM y.a AS g_0", Arrays.asList("a", 1));
+        hdm.addData("SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0 WHERE g_0.key_column = 'a'", Arrays.asList("a", 1));
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1l, 1l)});
+    }
     
     @Test public void testSortedLimitOverLOJ() throws Exception {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();

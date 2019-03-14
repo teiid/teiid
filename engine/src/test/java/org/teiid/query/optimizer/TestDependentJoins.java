@@ -1073,4 +1073,28 @@ public class TestDependentJoins {
         checkDependentGroups(plan, new String[] {}); //$NON-NLS-1$
     }
     
+    @Test public void testMakeDependentWithLimit() throws Exception {
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+                "select pm1.g1.e1, pm2.g2.e2 from pm1.g1 left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 order by pm1.g1.e1 limit 5", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(), new String[] {
+                        "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", 
+                        "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, //$NON-NLS-1$
+                new DefaultCapabilitiesFinder(caps),
+                TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
+        checkDependentGroups(plan, new String[] { "PM2.G2" }); //$NON-NLS-1$
+
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        
+        plan = TestOptimizer.helpPlan(
+                "select pm1.g1.e1, pm2.g2.e2 from pm1.g1 left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 order by pm1.g1.e1 limit 5", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(), new String[] {
+                        "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0",
+                        "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 LIMIT 5" }, //$NON-NLS-1$
+                new DefaultCapabilitiesFinder(caps),
+                TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
+        checkDependentGroups(plan, new String[] { "PM2.G2" }); //$NON-NLS-1$
+    }
+    
 }

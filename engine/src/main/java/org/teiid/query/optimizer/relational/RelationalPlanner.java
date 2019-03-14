@@ -1004,7 +1004,7 @@ public class RelationalPlanner {
         
         //rules.push(new RuleAssignOutputElements(true));
         
-        if (hints.hasLimit) {
+        if (hints.hasLimit && !hints.hasJoin) {
             rules.push(RuleConstants.PUSH_LIMIT);
         }
         
@@ -1015,6 +1015,12 @@ public class RelationalPlanner {
         }
         if (hints.hasJoin) {
         	rules.push(RuleConstants.CHOOSE_DEPENDENT);
+        	if (hints.hasLimit) {
+        	    //run before choosing dependent based upon costing
+        	    rules.push(RuleConstants.PUSH_LIMIT);
+        	    //push limit is designed to run with the full output symbols
+                rules.push(new RuleAssignOutputElements(false));        	    
+        	}
         }
         if (hints.hasCriteria) {
             rules.push(RuleConstants.PUSH_LARGE_IN);
