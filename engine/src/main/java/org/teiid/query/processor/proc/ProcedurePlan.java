@@ -354,9 +354,24 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         		VariableContext vc = this.cursorStates.getParentContext();
         		CursorState last = (CursorState) this.cursorStates.getValue(null);
                 if(last != null){
-                	if (last.resultsBuffer == null && (last.usesLocalTemp || !txnTupleSources.isEmpty())) {
-                		last.resultsBuffer = bufferMgr.createTupleBuffer(last.processor.getOutputElements(), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
-                		last.returning = true;
+                	if (last.resultsBuffer == null) {
+                	    if (last.usesLocalTemp || !txnTupleSources.isEmpty()) {
+                            last.returning = true;                	        
+                	    } else {
+                	        //check to see if we are returning from a loop - the processorplan can be reused, so we need to save this result
+                	        //
+                	        //the other strategy here would be to clone the plan on invocation and use different tracking rather
+                	        //than the plan itself
+                	        for (int i = 0; i < this.programs.size() - 1; i++) {
+                	            if (this.programs.get(i).getCurrentInstruction() instanceof RepeatedInstruction) {
+                                    last.returning = true;
+                                    break;
+                	            }
+                	        }
+                	    }
+                	    if (last.returning) {
+                	        last.resultsBuffer = bufferMgr.createTupleBuffer(last.processor.getOutputElements(), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
+                	    }
                 	}
                 	if (last.returning) {
 	                	while (last.ts.hasNext()) {
