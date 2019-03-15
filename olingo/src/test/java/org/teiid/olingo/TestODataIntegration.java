@@ -2746,6 +2746,17 @@ public class TestODataIntegration {
                         + "\"Orders_FK0\":["
                         + "]}]}", 
                     response.getContentAsString());
+            
+            //apply not yet implemented for expand
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$apply=expand(Orders_FK0,filter(place%20gt%20'a'))")
+                    .method("GET")
+                    .send();
+            assertEquals(501, response.getStatus());
+            
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0($apply=aggregate(place%20with%20min%20as%20first))")
+                    .method("GET")
+                    .send();
+            assertEquals(501, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

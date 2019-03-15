@@ -269,6 +269,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 Expression expandCriteria = processFilterOption(ei.getFilterOption(), expandResource);
                 expandResource.addCriteria(expandCriteria);
             }
+            
+            if (ei.getApplyOption() != null) {
+                throw new TeiidNotImplementedException("Apply Not Implemented");
+            }
 
             OrderBy expandOrder = null;
             if (ei.getOrderByOption() != null) {
