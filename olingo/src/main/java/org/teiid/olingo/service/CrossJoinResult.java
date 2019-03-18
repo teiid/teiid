@@ -61,7 +61,7 @@ public class CrossJoinResult implements QueryResponse, ComplexResponse {
                     this.baseURL, null);
             
             row.add(new ComplexReturnType(node.getName(),
-                    this.documentNode.getEdmEntityType(), sibiling,
+                    node.getEdmEntityType(), sibiling,
                     ((CrossJoinNode) node).hasExpand()));
         }
         this.out.add(row);

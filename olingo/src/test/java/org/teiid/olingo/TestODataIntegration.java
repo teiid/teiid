@@ -1407,6 +1407,11 @@ public class TestODataIntegration {
                 + " a string, "
                 + " b string, "
                 + " primary key (a)"
+                + ") options (updatable true);"
+                + "create foreign table z ("
+                + " a1 string, "
+                + " b1 string, "
+                + " primary key (a1)"
                 + ") options (updatable true);");
         mmd.addSourceMapping("x9", "x9", null);
         teiid.deployVDB("northwind", mmd);
@@ -1433,6 +1438,13 @@ public class TestODataIntegration {
                 .method("GET")
                 .send();
         assertEquals(400, response.getStatus());
+        
+        response = http.newRequest(baseURL + "/northwind/m/$crossjoin(x,z)?$expand=z")
+                .method("GET")
+                .send();
+        assertEquals(200, response.getStatus());
+        u = baseURL + "/northwind/m/";
+        assertTrue(response.getContentAsString().contains("\"z\":{\"a1\""));
     }     
     
     @Test 
