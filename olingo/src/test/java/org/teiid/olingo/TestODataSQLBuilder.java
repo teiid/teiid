@@ -97,6 +97,12 @@ public class TestODataSQLBuilder {
             "    CONSTRAINT FKX FOREIGN KEY (e2) REFERENCES G1(e2)\n" +
             ") OPTIONS (UPDATABLE 'true');" +
             "\n"+
+            "CREATE FOREIGN TABLE G4a(\n" +
+            "    e1 string PRIMARY KEY, \n" +
+            "    e2 integer,\n" +
+            "    CONSTRAINT FKX FOREIGN KEY (e2) REFERENCES G1(e2)\n" +
+            ") OPTIONS (UPDATABLE 'true');" +
+            "\n"+
             "CREATE FOREIGN TABLE G5 (\n" +
             "    e1 string OPTIONS (SELECTABLE 'FALSE'), \n" +
             "    e2 integer PRIMARY KEY, \n" +
@@ -388,8 +394,8 @@ public class TestODataSQLBuilder {
     @Test
     public void test$CountIn$orderby() throws Exception {
         String expected = "SELECT g0.e1, g0.e2, g0.e3, (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) "
-                + "AS \"_orderByAlias\" FROM PM1.G1 AS g0 "
-                + "ORDER BY \"_orderByAlias\" NULLS FIRST";
+                + "AS \"_orderByAlias_1\" FROM PM1.G1 AS g0 "
+                + "ORDER BY \"_orderByAlias_1\" NULLS FIRST";
         helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count", expected);
     }    
         
@@ -397,9 +403,16 @@ public class TestODataSQLBuilder {
     public void test$CountIn$OrderBy() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count", 
                 "SELECT g0.e1, g0.e2, g0.e3, "
-                + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) AS \"_orderByAlias\" "
+                + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) AS \"_orderByAlias_1\" "
                 + "FROM PM1.G1 AS g0 "
-                + "ORDER BY \"_orderByAlias\" NULLS FIRST");
+                + "ORDER BY \"_orderByAlias_1\" NULLS FIRST");
+        
+        helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count,G4a_FKX/$count", 
+                "SELECT g0.e1, g0.e2, g0.e3, "
+                + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) AS \"_orderByAlias_1\", "
+                + "(SELECT COUNT(*) FROM PM1.G4a AS g2 WHERE g0.e2 = g2.e2) AS \"_orderByAlias_2\" "
+                + "FROM PM1.G1 AS g0 "
+                + "ORDER BY \"_orderByAlias_1\" NULLS FIRST, \"_orderByAlias_2\" NULLS FIRST");
     }
 
     @Test

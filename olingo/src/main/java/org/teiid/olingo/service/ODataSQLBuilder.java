@@ -86,6 +86,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 	
@@ -470,6 +471,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     }
 
     private OrderBy processOrderBy(OrderBy orderBy, List<OrderByItem> orderByItems, DocumentNode resource) throws TeiidException {
+        int i = 1;
         for (OrderByItem obitem:orderByItems) {
             ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
                     resource, false,
@@ -477,12 +479,26 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     this.parseService);
             Expression expr = visitor.getExpression(obitem.getExpression());
             org.teiid.query.sql.lang.OrderByItem item = null;
-            if (expr instanceof ElementSymbol) {
+            if (expr instanceof ElementSymbol || ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty()) {
                 item = orderBy.addVariable(expr, !obitem.isDescending());
             }
             else {
-                AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
+                //there is a validation that the order by clause cannot contain unrelated correlated subquery
+                //so we have to add them to the projection as well
+                
+                //TODO: this will not work with apply unless we add even more logic to determine 
+                //the output columns.  an alternative is to use a join and aggregation 
+                
+                String baseName = "_orderByAlias_"; //$NON-NLS-1$
+                String name = baseName + i++;
+                while (resource.getColumnByName(name) != null) {
+                    name = baseName + i++;
+                }
+                AliasSymbol alias = new AliasSymbol(name, expr);
+                
                 item = orderBy.addVariable(alias, !obitem.isDescending());
+                //TODO: the type is not correct, but we shouldn't be selecting this so it's
+                //not a big issue
                 visitor.getEntityResource().addProjectedColumn(alias, EdmInt32.getInstance(), null, false);
             }
             if (obitem.isDescending()) {
