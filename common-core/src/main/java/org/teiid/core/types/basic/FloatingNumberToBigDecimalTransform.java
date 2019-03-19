@@ -23,9 +23,12 @@ import java.math.BigDecimal;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
+import org.teiid.core.util.PropertiesUtils;
 
 
 public class FloatingNumberToBigDecimalTransform extends Transform {
+    
+    public static final boolean PRESERVE_APPROXIMATE_SCALE = PropertiesUtils.getHierarchicalProperty("org.teiid.preserveApproximateScale", false, Boolean.class); //$NON-NLS-1$
 
 	private Class<?> sourceType;
 	
@@ -43,7 +46,9 @@ public class FloatingNumberToBigDecimalTransform extends Transform {
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
 		BigDecimal result = BigDecimal.valueOf(((Number)value).doubleValue());
-		result = result.setScale(Math.max(result.scale(), (value instanceof Double ? 16 : 8) - result.precision()));
+		if (PRESERVE_APPROXIMATE_SCALE) {
+		    result = result.setScale(Math.max(result.scale(), (value instanceof Double ? 16 : 8) - result.precision()));
+		}
 		return result;
 	}
 

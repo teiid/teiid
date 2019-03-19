@@ -222,9 +222,9 @@ public class TestAggregateProcessing {
 		// Create expected results
 		List[] expected = new List[] {
 				Arrays.asList(new Object[] { new Integer(1),
-						new BigDecimal("110.5000000") }), //$NON-NLS-1$
+						new BigDecimal("110.5") }), //$NON-NLS-1$
 				Arrays.asList(new Object[] { new Integer(2),
-						new BigDecimal("254.5000000") }) //$NON-NLS-1$
+						new BigDecimal("254.5") }) //$NON-NLS-1$
 		};
 
 		// Construct data manager with data
