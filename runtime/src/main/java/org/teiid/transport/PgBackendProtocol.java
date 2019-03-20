@@ -901,26 +901,27 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	}
 	
 	@Override
-	public void functionCallResponse(byte[] data) {
-		startMessage('V');
+	public void functionCallResponse(Object data, boolean binary) {
+		startMessage('V', -1);
+        int lengthIndex = this.dataOut.writerIndex() - 4;
 		if (data == null) {
-			writeInt(-1);
+		    if (binary) {
+		        writeInt(-1);
+		    } else {
+		        writeString("-1");
+		    }
+		} else {
+	        int dataBytesIndex = this.dataOut.writerIndex();
+	        //write data - see the getContent and getBinaryContent methods
+	        //more than likely we'll want to change this method to take a resultset as well
+	        throw new AssertionError("not implemented");
+		    //int bytes = this.dataOut.writerIndex() - dataBytesIndex - 4;
+            //this.dataOut.setInt(dataBytesIndex, bytes);
 		}
-		else {
-			writeInt(data.length);
-			write(data);
-		}
+		this.dataOut.setInt(lengthIndex, this.dataOut.writerIndex() - lengthIndex);
 		sendMessage();
 	}
 	
-	@Override
-	public void functionCallResponse(int data) {
-		startMessage('V');
-		writeInt(4);
-		writeInt(data);
-		sendMessage();
-	}
-
 	private void writeString(String s) {
 		write(s.getBytes(this.encoding));
 		write(0);

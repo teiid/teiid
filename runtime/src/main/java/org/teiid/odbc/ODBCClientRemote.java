@@ -90,8 +90,7 @@ public interface ODBCClientRemote {
 	void flush();
 	
 	// FunctionCallResponse (B)
-	void functionCallResponse(byte[] data);
-	void functionCallResponse(int data);
+	void functionCallResponse(Object data, boolean binary);
 	
 	void sendSslResponse();
 	

@@ -483,16 +483,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		
 		addPrimaryKey("pk_pg_proc", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		
-		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, t1.Name as proname, (SELECT (CASE WHEN count(pp.Type)>0 THEN true else false END) as x FROM SYS.ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName and pp.Type='ResultSet') as proretset, " + //$NON-NLS-1$
-		"CASE WHEN (SELECT count(dt.oid) FROM SYS.ProcedureParams pp, pg_catalog.matpg_datatype dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type IN ('ReturnValue', 'ResultSet') AND dt.Name = pp.DataType) = 0 THEN (select oid from pg_catalog.pg_type WHERE typname = 'void') WHEN (SELECT count(dt.oid) FROM SYS.ProcedureParams pp, pg_catalog.matpg_datatype dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type = 'ResultSet' AND dt.Name = pp.DataType) > 0 THEN (select oid from pg_catalog.pg_type WHERE typname = 'record') ELSE (SELECT dt.oid FROM SYS.ProcedureParams pp, pg_catalog.matpg_datatype dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type = 'ReturnValue' AND dt.Name = pp.DataType) END as prorettype,  " + //$NON-NLS-1$
-		"convert((SELECT count(*) FROM SYS.ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type IN ('In', 'InOut')), short) as pronargs, " + //$NON-NLS-1$
-		"asPGVector((select "+arrayAgg("y.oid","y.type, y.position" )+" FROM ("+paramTable("'ResultSet','ReturnValue', 'Out'")+") as y)) as proargtypes, " +//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-		"(select "+arrayAgg("y.name", "y.type, y.position")+" FROM (SELECT pp.Name as name, pp.position as position, pp.Type as type FROM SYS.ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type NOT IN ('ReturnValue' )) as y) as proargnames, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		"(select case WHEN count(distinct(y.type)) = 1 THEN null ELSE "+arrayAgg("CASE WHEN (y.type ='In') THEN cast('i' as char) WHEN (y.type = 'Out') THEN cast('o' as char) WHEN (y.type = 'InOut') THEN cast('b' as char) WHEN (y.type = 'ResultSet') THEN cast('t' as char) END", "y.type,y.position")+" END FROM (SELECT pp.Type as type, pp.Position as position FROM SYS.ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type NOT IN ('ReturnValue')) as y) as proargmodes, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		"(select case WHEN count(distinct(y.oid)) = 1 THEN null ELSE "+arrayAgg("y.oid", "y.type, y.position")+" END FROM ("+paramTable("'ReturnValue'")+") as y) as proallargtypes, " +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-		"pg_catalog.getOid(t1.SchemaUID) as pronamespace " + //$NON-NLS-1$
-		"FROM SYS.Procedures as t1";//$NON-NLS-1$			
+		String transformation = procQuery("Procedure") //$NON-NLS-1$
+		        //add in Functions - restricting to just pg_catalog functions initial
+		        //TODO: systemsource sys functions don't yet have a uid/oid
+		        + " UNION ALL " + procQuery("Function") + " WHERE t1.SchemaName = 'pg_catalog'";	//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 		
 		
 		//add in internal conversion functions that don't actually exist
 		//some of the recv names don't match, but only oidvectorrecv and array_recv are called out specifically by the npgsql driver
@@ -504,14 +498,27 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		        + "(select oid from pg_catalog.pg_namespace where nspname = 'pg_catalog') as pronamespace FROM" //$NON-NLS-1$
 		        + "(SELECT typreceive, case when typelem <> 0 and typname like '\\__%' escape '\\' then 'a' else typname || 'recv' end as kind, oid " //$NON-NLS-1$
 		        + "from pg_catalog.pg_type where typname not in ('internal', 'anyelement')) v"; //$NON-NLS-1$
-		
 		t.setSelectTransformation(transformation);
+		t.setMaterialized(true);
 		return t;		
 	}
+
+    private String procQuery(String type) {
+        return "SELECT pg_catalog.getOid(t1.uid) as oid, t1.Name as proname, (SELECT (CASE WHEN count(pp.Type)>0 THEN true else false END) as x FROM SYS." + type + "Params pp WHERE pp." + type + "Name = t1.Name AND pp.SchemaName = t1.SchemaName AND pp." + type + "UID = t1.UID and pp.Type='ResultSet') as proretset, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		"CASE WHEN (SELECT count(dt.oid) FROM SYS." + type + "Params pp, pg_catalog.matpg_datatype dt WHERE pp." + type + "Name = t1.Name AND pp.SchemaName = t1.SchemaName AND pp." + type + "UID = t1.UID AND pp.Type IN ('ReturnValue', 'ResultSet') AND dt.Name = pp.DataType) = 0 THEN (select oid from pg_catalog.pg_type WHERE typname = 'void') WHEN (SELECT count(dt.oid) FROM SYS." + type + "Params pp, pg_catalog.matpg_datatype dt WHERE pp." + type + "Name = t1.Name AND pp.SchemaName = t1.SchemaName AND pp." + type + "UID = t1.UID AND pp.Type = 'ResultSet' AND dt.Name = pp.DataType) > 0 THEN (select oid from pg_catalog.pg_type WHERE typname = 'record') " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+		"ELSE (SELECT dt.oid FROM SYS." + type + "Params pp, pg_catalog.matpg_datatype dt WHERE pp." + type + "Name = t1.Name AND pp.SchemaName = t1.SchemaName AND pp." + type + "UID = t1.UID AND pp." + type + "UID = t1.UID AND pp.Type = 'ReturnValue' AND dt.Name = pp.DataType) END as prorettype,  " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		"convert((SELECT count(*) FROM SYS." + type + "Params pp WHERE pp." + type + "Name = t1.Name AND pp.SchemaName = t1.SchemaName AND pp." + type + "UID = t1.UID AND pp.Type IN ('In', 'InOut')), short) as pronargs, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		"asPGVector((select "+arrayAgg("y.oid","y.type, y.position" )+" FROM ("+paramTable("'ResultSet','ReturnValue', 'Out'", type)+") as y)) as proargtypes, " +//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+		"(select "+arrayAgg("y.name", "y.type, y.position")+" FROM (SELECT pp.Name as name, pp.position as position, pp.Type as type FROM SYS." + type + "Params pp WHERE pp." + type + "Name = t1.Name AND pp.SchemaName = t1.SchemaName AND pp." + type + "UID = t1.UID AND pp.Type NOT IN ('ReturnValue' )) as y) as proargnames, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+		"(select case WHEN count(distinct(y.type)) = 1 THEN null ELSE "+arrayAgg("CASE WHEN (y.type ='In') THEN cast('i' as char) WHEN (y.type = 'Out') THEN cast('o' as char) WHEN (y.type = 'InOut') THEN cast('b' as char) WHEN (y.type = 'ResultSet') THEN cast('t' as char) END", "y.type,y.position")+" END FROM (SELECT pp.Type as type, pp.Position as position FROM SYS." + type + "Params pp WHERE pp." + type + "Name = t1.Name AND pp.SchemaName = t1.SchemaName AND pp." + type + "UID = t1.UID AND pp.Type NOT IN ('ReturnValue')) as y) as proargmodes, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+		"(select case WHEN count(distinct(y.oid)) = 1 THEN null ELSE "+arrayAgg("y.oid", "y.type, y.position")+" END FROM ("+paramTable("'ReturnValue'", type)+") as y) as proallargtypes, " +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+		"pg_catalog.getOid(t1.SchemaUID) as pronamespace " + //$NON-NLS-1$
+		"FROM SYS." + type + "s as t1"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
 	
-	private String paramTable(String notIn) {
-		return "SELECT case when pp.Type <> 'ResultSet' AND pp.DataType = 'object' then 2283 else dt.oid end as oid, pp.Position as position, pp.Type as type FROM SYS.ProcedureParams pp LEFT JOIN pg_catalog.matpg_datatype dt ON pp.DataType=dt.Name " + //$NON-NLS-1$
-				"WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type NOT IN ("+notIn+")"; //$NON-NLS-1$ //$NON-NLS-2$
+	private String paramTable(String notIn, String type) {
+		return "SELECT case when pp.Type <> 'ResultSet' AND pp.DataType = 'object' then 2283 else dt.oid end as oid, pp.Position as position, pp.Type as type FROM SYS." + type + "Params pp LEFT JOIN pg_catalog.matpg_datatype dt ON pp.DataType=dt.Name " + //$NON-NLS-1$ //$NON-NLS-2$ 
+				"WHERE pp." + type + "Name = t1.Name AND pp.SchemaName = t1.SchemaName AND pp." + type + "UID = t1.UID AND pp.Type NOT IN ("+notIn+")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 	
 	
@@ -1075,6 +1082,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                 return result;
             }
 	    }
+	    
+	    //public static int lo_open(int lobjId, int mode) {
+	    //    
+	    //}
 		
 	}
 }

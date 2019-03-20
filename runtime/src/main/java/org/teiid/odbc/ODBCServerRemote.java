@@ -53,7 +53,7 @@ public interface ODBCServerRemote {
 
 	void flush();
 
-	void functionCall(int oid);
+	void functionCall(int oid, Object[] params, short resultFormat);
 	
 	void sslRequest();
 

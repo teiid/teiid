@@ -252,6 +252,27 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         String bindName = data.readString();
         String prepName = data.readString();
         
+        Object[] params = readParams(data);
+        
+        int resultCodeCount = data.readShort();
+        short[] resultColumnFormat = null;
+        if (resultCodeCount != 0) {
+            resultColumnFormat = new short[resultCodeCount];
+            for (int i = 0; i < resultCodeCount; i++) {
+                resultColumnFormat[i] = data.readShort();
+            }
+        }
+        this.odbcProxy.bindParameters(bindName, prepName, params, resultCodeCount, resultColumnFormat, this.pgBackendProtocol.getEncoding());
+        return message;
+	}
+
+	/**
+	 * Read the format codes and params
+	 * @param data
+	 * @return
+	 * @throws IOException
+	 */
+    private Object[] readParams(NullTerminatedStringDataInputStream data) throws IOException {
         int formatCodeCount = data.readShort();
         int[] formatCodes = new int[formatCodeCount];
         for (int i = 0; i < formatCodeCount; i++) {
@@ -259,6 +280,7 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         }
         
         int paramCount = data.readShort();
+        
         Object[] params = new Object[paramCount];
         for (int i = 0; i < paramCount; i++) {
             byte[] paramdata = readByteArray(data);
@@ -274,18 +296,8 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
             	params[i] = paramdata;
             }
         }
-        
-        int resultCodeCount = data.readShort();
-        short[] resultColumnFormat = null;
-        if (resultCodeCount != 0) {
-            resultColumnFormat = new short[resultCodeCount];
-            for (int i = 0; i < resultCodeCount; i++) {
-                resultColumnFormat[i] = data.readShort();
-            }
-        }
-        this.odbcProxy.bindParameters(bindName, prepName, params, resultCodeCount, resultColumnFormat, this.pgBackendProtocol.getEncoding());
-        return message;
-	}	
+        return params;
+    }	
 
 	private Object buildExecute(NullTerminatedStringDataInputStream data) throws IOException {
 		String portalName = data.readString();
@@ -346,40 +358,15 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 		return message;
 	}	
 	
-	/**
-	 *  For this to eventually work, we need to provide the relevant functions - with reserved oids
-	 *     
-	private static final int LO_CREAT = 957;
-    private static final int LO_OPEN = 952;
-    private static final int LO_CLOSE = 953;
-    private static final int LO_READ = 954;
-    private static final int LO_WRITE = 955;
-    private static final int LO_LSEEK = 956;
-    private static final int LO_TELL = 958;
-    private static final int LO_UNLINK = 964;
-	 * 
-	 */
 	@SuppressWarnings("unused")
 	private Object buildFunctionCall(NullTerminatedStringDataInputStream data) throws IOException {
 		int funcID = data.readInt();
 		
-		// read data types of arguments 
-		int formatCount = data.readShort();
-		int[] formatTypes = new int[formatCount];
-		for (int i = 0; i< formatCount; i++) {
-			formatTypes[i] = data.readShort();
-		}
-		
-		// arguments	
-		short args = data.readShort(); 
-		
-		for (int i = 0; i < args; i++) {
-		    byte[] bytes = readByteArray(data);
-		}
+		Object[] params = readParams(data);
 		
 		short resultFormat = data.readShort();
 		
-		this.odbcProxy.functionCall(funcID);
+		this.odbcProxy.functionCall(funcID, params, resultFormat);
 		return message;
 	}	
 	

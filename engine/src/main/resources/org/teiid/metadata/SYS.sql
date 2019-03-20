@@ -107,6 +107,7 @@ CREATE FOREIGN TABLE ProcedureParams (
 	VDBName string(255) NOT NULL,
 	SchemaName string(255),
 	ProcedureName string(255) NOT NULL,
+	ProcedureUID string(50) NOT NULL,
 	Name string(255) NOT NULL,
 	DataType string(25) NOT NULL,
 	Position integer NOT NULL,
@@ -164,7 +165,7 @@ CREATE FOREIGN TABLE FunctionParams (
     ColumnSize integer,
     UNIQUE (UID),
     PRIMARY KEY (VDBName, SchemaName, FunctionName, Name),
-    FOREIGN KEY (VDBName, SchemaName, FunctionName) REFERENCES Functions (VDBName, SchemaName, Name)
+    FOREIGN KEY (VDBName, SchemaName, FunctionName, FunctionUID) REFERENCES Functions (VDBName, SchemaName, Name, UID)
 );
 
 CREATE FOREIGN TABLE Functions (
@@ -175,7 +176,8 @@ CREATE FOREIGN TABLE Functions (
     UID string(50) NOT NULL,
     Description string(4000),
     IsVarArgs boolean,
-    PRIMARY KEY (VDBName, SchemaName, Name),
+    SchemaUID string (50) NOT NULL,
+    PRIMARY KEY (VDBName, SchemaName, Name, UID),
     FOREIGN KEY (VDBName, SchemaName) REFERENCES Schemas (VDBName, Name),
     UNIQUE (UID)    
 );

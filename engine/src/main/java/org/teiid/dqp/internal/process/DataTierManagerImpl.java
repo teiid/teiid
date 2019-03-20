@@ -412,6 +412,17 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(proc.getUUID());
 				row.add(proc.getAnnotation());
 				row.add(proc.isVarArgs());
+				if (proc.getParent() != null) {
+				    row.add(proc.getParent().getUUID());
+				} else {
+				    String systemUid = null; 
+				    try {
+				        //TODO make this more available
+				        systemUid = metadata.getModelID(CoreConstants.SYSTEM_MODEL).getUUID();
+                    } catch (TeiidComponentException e) {
+                    }
+				    row.add(systemUid);
+				}
 			}
 		});
         name = SystemTables.DATATYPES.name();
@@ -509,7 +520,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				}
 				row.add(proc.getParent().getName());
 				row.add(proc.getName());
-				row.add(param.getName());
+				row.add(proc.getUUID());
+                row.add(param.getName());
 				row.add(param.getRuntimeType());
 				row.add(pos);
 				row.add(type);

@@ -71,7 +71,6 @@ public class PGUtil {
     public static final int PG_TYPE_TIMESTAMP_NO_TMZONEARRAY = 1115;
     public static final int PG_TYPE_NUMERICARRAY = 1031;
     public static final int PG_TYPE_XMLARRAY = 143;
-    //private static final int PG_TYPE_LO = 14939;
     
 	public static class PgColInfo {
 		public String name;

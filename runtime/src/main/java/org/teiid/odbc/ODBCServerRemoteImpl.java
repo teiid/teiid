@@ -1150,8 +1150,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}
 	
 	@Override
-	public void functionCall(int oid) {
-		errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40081));
+	public void functionCall(int oid, Object[] params, short resultFormat) {
+	    //try (PreparedStatement s = this.connection.prepareStatement("select proname from pg_proc where oid = ?")) { //$NON-NLS-1$
+        errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40081));
+	    this.ready();
 	}
 	
 	@Override
