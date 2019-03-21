@@ -50,7 +50,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.function.source.XMLHelper;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.metadata.SupportConstants;
@@ -82,7 +82,7 @@ import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
+import org.teiid.query.xquery.XQueryExpression;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.util.CharsetUtils;
 
@@ -314,7 +314,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	        if(obj.getArgs()[1] instanceof Constant) {
 	            Constant xpathConst = (Constant) obj.getArgs()[1];
                 try {
-                    XMLSystemFunctions.validateXpath((String)xpathConst.getValue());
+                    XMLHelper.getInstance().validateXpath((String)xpathConst.getValue());
                 } catch(TeiidProcessingException e) {
                 	handleValidationError(QueryPlugin.Util.getString("QueryResolver.invalid_xpath", e.getMessage()), obj); //$NON-NLS-1$
                 }
@@ -1132,7 +1132,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
 	private String[] validateQName(LanguageObject obj, String name) {
 		try {
-			return XMLSystemFunctions.validateQName(name);
+			return XMLHelper.getInstance().validateQName(name);
 		} catch (TeiidProcessingException e) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_invalid_qname", name), obj); //$NON-NLS-1$
 		}
@@ -1262,7 +1262,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	}
     }
 
-	private void validatePassing(LanguageObject obj, SaxonXQueryExpression xqe, List<DerivedColumn> passing) {
+	private void validatePassing(LanguageObject obj, XQueryExpression xqe, List<DerivedColumn> passing) {
 		boolean context = false;
     	boolean hadError = false;
     	TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
@@ -1296,9 +1296,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			if (item.getPrefix() != null) {
 				if (item.getPrefix().equals("xml") || item.getPrefix().equals("xmlns")) { //$NON-NLS-1$ //$NON-NLS-2$
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_reserved"), obj); //$NON-NLS-1$
-				} else if (!XMLSystemFunctions.isValidNCName(item.getPrefix())) {
-					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_invalid", item.getPrefix()), obj); //$NON-NLS-1$
-				}
+				} else
+                    try {
+                        if (!XMLHelper.getInstance().isValidNCName(item.getPrefix())) {
+                        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_invalid", item.getPrefix()), obj); //$NON-NLS-1$
+                        }
+                    } catch (TeiidProcessingException e) {
+                        handleException(e);
+                    }
 				if (item.getUri().length() == 0) {
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_null_uri"), obj); //$NON-NLS-1$
 				}

@@ -72,8 +72,6 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.Symbol;
-import org.teiid.query.sql.symbol.XMLQuery;
-import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
@@ -2688,17 +2686,12 @@ public class TestResolver {
     }
     
     @Test public void testXmlTableWithParam() {
-    	helpResolve("select * from xmltable('/a' passing ?) as x");
+        //xml dependency not included by default
+    	helpResolveException("select * from xmltable('/a' passing ?) as x");
     }
     
     @Test public void testObjectTableWithParam() {
     	helpResolve("select * from objecttable('x + 1' passing ? as x columns obj OBJECT '') as y");
-    }
-    
-    @Test public void testXmlQueryWithParam() {
-    	Query q = (Query)helpResolve("select xmlquery('/a' passing ?)");
-    	XMLQuery ex = (XMLQuery) SymbolMap.getExpression(q.getSelect().getSymbols().get(0));
-    	assertEquals(DataTypeManager.DefaultDataClasses.XML, ex.getPassing().get(0).getExpression().getType());
     }
     
     @Test public void testImplicitTempTableWithExplicitColumns() {

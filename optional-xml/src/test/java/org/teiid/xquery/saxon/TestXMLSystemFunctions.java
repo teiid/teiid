@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.query.function.source;
+package org.teiid.xquery.saxon;
 
 import static org.junit.Assert.*;
 
@@ -49,9 +49,9 @@ import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.xquery.saxon.XQueryEvaluator;
 
 import net.sf.saxon.trans.XPathException;
 
@@ -71,41 +71,41 @@ public class TestXMLSystemFunctions {
 
     public String helpGetNode(final String xmlFilePath, final String xpath ) throws XPathException, TeiidProcessingException, IOException {
         final String xmlContent = getContentOfTestFile(xmlFilePath);
-        return XMLSystemFunctions.xpathValue(xmlContent,xpath);
+        return XMLFunctions.xpathValue(xmlContent,xpath);
     }
 
     @Test public void testElement() throws Exception {
         String doc = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>"; //$NON-NLS-1$
         String xpath = "a/b/c"; //$NON-NLS-1$
-        String value = XMLSystemFunctions.xpathValue(doc, xpath);
+        String value = XMLFunctions.xpathValue(doc, xpath);
         assertEquals("test", value); //$NON-NLS-1$
     }
 
     @Test public void testAttribute() throws Exception {
         String doc = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b c=\"test\"></b></a>"; //$NON-NLS-1$
         String xpath = "a/b/@c"; //$NON-NLS-1$
-        String value = XMLSystemFunctions.xpathValue(doc, xpath);
+        String value = XMLFunctions.xpathValue(doc, xpath);
         assertEquals("test", value); //$NON-NLS-1$
     }
 
     @Test public void testText() throws Exception {
         String doc = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>"; //$NON-NLS-1$
         String xpath = "a/b/c/text()"; //$NON-NLS-1$
-        String value = XMLSystemFunctions.xpathValue(doc, xpath);
+        String value = XMLFunctions.xpathValue(doc, xpath);
         assertEquals("test", value); //$NON-NLS-1$
     }
 
     @Test public void testNoMatch() throws Exception {
         String doc = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>"; //$NON-NLS-1$
         String xpath = "x"; //$NON-NLS-1$
-        String value = XMLSystemFunctions.xpathValue(doc, xpath);
+        String value = XMLFunctions.xpathValue(doc, xpath);
         assertEquals(null, value);
     }
 
     @Test public void testNoXMLHeader() throws Exception {
         String doc = "<a><b><c>test</c></b></a>"; //$NON-NLS-1$
         String xpath = "a/b/c/text()"; //$NON-NLS-1$
-        String value = XMLSystemFunctions.xpathValue(doc, xpath);
+        String value = XMLFunctions.xpathValue(doc, xpath);
         assertEquals("test", value); //$NON-NLS-1$
     }
 
@@ -113,28 +113,28 @@ public class TestXMLSystemFunctions {
     @Test public void testXMLInput() throws Exception {
         XMLType doc = new XMLType(new SQLXMLImpl("<foo/>"));//$NON-NLS-1$
         String xpath = "a/b/c"; //$NON-NLS-1$
-        String value = XMLSystemFunctions.xpathValue(doc, xpath);
+        String value = XMLFunctions.xpathValue(doc, xpath);
         assertNull(value);
     }
     
     @Test(expected=XPathException.class) public void testBadXPath() throws Exception {
         String doc = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>"; //$NON-NLS-1$
         String xpath = ":BOGUS:"; //$NON-NLS-1$
-        XMLSystemFunctions.xpathValue(doc, xpath);
+        XMLFunctions.xpathValue(doc, xpath);
     }
     
     @Test(expected=TeiidProcessingException.class) public void testValidateXpath_Defect15088() throws Exception {
         // Mismatched tick and quote
         final String xpath = "//*[local-name()='bookName\"]"; //$NON-NLS-1$       
-    	XMLSystemFunctions.validateXpath(xpath);
+        XMLFunctions.validateXpath(xpath);
     }
 
     @Test public void testValidateXpath_null() throws Exception {
-        XMLSystemFunctions.validateXpath(null);
+        XMLFunctions.validateXpath(null);
     }
 
     @Test public void testValidateXpath_valid() throws Exception {
-    	XMLSystemFunctions.validateXpath("//shipTo/@country"); //$NON-NLS-1$
+        XMLFunctions.validateXpath("//shipTo/@country"); //$NON-NLS-1$
     }
 
     @Test public void testGetSingleMatch_01_001() throws Exception {
@@ -186,17 +186,17 @@ public class TestXMLSystemFunctions {
     }
 	
 	@Test public void testNameEscaping() throws Exception {
-		assertEquals("_x003A_b", XMLSystemFunctions.escapeName(":b", true));
+		assertEquals("_x003A_b", XMLFunctions.escapeName(":b", true));
     }
 	
 	@Test public void testNameEscaping1() throws Exception {
-		assertEquals("a_x005F_x", XMLSystemFunctions.escapeName("a_x", true));
-		assertEquals("_", XMLSystemFunctions.escapeName("_", true));
-        assertEquals("_a", XMLSystemFunctions.escapeName("_a", true));
+		assertEquals("a_x005F_x", XMLFunctions.escapeName("a_x", true));
+		assertEquals("_", XMLFunctions.escapeName("_", true));
+        assertEquals("_a", XMLFunctions.escapeName("_a", true));
     }
 	
 	@Test public void testNameEscaping2() throws Exception {
-		assertEquals("_x000A_", XMLSystemFunctions.escapeName(new String(new char[] {10}), true));
+		assertEquals("_x000A_", XMLFunctions.escapeName(new String(new char[] {10}), true));
     }
 	
 	@Test public void testJsonToXml() throws Exception {

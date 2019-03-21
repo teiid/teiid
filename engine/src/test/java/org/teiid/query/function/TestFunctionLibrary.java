@@ -51,7 +51,6 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.NullType;
-import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -208,7 +207,7 @@ public class TestFunctionLibrary {
 		assertTrue(library.hasFunctionMethod(fname, numArgs));
 	}
 
-	private void helpInvokeMethod(String fname, Object[] inputs, Object expectedOutput) {
+	void helpInvokeMethod(String fname, Object[] inputs, Object expectedOutput) {
         try {
             helpInvokeMethod(fname, null, inputs, null, expectedOutput);
         } catch (Exception err) {
@@ -221,7 +220,7 @@ public class TestFunctionLibrary {
         assertEquals("Actual function output not equal to expected: ", expectedOutput, actualOutput); //$NON-NLS-1$
     }
 
-	private Object helpInvokeMethod(String fname, Class<?>[] types,
+	Object helpInvokeMethod(String fname, Class<?>[] types,
 			Object[] inputs, CommandContext context)
 			throws FunctionExecutionException, BlockedException {
 		if (types == null) {
@@ -1153,30 +1152,6 @@ public class TestFunctionLibrary {
         helpInvokeMethod("convert", new Object[] {"05:00:00", "time"}, TimestampUtil.createTime(5, 0, 0)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$                    
     }
 
-    @Test public void testInvokeXpath1() {
-        helpInvokeMethod("xpathValue",  //$NON-NLS-1$
-                         new Object[] {
-                                       "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>", //$NON-NLS-1$
-                                       "a/b/c"}, //$NON-NLS-1$ 
-                         "test"); //$NON-NLS-1$ 
-    }
-    
-    @Test public void testInvokeXpathWithNill() {
-        helpInvokeMethod("xpathValue",  //$NON-NLS-1$
-                         new Object[] {
-                                       "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><b xsi:nil=\"true\"/></a>", //$NON-NLS-1$
-                                       "//*[local-name()='b' and not(@*[local-name()='nil' and string()='true'])]"}, //$NON-NLS-1$ 
-                         null);
-    }
-    
-    @Test public void testInvokeXpathWithNill1() {
-        helpInvokeMethod("xpathValue",  //$NON-NLS-1$
-                         new Object[] {
-                                       "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b>value</b></a>", //$NON-NLS-1$
-                                       "//*[local-name()='b' and not(@*[local-name()='nil' and string()='true'])]"}, //$NON-NLS-1$ 
-                         "value"); //$NON-NLS-1$
-    }
-    
     @Test public void testInvokeModifyTimeZone() {
         Timestamp ts = Timestamp.valueOf("2004-10-03 23:59:59.123"); //$NON-NLS-1$
         Timestamp out = Timestamp.valueOf("2004-10-03 22:59:59.123"); //$NON-NLS-1$
@@ -1335,37 +1310,6 @@ public class TestFunctionLibrary {
         helpInvokeMethod(SourceSystemFunctions.CONCAT, new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING}, new Object[] { null, String.valueOf(1) }, null, null);  
     }  
     
-	@Test public void testInvokeXslTransform() throws Exception {
-        CommandContext c = new CommandContext();
-        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        ClobType result = (ClobType)helpInvokeMethod("xsltransform", new Class<?>[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
-        		new Object[] {DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML), 
-        		DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>", DataTypeManager.DefaultDataClasses.XML)}, c);
-        
-        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
-        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name></Item></Items></Catalog></Catalogs>", xml);
-    }
-	
-	@Test public void testInvokeXmlConcat() throws Exception {
-        CommandContext c = new CommandContext();
-        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        XMLType result = (XMLType)helpInvokeMethod("xmlconcat", new Class<?>[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
-        		new Object[] {DataTypeManager.transformValue("<bar/>", DataTypeManager.DefaultDataClasses.XML), DataTypeManager.transformValue("<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML)}, c);
-        
-        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
-        assertEquals("<bar/><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", xml);
-    }
-	
-	@Test public void testInvokeXmlComment() throws Exception {
-        CommandContext c = new CommandContext();
-        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        XMLType result = (XMLType)helpInvokeMethod("xmlcomment", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, 
-        		new Object[] {"comment"}, c);
-        
-        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
-        assertEquals("<!--comment-->", xml);
-    }
-	
 	@Test public void testToChars() throws Exception {
 		Clob result = (Clob)helpInvokeMethod("to_chars", new Class<?>[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "ASCII" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());

@@ -1246,24 +1246,10 @@ public class TestValidator {
         helpValidate("SELECT e1 FROM test.group GROUP BY e1 HAVING convert(e1, clob) = 'a'", new String[] {"convert(e1, clob) = 'a'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	@Test public void testValidateNoExpressionName() {        
-        helpValidate("SELECT xmlelement(name a, xmlattributes('1'))", new String[] {"XMLATTRIBUTES('1')"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
 	@Test public void testValidateNoExpressionName1() {        
         helpValidate("SELECT xmlforest('1')", new String[] {"XMLFOREST('1')"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-    @Test public void testXpathValueValid_defect15088() {
-        String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', 'a/b/c')"; //$NON-NLS-1$
-        helpValidate(userSql, new String[] {}, RealMetadataFactory.exampleBQTCached());        
-    }
-
-    @Test public void testXpathValueInvalid_defect15088() throws Exception {
-        String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"; //$NON-NLS-1$
-        helpValidate(userSql, new String[] {"xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"}, RealMetadataFactory.exampleBQTCached());
-    }
-    
     @Test public void testTextTableNoWidth() {        
         helpValidate("SELECT * from texttable(null columns x string width 1, y integer) as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH 1, y integer) AS x"}, RealMetadataFactory.exampleBQTCached()); 
 	}
@@ -1280,41 +1266,9 @@ public class TestValidator {
         helpValidate("SELECT * from texttable(null SELECTOR 'a' columns x string width 1) as x", new String[] {}, RealMetadataFactory.exampleBQTCached()); 
 	}
     
-    @Test public void testXMLNamespaces() {
-    	helpValidate("select xmlforest(xmlnamespaces(no default, default 'http://foo'), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES(NO DEFAULT, DEFAULT 'http://foo')"}, RealMetadataFactory.example1Cached());
-    }
-    
-    @Test public void testXMLNamespacesInvalid() {
-    	helpValidate("select xmlforest(xmlnamespaces('http://foo' as \"1\"), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES('http://foo' AS \"1\")"}, RealMetadataFactory.example1Cached());
-    }
-
-    @Test public void testXMLNamespacesReserved() {
-    	helpValidate("select xmlforest(xmlnamespaces('http://foo' as xmlns), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES('http://foo' AS xmlns)"}, RealMetadataFactory.example1Cached());
-    }
-    
-    @Test public void testXMLTablePassingMultipleContext() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing xmlparse(DOCUMENT '<a/>'), xmlparse(DOCUMENT '<b/>')) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>'), XMLPARSE(DOCUMENT '<b/>')) AS x"}, RealMetadataFactory.example1Cached());
-    }
-    
-    @Test public void testInvalidDefault() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing xmlparse(DOCUMENT '<a/>') columns y string default 'a', x string default (select e1 from pm1.g1)) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>') COLUMNS y string DEFAULT 'a', x string DEFAULT (SELECT e1 FROM pm1.g1)) AS x"}, RealMetadataFactory.example1Cached());
-    }
-
     @Ignore("this is actually handled by saxon and will show up during resolving")
     @Test public void testXMLTablePassingSameName() {
     	helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'} as a, {x '<b/>'} as a) as x", new String[] {"xmltable('/' passing e1, e1 || 'x') as x"}, RealMetadataFactory.example1Cached());
-    }
-
-    @Test public void testXMLTablePassingContextType() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing 2) as x", new String[] {"XMLTABLE('/' PASSING 2) AS x"}, RealMetadataFactory.example1Cached());
-    }
-
-    @Test public void testXMLTableMultipleOrdinals() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing XMLPARSE(DOCUMENT '<a/>') columns x for ordinality, y for ordinality) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>') COLUMNS x FOR ORDINALITY, y FOR ORDINALITY) AS x"}, RealMetadataFactory.example1Cached());
-    }
-    
-    @Test public void testXMLTableContextRequired() {
-    	helpValidate("select * from xmltable('/a/b' passing convert('<a/>', xml) as a columns x for ordinality, c integer path '.') as x", new String[] {"XMLTABLE('/a/b' PASSING convert('<a/>', xml) AS a COLUMNS x FOR ORDINALITY, c integer PATH '.') AS x"}, RealMetadataFactory.example1Cached());
     }
     
     @Test public void testObjectTablePassing() {
@@ -1333,16 +1287,8 @@ public class TestValidator {
     	helpValidate("select * from objecttable('this. is not valid' columns c integer 'row') as x", new String[] {"OBJECTTABLE('this. is not valid' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
     }
 
-    @Test public void testXMLQueryPassingContextType() {
-    	helpValidate("select xmlquery('/' passing 2)", new String[] {"XMLQUERY('/' PASSING 2)"}, RealMetadataFactory.example1Cached());
-    }
-    
     @Test public void testQueryString() {
     	helpValidate("select querystring('/', '1')", new String[] {"QUERYSTRING('/', '1')"}, RealMetadataFactory.example1Cached());
-    }
-
-    @Test public void testXmlNameValidation() throws Exception {
-    	helpValidate("select xmlelement(\":\")", new String[] {"XMLELEMENT(NAME \":\")"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testXmlParse() throws Exception {
@@ -1501,10 +1447,6 @@ public class TestValidator {
 	@Test public void testWindowFunctionWithoutOrdering() {
 		helpValidate("SELECT row_number() over () from pm1.g1", new String[] {"ROW_NUMBER() OVER ()"}, RealMetadataFactory.example1Cached());		
 	}
-
-	@Test public void testWindowFunctionWithNestedOrdering() {
-		helpValidate("SELECT xmlagg(xmlelement(name x, e1) order by e2) over () from pm1.g1", new String[] {"XMLAGG(XMLELEMENT(NAME x, e1) ORDER BY e2) OVER ()"}, RealMetadataFactory.example1Cached());		
-	}
 	
 	@Test public void testWindowFunctionWithNestedaggAllowed() {
 		helpValidate("SELECT max(e1) over (order by max(e2)) from pm1.g1 group by e1", new String[] {}, RealMetadataFactory.example1Cached());		
@@ -1522,10 +1464,6 @@ public class TestValidator {
 		helpValidate("select count(distinct e1) over (order by e2) as y from pm1.g1", new String[] {"COUNT(DISTINCT e1) OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
 	}
 	
-	@Test public void testInvalidCorrelation() {
-		helpValidate("SELECT XMLELEMENT(NAME metadata, XMLFOREST(e1 AS objectName), (SELECT XMLAGG(XMLELEMENT(NAME subTypes, XMLFOREST(e1))) FROM pm1.g2 AS b WHERE b.e2 = a.e2)) FROM pm1.g1 AS a GROUP BY e1", new String[] {"a.e2"}, RealMetadataFactory.example1Cached());
-	}
-    
     @Test public void testUpdateError() {
         String userUpdateStr = "UPDATE vm1.g2 SET e1='x'"; //$NON-NLS-1$
         

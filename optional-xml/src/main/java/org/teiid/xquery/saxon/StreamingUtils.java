@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.query.xquery.saxon;
+package org.teiid.xquery.saxon;
 
 import java.io.IOException;
 import java.util.Map;

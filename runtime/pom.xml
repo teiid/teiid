@@ -59,6 +59,10 @@
     </dependency>
     <dependency>
       <groupId>org.teiid</groupId>
+      <artifactId>teiid-optional-xml</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
       <artifactId>teiid-engine</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
@@ -136,6 +140,7 @@
         <configuration>
           <ignoredDependencies>
             <ignoredDependency>org.teiid:teiid-optional-geo</ignoredDependency>
+            <ignoredDependency>org.teiid:teiid-optional-xml</ignoredDependency>
           </ignoredDependencies>
         </configuration>
       </plugin>

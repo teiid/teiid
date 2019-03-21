@@ -7966,22 +7966,6 @@ public class TestProcessor {
         TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("str_val", "2017-01-01", "League", 1, "str_val")});
     }
 	
-	@Test public void testLateralJoinMixedFromClause() throws Exception {
-	    String ddl = "create view v as select 1 a, 2 b;";
-	    
-	    TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "views");
-	    
-        String sql = "select x4.*,x3.*,x2.*,x1.* from v x1, table(select x1.a a) x2 join v x3 on x2.a=x3.a join v x4 on x4.a=x3.a";
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(caps));
-        HardcodedDataManager dataManager = new HardcodedDataManager();
-        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1,2,1,2,1,1,2)});
-        
-        sql = "select x4.*,x3.*,x2.*,x1.* from views.v x1, xmltable('/a' PASSING xmlparse(document '<a id=\"' || x1.a || '\"/>') COLUMNS a integer PATH '@id') x2 join views.v x3 on x2.a=x3.a join views.v x4 on x4.a=x3.a";
-        plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(caps));
-        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1,2,1,2,1,1,2)});
-	}
-	
 	@Test public void testNestedRightJoinWithLateral() throws Exception {
         String ddl = "create view v as select 1 a, 2 b;";
         
