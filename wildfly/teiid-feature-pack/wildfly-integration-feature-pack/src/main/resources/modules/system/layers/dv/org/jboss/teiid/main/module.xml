@@ -13,6 +13,7 @@
         <artifact name="${org.teiid:teiid-runtime}"/>
         <artifact name="${org.teiid.wildfly:teiid-wildfly-admin}"/>
         <artifact name="${org.teiid:teiid-data-quality}"/>
+        <artifact name="${org.teiid:teiid-optional-geo}"/>
         <resource-root path="deployments" />
     </resources>
 

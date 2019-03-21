@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.query.function;
+package org.teiid.geo;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,14 +32,19 @@ import org.teiid.CommandContext;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.GeometryType;
 import org.teiid.jdbc.TeiidConnection;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.GeometryUtils;
+import org.teiid.query.function.TeiidFunction;
+import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.translator.SourceSystemFunctions;
 
 /**
  * Wrapper around proj4j library to transform geometries to different coordinate
  * systems (ST_Transform).
  */
 public class GeometryTransformUtils {
-
+    
     /**
      * Convert geometry to a different coordinate system. Geometry must have valid
      * SRID.
@@ -50,6 +55,7 @@ public class GeometryTransformUtils {
      * @return Reprojected geometry.
      * @throws FunctionExecutionException
      */
+    @TeiidFunction(name = SourceSystemFunctions.ST_TRANSFORM, category = FunctionCategoryConstants.GEOMETRY, nullOnNull = true, pushdown = PushDown.CAN_PUSHDOWN)
     public static GeometryType transform(CommandContext ctx,
                                          GeometryType geom,
                                          int srid)
@@ -69,13 +75,13 @@ public class GeometryTransformUtils {
      * @return
      * @throws FunctionExecutionException
      */
-	static Geometry transform(CommandContext ctx, Geometry jtsGeomSrc, int srid) throws FunctionExecutionException {
-		String srcParam = lookupProj4Text(ctx, jtsGeomSrc.getSRID());
+    static Geometry transform(CommandContext ctx, Geometry jtsGeomSrc, int srid) throws FunctionExecutionException {
+        String srcParam = lookupProj4Text(ctx, jtsGeomSrc.getSRID());
         String tgtParam = lookupProj4Text(ctx, srid);
 
         Geometry jtsGeomTgt = transform(jtsGeomSrc, srcParam, tgtParam);
-		return jtsGeomTgt;
-	}
+        return jtsGeomTgt;
+    }
 
     /**
      * Lookup proj4 parameters in SPATIAL_REF_SYS using SRID as key.

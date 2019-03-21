@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Comparator;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.GeometryType;
 import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -198,8 +197,9 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addTrimFunction();
 
         addFunctions(JSONFunctionMethods.class);
-        addLibrary(GeometryFunctionMethods.class.getName(), null, true);
-        addLibrary(GeographyFunctionMethods.class.getName(), null, true);
+        addFunctions(GeometryFunctionMethods.class);
+        addFunctions(GeographyFunctionMethods.class);
+        addFunctions(GeometryUtils.Extent.class);
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
         if (addLibrary(XMLSystemFunctions.class.getName(), null, true)) {
@@ -211,23 +211,18 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
             addXmlPi();
             addJsonToXml();
         }
+        //optional geometry
+        if (addLibrary("org.teiid.geo.GeometryTransformUtils", null, true)) { //$NON-NLS-1$
+            addLibrary("org.teiid.geo.GeometryJsonUtils", null, true); //$NON-NLS-1$
+        }
         addLibrary("org.teiid.dataquality.OSDQFunctions", "osdq.", false); //$NON-NLS-1$ //$NON-NLS-2$
-        
-		try {
-			FunctionMethod fm = MetadataFactory.createFunctionFromMethod("st_extent", GeometryUtils.Extent.class.getMethod("addInput", GeometryType.class)); //$NON-NLS-1$ //$NON-NLS-2$
-			this.functions.add(fm);
-		} catch (NoSuchMethodException e) {
-			throw new AssertionError("Could not find function"); //$NON-NLS-1$
-		} catch (SecurityException e) {
-			throw new AssertionError("Could not find function"); //$NON-NLS-1$
-		}
     }
     
     private boolean addLibrary(String className, String prefix, boolean warn) {
         try {
-            Class<?> osdqFunctions = Class.forName(className, false, 
+            Class<?> clazz = Class.forName(className, false, 
                     this.getClass().getClassLoader());
-            addFunctions(osdqFunctions, prefix);
+            addFunctions(clazz, prefix);
             return true;
         } catch (ClassNotFoundException|NoClassDefFoundError e) {
             // ignore the add

@@ -78,15 +78,6 @@ public class GeometryFunctionMethods {
     	return GeometryUtils.geometryToEwkb(geometry);
 	}
     
-    @TeiidFunction(name=SourceSystemFunctions.ST_ASGEOJSON,
-                   category=FunctionCategoryConstants.GEOMETRY,
-        		   pushdown=PushDown.CAN_PUSHDOWN,
-                   nullOnNull=true)
-    public static ClobType asGeoJson(GeometryType geometry) 
-            throws FunctionExecutionException {
-        return GeometryUtils.geometryToGeoJson(geometry);
-    }
-    
     @TeiidFunction(name=SourceSystemFunctions.ST_ASGML,
                    category=FunctionCategoryConstants.GEOMETRY,
         		   pushdown=PushDown.CAN_PUSHDOWN,
@@ -140,24 +131,7 @@ public class GeometryFunctionMethods {
             throws FunctionExecutionException {
     	return GeometryUtils.geometryFromBlob(wkb, srid);
     }
-        
-    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGEOJSON,
-                   category=FunctionCategoryConstants.GEOMETRY,
-                   nullOnNull=true)
-    public static GeometryType geomFromGeoJson(ClobType clob) 
-            throws FunctionExecutionException {
-        return GeometryUtils.geometryFromGeoJson(clob);
-    }
-    
-    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGEOJSON,
-                   category=FunctionCategoryConstants.GEOMETRY,
-        		   pushdown=PushDown.CAN_PUSHDOWN,
-                   nullOnNull=true)
-    public static GeometryType geomFromGeoJson(ClobType clob, int srid) 
-            throws FunctionExecutionException {
-        return GeometryUtils.geometryFromGeoJson(clob, srid);
-    }
-    
+                
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGML,
                    category=FunctionCategoryConstants.GEOMETRY,
                    nullOnNull=true)
@@ -257,17 +231,6 @@ public class GeometryFunctionMethods {
 	public static Boolean equals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         return GeometryUtils.equals(geom1, geom2);
 	}
-
-    @TeiidFunction(name=SourceSystemFunctions.ST_TRANSFORM,
-                   category=FunctionCategoryConstants.GEOMETRY,
-                   nullOnNull=true,
-                   pushdown=PushDown.CAN_PUSHDOWN)
-    public static GeometryType transform(CommandContext context,
-                                         GeometryType geom, 
-                                         int srid) 
-            throws FunctionExecutionException {        
-        return GeometryTransformUtils.transform(context, geom, srid);
-    }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_ENVELOPE,
             category=FunctionCategoryConstants.GEOMETRY,

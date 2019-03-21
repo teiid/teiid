@@ -112,16 +112,6 @@
         </dependency>
         
         <dependency>
-            <groupId>org.wololo</groupId>
-            <artifactId>jts2geojson</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.osgeo</groupId>
-            <artifactId>proj4j</artifactId>
-        </dependency>
-
-        <dependency>
               <groupId>com.io7m.xom</groupId>
               <artifactId>xom</artifactId>
         </dependency>
