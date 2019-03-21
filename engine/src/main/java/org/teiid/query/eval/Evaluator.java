@@ -997,7 +997,7 @@ public class Evaluator {
 
 	private Object evaluateTextLine(List<?> tuple, TextLine function) throws ExpressionEvaluationException, BlockedException, TeiidComponentException, FunctionExecutionException {
 		List<DerivedColumn> args = function.getExpressions();
-		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true, true);
+		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, false, true);
 		
 		try {
 			return new ArrayImpl(TextLine.evaluate(Arrays.asList(nameValuePairs), defaultExtractor, function));
