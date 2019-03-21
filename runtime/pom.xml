@@ -55,6 +55,10 @@
     </dependency>
     <dependency>
       <groupId>org.teiid</groupId>
+      <artifactId>teiid-optional-geo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
       <artifactId>teiid-engine</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
@@ -123,4 +127,19 @@
       <scope>test</scope>
     </dependency>    
   </dependencies>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <configuration>
+          <ignoredDependencies>
+            <ignoredDependency>org.teiid:teiid-optional-geo</ignoredDependency>
+          </ignoredDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  
 </project>

@@ -52,14 +52,12 @@ import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
-import org.teiid.core.types.ClobType.Type;
 import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.query.QueryPlugin;
-import org.wololo.geojson.GeoJSON;
-import org.wololo.jts2geojson.GeoJSONReader;
-import org.wololo.jts2geojson.GeoJSONWriter;
+import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.translator.SourceSystemFunctions;
 import org.xml.sax.Attributes;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -171,40 +169,7 @@ public class GeometryUtils {
         	}
         }
     }
-    
-    public static ClobType geometryToGeoJson(GeometryType geometry) 
-            throws FunctionExecutionException {        
-        Geometry jtsGeometry = getGeometry(geometry);
-        GeoJSONWriter writer = new GeoJSONWriter();
-        try {
-            GeoJSON geoJson = writer.write(jtsGeometry);
-            ClobType result = new ClobType(new ClobImpl(geoJson.toString()));
-            result.setType(Type.JSON);
-            return result;
-        } catch (Exception e) {
-            throw new FunctionExecutionException(e);
-        }
-    }
-    
-    public static GeometryType geometryFromGeoJson(ClobType json) 
-            throws FunctionExecutionException {
-        return geometryFromGeoJson(json, GeometryType.UNKNOWN_SRID);
-    }
-    
-    public static GeometryType geometryFromGeoJson(ClobType json, int srid) 
-            throws FunctionExecutionException {
-        try {
-            GeoJSONReader reader = new GeoJSONReader();
-            String jsonText = ClobType.getString(json);
-            Geometry jtsGeometry = reader.read(jsonText);
-            return getGeometryType(jtsGeometry, srid);
-        } catch (SQLException e) {
-            throw new FunctionExecutionException(e);            
-        } catch (IOException e) {
-            throw new FunctionExecutionException(e);            
-        }
-    }    
-    
+        
     public static ClobType geometryToGml(CommandContext ctx, GeometryType geometry, 
                                          boolean withGmlPrefix) 
             throws FunctionExecutionException {        
@@ -216,7 +181,7 @@ public class GeometryUtils {
         		if (geometry.getSrid() == GeometryType.UNKNOWN_SRID) {
         			throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31161));
         		}
-        		jtsGeometry = GeometryTransformUtils.transform(ctx, jtsGeometry, SRID_4326);
+        		jtsGeometry = GeometryHelper.getInstance().transform(ctx, jtsGeometry, SRID_4326);
         	}
             writer.setPrefix(null);
         } else if (geometry.getSrid() != GeometryType.UNKNOWN_SRID) {
@@ -383,7 +348,7 @@ public class GeometryUtils {
         if (geom.getSRID() == GeometryType.UNKNOWN_SRID) {
             geom.setSRID(GeographyType.DEFAULT_SRID);
         }
-        if (!GeometryTransformUtils.isLatLong(ctx, geom.getSRID())) {
+        if (!GeometryHelper.getInstance().isLatLong(ctx, geom.getSRID())) {
             throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31290, geom.getSRID()));
         }
         geom.apply(new CoordinateFilter() {
@@ -527,6 +492,7 @@ public class GeometryUtils {
 			e = null;
 		}
 		
+		@TeiidFunction(name=SourceSystemFunctions.ST_EXTENT, category=FunctionCategoryConstants.GEOMETRY)
 		public void addInput(GeometryType geom) throws FunctionExecutionException {
 		    srid = geom.getSrid();
 			Geometry g1 = getGeometry(geom);

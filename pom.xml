@@ -1322,6 +1322,11 @@
             </dependency>
             <dependency>
                 <groupId>org.teiid</groupId>
+                <artifactId>teiid-optional-geo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid</groupId>
                 <artifactId>saxon-xom</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1735,7 +1740,8 @@
 		<module>admin</module>
 		<module>data-quality</module>
 		<module>engine</module>
-		<module>metadata</module>
+		<module>optional-geo</module>
+        <module>metadata</module>
 		<module>cache-infinispan</module>
 		<module>runtime</module>
 		<module>hibernate-dialect</module>

@@ -46,7 +46,7 @@ import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.query.function.GeometryUtils;
+import org.teiid.query.function.GeometryHelper;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MergeDetails.Association;
@@ -1143,7 +1143,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	private void convertGeometryToJson(BasicDBObjectBuilder builder, GeometryType object) throws TranslatorException {
 		try {
-			ClobType clob = GeometryUtils.geometryToGeoJson(object);
+			ClobType clob = GeometryHelper.getInstance().geometryToGeoJson(object);
 			ClobToStringTransform clob2str = new ClobToStringTransform();
 			String geometry = (String)clob2str.transform(clob, String.class);
 			builder.add("$geometry", geometry);

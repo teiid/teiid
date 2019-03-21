@@ -38,6 +38,11 @@
     </dependency>    
     <dependency>
       <groupId>org.teiid</groupId>
+      <artifactId>teiid-optional-geo</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
       <artifactId>teiid-metadata</artifactId>
       <scope>test</scope>
     </dependency>
