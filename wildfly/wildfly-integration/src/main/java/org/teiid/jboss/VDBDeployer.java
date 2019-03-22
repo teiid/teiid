@@ -64,6 +64,7 @@ import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.JBossVirtualFile;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.runtime.EmbeddedServer;
@@ -149,7 +150,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		VDBResources resources;
 		try {
-			resources = new VDBResources(file, deployment);
+			resources = new VDBResources(new JBossVirtualFile(file));
 		} catch (IOException e) {
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}

@@ -26,8 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jboss.vfs.VFS;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -86,7 +86,7 @@ public class TestTransformationMetadata {
 		table.setResourcePath("/a/b/doc.xmi");
 		
 		HashMap<String, VDBResources.Resource> resources = new HashMap<String, VDBResources.Resource>();
-		resources.put("/x.xsd", new VDBResources.Resource(VFS.getRootVirtualFile()));
+		resources.put("/x.xsd", new VDBResources.Resource(Mockito.mock(VirtualFile.class)));
 		
 		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.asMetadataStore(), mf1.asMetadataStore()));
 		

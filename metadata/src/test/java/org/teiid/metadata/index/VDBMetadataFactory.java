@@ -27,13 +27,14 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.LRUCache;
+import org.teiid.metadata.JBossVirtualFile;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.PureZipFileSystem;
 import org.teiid.metadata.Schema;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.CompositeMetadataStore;
-import org.teiid.query.metadata.PureZipFileSystem;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
@@ -101,7 +102,7 @@ public class VDBMetadataFactory {
 			throw new IOException(e);
 		}
     	IndexVDB result = new IndexVDB();
-    	result.resources = new VDBResources(root, null);
+    	result.resources = new VDBResources(new JBossVirtualFile(root));
     	IndexMetadataRepository store =  new IndexMetadataRepository();
     	result.store = store.load(SystemMetadata.getInstance().getDataTypes(), result.resources);
     	return result;

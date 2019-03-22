@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 import javax.transaction.TransactionManager;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.vfs.VirtualFile;
 import org.teiid.PreParser;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.VDB.Status;
@@ -107,10 +106,11 @@ import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.DDLStringVisitor;
-import org.teiid.query.metadata.PureZipFileSystem;
+import org.teiid.query.metadata.NioZipFileSystem;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.metadata.VirtualFile;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.validator.ValidatorFailure;
@@ -773,7 +773,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * @throws IOException 
 	 */
 	public void deployVDBZip(URL url) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException, URISyntaxException {
-		VirtualFile root = PureZipFileSystem.mount(url);
+		VirtualFile root = NioZipFileSystem.mount(url);
 		VDBMetaData metadata;
 		
 		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
@@ -794,8 +794,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	        DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(getVDBRepository());
 	        metadata = store.getVDBMetadata(ObjectConverterUtil.convertToString(vdbMetadata.openStream()));
 		}
-		
-		VDBResources resources = new VDBResources(root, metadata);
+		metadata.addAttchment(VirtualFile.class, root); //for auto cleanup of zip fs
+		VDBResources resources = new VDBResources(root);
 		deployVDB(metadata, resources);
 	}
 	

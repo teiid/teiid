@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.query.metadata;
+package org.teiid.metadata;
 
 import java.io.Closeable;
 import java.io.File;
@@ -49,7 +49,6 @@ import org.teiid.common.buffer.AutoCleanupUtil;
 import org.teiid.common.buffer.AutoCleanupUtil.Removable;
 
 /**
- * {@inheritDoc}
  * <p/>
  * This implementation is backed by a zip file.  The provided file must be owned by this instance; otherwise, if the
  * file disappears unexpectedly, the filesystem will malfunction.
@@ -141,7 +140,6 @@ public final class PureZipFileSystem implements FileSystem {
         this.rootNode = rootNode;
     }
 
-    /** {@inheritDoc} */
     private static <T> Iterable<T> iter(final Enumeration<T> entries) {
         return Collections.list(entries);
     }
