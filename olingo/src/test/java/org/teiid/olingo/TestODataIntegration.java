@@ -291,6 +291,28 @@ public class TestODataIntegration {
     }
     
     @Test
+    public void testOpenApi3Metadata() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/openapi.json");
+        assertEquals(200, response.getStatus());
+        assertEquals(ObjectConverterUtil.convertFileToString(
+                UnitTestUtil.getTestDataFile("loopy-vm1-metadata-openapi.json")).replace("${host}", "http://localhost:"+port),
+                response.getContentAsString());
+        
+        //cached fetch
+        response = http.GET(baseURL + "/loopy/vm1/openapi.json");
+        assertEquals(200, response.getStatus());
+        assertEquals(ObjectConverterUtil.convertFileToString(
+                UnitTestUtil.getTestDataFile("loopy-vm1-metadata-openapi.json")).replace("${host}", "http://localhost:"+port),
+                response.getContentAsString());
+        
+        response = http.GET(baseURL + "/loopy/pm1/openapi.json");
+        assertEquals(200, response.getStatus());
+        assertEquals(ObjectConverterUtil.convertFileToString(
+                UnitTestUtil.getTestDataFile("loopy-pm1-metadata-openapi.json")).replace("${host}", "http://localhost:"+port),
+                response.getContentAsString());
+    }
+    
+    @Test
     public void testSystemMetadata() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/SYS/$metadata");
         assertEquals(404, response.getStatus());

@@ -50,8 +50,18 @@ import org.teiid.vdb.runtime.VDBKey;
 
 public class OpenApiHandler {
     
-    private static final String OPENAPI_V2_JSON = "/swagger.json"; //$NON-NLS-1$
-    //private static final String OPENAPI_V3_JSON = "/openapi.json"; //$NON-NLS-1$
+    enum OpenApiVersion {
+        V2("2.0", "/swagger.json"), //$NON-NLS-1$ //$NON-NLS-2$
+        V3("3.0", "/openapi.json"); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        private OpenApiVersion(String key, String uri) {
+            this.key = key;
+            this.uri = uri;
+        }
+        
+        String key;
+        String uri;
+    }
     
     public static final String SCHEME = "scheme"; //$NON-NLS-1$
     public static final String HOST = "host"; //$NON-NLS-1$
@@ -59,6 +69,7 @@ public class OpenApiHandler {
     public static final String TITLE = "info-title"; //$NON-NLS-1$
     public static final String DESCRIPTION = "info-description"; //$NON-NLS-1$
     public static final String VERSION = "info-version"; //$NON-NLS-1$
+    public static final String OPENAPI_VERSION = "openapi-version"; //$NON-NLS-1$
     
     private ServletContext servletContext;
     private Map<List<?>, File> cachedMetadata = new ConcurrentHashMap<>();
@@ -77,8 +88,16 @@ public class OpenApiHandler {
         }
     }
     
-    public boolean isOpenApiMetadataRequest(String method, String uri) {
-        return method.equalsIgnoreCase("GET") && uri.endsWith(OPENAPI_V2_JSON); //$NON-NLS-1$
+    public OpenApiVersion getOpenApiMetadataRequestVersion(String method, String uri) {
+        if (method.equalsIgnoreCase("GET")) { //$NON-NLS-1$
+            if (uri.endsWith(OpenApiVersion.V2.uri)) {
+                return OpenApiVersion.V2;
+            }
+            if (uri.endsWith(OpenApiVersion.V3.uri)) {
+                return OpenApiVersion.V3;
+            }
+        }
+        return null;
     }
     
     /**
@@ -96,20 +115,22 @@ public class OpenApiHandler {
     public boolean processOpenApiMetadata(HttpServletRequest httpRequest, VDBKey key, String uri,
             String modelName, ServletResponse response, ServiceMetadata serviceMetadata, Map<String, String> parameters)
             throws TeiidProcessingException {
-        if (!this.isOpenApiMetadataRequest(httpRequest.getMethod(), uri)) {
+        OpenApiVersion version = getOpenApiMetadataRequestVersion(httpRequest.getMethod(), uri);
+        if (version == null) {
             return false;
         }
 
         //TODO: check for something like /odata4/vdb/model/foo/openapi.json
         try {
-            List<? extends Object> cacheKey = Arrays.asList(key, modelName);
+            List<? extends Object> cacheKey = Arrays.asList(key, modelName, version);
             File f = cachedMetadata.get(cacheKey);
             if (f == null || !f.exists()) {
                 Transformer transformer = templates.newTransformer();
                 transformer.setParameter(SCHEME, httpRequest.getScheme()); 
                 transformer.setParameter(HOST, httpRequest.getServerName()+":"+httpRequest.getServerPort()); //$NON-NLS-1$ 
-                transformer.setParameter(BASEPATH, uri.substring(0, uri.length() - OPENAPI_V2_JSON.length())); 
+                transformer.setParameter(BASEPATH, uri.substring(0, uri.length() - version.uri.length())); 
                 transformer.setParameter(TITLE, key.getName() + " - " + modelName); //$NON-NLS-1$ 
+                transformer.setParameter(OPENAPI_VERSION, version.key); 
                 //could also pull from the vdb description
                 transformer.setParameter(DESCRIPTION, modelName); 
                 transformer.setParameter(VERSION, key.getVersion()); 
