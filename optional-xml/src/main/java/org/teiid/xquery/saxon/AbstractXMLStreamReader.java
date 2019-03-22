@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.teiid.query.xquery.saxon;
+package org.teiid.xquery.saxon;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;

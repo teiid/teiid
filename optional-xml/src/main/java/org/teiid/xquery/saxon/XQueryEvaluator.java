@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.query.xquery.saxon;
+package org.teiid.xquery.saxon;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,12 +52,11 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
 import org.teiid.query.processor.relational.RelationalNode;
-import org.teiid.query.processor.relational.XMLTableNode;
 import org.teiid.query.sql.symbol.XMLCast;
 import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
+import org.teiid.xquery.saxon.SaxonXQueryExpression.Result;
+import org.teiid.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.FilterFactory;
@@ -289,7 +288,8 @@ public class XQueryEvaluator {
         Result result = null;
         try {
             XMLQueryRowProcessor rp = null;
-            if (xmlQuery.getXQueryExpression().isStreaming()) {
+            SaxonXQueryExpression sxqe = (SaxonXQueryExpression)xmlQuery.getXQueryExpression();
+            if (sxqe.isStreaming()) {
                 rp = new XMLQueryRowProcessor(exists, context);
             }
             try {
@@ -300,7 +300,7 @@ public class XQueryEvaluator {
                         return null;
                     }
                 }
-                result = evaluateXQuery(xmlQuery.getXQueryExpression(), contextItem, parameters, rp, context);
+                result = evaluateXQuery(sxqe, contextItem, parameters, rp, context);
                 if (result == null) {
                     return null;
                 }
@@ -331,7 +331,7 @@ public class XQueryEvaluator {
                 val.setType(rp.type);
                 return val;
             }
-            return xmlQuery.getXQueryExpression().createXMLType(result.iter, context.getBufferManager(), emptyOnEmpty, context);
+            return sxqe.createXMLType(result.iter, context.getBufferManager(), emptyOnEmpty, context);
         } catch (TeiidProcessingException e) {
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30333, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30333, e.getMessage()));
         } catch (XPathException e) {
@@ -375,7 +375,7 @@ public class XQueryEvaluator {
                 default:
                     throw new AssertionError("Unknown xml value type " + t); //$NON-NLS-1$
             }
-            return XMLTableNode.getValue(expression.getType(), i, config, context);
+            return SaxonXMLTableNode.getValue(expression.getType(), i, config, context);
         } catch (IOException e) {
             throw new FunctionExecutionException(e);
         } catch (ValidationException e) {

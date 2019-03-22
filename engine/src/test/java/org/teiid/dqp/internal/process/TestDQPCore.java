@@ -756,14 +756,6 @@ public class TestDQPCore {
         }
     }
     
-    @Test public void testXmlTableStreamingWithLimit() throws Exception {
-        String sql = "select * from xmltable('/a/b' passing xmlparse(document '<a x=''1''><b>foo</b><b>bar</b><b>zed</b></a>') columns y string path '.') as x limit 2"; //$NON-NLS-1$
-        
-        ResultsMessage rm = execute("A", 1, exampleRequestMessage(sql));
-        assertNull(rm.getException());
-        assertEquals(2, rm.getResultsList().size());
-    }
-    
     /**
      * Ensure that the row limit is not misapplied.
      * Note that it still could be applied in this example, but the
@@ -817,7 +809,7 @@ public class TestDQPCore {
         return results;
     }
 
-	private ResultsMessage execute(String userName, int sessionid, RequestMessage reqMsg)
+	public ResultsMessage execute(String userName, int sessionid, RequestMessage reqMsg)
 			throws InterruptedException, ExecutionException, TimeoutException, TeiidProcessingException {
 		DQPWorkContext.getWorkContext().getSession().setSessionId(String.valueOf(sessionid));
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);

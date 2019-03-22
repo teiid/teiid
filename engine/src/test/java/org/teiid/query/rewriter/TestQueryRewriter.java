@@ -158,7 +158,7 @@ public class TestQueryRewriter {
         return actual;
     }  
     
-    private Expression helpTestRewriteExpression(String original, String expected, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException {
+    public static Expression helpTestRewriteExpression(String original, String expected, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException {
     	Expression actualExp = QueryParser.getQueryParser().parseExpression(original);
     	ResolverVisitor.resolveLanguageObject(actualExp, metadata);
     	CommandContext context = new CommandContext();
@@ -1589,30 +1589,6 @@ public class TestQueryRewriter {
     	String original = "timestampadd(SQL_TSI_SECOND, 1, BQT1.SmallA.timevalue) = {t'08:02:00'}"; //$NON-NLS-1$
     	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	helpTestRewriteCriteria(original, parseCriteria("convert(timestampadd(SQL_TSI_SECOND, 1, convert(BQT1.SmallA.timevalue, timestamp)), time) = {t'08:02:00'}", metadata), metadata); //$NON-NLS-1$
-    }
-    
-    @Test public void testRewriteXmlElement() throws Exception {
-    	String original = "xmlserialize(document xmlelement(name a, xmlattributes('b' as c)) as string)"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
-    }
-    
-    @Test public void testRewriteXmlElement1() throws Exception {
-    	String original = "xmlelement(name a, xmlattributes(1+1 as c), BQT1.SmallA.timevalue)"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteExpression(original, "XMLELEMENT(NAME a, XMLATTRIBUTES(2 AS c), BQT1.SmallA.timevalue)", metadata);
-    }
-    
-    @Test public void testRewriteXmlSerialize() throws Exception {
-    	String original = "xmlserialize(document xmlelement(name a, xmlattributes('b' as c)) as string)"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
-    }
-    
-    @Test public void testRewriteXmlTable() throws Exception {
-    	String original = "select * from xmltable('/' passing 1 + 1 as a columns x string default curdate()) as x"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteCommand(original, "SELECT x.x FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT convert(curdate(), string)) AS x", metadata);
     }
     
     @Test public void testRewriteQueryString() throws Exception {

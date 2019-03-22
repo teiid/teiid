@@ -35,6 +35,7 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.function.source.XMLHelper;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
@@ -600,7 +601,6 @@ public class PlanToProcessConverter {
 				Object source = node.getProperty(NodeConstants.Info.TABLE_FUNCTION);
 				if (source instanceof XMLTable) {
 					XMLTable xt = (XMLTable)source;
-					XMLTableNode xtn = new XMLTableNode(getID());
 					//we handle the projection filtering once here rather than repeating the
 					//path analysis on a per plan basis
 					updateGroupName(node, xt);
@@ -612,9 +612,7 @@ public class PlanToProcessConverter {
 						filteredColumns.add(xt.getColumns().get(col));
 					}
 					xt.getXQueryExpression().useDocumentProjection(filteredColumns, analysisRecord);
-					xtn.setProjectedColumns(filteredColumns);
-					xtn.setTable(xt);
-					processNode = xtn;
+					processNode = XMLHelper.getInstance().newXMLTableNode(getID(), xt, filteredColumns);
 					break;
 				}
 				if (source instanceof ObjectTable) {

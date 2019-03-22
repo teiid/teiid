@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
@@ -59,12 +60,15 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.dqp.internal.process.TestDQPCore;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
@@ -1113,6 +1117,33 @@ public class TestSQLXMLProcessing {
         };    
     
         process(sql, expected);
+    }
+    
+    @Test public void testLateralJoinMixedFromClause() throws Exception {
+        String ddl = "create view v as select 1 a, 2 b;";
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "views");
+        
+        String sql = "select x4.*,x3.*,x2.*,x1.* from v x1, table(select x1.a a) x2 join v x3 on x2.a=x3.a join v x4 on x4.a=x3.a";
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(caps));
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1,2,1,2,1,1,2)});
+        
+        sql = "select x4.*,x3.*,x2.*,x1.* from views.v x1, xmltable('/a' PASSING xmlparse(document '<a id=\"' || x1.a || '\"/>') COLUMNS a integer PATH '@id') x2 join views.v x3 on x2.a=x3.a join views.v x4 on x4.a=x3.a";
+        plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(caps));
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1,2,1,2,1,1,2)});
+    }
+    
+    @Test public void testXmlTableStreamingWithLimit() throws Exception {
+        TestDQPCore tester = new TestDQPCore();
+        tester.setUp();
+        String sql = "select * from xmltable('/a/b' passing xmlparse(document '<a x=''1''><b>foo</b><b>bar</b><b>zed</b></a>') columns y string path '.') as x limit 2"; //$NON-NLS-1$
+        
+        ResultsMessage rm = tester.execute("A", 1, tester.exampleRequestMessage(sql));
+        assertNull(rm.getException());
+        assertEquals(2, rm.getResultsList().size());
+        tester.tearDown();
     }
     
 }

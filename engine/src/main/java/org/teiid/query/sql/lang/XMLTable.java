@@ -6,11 +6,12 @@ import java.util.List;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.query.function.source.XMLHelper;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.XMLNamespaces;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
+import org.teiid.query.xquery.XQueryExpression;
 
 public class XMLTable extends TableFunctionReference {
 	
@@ -91,17 +92,17 @@ public class XMLTable extends TableFunctionReference {
     private List<DerivedColumn> passing = new ArrayList<DerivedColumn>();
     private boolean usingDefaultColumn;
     
-    private SaxonXQueryExpression xqueryExpression;
+    private XQueryExpression xqueryExpression;
     
     public List<DerivedColumn> getPassing() {
 		return passing;
 	}
     
     public void compileXqueryExpression() throws TeiidProcessingException {
-    	this.xqueryExpression = SaxonXQueryExpression.compile(xquery, namespaces, passing, this.columns);
+    	this.xqueryExpression = XMLHelper.getInstance().compile(xquery, namespaces, passing, this.columns);
     }
     
-    public SaxonXQueryExpression getXQueryExpression() {
+    public XQueryExpression getXQueryExpression() {
 		return xqueryExpression;
 	}
     

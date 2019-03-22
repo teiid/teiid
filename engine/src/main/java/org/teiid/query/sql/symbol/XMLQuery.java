@@ -7,9 +7,10 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.function.source.XMLHelper;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
+import org.teiid.query.xquery.XQueryExpression;
 
 public class XMLQuery implements Expression {
 	
@@ -18,7 +19,7 @@ public class XMLQuery implements Expression {
     private List<DerivedColumn> passing = new ArrayList<DerivedColumn>();
     private Boolean emptyOnEmpty;
     
-    private SaxonXQueryExpression xqueryExpression;
+    private XQueryExpression xqueryExpression;
     
     @Override
     public Class<?> getType() {
@@ -39,11 +40,11 @@ public class XMLQuery implements Expression {
     
     //TODO: display the analysis record info
     public void compileXqueryExpression() throws QueryResolverException {
-    	this.xqueryExpression = SaxonXQueryExpression.compile(xquery, namespaces, passing, null);
+    	this.xqueryExpression = XMLHelper.getInstance().compile(xquery, namespaces, passing, null);
     	this.xqueryExpression.useDocumentProjection(null, new AnalysisRecord(false, false));
     }
     
-    public SaxonXQueryExpression getXQueryExpression() {
+    public XQueryExpression getXQueryExpression() {
 		return xqueryExpression;
 	}
     

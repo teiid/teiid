@@ -19,7 +19,6 @@
 package org.teiid.query.function.source;
 
 import java.io.*;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -68,7 +67,6 @@ import org.teiid.core.types.*;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.json.simple.ContentHandler;
 import org.teiid.json.simple.JSONParser;
@@ -80,21 +78,10 @@ import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.util.CharsetUtils;
 import org.teiid.util.StAXSQLXML;
 import org.teiid.util.StAXSQLXML.StAXSourceProvider;
 import org.teiid.util.WSUtil;
-
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NameChecker;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.QNameException;
-import net.sf.saxon.sxpath.XPathDynamicContext;
-import net.sf.saxon.sxpath.XPathEvaluator;
-import net.sf.saxon.sxpath.XPathExpression;
-import net.sf.saxon.trans.XPathException;
-
 
 /** 
  * This class contains scalar system functions supporting for XML manipulation.
@@ -103,8 +90,6 @@ import net.sf.saxon.trans.XPathException;
  */
 public class XMLSystemFunctions {
     
-    private static final boolean USE_X_ESCAPE = PropertiesUtils.getHierarchicalProperty("org.teiid.useXMLxEscape", true, Boolean.class); //$NON-NLS-1$
-	
 	private static final Charset UTF_32BE = Charset.forName("UTF-32BE"); //$NON-NLS-1$
 	private static final Charset UTF_16BE = Charset.forName("UTF-16BE"); //$NON-NLS-1$
 	private static final Charset UTF_32LE = Charset.forName("UTF-32LE"); //$NON-NLS-1$
@@ -210,7 +195,7 @@ public class XMLSystemFunctions {
 
 		private JsonToXmlContentHandler(String rootName,
 				Reader reader, JSONParser parser, XMLEventFactory eventFactory) {
-			this.nameStack.push(escapeName(rootName, true));
+			this.nameStack.push(XMLHelper.getInstance().escapeName(rootName, true));
 			this.reader = reader;
 			this.eventFactory = eventFactory;
 			this.parser = parser;
@@ -219,7 +204,7 @@ public class XMLSystemFunctions {
 		@Override
 		public boolean startObjectEntry(String key)
 				throws org.teiid.json.simple.ParseException, IOException {
-			this.nameStack.push(escapeName(key, true));
+			this.nameStack.push(XMLHelper.getInstance().escapeName(key, true));
 			return false;
 		}
 
@@ -547,7 +532,7 @@ public class XMLSystemFunctions {
 		if (attributes != null) {
 			for (Evaluator.NameValuePair<?> nameValuePair : attributes) {
 				if (nameValuePair.value != null) {
-					eventWriter.add(eventFactory.createAttribute(new QName(nameValuePair.name), XQueryEvaluator.convertToAtomicValue(nameValuePair.value).getStringValue()));
+					eventWriter.add(eventFactory.createAttribute(new QName(nameValuePair.name), XMLHelper.getInstance().convertToAtomicValue(nameValuePair.value)));
 				}
 			}
 		}
@@ -716,7 +701,7 @@ public class XMLSystemFunctions {
 				r = clob.getCharacterStream();
 				convertReader(writer, eventWriter, r, Type.TEXT, null);
 			} else {
-				String val = XQueryEvaluator.convertToAtomicValue(object).getStringValue();
+				String val = XMLHelper.getInstance().convertToAtomicValue(object);
 				eventWriter.add(eventFactory.createCharacters(val));
 			}
 		} catch (SQLException e) {
@@ -819,134 +804,7 @@ public class XMLSystemFunctions {
 		}
     	throw new AssertionError("Unknown type"); //$NON-NLS-1$
     }
-
-    public static String xpathValue(Object doc, String xpath) throws XPathException, TeiidProcessingException {
-    	Source s = null;
-        try {
-        	s = convertToSource(doc);
-            XPathEvaluator eval = new XPathEvaluator();
-            // Wrap the string() function to force a string return             
-            XPathExpression expr = eval.createExpression(xpath);
-            XPathDynamicContext context = expr.createDynamicContext(eval.getConfiguration().buildDocumentTree(s).getRootNode());
-            Object o = expr.evaluateSingle(context);
-            
-            if(o == null) {
-                return null;
-            }
-            
-            // Return string value of node type
-            if(o instanceof Item) {
-            	Item i = (Item)o;
-            	if (isNull(i)) {
-            		return null;
-            	}
-                return i.getStringValue();
-            }  
-            
-            // Return string representation of non-node value
-            return o.toString();
-        } finally {
-        	WSUtil.closeSource(s);
-        }
-    }
     
-	public static boolean isNull(Item i) {
-		if (i instanceof NodeInfo) {
-			NodeInfo ni = (NodeInfo)i;
-			return ni.getNodeKind() == net.sf.saxon.type.Type.ELEMENT && !ni.hasChildNodes() && Boolean.valueOf(ni.getAttributeValue(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "nil")); //$NON-NLS-1$
-			/* ideally we'd be able to check for nilled, but that doesn't work without validation
-			 if (ni.isNilled()) {
-				tuple.add(null);
-				continue;
-			}*/
-		}
-		return false;
-	}
-    
-    /**
-     * Validate whether the XPath is a valid XPath.  If not valid, an XPathExpressionException will be thrown.
-     * @param xpath An xpath expression, for example: a/b/c/getText()
-     */
-    public static void validateXpath(String xpath) throws TeiidProcessingException {
-        if(xpath == null) { 
-            return;
-        }
-        
-        XPathEvaluator eval = new XPathEvaluator();
-        try {
-            eval.createExpression(xpath);
-        } catch (XPathException e) {
-            throw new TeiidProcessingException(e);
-        }
-    }
-    
-    public static String[] validateQName(String name) throws TeiidProcessingException {
-        try {
-            return NameChecker.getQNameParts(name);
-        } catch (QNameException e) {
-            throw new TeiidProcessingException(e);
-        }
-    }
-    
-    public static boolean isValidNCName(String prefix) { 
-        return NameChecker.isValidNCName(prefix);
-    }
-    
-    public static String escapeName(String name, boolean fully) {
-    	StringBuilder sb = new StringBuilder();
-    	char[] chars = name.toCharArray();
-    	int i = 0;
-    	if (fully && name.regionMatches(true, 0, "xml", 0, 3)) { //$NON-NLS-1$
-			sb.append(escapeChar(name.charAt(0)));
-			sb.append(chars, 1, 2);
-			i = 3;
-    	}
-    	for (; i < chars.length; i++) {
-    		char chr = chars[i];
-    		switch (chr) {
-    		case ':':
-    			if (fully || i == 0) {
-    				sb.append(escapeChar(chr));
-    				continue;
-    			} 
-    			break;
-    		case '_':
-    			if (chars.length > i+1 && chars[i+1] == 'x') {
-    				sb.append(escapeChar(chr));
-    				continue;
-    			}
-    			break;
-    		default:
-    			//TODO: there should be handling for surrogates
-    			//      and invalid chars
-    			if (i == 0) {
-    				if (!NameChecker.isNCNameStartChar(chr)) {
-    					sb.append(escapeChar(chr));
-    					continue;
-    				}
-    			} else if (!NameChecker.isNCNameChar(chr)) {
-    				sb.append(escapeChar(chr));
-    				continue;
-    			}
-    			break;
-    		}
-			sb.append(chr);
-		}
-    	return sb.toString();
-    }
-
-	private static String escapeChar(char chr) {
-		CharBuffer cb = CharBuffer.allocate(7);
-		if (USE_X_ESCAPE) {
-		    cb.append("_x");  //$NON-NLS-1$
-		} else {
-		    cb.append("_u");  //$NON-NLS-1$
-		}
-		CharsetUtils.toHex(cb, (byte)(chr >> 8));
-		CharsetUtils.toHex(cb, (byte)chr);
-		return cb.append("_").flip().toString();  //$NON-NLS-1$
-	}
-
     public static SQLXML jsonToXml(CommandContext context, final String rootName, final Blob json) throws TeiidComponentException, TeiidProcessingException, SQLException, IOException {
     	return jsonToXml(context, rootName, json, false);
     }

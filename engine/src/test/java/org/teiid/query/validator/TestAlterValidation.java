@@ -32,10 +32,6 @@ public class TestAlterValidation {
 		TestValidator.helpValidate("alter view SmallA_2589 as select * from bqt1.smalla", new String[] {}, RealMetadataFactory.exampleBQTCached());
 	}
 	
-	@Test public void testValidateAlterViewDeep() {
-		TestValidator.helpValidate("alter view Defect15355 as select xpathvalue('a', ':'), cast(1 as biginteger)", new String[] {"xpathvalue('a', ':')"}, RealMetadataFactory.exampleBQTCached());
-	}
-	
 	@Test public void testValidateAlterTrigger() {
 		TestValidator.helpValidate("alter trigger on SmallA_2589 instead of insert as for each row begin atomic select 1; end", new String[] {"SmallA_2589"}, RealMetadataFactory.exampleBQTCached());
 	}

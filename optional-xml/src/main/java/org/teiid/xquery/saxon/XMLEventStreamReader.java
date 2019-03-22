@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.teiid.query.xquery.saxon;
+package org.teiid.xquery.saxon;
 
 import java.util.ArrayList;
 import java.util.Iterator;

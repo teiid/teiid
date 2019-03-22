@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.query.xquery.saxon;
+package org.teiid.xquery.saxon;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -87,7 +87,7 @@ import net.sf.saxon.type.ItemType;
 import net.sf.saxon.value.EmptySequence;
 import net.sf.saxon.value.SequenceType;
 
-public class SaxonXQueryExpression implements Cloneable {
+public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpression {
 	
 	private static final String XQUERY_PLANNING = "XQuery Planning"; //$NON-NLS-1$
 	private static final String EMPTY_STRING = ""; //$NON-NLS-1$

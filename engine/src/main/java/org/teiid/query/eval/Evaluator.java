@@ -56,6 +56,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.JSONFunctionMethods.JSONBuilder;
+import org.teiid.query.function.source.XMLHelper;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -69,7 +70,6 @@ import org.teiid.query.sql.util.ValueIteratorSource;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.util.WSUtil;
 
@@ -807,7 +807,7 @@ public class Evaluator {
 		if (val == null) {
 			return new Constant(null, expression.getType());
 		}
-		return XQueryEvaluator.evaluate((XMLType)val, expression, context);
+		return XMLHelper.getInstance().evaluate((XMLType)val, expression, context);
 	}
 
 	private Object evaluate(List<?> tuple, ExceptionExpression ee)
@@ -960,7 +960,7 @@ public class Evaluator {
         } catch (ExpressionEvaluationException e) {
             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30333, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30333, e.getMessage()));
         }
-        return XQueryEvaluator.evaluateXMLQuery(tuple, xmlQuery, exists, parameters, context);
+        return XMLHelper.getInstance().evaluateXMLQuery(tuple, xmlQuery, exists, parameters, context);
 	}
 	
 	private Object evaluateXMLSerialize(List<?> tuple, XMLSerialize xs)
@@ -997,7 +997,7 @@ public class Evaluator {
 
 	private Object evaluateTextLine(List<?> tuple, TextLine function) throws ExpressionEvaluationException, BlockedException, TeiidComponentException, FunctionExecutionException {
 		List<DerivedColumn> args = function.getExpressions();
-		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true, true);
+		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, false, true);
 		
 		try {
 			return new ArrayImpl(TextLine.evaluate(Arrays.asList(nameValuePairs), defaultExtractor, function));
@@ -1196,7 +1196,7 @@ public class Evaluator {
 			}
 			if (name != null) {
 				if (xmlNames) {
-					name = XMLSystemFunctions.escapeName(name, true);
+					name = XMLHelper.getInstance().escapeName(name, true);
 				}
 			} else if (!xmlNames) {
 				name = "expr" + (i+1); //$NON-NLS-1$

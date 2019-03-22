@@ -1150,7 +1150,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testNonSemiJoin() throws Exception {
-        ProcessorPlan plan = helpPlan("Select x from xmltable('/a/b' passing convert('<a/>', xml) columns x integer path '@x') as t where x = (select count(e2) FROM pm1.g2)", RealMetadataFactory.example4(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select x from texttable('a,b,c' COLUMNS x string, c2 string) as t where x = (select count(e2) FROM pm1.g2)", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             0,      // Access

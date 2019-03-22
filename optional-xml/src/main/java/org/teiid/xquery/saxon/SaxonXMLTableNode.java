@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.query.processor.relational;
+package org.teiid.xquery.saxon;
 
 import java.lang.reflect.Array;
 import java.sql.Timestamp;
@@ -48,15 +48,14 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.processor.relational.LimitNode;
+import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.xquery.saxon.PushBackSequenceIterator;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
-import org.teiid.query.xquery.saxon.XQueryEvaluator;
+import org.teiid.xquery.saxon.SaxonXQueryExpression.Result;
+import org.teiid.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.om.Item;
@@ -81,7 +80,7 @@ import net.sf.saxon.value.StringValue;
  * When streaming the results will be fully built and stored in a buffer
  * before being returned
  */
-public class XMLTableNode extends SubqueryAwareRelationalNode {
+public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 
 	private static Map<Class<?>, BuiltInAtomicType> typeMapping = new HashMap<Class<?>, BuiltInAtomicType>();
 	
@@ -98,6 +97,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	private static TeiidRuntimeException EARLY_TERMINATION = new TeiidRuntimeException();
 	
 	private XMLTable table;
+	private SaxonXQueryExpression saxonXQueryExpression;
 	private List<XMLColumn> projectedColumns;
 	
 	private Result result;
@@ -121,7 +121,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	
 	private boolean streaming;
 	
-	public XMLTableNode(int nodeID) {
+	public SaxonXMLTableNode(int nodeID) {
 		super(nodeID);
 	}
 	
@@ -156,6 +156,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	
 	public void setTable(XMLTable table) {
 		this.table = table;
+		this.saxonXQueryExpression = (SaxonXQueryExpression) this.table.getXQueryExpression();
 	}
 	
 	public void setProjectedColumns(List<XMLColumn> projectedColumns) {
@@ -163,8 +164,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	public XMLTableNode clone() {
-		XMLTableNode clone = new XMLTableNode(getID());
+	public SaxonXMLTableNode clone() {
+		SaxonXMLTableNode clone = new SaxonXMLTableNode(getID());
 		this.copyTo(clone);
 		clone.setTable(table);
 		clone.setProjectedColumns(projectedColumns);
@@ -180,7 +181,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 				rowLimit = parent.getLimit() + parent.getOffset();
 			}
 		}
-		streaming = this.table.getXQueryExpression().isStreaming();
+		streaming = this.saxonXQueryExpression.isStreaming();
 	}
 
 	@Override
@@ -252,7 +253,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 			contextItem = null;
 		}
 
-		if (this.table.getXQueryExpression().isStreaming()) {
+		if (this.saxonXQueryExpression.isStreaming()) {
 			if (this.buffer == null) {
 				this.buffer = this.getBufferManager().createTupleBuffer(getOutputElements(), getConnectionID(), TupleSourceType.PROCESSOR);
 				if (!useFinalBuffer) {
@@ -264,16 +265,16 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 				@Override
 				public void run() {
 					try {
-						XQueryEvaluator.evaluateXQuery(table.getXQueryExpression(), contextItem, parameters, new RowProcessor() {
+						XQueryEvaluator.evaluateXQuery(saxonXQueryExpression, contextItem, parameters, new RowProcessor() {
                             
                             @Override
                             public void processRow(NodeInfo row) {
-                                synchronized (XMLTableNode.this) {
+                                synchronized (SaxonXMLTableNode.this) {
                                     if (b != buffer) {
                                         //if the buffer has changed we've been reset
                                         throw EARLY_TERMINATION; 
                                     }
-                                    XMLTableNode.this.processRow(row);
+                                    SaxonXMLTableNode.this.processRow(row);
                                 }
                             }
                         }, getContext());
@@ -284,7 +285,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 					} catch (Throwable e) {
 						asynchException = new TeiidRuntimeException(e);
 					} finally {
-						synchronized (XMLTableNode.this) {
+						synchronized (SaxonXMLTableNode.this) {
 							if (buffer != null && asynchException == null) {
 								try {
 									buffer.close();
@@ -293,7 +294,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 								}
 							}
 							state = State.DONE;
-							XMLTableNode.this.notifyAll();
+							SaxonXMLTableNode.this.notifyAll();
 						}
 					}
 				}
@@ -302,7 +303,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 			return;
 		}
 		try {
-			result = XQueryEvaluator.evaluateXQuery(this.table.getXQueryExpression(), contextItem, parameters, null, this.getContext());
+			result = XQueryEvaluator.evaluateXQuery(this.saxonXQueryExpression, contextItem, parameters, null, this.getContext());
 		} catch (TeiidRuntimeException e) {
 			unwrapException(e);
 		}
@@ -319,7 +320,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 				tuple.add((int)rowCount);
 			} else {
 				try {
-					XPathExpression path = table.getXQueryExpression().getXPathExpression(proColumn.getName());
+					XPathExpression path = this.saxonXQueryExpression.getXPathExpression(proColumn.getName());
 					XPathDynamicContext dynamicContext = path.createDynamicContext(item);
 					final SequenceIterator pathIter = path.iterate(dynamicContext);
 					Item colItem = pathIter.next();
@@ -333,16 +334,16 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 					}
 					if (proColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
 					    SequenceIterator pushBack = new PushBackSequenceIterator(pathIter, colItem);
-						XMLType value = table.getXQueryExpression().createXMLType(pushBack, this.getBufferManager(), false, getContext());
+						XMLType value = this.saxonXQueryExpression.createXMLType(pushBack, this.getBufferManager(), false, getContext());
 						tuple.add(value);
 						continue;
 					}
 					if (proColumn.getSymbol().getType().isArray()) {
 						ArrayList<Object> vals = new ArrayList<Object>();
-						vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), colItem, this.table.getXQueryExpression().getConfig(), getContext()));
+						vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), colItem, this.saxonXQueryExpression.getConfig(), getContext()));
 						Item next = null;
 						while ((next = pathIter.next()) != null) {
-							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next, this.table.getXQueryExpression().getConfig(), getContext()));
+							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next, this.saxonXQueryExpression.getConfig(), getContext()));
 						}
 						Object value = new ArrayImpl(vals.toArray((Object[]) Array.newInstance(proColumn.getSymbol().getType().getComponentType(), vals.size())));
 						tuple.add(value);
@@ -350,7 +351,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 					} else if (pathIter.next() != null) {
 						throw new TeiidProcessingException(QueryPlugin.Event.TEIID30171, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30171, proColumn.getName()));
 					}
-					Object value = getValue(proColumn.getSymbol().getType(), colItem, this.table.getXQueryExpression().getConfig(), getContext());
+					Object value = getValue(proColumn.getSymbol().getType(), colItem, this.saxonXQueryExpression.getConfig(), getContext());
 					tuple.add(value);
 				} catch (XPathException e) {
 					throw new TeiidProcessingException(QueryPlugin.Event.TEIID30172, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30172, proColumn.getName()));
@@ -369,7 +370,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 			value = getValue((AtomicValue)colItem, context);
 		} else if (value instanceof Item) {
 			Item i = (Item)value;
-			if (XMLSystemFunctions.isNull(i)) {
+			if (XMLFunctions.isNull(i)) {
 				return null;
 			}
 			BuiltInAtomicType bat = typeMapping.get(type);
@@ -439,7 +440,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	public PlanNode getDescriptionProperties() {
 		PlanNode props = super.getDescriptionProperties();
         AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
-        props.addProperty(AnalysisRecord.PROP_STREAMING, String.valueOf(this.table.getXQueryExpression().isStreaming()));
+        props.addProperty(AnalysisRecord.PROP_STREAMING, String.valueOf(this.saxonXQueryExpression.isStreaming()));
         return props;
 	}
 

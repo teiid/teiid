@@ -567,14 +567,14 @@ public class TestFunctionPushdown {
 		CommandContext cc = TestProcessor.createCommandContext();
         cc.setMetadata(tm);
 		
-		String sql = "select xmlelement(name x, func(1) + e1) from g1"; //$NON-NLS-1$
+		String sql = "select concat('x', func(1) + e1) from g1"; //$NON-NLS-1$
         
         ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
                                       new String[] {"SELECT func(1), y.g1.e1 FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         dataManager.addData("SELECT func(1), g1.e1 FROM g1", new List[] {Arrays.asList(2, 0)});
-        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("<x>2</x>")});
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("x2")});
         
 	}
 	
