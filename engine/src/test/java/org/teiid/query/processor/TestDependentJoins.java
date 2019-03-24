@@ -942,7 +942,7 @@ public class TestDependentJoins {
    }    
     
     @Test public void testDependentJoinBackoff() throws Exception {
-        FakeDataManager dataManager = helpTestBackoff(true);
+        FakeDataManager dataManager = helpTestBackoff(true, 1, 1000);
         
         //note that the dependent join was not actually performed
         assertEquals(new HashSet<String>(Arrays.asList("SELECT pm6.g1.e1, pm6.g1.e2 FROM pm6.g1 ORDER BY pm6.g1.e1, pm6.g1.e2", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1")), 
@@ -950,7 +950,17 @@ public class TestDependentJoins {
     }
     
     @Test public void testDependentJoinBackoff1() throws Exception {
-        FakeDataManager dataManager = helpTestBackoff(false);
+        FakeDataManager dataManager = helpTestBackoff(false, 1, 1000);
+        
+        //note that the dependent join was performed
+        assertEquals(4, new HashSet<String>(dataManager.getQueries()).size());
+    }
+    
+    /*
+     * Computes a backoff value greater than the number or rows - should still perform the dependent join
+     */
+    @Test public void testDependentJoinBackoff2() throws Exception {
+        FakeDataManager dataManager = helpTestBackoff(true, 3, 4000);
         
         //note that the dependent join was performed
         assertEquals(4, new HashSet<String>(dataManager.getQueries()).size());
@@ -996,7 +1006,7 @@ public class TestDependentJoins {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
 
-	private FakeDataManager helpTestBackoff(boolean setNdv) throws Exception,
+	private FakeDataManager helpTestBackoff(boolean setNdv, int smallCardinality, int largeCardinality) throws Exception,
 			QueryMetadataException, TeiidComponentException,
 			TeiidProcessingException {
 		// Create query 
@@ -1008,15 +1018,15 @@ public class TestDependentJoins {
 
         TransformationMetadata fakeMetadata = RealMetadataFactory.example1();
 
-        RealMetadataFactory.setCardinality("pm1.g1", 1, fakeMetadata);
+        RealMetadataFactory.setCardinality("pm1.g1", smallCardinality, fakeMetadata);
         if (setNdv) {
-        	fakeMetadata.getElementID("pm1.g1.e1").setDistinctValues(1);
-        	fakeMetadata.getElementID("pm1.g1.e2").setDistinctValues(1);
+        	fakeMetadata.getElementID("pm1.g1.e1").setDistinctValues(smallCardinality);
+        	fakeMetadata.getElementID("pm1.g1.e2").setDistinctValues(smallCardinality);
         }
-        RealMetadataFactory.setCardinality("pm6.g1", 1000, fakeMetadata);
+        RealMetadataFactory.setCardinality("pm6.g1", largeCardinality, fakeMetadata);
         if (setNdv) {
-        	fakeMetadata.getElementID("pm6.g1.e1").setDistinctValues(1000);
-        	fakeMetadata.getElementID("pm6.g1.e2").setDistinctValues(1000);
+        	fakeMetadata.getElementID("pm6.g1.e1").setDistinctValues(largeCardinality);
+        	fakeMetadata.getElementID("pm6.g1.e2").setDistinctValues(largeCardinality);
         }
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();

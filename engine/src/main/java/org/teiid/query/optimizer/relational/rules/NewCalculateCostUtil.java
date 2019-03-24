@@ -1517,24 +1517,28 @@ public class NewCalculateCostUtil {
 		        	continue;
 		        }
 		        dca.expectedNdv[i] = indSymbolNDV;
-		        //use a quick binary search to find the max ndv
+		        if (indSymbolNDV >= depSymbolNDV) {
+		            dca.maxNdv[i] = indSymbolNDV;
+		            continue;
+		        }
+		        //use a quick "binary" search to find the max ndv
 		        float min = 0;
-		        float max = Math.max(Integer.MAX_VALUE, indSymbolNDV);
+		        float max = Math.min(Integer.MAX_VALUE, depSymbolNDV);
 		        float tempNdv = indSymbolNDV;
 		        for (int j = 0; j < 10; j++) {
 		        	if (estimates[1] > 1) {
 		        		max = tempNdv;
-		        		tempNdv = (tempNdv + min)/2;
+	        		    tempNdv = (tempNdv + min)/2;
 		        	} else if (estimates[1] < 0) {
 		        		min = tempNdv;
 		        		//we assume that values should be closer to the min side
-		        		tempNdv = Math.min(tempNdv * 8 + 1, (tempNdv + max)/2);
+	        		    tempNdv = Math.min(tempNdv * 8 + 1, (tempNdv + max)/2);
 		        	} else {
 		        		break;
 		        	}
 		        	estimates = estimateCost(accessNode, setCriteriaBatchSize, usesIndex, depTargetCardinality, tempNdv, dependentCardinality, depSymbolNDV, independentCardinality);
 		        }
-		        dca.maxNdv[i] = indSymbolNDV;
+		        dca.maxNdv[i] = tempNdv;
 			}
 		}
         return dca;
