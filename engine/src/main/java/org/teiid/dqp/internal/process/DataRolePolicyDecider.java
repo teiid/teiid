@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.teiid.CommandContext;
@@ -31,6 +32,7 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.Context;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 
 public class DataRolePolicyDecider implements PolicyDecider {
@@ -41,12 +43,27 @@ public class DataRolePolicyDecider implements PolicyDecider {
 	@Override
 	public Set<String> getInaccessibleResources(PermissionType action,
 			Set<String> resources, Context context, CommandContext commandContext) {
-		if (action == PermissionType.EXECUTE && context == Context.FUNCTION && allowFunctionCallsByDefault) {
+		if ((action == PermissionType.EXECUTE || action == null) && context == Context.FUNCTION && allowFunctionCallsByDefault) {
 			return Collections.emptySet();
 		}
 		Collection<DataPolicy> policies = commandContext.getAllowedDataPolicies().values();
 		int policyCount = policies.size();
 		boolean[] exclude = new boolean[policyCount];
+		Boolean[] results = null;
+		List<PermissionType> metadataPermissions = null;
+		if (context == Context.METADATA) {
+		    Assertion.assertTrue(resources.size() == 1);
+		    if (action == PermissionType.READ) {
+		        results = new Boolean[5];
+                metadataPermissions = Arrays.asList(
+                        PermissionType.ALTER, PermissionType.CREATE,
+                        PermissionType.UPDATE, PermissionType.READ,
+                        PermissionType.DELETE);
+		    } else {
+	            results = new Boolean[2];
+	            metadataPermissions = Arrays.asList(PermissionType.ALTER, action);
+		    }
+		}
 		outer:for (Iterator<String> iter = resources.iterator(); iter.hasNext();) {
 			String resource = iter.next();
 			Arrays.fill(exclude, false);
@@ -76,6 +93,18 @@ public class DataRolePolicyDecider implements PolicyDecider {
 							continue outer;
 						}
 						continue;
+					}
+					if (context == Context.METADATA) {
+					    for (int i = 0; i < results.length; i++) {
+	                        Boolean allows = policy.allows(resource, metadataPermissions.get(i));
+	                        if (allows != null && allows && results[i] == null) {
+                                resources.clear();
+                                return resources;
+                            }
+	                        if (results[i] == null) {
+					            results[i] = allows;
+					        }
+					    }
 					}
 					Boolean allows = policy.allows(resource, action);
 					if (allows != null) {

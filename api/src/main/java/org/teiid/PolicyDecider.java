@@ -41,7 +41,7 @@ public interface PolicyDecider {
 	/**
 	 * Returns the set of resources not allowed to be accessed by the current user.
 	 * Resource names are given based upon the FQNs (NOTE these are non-SQL names - identifiers are not quoted).
-	 * @param action
+	 * @param action if context is METADATA, then action execute means a procedure or function, and read some other resource
 	 * @param resources
 	 * @param context in which the action is performed.  
 	 *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.   
