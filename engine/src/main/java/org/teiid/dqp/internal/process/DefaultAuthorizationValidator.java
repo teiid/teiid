@@ -61,9 +61,15 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	public static final String IGNORE_UNAUTHORIZED_ASTERISK = "ignore_unauthorized_asterisk"; //$NON-NLS-1$
 	private PolicyDecider policyDecider;
 	private boolean ignoreUnauthorizedAsteriskDefault = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ignoreUnauthorizedAsterisk", false); //$NON-NLS-1$
+    private boolean metadataRequiresPermission = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.metadataRequiresPermission", true); //$NON-NLS-1$
 	
 	public DefaultAuthorizationValidator() {
 	}
+	
+	public void setMetadataRequiresPermission(
+            boolean metadataRequiresPermission) {
+        this.metadataRequiresPermission = metadataRequiresPermission;
+    }
 
 	@Override
 	public boolean validate(String[] originalSql, Command command,
@@ -146,6 +152,9 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 		if (policyDecider == null || !policyDecider.validateCommand(commandContext)) {
 			return true;
 		}
+		if (!metadataRequiresPermission) {
+		    return true;
+		}
 		AbstractMetadataRecord parent = record;
 		while (parent.getParent() != null) {
 			parent = parent.getParent();
@@ -161,42 +170,46 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 		if (record instanceof FunctionMethod || record instanceof Procedure) {
 			action = PermissionType.EXECUTE;
 		}
+		HashSet<String> resources = new HashSet<String>(2);
 		
-		//cache permission check
-		Boolean result = isAccessible(record, commandContext, action);
-		if (!result && record instanceof Schema) {
+		boolean result = false;
+		if (record instanceof Schema) {
+		    Boolean cachedResult = commandContext.isAccessible(record);
+	        if (cachedResult != null) {
+	            return cachedResult;
+	        }
 		    Schema s = (Schema)record;
 	        //check if anything can be seen below the schema level
-		    
-		    if (anyAccessible(s.getTables().values(), commandContext, PermissionType.READ)) {
+		    if (anyAccessible(s.getTables().values(), commandContext, resources, PermissionType.READ)) {
 		        result = true;
-		    } else if (anyAccessible(s.getProcedures().values(), commandContext, PermissionType.EXECUTE)) {
+		    } else if (anyAccessible(s.getProcedures().values(), commandContext, resources, PermissionType.EXECUTE)) {
                 result = true;
-            } else if (anyAccessible(s.getFunctions().values(), commandContext, PermissionType.EXECUTE)) {
+            } else if (anyAccessible(s.getFunctions().values(), commandContext, resources, PermissionType.EXECUTE)) {
                 result = true;
             }
+		} else {
+		    result = isAccessibleInternal(record, commandContext, resources, action);
 		}
 		commandContext.setAccessible(record, result);
 		return result;
 	}
 	
-	private boolean anyAccessible(Collection<? extends AbstractMetadataRecord> records, CommandContext commandContext, PermissionType permission) {
+	private boolean anyAccessible(Collection<? extends AbstractMetadataRecord> records, CommandContext commandContext, HashSet<String> resources, PermissionType permission) {
         for (AbstractMetadataRecord record : records) {
-            if (isAccessible(record, commandContext, permission)) {
+            if (isAccessibleInternal(record, commandContext, resources, permission)) {
                 return true;
             }
         }
         return false;
 	}
 
-    private Boolean isAccessible(AbstractMetadataRecord record,
-            CommandContext commandContext, PermissionType action) {
+	private boolean isAccessibleInternal(AbstractMetadataRecord record,
+            CommandContext commandContext, HashSet<String> resources, PermissionType action) {
         Boolean result = commandContext.isAccessible(record);
 		if (result != null) {
 			return result;
 		}
-		
-		HashSet<String> resources = new HashSet<String>(2);
+		resources.clear();
         resources.add(record.getFullName());
 		return this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
     }
