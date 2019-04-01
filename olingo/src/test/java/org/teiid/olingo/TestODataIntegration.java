@@ -2321,11 +2321,11 @@ public class TestODataIntegration {
                 Arrays.asList(1, 3, "country"), Arrays.asList(1,4, "abroad"),
                 Arrays.asList(2, 5, "state"), Arrays.asList(2, 6, "country"),
                 Arrays.asList(3,7,"town"), Arrays.asList(3, 8, "town")));
-        hc.addData("SELECT Orders.place, Orders.customerid, Orders.id FROM Orders", 
-                Arrays.asList(Arrays.asList("town",1, 1), Arrays.asList("state", 1, 2),
-                Arrays.asList("country",1, 3), Arrays.asList("abroad", 1, 4),
-                Arrays.asList("state", 2, 5), Arrays.asList("country", 2, 6),
-                Arrays.asList("town", 3, 7), Arrays.asList("town", 3, 8)));
+        hc.addData("SELECT Orders.customerid, Orders.place, Orders.id FROM Orders", 
+                Arrays.asList(Arrays.asList(1,"town", 1), Arrays.asList(1,"state", 2),
+                Arrays.asList(1,"country", 3), Arrays.asList(1,"abroad", 4),
+                Arrays.asList(2,"state", 5), Arrays.asList(2,"country", 6),
+                Arrays.asList(3,"town", 7), Arrays.asList(3,"town", 8)));
         
         
         teiid.addTranslator("x12", hc);

@@ -77,6 +77,7 @@ import org.teiid.olingo.service.TeiidServiceHandler.OperationParameterValueProvi
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
+import org.teiid.query.sql.lang.Option.MakeDep;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Array;
@@ -371,6 +372,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 		subqueryHint.setMergeJoin(true);
         agg.setSubqueryHint(subqueryHint);
         outerQuery.getSelect().addSymbol(agg);
+        outerQuery.getFrom().getClauses().get(0).setMakeInd(new MakeDep());
 	}
 
     private Expression processFilterOption(FilterOption option, DocumentNode resource) throws TeiidException {
