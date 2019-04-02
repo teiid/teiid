@@ -1053,6 +1053,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		return s;
 	}
 	
+	@Override
+	public List<Schema> getModelIDs() {
+        return this.getMetadataStore().getSchemaList();
+	}
+	
 	public Map<String, DataPolicyMetadata> getPolicies() {
 		return policies;
 	}
@@ -1110,5 +1115,5 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public void setLongRanks(boolean longRanks) {
         this.longRanks = longRanks;
     }
-	
+
 }

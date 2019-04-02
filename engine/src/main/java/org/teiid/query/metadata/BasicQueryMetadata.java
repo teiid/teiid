@@ -591,4 +591,9 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	    return false;
 	}
 	
+	@Override
+	public List<? extends Object> getModelIDs() {
+	    return Collections.emptyList();
+	}
+	
 }

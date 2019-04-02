@@ -68,10 +68,6 @@ public class CachedFinder implements CapabilitiesFinder {
     
     private Map<String, SourceCapabilities> userCache = new HashMap<String, SourceCapabilities>();
     
-    /**
-     * Construct a CacheFinder that wraps another finder
-     * @param internalFinder Finder to wrap
-     */
     public CachedFinder(ConnectorManagerRepository repo, VDBMetaData vdb) {
         this.connectorRepo = repo;
         this.vdb = vdb;
@@ -117,10 +113,6 @@ public class CachedFinder implements CapabilitiesFinder {
         
         userCache.put(modelName, caps);
         return caps;
-    }
-    
-    public void addCapabilities(String connBinding, SourceCapabilities sourceCaps) {
-    	userCache.put(connBinding, sourceCaps);
     }
     
     public boolean isValid(String modelName) {

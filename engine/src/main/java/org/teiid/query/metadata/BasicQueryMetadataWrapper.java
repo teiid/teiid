@@ -436,5 +436,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
     public boolean isLongRanks() {
         return actualMetadata.isLongRanks();
     }
+    
+    @Override
+    public List<? extends Object> getModelIDs() {
+        return actualMetadata.getModelIDs();
+    }
 	
 }

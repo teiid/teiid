@@ -34,9 +34,11 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
@@ -779,8 +781,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		    	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
 		    	List<Function> mustPushSubexpression = null;
 		    	for (Function function : functions) {
-					if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN 
-							|| (EvaluatableVisitor.willBecomeConstant(function) && accessNode != null && CapabilitiesUtil.supports(Capability.SELECT_WITHOUT_FROM, modelId, metadata, capFinder))) {
+					if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN) {
 						continue;
 					}
 		    		//there is a special check in the evaluator for a must pushdown function to use
@@ -793,6 +794,11 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			        	mustPushSubexpression.add(function);
 						continue;
 					}
+					
+					if (findFunctionTarget(function, function.getFunctionDescriptor(), capFinder, metadata) != null) {
+					    continue;
+					}
+					
 					//assume we need the whole thing
 					requiredSymbols.add(ss);
 					checkSymbols = true;
@@ -805,6 +811,34 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		}
 		return false;
 	}
+	
+	/**
+     * Find the first schema name against which this function can be executed, or null for no target
+     * @param function
+     * @param fd
+     * @param capabiltiesFinder
+     * @param metadata
+     * @return
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
+     */
+    public static String findFunctionTarget(Function function,
+            final FunctionDescriptor fd,
+            CapabilitiesFinder capabiltiesFinder, QueryMetadataInterface metadata)
+            throws TeiidComponentException, QueryMetadataException {
+        for (Object mid : metadata.getModelIDs()) {
+            if (metadata.isVirtualModel(mid)) {
+                continue;
+            }
+            String name = metadata.getName(mid);
+            SourceCapabilities caps = capabiltiesFinder.findCapabilities(name);
+            if (caps != null && caps.supportsCapability(Capability.SELECT_WITHOUT_FROM) 
+                    && CapabilitiesUtil.supportsScalarFunction(mid, function, metadata, capabiltiesFinder)) {
+                return name;
+            }
+        }
+        return null;
+    }
 
     /**
      * Get name of the rule
