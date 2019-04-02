@@ -651,4 +651,6 @@ public interface QueryMetadataInterface {
     boolean isEnvAllowed();
 
     boolean isLongRanks();
+
+    List<? extends Object> getModelIDs();
 }

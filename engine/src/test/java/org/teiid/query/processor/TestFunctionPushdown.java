@@ -76,7 +76,7 @@ public class TestFunctionPushdown {
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setFunctionSupport("misc.namespace.func", true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
         
         String sql = "select func(x.e1) from pm1.g1 as x, pm2.g1 as y where x.e2 = y.e2"; //$NON-NLS-1$
         
@@ -667,4 +667,49 @@ public class TestFunctionPushdown {
 
     }
 	
+    @Test public void testSimpleFunctionPushdownCrossSource() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("x", new DDLHolder("a", 
+                "create foreign function func (param integer) returns integer; create foreign table tbl2 (col integer);"), new DDLHolder("b", "create foreign table tbl (col integer);"));
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+        final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+            
+            @Override
+            public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+                    CommandContext commandContext, QueryMetadataInterface metadata)
+                    throws TeiidProcessingException, TeiidComponentException {
+                return null;
+            }
+            
+            @Override
+            public CapabilitiesFinder getCapabiltiesFinder() {
+                return capFinder;
+            }
+            
+            @Override
+            public QueryProcessor createQueryProcessor(String query,
+                    String recursionGroup, CommandContext commandContext,
+                    Object... params) throws TeiidProcessingException,
+                    TeiidComponentException {
+                return null;
+            }
+        });
+        cc.setMetadata(tm);
+        
+        String sql = "select func(tbl.col) from tbl"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT b.tbl.col FROM b.tbl"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT b.tbl.col FROM b.tbl", new List[] {Arrays.asList(1), Arrays.asList(2)});
+        dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
+        dataManager.addData("SELECT func(2)", new List[] {Arrays.asList(3)});
+        
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2), Arrays.asList(3)});
+    }
+
 }

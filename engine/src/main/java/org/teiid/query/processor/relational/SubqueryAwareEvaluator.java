@@ -27,8 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BlockedException;
@@ -45,9 +43,9 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
-import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
+import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
@@ -417,32 +415,20 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	    String schema = null;
 	    if (fd.getMethod().getParent() == null || !fd.getMethod().getParent().isPhysical()) {
 	    	//find a suitable target
-	    	//TODO: do better than a linear search
-	    	VDBMetaData vdb = this.context.getVdb();
 	    	CapabilitiesFinder capabiltiesFinder = this.context.getQueryProcessorFactory().getCapabiltiesFinder();
-	    	for (ModelMetaData mmd : vdb.getModelMetaDatas().values()) {
-	    		if (!mmd.isSource()) {
-	    			continue;
-	    		}
-	    		SourceCapabilities caps = capabiltiesFinder.findCapabilities(mmd.getName());
-	    		Object mid = this.context.getMetadata().getModelID(mmd.getName());
-    			if (caps.supportsCapability(Capability.SELECT_WITHOUT_FROM) 
-    			        && CapabilitiesUtil.supportsScalarFunction(mid, function, this.context.getMetadata(), capabiltiesFinder)) {
-    				schema = mmd.getName();
-    				break;
-    			}
-	    	}
+	    	//TODO: save this across invocations
+	    	schema = RuleAssignOutputElements.findFunctionTarget(function, fd, capabiltiesFinder, this.context.getMetadata());
 	    	if (schema == null) {
-	    		throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
-	    	}
+	            throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
+	        }
 	    } else {
 	    	if (!CapabilitiesUtil.supports(Capability.SELECT_WITHOUT_FROM, fd.getMethod().getParent(), context.getMetadata(), context.getQueryProcessorFactory().getCapabiltiesFinder())) {
-	    		if (elements != null) {
-	    			Integer index = (Integer) elements.get(function);
-	    			 if(index != null) {
-	  		           return tuple.get(index.intValue());
-	  		       }
-	    		}
+                if (elements != null) {
+                    Integer index = (Integer) elements.get(function);
+                    if (index != null) {
+                        return tuple.get(index.intValue());
+                    }
+                }
 		    	throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
 	    	}
 	    	schema = fd.getSchema();
@@ -483,5 +469,5 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		functionState.put(function, ss);
 		return internalEvaluate(ss, tuple);
 	}
-	
+
 }
