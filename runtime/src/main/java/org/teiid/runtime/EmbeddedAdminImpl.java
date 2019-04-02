@@ -256,6 +256,12 @@ public class EmbeddedAdminImpl implements Admin {
 		list.addAll(this.embeddedServer.repo.getVDBs());
 		return list;
 	}
+	
+	@Override
+	public Collection<? extends VDB> getVDBs(boolean singleInstance)
+	        throws AdminException {
+	    return getVDBs();
+	}
 
 	@Override
 	public VDB getVDB(String vdbName, String vdbVersion) throws AdminException {

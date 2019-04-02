@@ -1782,17 +1782,22 @@ public class AdminFactory {
 
 		@Override
 		public List<? extends VDB> getVDBs() throws AdminException {
-	        final ModelNode request = buildRequest("teiid", "list-vdbs");//$NON-NLS-1$ //$NON-NLS-2$
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
+	        return getVDBs(true);
+		}
+		
+        @Override
+        public List<? extends VDB> getVDBs(boolean singleInstance) throws AdminException {
+            final ModelNode request = buildRequest("teiid", "list-vdbs");//$NON-NLS-1$ //$NON-NLS-2$
+            try {
+                ModelNode outcome = this.connection.execute(request);
+                if (!Util.isSuccess(outcome)) {
                     throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
                 }
-                return getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE, true, true);
-	        } catch (IOException e) {
-	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70036, e);
-	        }
-		}
+                return getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE, singleInstance, true);
+            } catch (IOException e) {
+                 throw new AdminComponentException(AdminPlugin.Event.TEIID70036, e);
+            }
+        }
 		
 		@Override
 		public void addDataRoleMapping(String vdbName, String vdbVersion, String dataRole, String mappedRoleName) throws AdminException {

@@ -170,7 +170,7 @@ public interface Admin {
     void undeploy(String deployedName) throws AdminException;
 
     /**
-     * Get the VDBs that currently deployed in the system
+     * Get the VDBs that are currently deployed in the system
      *
      * @return Collection of {@link VDB}s.  There could be multiple VDBs with the
      * same name in the Collection but they will differ by VDB version.
@@ -203,7 +203,6 @@ public interface Admin {
      * @param vbdVersion
      * @param models names for which metadata needs to be reloaded, if null or not supplied all models reloaded
      * @throws AdminException
-     * @return
      */
     @Deprecated
     void restartVDB(String vdbName, int vdbVersion, String... models) throws AdminException;
@@ -214,7 +213,6 @@ public interface Admin {
      * @param vbdVersion
      * @param models names for which metadata needs to be reloaded, if null or not supplied all models reloaded
      * @throws AdminException
-     * @return
      */
     void restartVDB(String vdbName, String vdbVersion, String... models) throws AdminException;
 
@@ -284,7 +282,7 @@ public interface Admin {
      * @param translatorName - Name of the translator
      * @return
      * @throws AdminException
-     * @see getTranslatorPropertyDefinitions
+     * @see #getTranslatorPropertyDefinitions
      * @deprecated
      */
     @Deprecated
@@ -502,7 +500,7 @@ public interface Admin {
      * @param vdbName
      * @param vdbVersion
      * @param modelName
-     * @param EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
+     * @param allowedTypes EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
      * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
      */
     @Deprecated
@@ -514,7 +512,7 @@ public interface Admin {
      * @param vdbName
      * @param vdbVersion
      * @param modelName
-     * @param EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
+     * @param allowedtypes EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
      * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
      */
     String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException;
@@ -529,7 +527,6 @@ public interface Admin {
 
     /**
      * Restart the Server
-     * @throws AdminException
      */
     void restart();
 
@@ -538,4 +535,18 @@ public interface Admin {
      * @param name
      */
     void setProfileName(String name);
+
+    /**
+     * Get the VDBs that are currently deployed in the system
+     *
+     * @param singleInstance
+     * <br> 
+     * - <b>true</b> to return the VDB list from only a single server instance,
+     * which is the same as {@link #getVDBs()}.
+     * <br>
+     * - <b>false</b> to get all VDBs from all servers in the domain
+     * @return Collection of {@link VDB}s.
+     * @throws AdminException
+     */
+    Collection<? extends VDB> getVDBs(boolean singleInstance) throws AdminException;
 }
