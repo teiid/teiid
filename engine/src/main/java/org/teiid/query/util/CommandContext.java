@@ -466,9 +466,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         }
     }
 
-    /** 
-     * @param securityFunctionEvaluator The securityFunctionEvaluator to set.
-     */
     public void setAuthoriziationValidator(AuthorizationValidator authorizationValidator) {
         this.globalState.authorizationValidator = authorizationValidator;
     }
@@ -521,8 +518,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		if (variableContext == null || !(expression instanceof ElementSymbol)) {
 			throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
 		}
-		Object value = variableContext.getValue((ElementSymbol)expression);
-		if (value == null && !variableContext.containsVariable((ElementSymbol)expression)) {
+		Object value = variableContext.getValue(expression);
+		if (value == null && !variableContext.containsVariable(expression)) {
 			throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
 		}
 		return value;

@@ -20,6 +20,7 @@ package org.teiid.query.sql.visitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -126,11 +127,12 @@ public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
 						groupMap.put(g, g);
 					}
 					visitor.outerGroups.add(groupMap);
+        		} else {
+        		    //the logic still expects a group set to be preset
+        		    visitor.outerGroups.add(Collections.emptyMap());
         		}
     			super.visit(query);
-    			if (fromGroups != null) {
-    				visitor.outerGroups.remove(visitor.outerGroups.size() - 1);
-    			}
+				visitor.outerGroups.remove(visitor.outerGroups.size() - 1);
         	}
         });
     }
