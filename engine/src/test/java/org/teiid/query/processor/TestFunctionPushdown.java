@@ -159,6 +159,18 @@ public class TestFunctionPushdown {
         dataManager.addData("SELECT func(0) FROM g1", new List[] {Arrays.asList(1), Arrays.asList(1)});
         
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(1), Arrays.asList(1)});
+        
+        //correlated case
+        sql = "select (select func(e1)) from g1"; //$NON-NLS-1$
+        
+        plan = helpPlan(sql, tm, null, capFinder, 
+                new String[] {"SELECT y.g1.e1 FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+
+        dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT g1.e1 FROM g1", new List[] {Arrays.asList(1), Arrays.asList(1)});
+        dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
+        
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2), Arrays.asList(2)});
 	}
 	
 	@Test public void testSimpleFunctionPushdown1() throws Exception {
