@@ -18,14 +18,12 @@
 
 package org.teiid.query.metadata;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod;
@@ -34,7 +32,6 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.Table.Type;
 import org.teiid.query.QueryPlugin;
 
 
@@ -125,7 +122,7 @@ public class CompositeMetadataStore extends MetadataStore {
 		return true;
 	}
 	
-	public Collection<Procedure> getStoredProcedure(String name) throws TeiidComponentException, QueryMetadataException {
+	public Collection<Procedure> getStoredProcedure(String name) {
 		List<Procedure> result = new LinkedList<Procedure>();
 		int index = name.indexOf(TransformationMetadata.DELIMITER_STRING);
 		if (index > -1) {
@@ -150,21 +147,6 @@ public class CompositeMetadataStore extends MetadataStore {
 		return result;
 	}
 
-	/*
-	 * The next method is a hold over from XML/UUID resolving and will perform poorly
-	 */
-
-	public Collection<Table> getXMLTempGroups(Table tableRecord) {
-		ArrayList<Table> results = new ArrayList<Table>();
-		String namePrefix = tableRecord.getName() + TransformationMetadata.DELIMITER_STRING;
-		for (Table table : tableRecord.getParent().getTables().values()) {
-			if (table.getTableType() == Type.XmlStagingTable && table.getName().startsWith(namePrefix)) {
-				results.add(table);
-			}
-		}
-		return results;
-	}
-	
 	private void assignOids(Schema schema, TreeMap<String, RecordHolder> map) {
 		addOid(schema, map);
 		for (Table table : schema.getTables().values()) {
