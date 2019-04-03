@@ -71,8 +71,6 @@ UNIQUE0                                                            <null>
 UNIQUE0                                                            <null>                                            
 UNIQUE0                                                            <null>                                            
 UNIQUE0                                                            <null>                                            
-idx_attr                                                           <null>                                            
-idx_attr                                                           <null>                                            
 matpg_datatype_ids                                                 <null>                                            
 matpg_datatype_ids                                                 <null>                                            
 matpg_datatype_names                                               <null>                                            
@@ -81,7 +79,7 @@ pk_pg_attr                                                         <null>
 pk_pg_class                                                        <null>                                            
 pk_pg_index                                                        <null>                                            
 pk_pg_proc                                                         <null>                                            
-Row Count : 81
+Row Count : 79
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 KeyName        12             PartsSupplier   java.lang.String    KeyName         string             SYS            KeyColumns    255                   255           0         false            true             false       false                 1           true        true          false     false       
 RefKeyUID      12             PartsSupplier   java.lang.String    RefKeyUID       string             SYS            KeyColumns    50                    50            0         false            true             false       false                 1           true        true          false     false       

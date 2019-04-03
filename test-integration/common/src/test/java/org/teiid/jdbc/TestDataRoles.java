@@ -190,6 +190,15 @@ public class TestDataRoles {
     	rs = s.executeQuery("select * from sys.keys where tablename = 't1'");
     	//nothing should be visible
     	assertFalse(rs.next());
+    	
+        rs = s.executeQuery("select count(*) from pg_catalog.pg_constraint, pg_class where pg_class.oid = conrelid and relname like 't_'");
+        assertTrue(rs.next());
+        assertEquals(0, rs.getInt(1));
+        
+        rs = s.executeQuery("select count(*) from pg_catalog.pg_attribute, pg_class where pg_class.oid = pg_attribute.attrelid and relname like 't_'");
+        assertTrue(rs.next());
+        assertEquals(1, rs.getInt(1));
 	}
 	
 }
+	

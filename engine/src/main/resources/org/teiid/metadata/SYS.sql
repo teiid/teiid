@@ -98,6 +98,7 @@ CREATE FOREIGN TABLE Keys (
 	RefTableUID string(50) NOT NULL,
 	RefSchemaUID string(50) NOT NULL,
 	ColPositions short[] NOT NULL,
+	ColNames string[] NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Sys.Tables (VDBName, SchemaName, Name),
 	UNIQUE (UID)
