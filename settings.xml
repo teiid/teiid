@@ -17,7 +17,7 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
         <repository>
             <id>central</id>
             <name>Maven Central</name>
-            <url>http://repo.maven.apache.org/maven2/</url>
+            <url>https://repo.maven.apache.org/maven2/</url>
             <snapshots>
                 <enabled>false</enabled>
                 <updatePolicy>never</updatePolicy>
@@ -35,7 +35,7 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
         <repository>
           <id>jboss-public-repository-group</id>
           <name>JBoss Public Maven Repository Group</name>
-          <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+          <url>https://repository.jboss.org/nexus/content/groups/public/</url>
           <layout>default</layout>
           <releases>
             <enabled>true</enabled>
@@ -51,7 +51,7 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
         <pluginRepository>
           <id>jboss-public-repository-group</id>
           <name>JBoss Public Maven Repository Group</name>
-          <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+          <url>https://repository.jboss.org/nexus/content/groups/public/</url>
           <layout>default</layout>
           <releases>
             <enabled>true</enabled>
@@ -70,7 +70,7 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
         <repository>
           <id>jboss-developer-repository-group</id>
           <name>JBoss Developer Maven Repository Group</name>
-          <url>http://repository.jboss.org/nexus/content/groups/developer/</url>
+          <url>https://repository.jboss.org/nexus/content/groups/developer/</url>
           <layout>default</layout>
           <releases>
             <enabled>true</enabled>
