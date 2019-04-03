@@ -804,10 +804,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		}
         		List<Column> columns2 = key.getColumns();
                 Short[] pos = new Short[columns2.size()];
+                String[] names = new String[columns2.size()];
         		for (int i = 0; i < pos.length; i++) {
         		    pos[i] = (short)columns2.get(i).getPosition();
+        		    names[i] = columns2.get(i).getName();
         		}
         		row.add(new ArrayImpl((Object[])pos));
+        		row.add(new ArrayImpl((Object[])names));
         	}
         	
         	@Override

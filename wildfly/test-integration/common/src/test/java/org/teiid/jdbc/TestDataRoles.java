@@ -187,6 +187,14 @@ public class TestDataRoles {
     	rs = s.executeQuery("select * from sys.keys where tablename = 't1'");
     	//nothing should be visible
     	assertFalse(rs.next());
+    	
+        rs = s.executeQuery("select count(*) from pg_catalog.pg_constraint, pg_class where pg_class.oid = conrelid and relname like 't_'");
+        assertTrue(rs.next());
+        assertEquals(1, rs.getInt(1));
+        
+        rs = s.executeQuery("select count(*) from pg_catalog.pg_attribute, pg_class where pg_class.oid = pg_attribute.attrelid and relname like 't_'");
+        assertTrue(rs.next());
+        assertEquals(2, rs.getInt(1));
 	}
 	
     @Test public void testMetadataWithoutPermission() throws Exception {
@@ -230,6 +238,14 @@ public class TestDataRoles {
         rs = s.executeQuery("select count(*) from sys.keys where tablename = 't1'");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
+        
+        rs = s.executeQuery("select count(*) from pg_catalog.pg_constraint, pg_class where pg_class.oid = conrelid and relname like 't_'");
+        assertTrue(rs.next());
+        assertEquals(4, rs.getInt(1));
+        
+        rs = s.executeQuery("select count(*) from pg_catalog.pg_attribute, pg_class where pg_class.oid = pg_attribute.attrelid and relname like 't_'");
+        assertTrue(rs.next());
+        assertEquals(6, rs.getInt(1));
     }
 
     private void deploySampleVDB() throws VirtualDatabaseException,

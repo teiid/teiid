@@ -283,8 +283,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		
 		addPrimaryKey("pk_pg_attr", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		addIndex("idx_attr", false, Arrays.asList("attname", "attrelid"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
-		
 		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, " + //$NON-NLS-1$
 				"pg_catalog.getOid(t1.TableUID) as attrelid, " + //$NON-NLS-1$
 				"t1.Name as attname, " + //$NON-NLS-1$
@@ -310,8 +308,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"FROM (SYS.KeyColumns as kc INNER JOIN SYS.Columns as t1 ON kc.SchemaName = t1.SchemaName AND kc.TableName = t1.TableName AND kc.Name = t1.Name) LEFT OUTER JOIN " + //$NON-NLS-1$
 				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name WHERE kc.keytype in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
-		t.setProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, "true"); //$NON-NLS-1$
 		return t;		
 	}
 	
@@ -419,17 +415,15 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, " + //$NON-NLS-1$
 				"pg_catalog.getOid(t1.uid) as indexrelid, " + //$NON-NLS-1$
 				"pg_catalog.getOid(t1.TableUID) as indrelid, " + //$NON-NLS-1$
-				"cast(count(t1.uid) as short) as indnatts, " + //$NON-NLS-1$
+				"cast(ARRAY_LENGTH(ColPositions) as short) as indnatts, " + //$NON-NLS-1$
 				"false indisclustered, " + //$NON-NLS-1$
-				"(CASE WHEN t1.KeyType in ('Unique', 'Primary') THEN true ELSE false END) as indisunique, " + //$NON-NLS-1$
-				"(CASE t1.KeyType WHEN 'Primary' THEN true ELSE false END) as indisprimary, " + //$NON-NLS-1$
-				"asPGVector(" + //$NON-NLS-1$
-				arrayAgg("(select at.attnum FROM pg_catalog.pg_attribute as at WHERE at.attname = t1.Name AND at.attrelid = pg_catalog.getOid(t1.TableUID))", "t1.position") +") as indkey, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				"(CASE WHEN t1.Type in ('Unique', 'Primary') THEN true ELSE false END) as indisunique, " + //$NON-NLS-1$
+				"(CASE t1.Type WHEN 'Primary' THEN true ELSE false END) as indisprimary, " + //$NON-NLS-1$
+				"asPGVector(ColPositions) as indkey, " + //$NON-NLS-1$
 				"null as indexprs, null as indpred, " + //$NON-NLS-1$
-                arrayAgg("t1.Name", "t1.position") +" as indkey_names " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				"FROM Sys.KeyColumns as t1 GROUP BY t1.TableUID, t1.uid, t1.KeyType, t1.KeyName"; //$NON-NLS-1$
+                "ColNames as indkey_names " + //$NON-NLS-1$
+				"FROM Sys.Keys as t1"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 
@@ -499,7 +493,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		        + "(SELECT typreceive, case when typelem <> 0 and typname like '\\__%' escape '\\' then 'a' else typname || 'recv' end as kind, oid " //$NON-NLS-1$
 		        + "from pg_catalog.pg_type where typname not in ('internal', 'anyelement')) v"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 
