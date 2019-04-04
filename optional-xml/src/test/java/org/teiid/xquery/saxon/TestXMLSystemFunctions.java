@@ -199,6 +199,11 @@ public class TestXMLSystemFunctions {
 		assertEquals("_x000A_", XMLFunctions.escapeName(new String(new char[] {10}), true));
     }
 	
+	@Test public void testNameEscaping3() throws Exception {
+        assertEquals("𐀀", XMLFunctions.escapeName("𐀀", true));
+        assertEquals("_x0F1000_", XMLFunctions.escapeName(new String(Character.toChars(0xF1000)), true));
+    }
+	
 	@Test public void testJsonToXml() throws Exception {
 		String json = "[0,{\"1\":{\"2\":{\"3\":{\"4\":[5,{\"6\":7}]}}}}]";
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Array xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Array xsi:type=\"decimal\">0</Array><Array><_x0031_><_x0032_><_x0033_><_x0034_ xsi:type=\"decimal\">5</_x0034_><_x0034_><_x0036_ xsi:type=\"decimal\">7</_x0036_></_x0034_></_x0033_></_x0032_></_x0031_></Array></Array>";

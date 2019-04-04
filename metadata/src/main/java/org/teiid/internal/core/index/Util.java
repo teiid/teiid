@@ -46,16 +46,6 @@ public class Util {
 	/**
 	 * Returns the length of the common prefix between s1 and s2.
 	 */
-	public static int prefixLength(char[] s1, char[] s2) {
-		int len= 0;
-		int max= Math.min(s1.length, s2.length);
-		for (int i= 0; i < max && s1[i] == s2[i]; ++i)
-			++len;
-		return len;
-	}
-	/**
-	 * Returns the length of the common prefix between s1 and s2.
-	 */
 	public static int prefixLength(String s1, String s2) {
 		int len= 0;
 		int max= Math.min(s1.length(), s2.length());

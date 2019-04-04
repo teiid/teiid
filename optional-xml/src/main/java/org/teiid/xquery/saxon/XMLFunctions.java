@@ -18,12 +18,13 @@
 
 package org.teiid.xquery.saxon;
 
-import java.nio.CharBuffer;
+import java.io.IOException;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.util.CharsetUtils;
@@ -118,8 +119,9 @@ public class XMLFunctions {
         StringBuilder sb = new StringBuilder();
         char[] chars = name.toCharArray();
         int i = 0;
+        boolean surrogatePair = false;
         if (fully && name.regionMatches(true, 0, "xml", 0, 3)) { //$NON-NLS-1$
-            sb.append(escapeChar(name.charAt(0)));
+            escapeChar(sb, name.charAt(0));
             sb.append(chars, 1, 2);
             i = 3;
         }
@@ -128,45 +130,60 @@ public class XMLFunctions {
             switch (chr) {
             case ':':
                 if (fully || i == 0) {
-                    sb.append(escapeChar(chr));
+                    escapeChar(sb, chr);
                     continue;
                 } 
                 break;
             case '_':
                 if (chars.length > i+1 && chars[i+1] == 'x') {
-                    sb.append(escapeChar(chr));
+                    escapeChar(sb, chr);
                     continue;
                 }
                 break;
             default:
-                //TODO: there should be handling for surrogates
-                //      and invalid chars
-                if (i == 0) {
-                    if (!NameChecker.isNCNameStartChar(chr)) {
-                        sb.append(escapeChar(chr));
+                int codepoint = chr;
+                if (i+1 < chars.length && Character.isSurrogatePair(chr, chars[i+1])) {
+                    i++;
+                    codepoint = Character.toCodePoint(chr, chars[i]);
+                    surrogatePair = true;
+                }
+                if (i == (surrogatePair?1:0)) {
+                    if (!NameChecker.isNCNameStartChar(codepoint)) {
+                        escapeChar(sb, codepoint);
                         continue;
                     }
-                } else if (!NameChecker.isNCNameChar(chr)) {
-                    sb.append(escapeChar(chr));
+                } else if (!NameChecker.isNCNameChar(codepoint)) {
+                    escapeChar(sb, codepoint);
                     continue;
                 }
                 break;
             }
             sb.append(chr);
+            if (surrogatePair) {
+                sb.append(chars[i]);
+            }
         }
         return sb.toString();
     }
 
-    private static String escapeChar(char chr) {
-        CharBuffer cb = CharBuffer.allocate(7);
+    private static void escapeChar(StringBuilder sb, int chr) {
+        boolean bmp = Character.isBmpCodePoint(chr);
         if (USE_X_ESCAPE) {
-            cb.append("_x");  //$NON-NLS-1$
+            sb.append("_x");  //$NON-NLS-1$
         } else {
-            cb.append("_u");  //$NON-NLS-1$
+            sb.append("_u");  //$NON-NLS-1$
         }
-        CharsetUtils.toHex(cb, (byte)(chr >> 8));
-        CharsetUtils.toHex(cb, (byte)chr);
-        return cb.append("_").flip().toString();  //$NON-NLS-1$
+        try {
+            if (!bmp) {
+                byte high = (byte)(chr >> 16);
+                CharsetUtils.toHex(sb, high);
+            }
+            CharsetUtils.toHex(sb, (byte)(chr >> 8));
+            CharsetUtils.toHex(sb, (byte)chr);
+        } catch (IOException e) {
+            throw new TeiidRuntimeException(e);
+        }
+        sb.append("_");  //$NON-NLS-1$
     }
 
 }

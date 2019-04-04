@@ -53,9 +53,11 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.function.IntConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import javax.crypto.spec.IvParameterSpec;
 
@@ -844,14 +846,6 @@ public final class FunctionMethods {
 
     //  ================== Function = timestampcreate =====================
 
-    /**
-     * This method truncates (ignores) figures
-     * @param interval
-     * @param timestamp1
-     * @param timestamp2
-     * @return
-     * @throws FunctionExecutionException
-     */
     public static Object timestampCreate(java.sql.Date date, Time time) {
         Calendar tsCal = TimestampWithTimezone.getCalendar();
         tsCal.setTime(time);
@@ -1182,20 +1176,22 @@ public final class FunctionMethods {
     public static Object initCap(String s) {
         StringBuffer cap = new StringBuffer();
 
-        boolean checkCap = true;
-        for(int i=0; i<s.length(); i++) {
-            char c = s.charAt(i);
+        s.codePoints().forEachOrdered(new IntConsumer() {
+            boolean checkCap = true;
+            
+            @Override
+            public void accept(int c) {
+                // Decide whether to upper case
+                if(checkCap) {
+                    cap.appendCodePoint(Character.toUpperCase(c));
+                } else {
+                    cap.appendCodePoint(Character.toLowerCase(c));
+                }
 
-            // Decide whether to upper case
-            if(checkCap) {
-                cap.append(Character.toUpperCase(c));
-            } else {
-                cap.append(Character.toLowerCase(c));
+                // Reset flag for next character
+                checkCap = Character.isWhitespace(c);
             }
-
-            // Reset flag for next character
-            checkCap = Character.isWhitespace(c);
-        }
+        });
         return cap.toString();
     }
 
@@ -1265,7 +1261,11 @@ public final class FunctionMethods {
 
     public static Object translate(String str, String in, String out)
         throws FunctionExecutionException {
-        if(in.length() != out.length()) {
+        
+        List<Integer> inCodePoints = in.codePoints().boxed().collect(Collectors.toList());
+        List<Integer> outCodePoints = out.codePoints().boxed().collect(Collectors.toList());
+        
+        if(inCodePoints.size() != outCodePoints.size()) {
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30404, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30404));
         }
 
@@ -1274,15 +1274,13 @@ public final class FunctionMethods {
         }
 
         StringBuffer translated = new StringBuffer(str.length());
-        for(int i=0; i<str.length(); i++) {
-            char c = str.charAt(i);
-            int j = in.indexOf(c);
+        str.codePoints().forEachOrdered(c->{
+            int j = inCodePoints.indexOf(c);
             if (j >= 0) {
-                translated.append(out.charAt(j));
+                translated.appendCodePoint(outCodePoints.get(j));
             } else {
-                translated.append(c);
-            }
-        }
+                translated.appendCodePoint(c);
+            }});
         return translated.toString();
     }
 

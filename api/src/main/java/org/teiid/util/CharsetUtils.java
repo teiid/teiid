@@ -18,6 +18,7 @@
 
 package org.teiid.util;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -26,6 +27,7 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
 import java.util.Arrays;
 
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.Base64;
 
@@ -58,7 +60,11 @@ public final class CharsetUtils {
 				@Override
 				public void decode(CharBuffer out) {
 					byte b = this.bb.get();
-					toHex(out, b);
+					try {
+                        toHex(out, b);
+                    } catch (IOException e) {
+                        throw new TeiidRuntimeException(e);
+                    }
 				}
 
 			};
@@ -70,9 +76,9 @@ public final class CharsetUtils {
 		}
 	};
 
-	public static void toHex(CharBuffer out, byte b) {
-		out.put(hex_alphabet[(b & 0xf0) >> 4]);
-		out.put(hex_alphabet[b & 0x0f]);
+	public static void toHex(Appendable out, byte b) throws IOException {
+        out.append(hex_alphabet[(b & 0xf0) >> 4]);
+        out.append(hex_alphabet[b & 0x0f]);
 	}
 	
 	public static final String BASE64_NAME = "BASE64"; //$NON-NLS-1$

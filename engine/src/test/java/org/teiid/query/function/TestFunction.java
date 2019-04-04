@@ -545,6 +545,10 @@ public class TestFunction {
     @Test public void testInitCap5() throws Exception {
         helpTestInitCap("cows are FUN", "Cows Are Fun"); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testInitCap6() throws Exception {
+        helpTestInitCap("𐐩ome chars are fun 𐐨!", "𐐁ome Chars Are Fun 𐐀!"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Test public void testLpad1() throws Exception {
         helpTestLpad("x", 4, "   x");     //$NON-NLS-1$ //$NON-NLS-2$
@@ -612,6 +616,10 @@ public class TestFunction {
 
     @Test public void testLocate1() throws Exception {
         helpTestLocate(",", "Metamatrix, John Quincy", 11); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testTranslate5() throws Exception {
+        helpTestTranslate("𐀀 a", "𐀀", "b", "b a"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
     @Test public void testLocate2() throws Exception {
