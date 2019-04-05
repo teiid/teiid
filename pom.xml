@@ -67,7 +67,7 @@
         <version.com.fasterxml.jackson.core>2.9.8</version.com.fasterxml.jackson.core>
         <version.com.fasterxml.jackson.dataformat>2.9.8</version.com.fasterxml.jackson.dataformat>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
-        <version.com.force.api.41>41.0.0</version.com.force.api.41>
+        <version.com.force.api.41>45.1.0</version.com.force.api.41>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
         <version.com.google.guava>25.0-jre</version.com.google.guava>
         <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>      
