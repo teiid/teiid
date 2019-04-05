@@ -651,8 +651,8 @@ public class DataTypeManager {
 				|| DataTypeManager.DefaultDataTypes.CLOB.equals(type)
 				|| DataTypeManager.DefaultDataTypes.XML.equals(type)
                 || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type)
-                || DataTypeManager.DefaultDataClasses.GEOGRAPHY.equals(type)
-                || DataTypeManager.DefaultDataClasses.JSON.equals(type);
+                || DataTypeManager.DefaultDataTypes.GEOGRAPHY.equals(type)
+                || DataTypeManager.DefaultDataTypes.JSON.equals(type);
 	}
 
 	/**
