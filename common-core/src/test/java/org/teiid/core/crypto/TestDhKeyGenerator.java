@@ -43,7 +43,6 @@ public class TestDhKeyGenerator {
 		byte[] cleartext2 = clientCryptor.decrypt(ciphertext);
 		
 		assertArrayEquals(cleartext.getBytes(Charset.forName("UTF-8")), cleartext2);
-		assertTrue(!ciphertext.equals(cleartext));
 		
 		Object sealed = serverCryptor.sealObject(cleartext);
 		Object unsealed = clientCryptor.unsealObject(sealed);
