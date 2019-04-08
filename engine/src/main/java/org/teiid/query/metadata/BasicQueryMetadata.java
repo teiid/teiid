@@ -356,26 +356,12 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     }
 
     /**
-     * @see QueryMetadataInterface#isXMLGroup(Object)
-     */
-    public boolean isXMLGroup(Object groupID)
-        throws TeiidComponentException, QueryMetadataException {
-        return false;
-    }
-
-    /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getVirtualDatabaseName()
      */
     public String getVirtualDatabaseName() 
         throws TeiidComponentException, QueryMetadataException {
             
         return null;
-    }
-    
-    public Collection getXMLTempGroups(Object groupID) 
-        throws TeiidComponentException, QueryMetadataException{
-    	
-    	return Collections.EMPTY_SET;    	
     }
     
     public float getCardinality(Object groupID) 

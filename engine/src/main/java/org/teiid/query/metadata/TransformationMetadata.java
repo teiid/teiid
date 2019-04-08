@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -130,6 +131,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private final CompositeMetadataStore store;
     private Map<String, VDBResources.Resource> vdbEntries;
     private FunctionLibrary functionLibrary;
+    private FunctionLibrary visibleFunctionLibrary;
     private VDBMetaData vdbMetaData;
     private ScriptEngineManager scriptEngineManager;
     private Map<String, ScriptEngineFactory> scriptEngineFactories = Collections.synchronizedMap(new HashMap<String, ScriptEngineFactory>());
@@ -137,6 +139,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private Set<String> allowedLanguages;
     private Map<String, DataPolicyMetadata> policies = new TreeMap<String, DataPolicyMetadata>(String.CASE_INSENSITIVE_ORDER);
     private boolean useOutputNames = true;
+    private boolean hiddenResolvable = true;
     
     /*
      * TODO: move caching to jboss cache structure
@@ -151,7 +154,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private boolean longRanks;
     /**
      * TransformationMetadata constructor
-     * @param context Object containing the info needed to lookup metadata.
      */
     public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, VDBResources.Resource> vdbEntries, FunctionTree systemFunctions, Collection<FunctionTree> functionTrees) {
     	ArgCheck.isNotNull(store);
@@ -236,7 +238,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	}
 
     public Table getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
-        return getMetadataStore().findGroup(groupName);
+        Table t = getMetadataStore().findGroup(groupName);
+        if (!isResolvable(t.getParent())) {
+            throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, groupName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+        }
+        return t;
     }
     
     public Collection<String> getGroupsForPartialName(final String partialGroupName)
@@ -339,7 +345,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         throws TeiidComponentException, QueryMetadataException {
         StoredProcedureInfo result = getStoredProcInfoDirect(name);
         
-		if (result == null) {
+		if (result == null || !isResolvable((Schema) result.getModelID())) {
 			 throw new QueryMetadataException(QueryPlugin.Event.TEIID30357, name+NOT_EXISTS_MESSAGE);
 		}
     	
@@ -690,11 +696,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return ((ColumnSet<?>)accessPattern).getColumns();
     }
 
-    public boolean isXMLGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        Table tableRecord = (Table) groupID;
-        return tableRecord.getTableType() == Table.Type.Document;
-    }
-
     /** 
      * @see org.teiid.query.metadata.QueryMetadataInterface#hasMaterialization(java.lang.Object)
      * @since 4.2
@@ -965,6 +966,23 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
 	@Override
 	public FunctionLibrary getFunctionLibrary() {
+	    if (!hiddenResolvable) {
+	        if (visibleFunctionLibrary == null && functionLibrary != null && vdbMetaData != null) {
+	            FunctionTree[] userFuncts = functionLibrary.getUserFunctions();
+	            List<FunctionTree> filtered = new ArrayList<>();
+	            if (userFuncts != null) {
+	                for (FunctionTree tree : userFuncts) {
+	                    if (vdbMetaData.isVisible(tree.getSchemaName())) {
+	                        filtered.add(tree);
+	                    }
+	                }
+	            }
+                visibleFunctionLibrary = new FunctionLibrary(
+                        functionLibrary.getSystemFunctions(),
+                        filtered.toArray(new FunctionTree[filtered.size()]));
+	        }
+	        return visibleFunctionLibrary;
+	    }
 		return this.functionLibrary;
 	}
 	
@@ -986,6 +1004,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		tm.allowedLanguages = this.allowedLanguages;
 		tm.widenComparisonToString = this.widenComparisonToString;
 		tm.longRanks = this.longRanks;
+		tm.hiddenResolvable = true;
 		return tm;
 	}
 	
@@ -1047,14 +1066,24 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	public Schema getModelID(String modelName) throws TeiidComponentException,
 			QueryMetadataException {
 		Schema s = this.getMetadataStore().getSchema(modelName);
-		if (s == null) {
+		if (s == null || !isResolvable(s)) {
 			throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, modelName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
 		return s;
 	}
+
+    private final boolean isResolvable(Schema s) {
+        return hiddenResolvable || vdbMetaData == null || vdbMetaData.isVisible(s.getName());
+    }
 	
 	@Override
 	public List<Schema> getModelIDs() {
+	    if (!hiddenResolvable && vdbMetaData != null) {
+	        //filter list
+            return this.getMetadataStore().getSchemaList().stream()
+                    .filter(s -> vdbMetaData.isVisible(s.getName()))
+                    .collect(Collectors.toList());
+	    }
         return this.getMetadataStore().getSchemaList();
 	}
 	
@@ -1079,6 +1108,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	public void setWidenComparisonToString(boolean widenComparisonToString) {
 		this.widenComparisonToString = widenComparisonToString;
 	}
+	
+	public boolean isHiddenResolvable() {
+        return hiddenResolvable;
+    }
+	
+	public void setHiddenResolvable(boolean hiddenResolvable) {
+        this.hiddenResolvable = hiddenResolvable;
+    }
 	
 	@Override
 	public Class<?> getDataTypeClass(String typeOrDomainName)

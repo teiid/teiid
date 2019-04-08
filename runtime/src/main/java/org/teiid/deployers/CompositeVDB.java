@@ -51,6 +51,7 @@ import org.teiid.vdb.runtime.VDBKey;
 public class CompositeVDB {
 	
 	private static final boolean WIDEN_COMPARISON_TO_STRING = PropertiesUtils.getHierarchicalProperty("org.teiid.widenComparisonToString", false, Boolean.class); //$NON-NLS-1$
+	private static final boolean HIDDEN_METADATA_RESOLVABLE = PropertiesUtils.getHierarchicalProperty("org.teiid.hiddenMetadataResolvable", true, Boolean.class); //$NON-NLS-1$
 	
 	private VDBMetaData vdb;
 	private MetadataStore store;
@@ -130,6 +131,7 @@ public class CompositeVDB {
 		metadata.setLongRanks(AggregateSymbol.LONG_RANKS);
 		metadata.setUseOutputNames(false);
 		metadata.setWidenComparisonToString(WIDEN_COMPARISON_TO_STRING);
+		metadata.setHiddenResolvable(HIDDEN_METADATA_RESOLVABLE);
 		return metadata;
 	}
 

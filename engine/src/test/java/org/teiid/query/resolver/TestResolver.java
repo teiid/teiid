@@ -2954,5 +2954,26 @@ public class TestResolver {
     	tm.setWidenComparisonToString(true);
     	helpResolve(sql, tm);
     }
+    
+    @Test public void testHiddenTable() {
+        helpTestHiddenNotResolvable("select * from bqt1.smalla");
+    }
+    
+    @Test public void testHiddenProcedure() {
+        helpTestHiddenNotResolvable("call bqt1.native('x')");
+    }
+    
+    @Test public void testHiddenFunction() {
+        helpTestHiddenNotResolvable("select bqt1.reverse('x')");
+    }
+    
+    private void helpTestHiddenNotResolvable(String sql) {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQT();
+        tm.getVdbMetaData().getModel("BQT1").setVisible(false);
+        tm.setHiddenResolvable(false);
+        helpResolveException(sql, tm);
+        tm.setHiddenResolvable(true);
+        helpResolve(sql, tm);
+    }
 
 }

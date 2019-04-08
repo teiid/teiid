@@ -8052,6 +8052,31 @@ public class TestProcessor {
        dataManager.addData("SELECT v_0.c_0 FROM (SELECT DISTINCT 1 AS c_0, g_0.b AS c_1 FROM test_x AS g_0) AS v_0", new List<?>[] {Arrays.asList(1)});
        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(2)});
    }
-	
+   
+   @Test public void testHiddenTableUnderView() {
+       String sql = "select shortvalue from vqt.smalla";
+       TransformationMetadata tm = RealMetadataFactory.exampleBQT();
+       tm.getVdbMetaData().getModel("BQT1").setVisible(false);
+       tm.setHiddenResolvable(false);
+       
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(getTypicalCapabilities()));
+       HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+       dataManager.addData("SELECT g_0.ShortValue FROM SmallA AS g_0",
+               new List<?>[] {Arrays.asList((short)1)});
+       
+       TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList((short)1)});
+       
+        try {
+            //direct access should not resolve
+            TestProcessor.helpGetPlan(
+                    TestOptimizer.helpGetCommand(
+                            "select shortvalue from bqt1.smalla", tm),
+                    tm, new DefaultCapabilitiesFinder(getTypicalCapabilities()),
+                    createCommandContext());
+            fail();
+        } catch (TeiidException e) {
+        }
+   }
+   
     private static final boolean DEBUG = false;
 }
