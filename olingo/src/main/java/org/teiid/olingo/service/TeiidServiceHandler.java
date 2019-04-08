@@ -104,6 +104,7 @@ public class TeiidServiceHandler implements ServiceHandler {
     private boolean prepared = true;
     private OData odata;
     private ServiceMetadata serviceMetadata;
+    private Integer maxPageSize = null;
     
     private static ThreadLocal<Client> CLIENT = new ThreadLocal<Client>();
 
@@ -328,7 +329,7 @@ public class TeiidServiceHandler implements ServiceHandler {
             return getClient().executeCount(query, visitor.getParameters());
         }
         else {
-            String pageSize = getPageSize(request);
+            int pageSize = getPageSize(request);
 
             QueryResponse result = new EntityCollectionResponse(request
                     .getODataRequest().getRawBaseUri(),
@@ -344,23 +345,26 @@ public class TeiidServiceHandler implements ServiceHandler {
             
             getClient().executeSQL(query, visitor.getParameters(),
                     visitor.includeTotalSize(), visitor.getSkip(),
-                    visitor.getTop(), visitor.getNextToken(), Integer.parseInt(pageSize), result);
+                    visitor.getTop(), visitor.getNextToken(), pageSize, result);
             
             return result;
         }
     }
 
-    private String getPageSize(final ServiceRequest request) {
-        String pageSize = request.getPreference(ODATA_MAXPAGESIZE);
-        if (pageSize == null) {
-            if (getClient().getProperty(Client.BATCH_SIZE) == null) {
-                pageSize = String.valueOf(BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
-            }
-            else {
-                pageSize = getClient().getProperty(Client.BATCH_SIZE);
+    private int getPageSize(final ServiceRequest request) {
+        if (maxPageSize == null) {
+            String pageSize = getClient().getProperty(Client.BATCH_SIZE); 
+            if (pageSize == null) {
+                maxPageSize = BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE;
+            } else {
+                maxPageSize = Integer.parseInt(pageSize); 
             }
         }
-        return pageSize;
+        String pageSize = request.getPreference(ODATA_MAXPAGESIZE);
+        if (pageSize == null) {
+            return maxPageSize;
+        }
+        return Math.min(maxPageSize<<4, Integer.parseInt(pageSize));
     }
 
     private void checkExpand(UriInfoResource queryInfo) {
