@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 import org.teiid.core.TeiidRuntimeException;
@@ -100,8 +100,8 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 			super.visit(obj);
 			return;
 		}
-		if (obj.getValue() instanceof Date) {
-			buffer.append(((Date)obj.getValue()).getTime());
+		if (obj.getValue() instanceof Timestamp) {
+			buffer.append(((Timestamp)obj.getValue()).getTime());
 			return;
 		}
 		//cassandra directly parses uuids
