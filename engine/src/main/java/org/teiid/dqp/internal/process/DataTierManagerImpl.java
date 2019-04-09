@@ -94,6 +94,7 @@ import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.DdlPlan;
+import org.teiid.query.processor.DdlPlan.SetPropertyProcessor;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.proc.ProcedurePlan;
@@ -1376,15 +1377,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					if (schema instanceof Schema && vdb.getImportedModels().contains(((Schema)schema).getName())) {
 						throw new TeiidProcessingException(QueryPlugin.Event.TEIID31098, QueryPlugin.Util.getString("ValidationVisitor.invalid_alter", uuid)); //$NON-NLS-1$
 					}
-					if (getMetadataRepository(target, vdb) != null) {
-						getMetadataRepository(target, vdb).setProperty(vdbName, vdbVersion, target, key, strVal);
-					}
-					result = DdlPlan.setProperty(vdb, target, key, strVal);
-					if (eventDistributor != null) {
-						eventDistributor.setProperty(vdbName, vdbVersion, uuid, key, strVal);
-					}
-					//materialization depends upon the property values
-					indexMetadata.addToMetadataCache(target, "transformation/matview", null); //$NON-NLS-1$
+					result = new SetPropertyProcessor(getMetadataRepository(target, vdb), eventDistributor).setProperty(vdb, target, key, strVal);
 					if (proc.returnParameters()) {
 						if (result == null) {
 							rows.add(Arrays.asList((Clob)null));
@@ -1400,7 +1393,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				}
 			}
 			final Table table = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
-			switch (sysProc) {
+			MetadataRepository metadataRepository = getMetadataRepository(table, vdb);
+            switch (sysProc) {
 			case SETCOLUMNSTATS:
 				final String columnName = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
 				Column c = null;
@@ -1422,8 +1416,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				columnStats.setNullValues(nullVals);
 				columnStats.setMaximumValue(max);
 				columnStats.setMinimumValue(min);
-				if (getMetadataRepository(table, vdb) != null) {
-					getMetadataRepository(table, vdb).setColumnStats(vdbName, vdbVersion, c, columnStats);
+				if (metadataRepository != null) {
+					metadataRepository.setColumnStats(vdbName, vdbVersion, c, columnStats);
 				}
 				DdlPlan.setColumnStats(vdb, c, columnStats);
 				if (eventDistributor != null) {
@@ -1435,8 +1429,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				final Number cardinality = (Number)val.getValue();
 				TableStats tableStats = new TableStats();
 				tableStats.setCardinality(cardinality);
-				if (getMetadataRepository(table, vdb) != null) {
-					getMetadataRepository(table, vdb).setTableStats(vdbName, vdbVersion, table, tableStats);
+				if (metadataRepository != null) {
+					metadataRepository.setTableStats(vdbName, vdbVersion, table, tableStats);
 				}
 				DdlPlan.setTableStats(vdb, table, tableStats);
 				if (eventDistributor != null) {

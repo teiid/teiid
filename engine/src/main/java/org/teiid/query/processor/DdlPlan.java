@@ -33,7 +33,9 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.events.EventDistributor;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
@@ -59,6 +61,8 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
 
 public class DdlPlan extends ProcessorPlan {
+    
+    public static final boolean ALLOW_ALTER = PropertiesUtils.getHierarchicalProperty("org.teiid.allowAlter", true, Boolean.class); //$NON-NLS-1$
 	
     class AlterProcessor extends LanguageVisitor {
         DQPWorkContext workContext = getContext().getDQPWorkContext();
@@ -75,8 +79,9 @@ public class DdlPlan extends ProcessorPlan {
     		Table t = (Table)obj.getTarget().getMetadataID();
     		String sql = obj.getDefinition().toString();
 
-	        if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
-                getMetadataRepository(vdb, t.getParent().getName()).setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, sql);
+	        MetadataRepository metadataRepository = getMetadataRepository(vdb, t.getParent().getName());
+            if (metadataRepository != null) {
+                metadataRepository.setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, sql);
             }
             alterView(vdb, t, sql, false);
             if (pdm.getEventDistributor() != null) {
@@ -89,8 +94,9 @@ public class DdlPlan extends ProcessorPlan {
     		Procedure p = (Procedure)obj.getTarget().getMetadataID();
     		String sql = obj.getDefinition().toString();
 
-            if (getMetadataRepository(vdb, p.getParent().getName()) != null) {
-                getMetadataRepository(vdb, p.getParent().getName()).setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p, sql);
+            MetadataRepository metadataRepository = getMetadataRepository(vdb, p.getParent().getName());
+            if (metadataRepository != null) {
+                metadataRepository.setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p, sql);
             }
             alterProcedureDefinition(vdb, p, sql, false);
             if (pdm.getEventDistributor() != null) {
@@ -115,11 +121,12 @@ public class DdlPlan extends ProcessorPlan {
     		} else if (getPlanForEvent(t, event) == null) {
 				 throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30158, t.getName(), obj.getEvent())));
     		}
-            if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
+            MetadataRepository metadataRepository = getMetadataRepository(vdb, t.getParent().getName());
+            if (metadataRepository != null) {
                 if (sql != null) {
-                    getMetadataRepository(vdb, t.getParent().getName()).setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), sql);
+                    metadataRepository.setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), sql);
                 } else {
-                    getMetadataRepository(vdb, t.getParent().getName()).setInsteadOfTriggerEnabled(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), obj.getEnabled());
+                    metadataRepository.setInsteadOfTriggerEnabled(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), obj.getEnabled());
                 }
             }
             alterInsteadOfTrigger(vdb, t, sql, obj.getEnabled(), event, false);
@@ -146,6 +153,32 @@ public class DdlPlan extends ProcessorPlan {
 		t.setSelectTransformation(sql);
 		t.setLastModified(System.currentTimeMillis());
 		metadata.addToMetadataCache(t, "transformation/"+SQLConstants.Reserved.SELECT, null); //$NON-NLS-1$
+	}
+	
+	public static class SetPropertyProcessor {
+	    private MetadataRepository metadataRepository;
+	    private EventDistributor eventDistributor;
+	    
+        public SetPropertyProcessor(MetadataRepository metadataRepository,
+                EventDistributor eventDistributor) {
+            this.metadataRepository = metadataRepository;
+            this.eventDistributor = eventDistributor;
+        }
+	    
+        public String setProperty(final VDBMetaData vdb, final AbstractMetadataRecord record, final String key, final String value) throws TeiidProcessingException {
+            if (!ALLOW_ALTER) {
+                throw new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31296));
+            }
+            if (metadataRepository != null) {
+                metadataRepository.setProperty(vdb.getName(), vdb.getVersion(), record, key, value);
+            }
+            String result = DdlPlan.setProperty(vdb, record, key, value);
+            if (eventDistributor != null) {
+                eventDistributor.setProperty(vdb.getName(), vdb.getVersion(), record.getUUID(), key, value);
+            }
+            return result;
+        }
+	    
 	}
 	
 	public static String setProperty(final VDBMetaData vdb, final AbstractMetadataRecord record, final String key, final String value) {
@@ -271,6 +304,9 @@ public class DdlPlan extends ProcessorPlan {
 
 	@Override
 	public void open() throws TeiidComponentException, TeiidProcessingException {
+	    if (!ALLOW_ALTER) {
+	        throw new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31296));
+	    }
 		AlterProcessor ap = new AlterProcessor();
 		try {
 			command.acceptVisitor(ap);
