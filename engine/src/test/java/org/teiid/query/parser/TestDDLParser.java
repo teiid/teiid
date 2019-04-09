@@ -34,6 +34,7 @@ import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseStore.Mode;
@@ -44,8 +45,6 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
-
-//import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestDDLParser {
@@ -363,6 +362,7 @@ public class TestDDLParser {
 		ModelMetaData modelOne = new ModelMetaData();
 		modelOne.setName("model"); //$NON-NLS-1$
 		vdb.addModel(modelOne);
+		vdb.addAttchment(QueryMetadataInterface.class, new BasicQueryMetadata());
 
 		ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 		
@@ -394,6 +394,7 @@ public class TestDDLParser {
 		ModelMetaData modelOne = new ModelMetaData();
 		modelOne.setName("model"); //$NON-NLS-1$
 		vdb.addModel(modelOne);
+		vdb.addAttchment(QueryMetadataInterface.class, new BasicQueryMetadata());
 
 		ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 		
@@ -416,6 +417,7 @@ public class TestDDLParser {
 		ModelMetaData modelOne = new ModelMetaData();
 		modelOne.setName("model"); //$NON-NLS-1$
 		vdb.addModel(modelOne);
+		vdb.addAttchment(QueryMetadataInterface.class, new BasicQueryMetadata());
 		
 		ModelMetaData modelTwo = new ModelMetaData();
 		modelTwo.setName("model2"); //$NON-NLS-1$

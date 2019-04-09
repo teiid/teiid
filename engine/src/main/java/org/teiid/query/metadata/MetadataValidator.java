@@ -242,7 +242,7 @@ public class MetadataValidator {
 		@Override
 		public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
 			QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
-	    	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
+	    	metadata = new TempMetadataAdapter(metadata.getDesignTimeMetadata(), new TempMetadataStore());
 			for (Schema schema:store.getSchemaList()) {
 				if (vdb.getImportedModels().contains(schema.getName())) {
 					continue;
@@ -505,7 +505,7 @@ public class MetadataValidator {
         	if(script == null) {
         		return;
         	}
-            QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
+            QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class).getDesignTimeMetadata();
             QueryParser queryParser = QueryParser.getQueryParser();
             try {
                 Command command = queryParser.parseCommand(script);
@@ -525,7 +525,7 @@ public class MetadataValidator {
             if(query == null) {
                 return;
             }
-            QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
+            QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class).getDesignTimeMetadata();
             QueryParser queryParser = QueryParser.getQueryParser();
             try {
                 Command command = queryParser.parseCommand(query);

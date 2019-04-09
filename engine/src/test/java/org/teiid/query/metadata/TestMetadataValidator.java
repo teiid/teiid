@@ -55,10 +55,11 @@ public class TestMetadataValidator {
 		vdb.setVersion(1);
 	}
 
-	private void buildTransformationMetadata() {
+	private TransformationMetadata buildTransformationMetadata() {
 		TransformationMetadata metadata =  new TransformationMetadata(this.vdb, new CompositeMetadataStore(this.store), null, SFM.getSystemFunctions(), null);
 		this.vdb.addAttchment(QueryMetadataInterface.class, metadata);
 		this.vdb.addAttchment(TransformationMetadata.class, metadata);
+		return metadata;
 	}
 
 	public static ModelMetaData buildModel(String modelName, boolean physical, VDBMetaData vdb, MetadataStore store, String ddl) throws Exception {
@@ -811,6 +812,18 @@ public class TestMetadataValidator {
 		}
 		return report;
 	}
-
+	
+	@Test public void testHiddenMetadataResolving() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE T ( e1 integer, e2 varchar);" +
+                "CREATE VIEW V as select * from T";
+        ModelMetaData mmd = buildModel("phy1", true, this.vdb, this.store, ddl);
+        mmd.setVisible(false);
+        
+        TransformationMetadata tm = buildTransformationMetadata();
+        tm.setHiddenResolvable(false);
+        
+        ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
+        assertFalse(printError(report), report.hasItems());
+    }
     
 }
