@@ -44,7 +44,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     
     public RuntimeMetadataImpl(QueryMetadataInterface metadata){
     	ArgCheck.isNotNull(metadata);
-        this.metadata = metadata;
+        this.metadata = metadata.getDesignTimeMetadata();
     }
     
     @Override

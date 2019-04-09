@@ -140,6 +140,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private Map<String, DataPolicyMetadata> policies = new TreeMap<String, DataPolicyMetadata>(String.CASE_INSENSITIVE_ORDER);
     private boolean useOutputNames = true;
     private boolean hiddenResolvable = true;
+    private boolean designTime = false;
     
     /*
      * TODO: move caching to jboss cache structure
@@ -263,7 +264,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		
 		Collection<String> filteredResult = new ArrayList<String>(matches.size());
 		for (Table table : matches) {
-			if (vdbMetaData == null || vdbMetaData.isVisible(table.getParent().getName())) {
+			if (designTime || vdbMetaData == null || vdbMetaData.isVisible(table.getParent().getName())) {
 	        	filteredResult.add(table.getFullName());
 	        }
 		}
@@ -424,7 +425,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         
         for (StoredProcedureInfo storedProcedureInfo : results) {
         	Schema schema = (Schema)storedProcedureInfo.getModelID();
-	        if(name.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
+	        if(name.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || designTime || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
 	        	if (result != null) {
 	    			 throw new QueryMetadataException(QueryPlugin.Event.TEIID30358, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30358, name));
 	    		}
@@ -994,6 +995,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	
 	@Override
 	public TransformationMetadata getDesignTimeMetadata() {
+	    if (this.designTime) {
+	        return this;
+	    }
 		TransformationMetadata tm = new TransformationMetadata(store, functionLibrary);
 		tm.groupInfoCache = this.groupInfoCache;
 		tm.metadataCache = this.metadataCache;
@@ -1005,6 +1009,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		tm.widenComparisonToString = this.widenComparisonToString;
 		tm.longRanks = this.longRanks;
 		tm.hiddenResolvable = true;
+		tm.vdbEntries = this.vdbEntries;
+		tm.vdbMetaData = this.vdbMetaData;
+		tm.designTime = true;
 		return tm;
 	}
 	

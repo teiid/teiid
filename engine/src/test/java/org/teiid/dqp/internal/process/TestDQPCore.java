@@ -110,7 +110,7 @@ public class TestDQPCore {
     	agds = new AutoGenDataService();
         DQPWorkContext context = RealMetadataFactory.buildWorkContext(RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt"));
         context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
-        context.getVDB().getModel("VQT").setVisible(false); //$NON-NLS-1$
+        context.getVDB().getModel("VQT").setVisible(true); //$NON-NLS-1$
         HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
         policies.put("foo", new DataPolicyMetadata());
         context.setPolicies(policies);

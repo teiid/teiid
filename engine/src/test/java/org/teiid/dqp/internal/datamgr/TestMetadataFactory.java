@@ -32,11 +32,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.NioVirtualFile;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestMetadataFactory {
@@ -50,16 +50,15 @@ public class TestMetadataFactory {
 	}
 	
     @Before public void setUp() {
-        MetadataStore metadataStore = new MetadataStore();
-        CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
-    	VDBMetaData vdbMetaData = new VDBMetaData();
-    	vdbMetaData.setName("foo"); //$NON-NLS-1$
-    	vdbMetaData.setVersion(1);
+        VDBMetaData vdbMetaData = RealMetadataFactory.example1VDB();
+        vdbMetaData.getModel("pm1").setVisible(false);
     	Map<String, VDBResources.Resource> vdbEntries = new LinkedHashMap<String, VDBResources.Resource>();
         vdbEntries.put(MY_RESOURCE_PATH,
                 new VDBResources.Resource(new NioVirtualFile(
                         UnitTestUtil.getTestScratchFile("foo").toPath())));
-        metadataFactory = new RuntimeMetadataImpl(new TransformationMetadata(vdbMetaData, store, vdbEntries, null, null));
+        TransformationMetadata metadata = new TransformationMetadata(vdbMetaData, new CompositeMetadataStore(RealMetadataFactory.example1Store()), vdbEntries, null, null);
+        metadata.setHiddenResolvable(false);
+        metadataFactory = new RuntimeMetadataImpl(metadata);
     }
     
     @Test public void testGetVDBResourcePaths() throws Exception {
@@ -82,6 +81,10 @@ public class TestMetadataFactory {
      
     @Test public void testGetCharacterVDBResource() throws Exception {
         assertEquals("ResourceContents", metadataFactory.getCharacterVDBResource(MY_RESOURCE_PATH)); //$NON-NLS-1$
+    }
+    
+    @Test public void testHidden() throws Exception {
+        assertNotNull(metadataFactory.getTable("pm1.g1"));
     }
      
 }
