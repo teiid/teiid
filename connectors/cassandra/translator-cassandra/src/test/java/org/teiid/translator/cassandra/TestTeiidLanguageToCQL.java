@@ -35,7 +35,8 @@ public class TestTeiidLanguageToCQL {
 		factory.addColumn("id", TypeFacility.RUNTIME_NAMES.INTEGER, person);
 		factory.addColumn("name", TypeFacility.RUNTIME_NAMES.STRING, person);
 		factory.addColumn("age", TypeFacility.RUNTIME_NAMES.INTEGER, person);
-		factory.addColumn("bday", TypeFacility.RUNTIME_NAMES.TIMESTAMP, person);
+		factory.addColumn("bday", TypeFacility.RUNTIME_NAMES.DATE, person);
+		factory.addColumn("bts", TypeFacility.RUNTIME_NAMES.TIMESTAMP, person);
 		factory.addColumn("employed", TypeFacility.RUNTIME_NAMES.BOOLEAN, person);
 		factory.addColumn("custom", TypeFacility.RUNTIME_NAMES.VARBINARY, person);
 		factory.addColumn("custom1", TypeFacility.RUNTIME_NAMES.BLOB, person);
@@ -62,7 +63,7 @@ public class TestTeiidLanguageToCQL {
 
 		assertEquals("SELECT name, age FROM Person", getTranslation("select name,age from Person", props));
 
-		assertEquals("SELECT id, name, age, bday, employed, custom, custom1 FROM Person", getTranslation("SELECT * FROM Person", props));
+		assertEquals("SELECT id, name, age, bday, bts, employed, custom, custom1 FROM Person", getTranslation("SELECT * FROM Person", props));
 
 		assertEquals("SELECT COUNT(*) FROM Person LIMIT 10", getTranslation("SELECT count(*) FROM Person limit 10", props));
 
@@ -70,7 +71,9 @@ public class TestTeiidLanguageToCQL {
 
 		assertEquals("SELECT id, name, age FROM Person WHERE id IN (1, 2, 3)", getTranslation("SELECT id, name, age from Person where id in(1,2,3)", props));
 
-		assertEquals("SELECT id FROM Person WHERE bday = -2208949200000 AND employed = TRUE", getTranslation("select id from Person where bday = {ts '1900-01-01 12:00:00'} and employed = true", props));
+		assertEquals("SELECT id FROM Person WHERE bday = '1900-01-01' AND employed = TRUE", getTranslation("select id from Person where bday = {d '1900-01-01'} and employed = true", props));
+		
+		assertEquals("SELECT id FROM Person WHERE bts = -2208949200000 AND employed = TRUE", getTranslation("select id from Person where bts = {ts '1900-01-01 12:00:00'} and employed = true", props));
 
 		//assertEquals("SELECT id FROM Person where custom = X'abcd'", getTranslation("SELECT id FROM Person WHERE custom = 0xABCD", props));
 

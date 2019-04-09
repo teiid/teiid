@@ -160,7 +160,8 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
             case DATE:
                 return TypeFacility.RUNTIME_NAMES.DATE;
             case TIME:
-                return TypeFacility.RUNTIME_NAMES.TIME;
+                //due to nano-second precision
+                return TypeFacility.RUNTIME_NAMES.TIMESTAMP;
             default:
                 return TypeFacility.RUNTIME_NAMES.OBJECT;
         }

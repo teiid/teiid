@@ -19,6 +19,8 @@
 package org.teiid.translator.cassandra;
 
 import java.nio.ByteBuffer;
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -157,8 +159,17 @@ public class CassandraQueryExecution implements ResultSetExecution {
 			case TEXT:
 				values.add(row.getString(i));
 				break;
+			case TIME:
+			    long val = row.getTime(i);
+			    Timestamp ts = new Timestamp(val/1000000);
+			    ts.setNanos((int)(val%1000000));
+			    values.add(ts);
+			    break;
+            case DATE:
+                values.add(Date.valueOf(row.getDate(i).toString()));
+                break;
 			case TIMESTAMP:
-				values.add(row.getDate(i));
+				values.add(row.getTimestamp(i));
 				break;
 			case TIMEUUID:
 				values.add(row.getUUID(i));
