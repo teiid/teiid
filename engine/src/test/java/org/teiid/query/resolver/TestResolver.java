@@ -2070,8 +2070,8 @@ public class TestResolver {
     }
     
     @Test public void testCreateQualifiedName() {
-        String sql = "CREATE LOCAL TEMPORARY TABLE pm1.g1 (column1 string)"; //$NON-NLS-1$
-        helpResolveException(sql, "TEIID30117 Cannot create temporary table \"pm1.g1\". Local temporary tables must be created with unqualified names."); //$NON-NLS-1$
+        String sql = "CREATE LOCAL TEMPORARY TABLE \"my.g1\" (column1 string)"; //$NON-NLS-1$
+        helpResolve(sql); //$NON-NLS-1$
     }
     
     @Test public void testProcedureConflict() {

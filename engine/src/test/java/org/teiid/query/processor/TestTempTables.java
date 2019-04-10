@@ -756,4 +756,15 @@ public class TestTempTables extends TempTableTestHarness {
         }
     }
 	
+	@Test public void testNameWithPeriod() throws Exception {
+	    try {
+	        execute("create local temporary table \"pm1.g1\" (a string, b integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+	        fail();
+	    } catch (QueryResolverException e) {
+	        
+	    }
+	    execute("create local temporary table \"something.g1\" (a string, b integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("select a, b from \"something.g1\"", new List[0]); //$NON-NLS-1$
+    }
+	
 }

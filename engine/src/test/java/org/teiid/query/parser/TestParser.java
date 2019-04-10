@@ -5368,5 +5368,9 @@ public class TestParser {
     @Test public void testIncompleteTimestampDateLiteral() {
         helpException("DATE '2000-01-01 00:00'");
     }
+    
+    @Test public void testCreateQualifiedName() {
+        helpException("CREATE LOCAL TEMPORARY TABLE pm1.g1 (column1 string)"); //$NON-NLS-1$
+    }
 
 }

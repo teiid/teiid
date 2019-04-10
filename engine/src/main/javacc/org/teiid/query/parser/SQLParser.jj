@@ -925,7 +925,7 @@ Command createTempTable(ParseInfo info) :
 }
 {
 	<CREATE> [<LOCAL>] <TEMPORARY> <TABLE> 
-	table = id(null)
+	table = unqualifiedId()
 	<LPAREN>
 	{
 		create.setTable(new GroupSymbol(table));
@@ -5988,7 +5988,7 @@ Create createForeignTempTable(ParseInfo info) :
 }
 {
 	<CREATE> [<LOCAL>] <FOREIGN> <TEMPORARY> <TABLE>
-	tableName = id(null)
+	tableName = unqualifiedId()
 	{
 		table = new Table();
 		//need to set a dummy/stable uuid

@@ -71,7 +71,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	/**
 	 * Construct a symbol with a name.
 	 * @param name Name of the symbol
-	 * @param name Definition of the symbol, may be null
+	 * @param definition Definition of the symbol, may be null
 	 * @throws IllegalArgumentException If name is null
 	 */
 	public GroupSymbol(String name, String definition) {
@@ -79,8 +79,8 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 		setDefinition(definition);
 	}
 	
-	private GroupSymbol(String schmea, String shortName, String definition) {
-		this.qualifier = schmea;
+	private GroupSymbol(String schema, String shortName, String definition) {
+		this.qualifier = schema;
 		this.setShortName(shortName);
 		this.setDefinition(definition);
 	}
@@ -133,7 +133,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	/**
 	 * Set the metadata ID that this group symbol resolves to.  It cannot
 	 * be null.
-	 * @param meatdataID Metadata ID object
+	 * @param metadataID Metadata ID object
 	 * @throws IllegalArgumentException If metadataID is null
 	 */
 	public void setMetadataID(Object metadataID) {
@@ -176,7 +176,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 
 	/**
 	 * Compare two groups and give an ordering.
-	 * @param other Other group
+	 * @param o Other group
 	 * @return -1, 0, or 1 depending on how this compares to group
 	 */
     public int compareTo(GroupSymbol o) {

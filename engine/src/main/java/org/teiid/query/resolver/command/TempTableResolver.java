@@ -40,7 +40,6 @@ import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Symbol;
 
 
 
@@ -59,11 +58,6 @@ public class TempTableResolver implements CommandResolver {
             Create create = (Create)command;
             GroupSymbol group = create.getTable();
             
-            //assuming that all temp table creates are local, the user must use a local name
-            if (group.getName().indexOf(Symbol.SEPARATOR) != -1) {
-                 throw new QueryResolverException(QueryPlugin.Event.TEIID30117, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30117, group.getName()));
-            }
-
             //this will only check non-temp groups
             Collection exitsingGroups = metadata.getMetadata().getGroupsForPartialName(group.getName());
             if(!exitsingGroups.isEmpty()) {
@@ -83,6 +77,10 @@ public class TempTableResolver implements CommandResolver {
             //exception at runtime if the user has not dropped the previous table yet
             TempMetadataID tempTable = ResolverUtil.addTempTable(metadata, group, create.getColumnSymbols());
             ResolverUtil.resolveGroup(create.getTable(), metadata);
+            if (create.getTable().getMetadataID() != tempTable) {
+                //conflict with a fully qualified existing object
+                throw new QueryResolverException(QueryPlugin.Event.TEIID30118, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30118, group.getName()));
+            }
             Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
             groups.add(create.getTable());
             ResolverVisitor.resolveLanguageObject(command, groups, metadata);
