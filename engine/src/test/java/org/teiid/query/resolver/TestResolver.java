@@ -2752,6 +2752,103 @@ public class TestResolver {
     	helpResolve("select * from bqt1.smalla where timestampvalue in (null, null)", RealMetadataFactory.exampleBQTCached());
     }
     
+    @Test public void testCharToStringComparison() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolve("select * from bqt1.smalla where CharValue = ''", tm);
+    }
+    
+    @Test public void testCharToStringComparisona() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where CharValue = 'a b'", tm);
+        //assertEquals(DataTypeManager.DefaultDataClasses.STRING, ((CompareCriteria)query.getCriteria()).getLeftExpression().getType());
+    }
+    
+    @Test public void testCharToStringComparisonb() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where CharValue = StringKey", tm);
+    }
+    
+    @Test public void testCharToStringComparison1() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        Query query = (Query)helpResolve("select * from bqt1.smalla where '' = CharValue", tm);
+        assertEquals(DataTypeManager.DefaultDataClasses.CHAR, ((CompareCriteria)query.getCriteria()).getLeftExpression().getType());
+    }
+    
+    @Test public void testCharToStringComparison1a() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where 'a b' = CharValue", tm);
+    }
+    
+    @Test public void testCharToStringComparison1b() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where StringKey = CharValue", tm);
+    }
+    
+    @Test public void testCharToStringComparison2() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolve("select * from bqt1.smalla where CharValue in ('')", tm);
+    }
+    
+    @Test public void testCharToStringComparison2a() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where CharValue in ('a b')", tm);
+        //assertEquals(DataTypeManager.DefaultDataClasses.STRING, ((SetCriteria)query.getCriteria()).getExpression().getType());
+    }
+    
+    @Test public void testCharToStringComparison3() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        Query query = (Query)helpResolve("select * from bqt1.smalla where '' in (CharValue)", tm);
+        assertEquals(DataTypeManager.DefaultDataClasses.CHAR, ((SetCriteria)query.getCriteria()).getExpression().getType());
+    }
+    
+    @Test public void testCharToStringComparison3a() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        Query query = (Query)helpResolve("select * from bqt1.smalla where 'a  ' in (CharValue)", tm);
+        assertEquals(DataTypeManager.DefaultDataClasses.CHAR, ((SetCriteria)query.getCriteria()).getExpression().getType());
+    }
+    
+    @Test public void testCharToStringComparison3b() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where 'a b' in (CharValue)", tm);
+        //assertEquals(DataTypeManager.DefaultDataClasses.CHAR, ((SetCriteria)query.getCriteria()).getExpression().getType());
+    }
+    
+    @Test public void testCharToStringComparison3c() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where StringKey in (CharValue)", tm);
+    }
+    
+    @Test public void testCharToStringComparison3d() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where CharValue in (StringKey)", tm);
+    }
+    
+    @Test public void testCharToStringComparison4() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolve("select * from bqt1.smalla where 'a' = CharValue", tm);
+    }
+    
+    @Test public void testCharToStringComparison4a() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where 'a b' = CharValue", tm);
+        //assertEquals(DataTypeManager.DefaultDataClasses.STRING, ((CompareCriteria)query.getCriteria()).getLeftExpression().getType());
+    }
+    
     @Test public void testInvalidComparison() {
     	helpTestWidenToString("select * from bqt1.smalla where timestampvalue > stringkey");
     }
@@ -2809,6 +2906,25 @@ public class TestResolver {
     	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
     	tm.setWidenComparisonToString(false);
     	helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue between 'a' and 'b'", tm);
+    }
+    
+    @Test public void testCharBetweenString1() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        Query query = (Query)helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue between 'a ' and 'b'", tm);
+        assertEquals(DataTypeManager.DefaultDataClasses.CHAR, ((BetweenCriteria)query.getCriteria()).getExpression().getType());
+    }
+    
+    @Test public void testCharBetweenString2() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where bqt1.smalla.charValue between bqt1.smalla.stringkey and 'b'", tm);
+    }
+    
+    @Test public void testCharSubqueryCompareString() {
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+        tm.setWidenComparisonToString(false);
+        helpResolveException("select * from bqt1.smalla where bqt1.smalla.charValue = SOME (select stringkey from bqt1.smallb)", tm);
     }
     
     @Test public void testCharCompareString() {

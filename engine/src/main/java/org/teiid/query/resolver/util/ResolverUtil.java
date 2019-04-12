@@ -35,6 +35,7 @@ import org.teiid.metadata.BaseColumn;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.GroupInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
@@ -193,7 +194,7 @@ public class ResolverUtil {
     public static Expression convertExpression(Expression sourceExpression, String targetTypeName, QueryMetadataInterface metadata) throws QueryResolverException {
         return convertExpression(sourceExpression,
                                  DataTypeManager.getDataTypeName(sourceExpression.getType()),
-                                 targetTypeName, metadata);
+                                 targetTypeName, metadata, false);
     }
 
     /**
@@ -203,15 +204,17 @@ public class ResolverUtil {
      * @param sourceExpression
      * @param sourceTypeName
      * @param targetTypeName
+     * @param forComparison if the conversion is for a comparison
      * @return
      * @throws QueryResolverException 
      */
-    public static Expression convertExpression(Expression sourceExpression, String sourceTypeName, String targetTypeName, QueryMetadataInterface metadata) throws QueryResolverException {
+    public static Expression convertExpression(Expression sourceExpression, String sourceTypeName, String targetTypeName, QueryMetadataInterface metadata, boolean forComparison) throws QueryResolverException {
         if (sourceTypeName.equals(targetTypeName)) {
             return sourceExpression;
         }
         
-        if(canImplicitlyConvert(sourceTypeName, targetTypeName)) {
+        //can't implicit convert from char in comparisons as it looses the notion of fixed comparison
+        if(!(forComparison && !metadata.widenComparisonToString() && sourceTypeName.equals(DataTypeManager.DefaultDataTypes.CHAR)) && canImplicitlyConvert(sourceTypeName, targetTypeName)) {
             return getConversion(sourceExpression, sourceTypeName, targetTypeName, true, metadata.getFunctionLibrary());
         }
         
@@ -244,7 +247,7 @@ public class ResolverUtil {
 	        if (DataTypeManager.DefaultDataTypes.STRING.equals(sourceTypeName)) {
 	        	if (DataTypeManager.DefaultDataTypes.CHAR.equals(targetTypeName)) {
 	        		String value = (String)constant.getValue();
-	        		if (value != null && value.length() != 1) {
+	        		if (value != null && value.length() != 1 && FunctionMethods.rightTrim(value, ' ').length() > 1) {
 	        			return null;
 	        		}
 	        	}
@@ -882,7 +885,7 @@ public class ResolverUtil {
 	    	if (!metadata.widenComparisonToString() && ResolverVisitor.isCharacter(subqueryType, true) && !ResolverVisitor.isCharacter(expression, true)) {
 	    		throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, crit));
 	    	}
-	        result = convertExpression(expression, exprTypeName, subqueryTypeName, metadata);
+	        result = convertExpression(expression, exprTypeName, subqueryTypeName, metadata, true);
 	    } catch (QueryResolverException qre) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30094, qre, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30094, crit));
 	    }
