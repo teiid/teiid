@@ -274,9 +274,13 @@ public final class StringUtil {
         if (isEmpty(str)) {
             return -1;
         }
-        final String lowerText = text.toLowerCase();
-        final String lowerStr  = str.toLowerCase();
-        return lowerText.indexOf(lowerStr);
+        int len = text.length() - str.length();
+        for (int i = 0; i <= len; i++) {
+            if (text.regionMatches(true, i, str, 0, str.length())) {
+                return i;
+            }
+        }
+        return -1;
     }
     
     /**
