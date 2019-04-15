@@ -253,10 +253,11 @@ public class RulePlanOuterJoins implements OptimizerRule {
             }
             
             //check for left outer join ordering, such that we can combine for pushdown
-            checkLeftOrdering(metadata, capabilitiesFinder, analysisRecord,
+            boolean val = checkLeftOrdering(metadata, capabilitiesFinder, analysisRecord,
                     context, join);
             
             //we don't need to do further reordering at this point as it can be handled after join planning
+            changedAny |= val;
         }
         return changedAny;
     }
@@ -329,9 +330,12 @@ public class RulePlanOuterJoins implements OptimizerRule {
                 join.addLastChild(right);
                 join.getGroups().clear();
                 updateGroups(join);
-                //update left an parent to pick up new groups
-                updateGroups(left);
-                updateGroups(left.getParent());
+                //update left and parents to pick up new groups
+                PlanNode toCorrect = left;
+                while (toCorrect != parent) {
+                    updateGroups(toCorrect);
+                    toCorrect = toCorrect.getParent();
+                }
                 return true;
             }
         }
