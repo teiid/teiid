@@ -37,8 +37,8 @@ public class TestInformixExecutionFactory {
     }
 	
     @Test public void testCast() throws Exception {
-		String input = "SELECT cast(INTKEY as string) FROM BQT1.SmallA"; //$NON-NLS-1$       
-        String output = "SELECT cast(SmallA.IntKey AS varchar(255)) FROM SmallA";  //$NON-NLS-1$
+		String input = "SELECT cast(INTKEY as string), cast(stringkey as time), cast(stringkey as date), cast(stringkey as timestamp) FROM BQT1.SmallA"; //$NON-NLS-1$       
+        String output = "SELECT cast(SmallA.IntKey AS varchar(255)), cast(SmallA.StringKey AS datetime hour to second), cast(SmallA.StringKey AS date), cast(SmallA.StringKey AS datetime year to fraction(5)) FROM SmallA";  //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}

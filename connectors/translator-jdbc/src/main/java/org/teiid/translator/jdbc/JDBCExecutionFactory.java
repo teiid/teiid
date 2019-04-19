@@ -121,6 +121,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private String commentFormat = "/*teiid sessionid:{0}, requestid:{1}.{2}*/ "; //$NON-NLS-1$
 	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
+    private Boolean defaultTimeZone;
 	
 	public JDBCExecutionFactory() {
 		setSupportsFullOuterJoins(true);
@@ -1695,5 +1696,16 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public String getLateralKeyword() {
 		return SQLConstants.Reserved.LATERAL;
 	}
-
+	
+	/**
+	 * 
+	 * @return true if the translator is using the VM default TimeZone
+	 */
+	public boolean isDefaultTimeZone() {
+		if (defaultTimeZone == null) {
+			defaultTimeZone = getDatabaseCalendar().getTimeZone().hasSameRules(TimeZone.getDefault());
+		}
+	    return defaultTimeZone;
+	}
+	
 }

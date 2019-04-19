@@ -24,10 +24,18 @@
  */
 package org.teiid.translator.jdbc.informix;
 
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -60,8 +68,8 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
         convertModifier.addTypeMapping("smallfloat", FunctionModifier.FLOAT); //$NON-NLS-1$
         convertModifier.addTypeMapping("float", FunctionModifier.DOUBLE); //$NON-NLS-1$
         convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("datetime", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("datetime hour to second", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("datetime year to fraction(5)", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("datetime hour to second", FunctionModifier.TIME); //$NON-NLS-1$
     	convertModifier.addTypeMapping("varchar(255)", FunctionModifier.STRING); //$NON-NLS-1$
     	convertModifier.addTypeMapping("varchar(1)", FunctionModifier.CHAR); //$NON-NLS-1$
     	convertModifier.addTypeMapping("byte", FunctionModifier.VARBINARY); //$NON-NLS-1$
@@ -76,8 +84,7 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
     public List getSupportedFunctions() {
         List supportedFunctons = new ArrayList();
         supportedFunctons.addAll(super.getSupportedFunctions());
-        supportedFunctons.add("CAST"); //$NON-NLS-1$
-        supportedFunctons.add("CONVERT"); //$NON-NLS-1$
+        supportedFunctons.add(SourceSystemFunctions.CONVERT);
         return supportedFunctons;
     }
 	
@@ -106,6 +113,92 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
             }
     	}
     	return super.translate(obj, context);
+    }
+    
+    @Override
+    public Object retrieveValue(CallableStatement results, int parameterIndex,
+            Class<?> expectedType) throws SQLException {
+        if (expectedType.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
+            if (isDefaultTimeZone()) {
+                return results.getDate(parameterIndex);
+            }
+            return results.getDate(parameterIndex, getDatabaseCalendar());
+        } 
+        if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
+            Time time = results.getTime(parameterIndex);
+            if (time == null || isDefaultTimeZone()) {
+                return time;
+            }
+            return TimestampWithTimezone.createTime(time, TimeZone.getDefault(), getDatabaseCalendar());
+        } 
+        if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
+            if (isDefaultTimeZone()) {
+                return results.getTimestamp(parameterIndex);
+            }
+            return results.getTimestamp(parameterIndex, getDatabaseCalendar());
+        }
+        return super.retrieveValue(results, parameterIndex, expectedType);
+    }
+    
+    @Override
+    public Object retrieveValue(ResultSet results, int columnIndex,
+            Class<?> expectedType) throws SQLException {
+        if (expectedType.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
+            if (isDefaultTimeZone()) {
+                return results.getDate(columnIndex);
+            }
+            return results.getDate(columnIndex, getDatabaseCalendar());
+        } 
+        if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
+            Time time = results.getTime(columnIndex);
+            if (time == null || isDefaultTimeZone()) {
+                return time;
+            }
+            return TimestampWithTimezone.createTime(time, TimeZone.getDefault(), getDatabaseCalendar());
+        } 
+        if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
+            if (isDefaultTimeZone()) {
+                return results.getTimestamp(columnIndex);
+            }
+            return results.getTimestamp(columnIndex, getDatabaseCalendar());
+        }
+        return super.retrieveValue(results, columnIndex, expectedType);
+    }
+    
+    @Override
+    public void bindValue(PreparedStatement stmt, Object param,
+            Class<?> paramType, int i) throws SQLException {
+        if (paramType.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
+            if (isDefaultTimeZone()) {
+                stmt.setDate(i,(java.sql.Date)param);
+            } else {
+                stmt.setDate(i,(java.sql.Date)param, getDatabaseCalendar());
+            }
+            return;
+        } 
+        if (paramType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
+            if (isDefaultTimeZone()) {
+                stmt.setTime(i,(java.sql.Time)param);
+            } else {
+                stmt.setTime(i,(java.sql.Time)param, getDatabaseCalendar());
+            }
+            return;
+        } 
+        if (paramType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
+            if (isDefaultTimeZone()) {
+                stmt.setTimestamp(i,(java.sql.Timestamp)param);
+            } else {
+                stmt.setTimestamp(i,(java.sql.Timestamp)param, getDatabaseCalendar());
+            }
+            return;
+        }
+        super.bindValue(stmt, param, paramType, i);
+    }
+    
+    @Override
+    public Calendar getDatabaseCalendar() {
+        //informix will modify the calendar
+        return (Calendar) super.getDatabaseCalendar().clone();
     }
 	
 }
