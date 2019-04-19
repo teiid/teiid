@@ -24,11 +24,14 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -118,10 +121,11 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
             return results.getDate(parameterIndex, getDatabaseCalendar());
         } 
         if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
-            if (isDefaultTimeZone()) {
-                return results.getTime(parameterIndex);
+            Time time = results.getTime(parameterIndex);
+            if (time == null || isDefaultTimeZone()) {
+                return time;
             }
-            return results.getTime(parameterIndex, getDatabaseCalendar());
+            return TimestampWithTimezone.createTime(time, TimeZone.getDefault(), getDatabaseCalendar());
         } 
         if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
             if (isDefaultTimeZone()) {
@@ -142,10 +146,11 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
             return results.getDate(columnIndex, getDatabaseCalendar());
         } 
         if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
-            if (isDefaultTimeZone()) {
-                return results.getTime(columnIndex);
+            Time time = results.getTime(columnIndex);
+            if (time == null || isDefaultTimeZone()) {
+                return time;
             }
-            return results.getTime(columnIndex, getDatabaseCalendar());
+            return TimestampWithTimezone.createTime(time, TimeZone.getDefault(), getDatabaseCalendar());
         } 
         if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
             if (isDefaultTimeZone()) {
