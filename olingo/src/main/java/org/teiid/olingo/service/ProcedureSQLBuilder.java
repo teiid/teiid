@@ -67,14 +67,17 @@ public class ProcedureSQLBuilder {
             this.hasResultSet = hasResultSet;
         }
         
+        @Override
         public EdmReturnType getReturnType() {
             return type;
         }
         
+        @Override
         public boolean hasResultSet() {
             return this.hasResultSet;
         } 
         
+        @Override
         public Integer getSqlType() {
             return sqlType;
         }        
@@ -93,6 +96,10 @@ public class ProcedureSQLBuilder {
         visit(edmOperation);
     }
     
+    /**
+     * 
+     * @return the {@link ProcedureReturnType} or null if none is found
+     */
     public ProcedureReturn getReturn() {
         return this.procedureReturn;
     }
@@ -135,7 +142,7 @@ public class ProcedureSQLBuilder {
     }
 
     private void visit(EdmParameter edmParameter) throws TeiidProcessingException {
-        Class<?> runtimeType = resolveParameterType(this.procedure.getName(), edmParameter.getName());
+        Class<?> runtimeType = resolveParameterType(edmParameter.getName());
         Integer sqlType = JDBCSQLTypeInfo.getSQLType(DataTypeManager.getDataTypeName(runtimeType));
         Object value = this.parameterValueProvider.getValue(edmParameter, runtimeType);
         this.sqlParameters.add(new SQLParameter(edmParameter.getName(), value, sqlType));
@@ -145,14 +152,14 @@ public class ProcedureSQLBuilder {
                 
         StringBuilder sql = new StringBuilder();
         
-        // fully qualify the procedure name
-        if (getReturn().hasResultSet()) {
+        if (procedureReturn == null || procedureReturn.hasResultSet()) {
             sql.append("{"); //$NON-NLS-1$
         }
         else {
             sql.append("{? = "); //$NON-NLS-1$
         }
-        
+
+        // fully qualify the procedure name
         sql.append("call ").append(SQLStringVisitor.escapeSinglePart(this.procedure.getFullName())); //$NON-NLS-1$ 
         sql.append("("); //$NON-NLS-1$
         
@@ -170,7 +177,7 @@ public class ProcedureSQLBuilder {
         return sql.toString();
     }
     
-    private Class<?> resolveParameterType(String procedureName, String parameterName) {
+    private Class<?> resolveParameterType(String parameterName) {
         for (ProcedureParameter pp : this.procedure.getParameters()) {
             if (pp.getName().equalsIgnoreCase(parameterName)) {
                 return DataTypeManager.getDataTypeClass(pp.getRuntimeType());

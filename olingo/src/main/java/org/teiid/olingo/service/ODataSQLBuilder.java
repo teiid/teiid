@@ -986,16 +986,20 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     this.metadata, operation, this.parameters,
                     this.params);
             ProcedureReturn pp = builder.getReturn();
-            if (!pp.hasResultSet()) {
-                NoDocumentNode ndn = new NoDocumentNode();
-                ndn.setProcedureReturn(pp);
-                ndn.setQuery(builder.buildProcedureSQL());
-                this.context = ndn;
-            } else {
+            if (pp == null) {
+                //assign a dummy return
+                pp = new ProcedureReturn(null, null, false);
+            }
+            if (pp.hasResultSet()) {
                 ComplexDocumentNode cdn = ComplexDocumentNode.buildComplexDocumentNode(
                         operation, this.metadata, this.nameGenerator);
                 cdn.setProcedureReturn(pp);
                 this.context = cdn;
+            } else {
+                NoDocumentNode ndn = new NoDocumentNode();
+                ndn.setProcedureReturn(pp);
+                ndn.setQuery(builder.buildProcedureSQL());
+                this.context = ndn;
             }
         } catch (TeiidProcessingException e) {
             throw new ODataRuntimeException(e);
