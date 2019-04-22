@@ -721,26 +721,12 @@ public class TeiidServiceHandler implements ServiceHandler {
                     Locale.getDefault(), e);
         }         
         
-        /*
-        try {
-            MetadataStore store = getClient().getMetadataStore();
-            ProcedureSQLBuilder builder = new ProcedureSQLBuilder(store.getSchema(schemaName), request);
-            ProcedureReturn procedureReturn = builder.getReturn();
-            result = new OperationResponseImpl(procedureReturn);
-            
-            getClient().executeCall(builder.buildProcedureSQL(), builder.getSqlParameters(), procedureReturn, result);
-        } catch (SQLException e) {
-            throw new ODataApplicationException(e.getMessage(),
-                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
-                    Locale.getDefault(), e);
-        } catch (TeiidException e) {
-            throw new ODataApplicationException(e.getMessage(),
-                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
-                    Locale.getDefault(), e);
-        } 
-        */
         final OperationResponseImpl operationResult = queryResponse;
         
+        if (operationResult.getProcedureReturn().getReturnType() == null) {
+            response.writeNoContent(true);
+            return;
+        }
         
         if (operationResult.getProcedureReturn().hasResultSet() 
                 && operationResult.getNextToken() != null) {
@@ -755,7 +741,6 @@ public class TeiidServiceHandler implements ServiceHandler {
             return;
         }
                 
-        
         response.accepts(new ServiceResponseVisior() {
             @Override
             public void visit(PropertyResponse response)

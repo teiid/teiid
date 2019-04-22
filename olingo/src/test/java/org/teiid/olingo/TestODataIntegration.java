@@ -2847,6 +2847,20 @@ public class TestODataIntegration {
     }
     
     @Test 
+    public void testActionNoReturn() throws Exception {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("vw");
+        mmd.addSourceMetadata("ddl", "CREATE virtual procedure x() as begin --do nothing\nend");
+        mmd.setModelType(Model.Type.VIRTUAL);
+        teiid.deployVDB("northwind", mmd);
+
+        ContentResponse response = http.newRequest(baseURL + "/northwind/vw/x")
+                .method("POST")
+                .send();
+        assertEquals(204, response.getStatus());
+    }
+    
+    @Test 
     public void testReverseNavigation() throws Exception {
         HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
         hc.addData("SELECT Customers.id, Customers.name FROM Customers", 

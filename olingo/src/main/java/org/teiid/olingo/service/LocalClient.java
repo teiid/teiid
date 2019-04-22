@@ -161,7 +161,7 @@ public class LocalClient implements Client {
         final CallableStatement stmt = getConnection().prepareCall(sql);
 
         int i = 1;
-        if (!returnType.hasResultSet()) {
+        if (returnType.getSqlType() != null) {
             stmt.registerOutParameter(i++, returnType.getSqlType());
         }
 
@@ -179,7 +179,7 @@ public class LocalClient implements Client {
             }
         }
 
-        if (!returnType.hasResultSet()) {
+        if (returnType.getSqlType() != null) {
             Object result = stmt.getObject(1);
             response.setReturnValue(result);
         }
