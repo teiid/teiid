@@ -86,7 +86,6 @@ public class Select implements LanguageObject {
 
     /**
      * Returns an ordered list of the symbols in the select.
-     * @param Get list of SelectSymbol in SELECT
      */
     public List<Expression> getSymbols() {
         return symbols;

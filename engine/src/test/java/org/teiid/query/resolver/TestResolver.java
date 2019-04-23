@@ -3056,6 +3056,11 @@ public class TestResolver {
         assertEquals("[\"pm1.g2\".x]", query.getProjectedSymbols().toString());
     }
     
+    @Test public void testArrayFromQuery() throws Exception {
+        Command command = helpResolve("select array(select 1)"); //$NON-NLS-1$
+        assertEquals(Integer[].class, command.getProjectedSymbols().get(0).getType());
+    }
+    
     @Test public void testTextTableAliasWithPeriod() throws Exception {
         Command command = helpResolve("select \"x.y.z\".*, \"x.y.z\".x  from pm1.g1, texttable(e1 COLUMNS x string) \"x.y.z\""); //$NON-NLS-1$
         assertEquals(2, command.getProjectedSymbols().size());

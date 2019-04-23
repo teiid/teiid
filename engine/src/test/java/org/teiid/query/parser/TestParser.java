@@ -5372,5 +5372,17 @@ public class TestParser {
     @Test public void testCreateQualifiedName() {
         helpException("CREATE LOCAL TEMPORARY TABLE pm1.g1 (column1 string)"); //$NON-NLS-1$
     }
+    
+    @Test public void testArrayFromQuery1() throws Exception {
+        helpException("select array(select 1, 2)"); //$NON-NLS-1$
+    }
+    
+    @Test public void testArrayFromQuery2() throws Exception {
+        helpException("select array(select * from (select 1) as x)"); //$NON-NLS-1$
+    }
+    
+    @Test public void testArrayFromQuery3() throws Exception {
+        helpException("select array(select *, 1 from (select 1) as x)"); //$NON-NLS-1$
+    }
 
 }

@@ -19,6 +19,7 @@
 package org.teiid.query.parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,10 +44,13 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.Symbol;
 
 public class SQLParserUtil {
 	    
@@ -683,5 +687,24 @@ public class SQLParserUtil {
 			column.setProperty(BaseColumn.DEFAULT_HANDLING, BaseColumn.EXPRESSION_DEFAULT);
 			column.setDefaultValue(value.toString());
 		}
+	}
+	
+	public static Expression arrayFromQuery(QueryCommand subquery) throws ParseException {
+	    List<Expression> projected = subquery.getProjectedSymbols();
+        if (projected.size() != 1) {
+            if (projected.size() > 1) {
+                throw new ParseException(QueryPlugin.Util.getString("ERR.015.008.0032", subquery)); //$NON-NLS-1$
+            }
+            throw new ParseException(QueryPlugin.Util.getString("SQLParser.array_query", subquery)); //$NON-NLS-1$
+        } 
+        Expression ex = projected.get(0);
+        String name = Symbol.getName(ex);
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(
+                new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(),
+                        false, new ElementSymbol(name)))));
+        query.setFrom(new From(Arrays.asList(
+                new SubqueryFromClause(new GroupSymbol("x"), subquery)))); //$NON-NLS-1$
+        return new ScalarSubquery(query);
 	}
 }

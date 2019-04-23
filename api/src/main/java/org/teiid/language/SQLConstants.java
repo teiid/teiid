@@ -180,6 +180,8 @@ public class SQLConstants {
         public static final String FOLLOWING = "FOLLOWING"; //$NON-NLS-1$
         
         public static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
+        
+        public static final String OBJECT = "OBJECT"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {
@@ -342,8 +344,7 @@ public class SQLConstants {
 	    public static final String NOT = "NOT"; //$NON-NLS-1$
 	    public static final String NULL = "NULL"; //$NON-NLS-1$
 	    public static final String NUMERIC = "NUMERIC"; //$NON-NLS-1$
-	    public static final String OBJECT = "OBJECT"; //$NON-NLS-1$
-		public static final String OF = "OF"; //$NON-NLS-1$
+	    public static final String OF = "OF"; //$NON-NLS-1$
 		public static final String OFFSET = "OFFSET"; //$NON-NLS-1$
 		public static final String OLD = "OLD"; //$NON-NLS-1$
 		public static final String ON = "ON"; //$NON-NLS-1$

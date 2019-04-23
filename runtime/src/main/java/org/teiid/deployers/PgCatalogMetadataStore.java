@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.teiid.CommandContext;
 import org.teiid.adminapi.Model;
@@ -38,12 +39,14 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.jdbc.TeiidSQLException;
@@ -109,9 +112,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addFunction("regClass", "regclass").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("objDescription", "obj_description"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("objDescription2", "obj_description"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("hasSchemaPrivilege", "has_schema_privilege").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("hasTablePrivilege", "has_table_privilege").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
-		addFunction("formatType", "format_type").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("formatType", "format_type"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("currentSchema", "current_schema"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getUserById", "pg_get_userbyid"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("colDescription", "col_description"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -137,6 +141,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
 		addFunction("current_schemas", "current_schemas"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("pg_get_indexdef", "pg_get_indexdef"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("array_to_string", "array_to_string").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private Table add_pg_constraint() {
@@ -349,6 +354,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("relnspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
 		addColumn("reloptions", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.STRING)), t); //$NON-NLS-1$
+		
+		addColumn("relacl", "object[]", t); //$NON-NLS-1$ //$NON-NLS-2$
 
 		addPrimaryKey("pk_pg_class", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -362,7 +369,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"false as relhasrules, " + //$NON-NLS-1$
 				"false as relhasoids, " + //$NON-NLS-1$
 				"t1.SchemaName as relnspname, " + //$NON-NLS-1$
-				"null as reloptions " + //$NON-NLS-1$
+				"null as reloptions, null as relacl " + //$NON-NLS-1$
 				"FROM SYS.Tables t1 UNION ALL SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
 				"pg_catalog.getOid(uid) as relnamespace, " + //$NON-NLS-1$
 				"convert('i', char) as relkind," + //$NON-NLS-1$
@@ -373,7 +380,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"false as relhasrules, " + //$NON-NLS-1$
 				"false as relhasoids, " + //$NON-NLS-1$
 				"t1.SchemaName as relnspname, " + //$NON-NLS-1$
-				"null as reloptions " + //$NON-NLS-1$
+				"null as reloptions, null as relacl " + //$NON-NLS-1$
 				"FROM SYS.Keys t1 WHERE t1.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		return t;		
@@ -649,7 +656,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		// this is is boolean type but the query coming in is in the form dataallowconn = 't'
 		addColumn("datallowconn", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$ 
 		addColumn("datconfig", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$ 
-		addColumn("datacl", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$ 
+		addColumn("datacl", "object[]", t); //$NON-NLS-1$ //$NON-NLS-2$ 
 		addColumn("datdba", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("dattablespace", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		
@@ -905,6 +912,11 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		    return null;
 		}
 		
+        public static String objDescription2(org.teiid.CommandContext cc, int oid, String type) {
+            //TODO need a reverse lookup by oid at least for schema or add the annotation to pg_namespace
+            return null;
+        }
+		
 		public static String getUserById(int user) {
 		    return "pgadmin"; //$NON-NLS-1$
 		}
@@ -923,7 +935,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
             return "SYS"; //$NON-NLS-1$
         }
 		
-		public static String formatType(org.teiid.CommandContext cc, int oid, int typmod) throws SQLException {
+		public static String formatType(org.teiid.CommandContext cc, Integer oid, Integer typmod) throws SQLException {
+		    if (oid == null) {
+		        return null;
+		    }
 		    Connection c = cc.getConnection();
             try {
                 PreparedStatement ps = c.prepareStatement("select typname from pg_catalog.pg_type where oid = ?"); //$NON-NLS-1$
@@ -962,7 +977,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                         name = "character"; //$NON-NLS-1$
                         break;
                     }
-                    if (typmod > 4) {
+                    if (typmod != null && typmod > 4) {
                         if (name.equals("numeric")) {  //$NON-NLS-1$
                             name += "("+((typmod-4)>>16)+","+((typmod-4)&0xffff)+")";  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                         } else if (name.equals("character") || name.equals("varchar")) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -1074,6 +1089,18 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                 }
                 return result;
             }
+	    }
+	    
+	    public static String array_to_string(CommandContext cc, Object[] array, String delim) {
+            return StringUtil.join(Arrays.asList(array).stream()
+                    .map(o -> {
+                        try {
+                            return (String)DataTypeManager.transformValue(o, DataTypeManager.DefaultDataClasses.STRING);
+                        } catch (TransformationException e) {
+                            throw new TeiidRuntimeException(e);
+                        }
+                    })
+                    .collect(Collectors.toList()), delim);
 	    }
 	    
 	    //public static int lo_open(int lobjId, int mode) {

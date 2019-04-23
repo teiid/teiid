@@ -134,7 +134,6 @@ TOKEN: /* Data types */
 |	<DATE: "date">
 |	<TIME: "time">
 |	<TIMESTAMP: "timestamp">
-|	<OBJECT: "object">
 |	<BLOB: "blob">
 |	<CLOB: "clob">
 |	<XML: "xml">
@@ -531,6 +530,7 @@ TOKEN : /* NonReserved words */
 |   <USAGE: "usage">
 |   <POSITION: "position">
 |   <LISTAGG: "listagg">
+|   <OBJECT: "object">
 }
 /*
 name=all in group identifier
@@ -640,7 +640,8 @@ Token nonReserved() :
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSON>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
-     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>|<GEOGRAPHY>)
+     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>|<GEOGRAPHY>
+     |<OBJECT>)
     {
     	return getToken(0);
     }	
@@ -4208,17 +4209,26 @@ Expression arrayExpression(ParseInfo info) :
 {
     Expression arrayExpression = null;
     List<Expression> arrayExpressions = new ArrayList<Expression>();
+    QueryCommand subquery = null;
 }
 {
-    ( <ARRAY> <LSBRACE> 
+    <ARRAY> 
+    (( <LSBRACE> 
         [arrayExpression = expression(info) {arrayExpressions.add(arrayExpression);}
          (<COMMA> arrayExpression = expression(info) {arrayExpressions.add(arrayExpression);})*
         ]
       <RSBRACE>
-    )
-    {
+      {
         return new Array(arrayExpressions);
-    }
+      }
+    ) | 
+    ( <LPAREN> 
+        subquery = queryExpression(info)
+      <RPAREN>
+      {
+        return arrayFromQuery(subquery);
+      }
+    ))
 }    
 
 
