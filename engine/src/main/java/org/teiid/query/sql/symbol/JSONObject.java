@@ -40,7 +40,7 @@ public class JSONObject implements Expression {
 
 	@Override
 	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.CLOB;
+		return DataTypeManager.DefaultDataClasses.JSON;
 	}
 
 	@Override

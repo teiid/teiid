@@ -237,7 +237,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		case TEXTAGG:
 			return DataTypeManager.DefaultDataClasses.BLOB;
 		case JSONARRAY_AGG:
-			return DataTypeManager.DefaultDataClasses.CLOB;
+			return DataTypeManager.DefaultDataClasses.JSON;
         case USER_DEFINED:
 		case STRING_AGG:
 			return super.getType();

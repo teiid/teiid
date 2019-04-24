@@ -18,6 +18,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.nio.charset.Charset;
@@ -28,8 +29,12 @@ import javax.sql.rowset.serial.SerialBlob;
 
 import org.junit.Test;
 import org.teiid.core.types.BlobType;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.resolver.TestResolver;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -69,6 +74,7 @@ public class TestJSONProcessing {
     
         dataManager.addData("SELECT pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList("a"), Arrays.asList("\"b"), Arrays.asList("d")});
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        assertEquals(DataTypeManager.DefaultDataClasses.JSON, ((Expression)plan.getOutputElements().get(0)).getType());
         helpProcess(plan, dataManager, expected);
 	}
 	
@@ -125,6 +131,14 @@ public class TestJSONProcessing {
         
         //small breaking potential - if we explicitly expect clob results
         //tm = RealMetadataFactory.fromDDL("create view json (col clob) as select jsonParse('{}', true) as col", "x", "y");
+    }
+	
+	@Test public void testJSONResolving() throws Exception {
+        String sql = "select jsonArray(1, null, true, {d '2007-01-01'}), jsonParse('{\\\"name\\\":123}', true), jsonObject(1 as expr)"; //$NON-NLS-1$
+        
+        Command command = TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
+        command.getProjectedSymbols().stream().forEach(e -> assertEquals(
+                DataTypeManager.DefaultDataClasses.JSON, e.getType()));
     }
 	
 }
