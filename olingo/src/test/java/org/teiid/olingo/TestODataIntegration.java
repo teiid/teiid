@@ -52,6 +52,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.GeneratedKeys;
 import org.teiid.adminapi.Admin;
@@ -2609,6 +2610,32 @@ public class TestODataIntegration {
         assertEquals(200, response.getStatus());
         assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/vw/$metadata#SimpleTable(intkey)\",\"value\":[{\"intkey\":1}]}", 
                 response.getContentAsString());
+    }
+    
+    @Ignore("Not supported")
+    @Test 
+    public void testArrayParam() throws Exception {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("vw");
+        mmd.addSourceMetadata("ddl", "CREATE virtual procedure x(y string[]) returns string[] as return y;");
+        mmd.setModelType(Model.Type.VIRTUAL);
+        teiid.deployVDB("northwind", mmd);
+        
+        ContentResponse response = http.GET(baseURL + "/northwind/vw/x(y="+Encoder.encode("[\"a\",\"b\"]")+")");
+        assertEquals(200, response.getStatus());
+    }
+    
+    @Ignore("Not supported")
+    @Test 
+    public void testArrayFilter() throws Exception {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("vw");
+        mmd.addSourceMetadata("ddl", "CREATE virtual view x(a integer primary key, b string[]) as select 1, ('c','d');");
+        mmd.setModelType(Model.Type.VIRTUAL);
+        teiid.deployVDB("northwind", mmd);
+        
+        ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter=" + Encoder.encode("b eq [\"c\",\"d\"]"));
+        assertEquals(200, response.getStatus());
     }
     
     @Test 

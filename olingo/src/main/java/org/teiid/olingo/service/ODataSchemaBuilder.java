@@ -463,6 +463,7 @@ public class ODataSchemaBuilder {
     private static boolean isInputParameterLob(Procedure proc) {        
         for (ProcedureParameter pp : proc.getParameters()) {
             if (!pp.getType().equals(ProcedureParameter.Type.ReturnValue)
+                    && !pp.getType().equals(ProcedureParameter.Type.Out)
                     && DataTypeManager.isLOB(pp.getRuntimeType())) {
                 return true;
             }
