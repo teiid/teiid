@@ -63,6 +63,7 @@ public class DDLStringVisitor {
 	private Pattern filter;
 	private Map<String, String> prefixMap;
 	protected boolean usePrefixes = true;
+	private boolean namespaceAdded = false;
 	
 	private final static Map<String, String> BUILTIN_PREFIXES = new HashMap<String, String>();
 	static {
@@ -113,6 +114,11 @@ public class DDLStringVisitor {
         append(VERSION).append(SPACE).append(new Constant(database.getVersion()));
         append(SEMICOLON);
         append(NEWLINE);
+        
+        if (!this.namespaceAdded) {
+        	append("${NAMESPACE}");
+        	this.namespaceAdded = true;
+        }
 
         boolean outputDt = false;
         for (Datatype dt : database.getMetadataStore().getDatatypes().values()) {
@@ -367,7 +373,10 @@ public class DDLStringVisitor {
 
     protected void visit(Schema schema) {
 		boolean first = true; 
-		
+        if (!this.namespaceAdded) {
+        	append("${NAMESPACE}");
+        	this.namespaceAdded = true;
+        }
 		for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
             String generated = record.getProperty(GENERATED, false);
             if (generated != null && Boolean.valueOf(generated)) {
@@ -1032,16 +1041,20 @@ public class DDLStringVisitor {
 
     @Override
     public String toString() {
-    	if (this.prefixMap != null) {
-    		StringBuilder sb = new StringBuilder();
-    		for (Map.Entry<String, String> entry : this.prefixMap.entrySet()) {
-    			sb.append("SET NAMESPACE '").append(StringUtil.replaceAll(entry.getKey(), "'", "''")).append('\'') //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    			.append(" AS " ).append(SQLStringVisitor.escapeSinglePart(entry.getValue())).append(";\n"); //$NON-NLS-1$  //$NON-NLS-2$
-    		}
-    		return sb.append("\n").toString() + buffer.toString(); //$NON-NLS-1$
-    	}
-        return buffer.toString();
+        return StringUtil.replace(buffer.toString(), "${NAMESPACE}", getNamespaces());
     }
+
+	private String getNamespaces() {
+		if (this.prefixMap != null) {
+			StringBuilder sb = new StringBuilder();
+			for (Map.Entry<String, String> entry : this.prefixMap.entrySet()) {
+				sb.append("SET NAMESPACE '").append(StringUtil.replaceAll(entry.getKey(), "'", "''")).append('\'') //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				.append(" AS " ).append(SQLStringVisitor.escapeSinglePart(entry.getValue())).append(";\n"); //$NON-NLS-1$  //$NON-NLS-2$
+			}
+			return sb.append("\n").toString(); //$NON-NLS-1$
+		}
+		return "";
+	}
 
     public static String getDomainDDLString(Database database) {
         DDLStringVisitor visitor = new DDLStringVisitor(null, null);
