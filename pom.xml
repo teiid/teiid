@@ -306,7 +306,8 @@
             <plugin>
 				<groupId>org.sonatype.plugins</groupId>
 				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.6.3</version>
+				<!-- until the builds are separate, needs to match wildfly -->
+				<version>1.6.8</version>
 		    </plugin>       
 		    
 		    <plugin>
