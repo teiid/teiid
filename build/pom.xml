@@ -77,10 +77,12 @@
     	<dependency>
     		<groupId>org.teiid</groupId>
     		<artifactId>teiid-client</artifactId>
+    		<optional>true</optional>
     	</dependency>
     	<dependency>
     		<groupId>org.teiid</groupId>
     		<artifactId>teiid-common-core</artifactId>
+    		<optional>true</optional>
     	</dependency>
     </dependencies>
 </project>
