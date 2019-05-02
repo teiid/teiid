@@ -122,7 +122,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private Pattern removePushdownCharacters;
 	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
-    private boolean defaultTimeZone = true;
+    private Boolean defaultTimeZone;
 	
 	public JDBCExecutionFactory() {
 		setSupportsFullOuterJoins(true);
@@ -138,7 +138,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public void start() throws TranslatorException {
 		super.start();		
 		this.databaseCalender = new DatabaseCalender(this.databaseTimeZone);
-		this.defaultTimeZone = getDatabaseCalendar().getTimeZone().hasSameRules(TimeZone.getDefault());
 		if (useCommentsInSourceQuery) {
 			//will throw an exception if not valid
 			new MessageFormat(commentFormat);
@@ -1850,6 +1849,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 * @return true if the translator is using the VM default TimeZone
 	 */
 	public boolean isDefaultTimeZone() {
+	    if (defaultTimeZone == null) {
+	        this.defaultTimeZone = getDatabaseCalendar().getTimeZone().hasSameRules(TimeZone.getDefault());
+	    }
 	    return defaultTimeZone;
 	}
 	
