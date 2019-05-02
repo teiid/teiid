@@ -68,7 +68,7 @@ public class SocketUtil {
     public static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
     
     public static final String ANON_CIPHER_SUITE = "TLS_DH_anon_WITH_AES_128_CBC_SHA"; //$NON-NLS-1$
-    public static final String DEFAULT_PROTOCOL = "TLSv1"; //$NON-NLS-1$
+    public static final String DEFAULT_PROTOCOL = "TLSv1.2"; //$NON-NLS-1$
     
     private final static X509TrustManager[] TRUST_ALL_MANAGER = new X509TrustManager[] {new X509TrustManager() {
 		@Override
