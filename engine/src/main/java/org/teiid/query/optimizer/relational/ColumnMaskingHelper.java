@@ -140,6 +140,7 @@ public class ColumnMaskingHelper {
 			}
 			if (group.getDefinition() != null) {
 		        PreOrPostOrderNavigator.doVisit(mask, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
+		        PreOrPostOrderNavigator.doVisit(condition, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
 			}
 			if (cases == null) {
 				cases = new ArrayList<ColumnMaskingHelper.WhenThen>();
