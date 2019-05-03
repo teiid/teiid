@@ -14,7 +14,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid Build Configuration Parent</name>
 
-    <version>11.2.3</version>
+    <version>11.2.4-SNAPSHOT</version>
 	<description>Parent Pom for Teiid build configuration</description>
     
     
@@ -188,8 +188,4 @@
         </build>
       </profile>
     </profiles>
-
-  <scm>
-    <tag>teiid-parent-11.2.3</tag>
-  </scm>
 </project>
