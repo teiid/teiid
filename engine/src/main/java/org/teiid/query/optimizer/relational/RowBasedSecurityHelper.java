@@ -89,7 +89,9 @@ public class RowBasedSecurityHelper {
 				ElementSymbol es = (ElementSymbol)element;
 				if (es.getGroupSymbol().getDefinition() == null && es.getGroupSymbol().getName().equalsIgnoreCase(this.definition)) {
 					es.getGroupSymbol().setDefinition(group.getDefinition());
-					es.getGroupSymbol().setName(group.getName());            						}
+					es.getGroupSymbol().setName(group.getName());
+					es.setOutputName(null);
+			    }
 			}
 			return element;
 		}
