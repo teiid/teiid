@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -493,6 +494,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(key.getName());
     			row.add(record.getVersion());
     			row.add(record.getDescription());
+    			row.add(record.getStatusTimestamp(Status.LOADING));
+    			row.add(record.getStatusTimestamp(Status.ACTIVE));
         	}
 		});
         name = SystemTables.PROCEDUREPARAMS.name();

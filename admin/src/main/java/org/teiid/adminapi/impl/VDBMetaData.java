@@ -17,6 +17,7 @@
  */
 package org.teiid.adminapi.impl;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,6 +62,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	private long queryTimeout = Long.MIN_VALUE;
 	private Set<String> importedModels = Collections.emptySet();
 	private Map<String, Boolean> visibilityOverrides = new HashMap<String, Boolean>(2);
+	private Map<Status, Timestamp> statusTimestamps = Collections.synchronizedMap(new HashMap<>(2));
 
 	public String getFullName() {
 		return getName() + VERSION_DELIM + getVersion(); 
@@ -87,6 +89,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	public synchronized void setStatus(Status s) {
 		this.notifyAll();
 		this.status = s;
+		this.statusTimestamps.put(s, new Timestamp(System.currentTimeMillis()));
 	}
 	
 	public void setStatus(String s) {
@@ -312,6 +315,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	
 	public Map<String, Boolean> getVisibilityOverrides() {
 		return visibilityOverrides;
+	}
+
+	public Timestamp getStatusTimestamp(Status s) {
+	    return statusTimestamps.get(s);
 	}
 
 }

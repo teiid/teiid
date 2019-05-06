@@ -244,6 +244,8 @@ CREATE FOREIGN TABLE VirtualDatabases (
 	Name string(255) NOT NULL,
 	Version string(50) NOT NULL,
 	Description string(4000),
+	LoadingTimestamp timestamp,
+	ActiveTimestamp timestamp,
 	PRIMARY KEY (Name, Version)
 );
 
