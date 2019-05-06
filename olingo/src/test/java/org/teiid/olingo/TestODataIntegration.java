@@ -1825,7 +1825,7 @@ public class TestODataIntegration {
             .method("GET")
             .send();
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x\",\"value\":["
+        assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x(y_FKX(),z_FKX())\",\"value\":["
         		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
         			+ "[{\"a\":\"y\",\"b\":\"a\"},{\"a\":\"y1\",\"b\":\"a\"}],"
         			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
@@ -1836,7 +1836,7 @@ public class TestODataIntegration {
                 .method("GET")
                 .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x\",\"value\":["
+            assertEquals("{\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x(y_FKX(),z_FKX())\",\"value\":["
             		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
             			+ "[{\"a\":\"y1\",\"b\":\"a\"}],"
             			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
@@ -1853,7 +1853,7 @@ public class TestODataIntegration {
                 .send();
             assertEquals(200, response.getStatus());
             String expected = "{" + 
-            		"\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x\"," + 
+            		"\"@odata.context\":\""+baseURL+"/northwind/m/$metadata#x(y_FKX(),z_FKX())\"," + 
             		"\"value\":[" + 
             		    "{" + 
             		    "\"a\":\"a\"," + 
@@ -2262,7 +2262,7 @@ public class TestODataIntegration {
                 .method("GET")
                 .send();
         assertEquals(500, response.getStatus());
-        assertEquals("<?xml version='1.0' encoding='UTF-8'?>"
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                 + "<error xmlns=\"http://docs.oasis-open.org/odata/ns/metadata\">"
                 +   "<code>TEIID30504</code>"
                 +   "<message>TEIID30504 x1: TEIID16001 execution failed</message>"
@@ -2877,7 +2877,8 @@ public class TestODataIntegration {
         
         ContentResponse response = http.GET(baseURL + "/northwind/vw/$metadata");
         assertEquals(200, response.getStatus());
-        assertTrue(response.getContentAsString().contains("<NavigationProperty Name=\"FK1\" Type=\"vw.B\"><ReferentialConstraint Property=\"b_ref\" ReferencedProperty=\"b_id\"/>"));
+        assertTrue(response.getContentAsString().contains("<NavigationProperty Name=\"FK1\" Type=\"vw.B\">"
+        		+ "<ReferentialConstraint Property=\"b_ref\" ReferencedProperty=\"b_id\"></ReferentialConstraint>"));
     }
     
     @Test public void testConcatNull() throws Exception {
@@ -2940,7 +2941,8 @@ public class TestODataIntegration {
         assertEquals("[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,3.0]}}]", value);
         
         response = http.GET(baseURL + "/northwind/phy/$metadata");
-        assertTrue(response.getContentAsString().contains("<Property Name=\"location\" Type=\"Edm.GeometryPoint\">"));
+        assertTrue(response.getContentAsString(), response.getContentAsString().contains("<Property Name=\"location\" "
+        		+ "Type=\"Edm.GeometryPoint\" SRID=\"4326\">"));
     }
     
     @Test public void testGeography() throws Exception {
@@ -2968,7 +2970,8 @@ public class TestODataIntegration {
         assertEquals("[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,3.0]}}]", value);
         
         response = http.GET(baseURL + "/northwind/phy/$metadata");
-        assertTrue(response.getContentAsString().contains("<Property Name=\"location\" Type=\"Edm.GeographyPoint\">"));
+        assertTrue(response.getContentAsString().contains("<Property Name=\"location\" Type=\"Edm.GeographyPoint\" "
+        		+ "SRID=\"4326\">"));
     }
     
     @Test 

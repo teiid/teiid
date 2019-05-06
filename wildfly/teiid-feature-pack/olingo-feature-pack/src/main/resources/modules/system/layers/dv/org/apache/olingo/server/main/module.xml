@@ -18,7 +18,6 @@
         <module name="com.fasterxml.jackson.core.jackson-core"/>
         <module name="com.fasterxml.jackson.core.jackson-annotations"/>
         <module name="com.fasterxml.jackson.core.jackson-databind"/>
-        <module name="com.fasterxml.aalto-xml"/>
         <module name="org.apache.olingo.commons"/>
         <module name="org.apache.commons.codec"/>
     </dependencies>
