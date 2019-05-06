@@ -69,7 +69,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 					} catch (IOException e) {
 					}
 				}
-				props.putAll(newProps);
+				newProps.putAll(props);
 			}
 			INSTANCE.initialize(props);
 		}
