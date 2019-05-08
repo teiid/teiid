@@ -1451,6 +1451,7 @@ CreateProcedureCommand  procedureBodyCommand(ParseInfo info) :
 { 
     [LOOKAHEAD(2) <CREATE> [<VIRTUAL>] <PROCEDURE>]
     stmt = statement(info)
+    <EOF>
     {        
         procCmd.setBlock(asBlock(stmt));
         return procCmd;        
@@ -5748,7 +5749,7 @@ CreateProcedureCommand createDDLProcedure(DatabaseStore dbStore, ParseInfo info)
 		      OptionsUtil.setOptions(proc);
 		   }
 		]
-		[<AS> { comment = getToken(1).specialToken; } 
+		[<AS> { comment = getToken(1); } 
 		stmt = statement(info)])
 		{
 			proc.setVirtual(virtual);
@@ -5757,7 +5758,7 @@ CreateProcedureCommand createDDLProcedure(DatabaseStore dbStore, ParseInfo info)
 			    if (!virtual) {
 			         throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_def", procName));
 			    }
-				proc.setQueryPlan((comment != null?comment.image+" ":"") + stmt.toString());
+				proc.setQueryPlan(getFullComment(comment, true) + stmt.toString());
 			}
 			
 	        if (returnDataType != null){
@@ -5952,9 +5953,9 @@ void createView(DatabaseStore dbStore) :
           OptionsUtil.setOptions(table);
        }
     ])
-    <AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
+    <AS> { comment = getToken(1); } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
       {
-           table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());    
+           table.setSelectTransformation(getFullComment(comment, true) + query.toString());    
       }
     {
        dbStore.tableCreated(table);
