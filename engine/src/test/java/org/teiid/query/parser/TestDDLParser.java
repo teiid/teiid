@@ -28,6 +28,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
@@ -1837,5 +1838,37 @@ public class TestDDLParser {
         ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
         
         assertTrue(report.hasItems());
+    }
+    
+    @Test public void testPreceedingLineComment() throws Exception {
+        String ddl = "create foreign table testRemove (id integer) options (updatable true);"
+                + "create virtual procedure deleteTableTest (\n" + 
+                ") AS \n" + 
+                "-- \n" + 
+                "begin\n" + 
+                "    declare string v;\n" + 
+                "    execute immediate 'DELETE from testRemove' without return ;\n" + 
+                "end";
+
+    
+        MetadataFactory s = helpParse(ddl, "S1");
+                
+        Procedure p = s.getSchema().getProcedures().get("deleteTableTest");
+        
+        assertEquals("-- \n" + 
+                "BEGIN\n" + 
+                "DECLARE string v;\n" + 
+                "EXECUTE IMMEDIATE 'DELETE from testRemove' WITHOUT RETURN;\n" + 
+                "END", p.getQueryPlan());
+    }
+    
+    @Test(expected=QueryParserException.class) public void testIncompleteProcedure() throws Exception {
+        String ddl = "create virtual procedure deleteTableTest (\n" + 
+                ") AS \n" + 
+                "    declare string v;\n" + 
+                "    execute immediate 'DELETE from testRemove' without return ;\n" + 
+                "end";
+
+        QueryParser.getQueryParser().parseProcedure(ddl, false);
     }
 }

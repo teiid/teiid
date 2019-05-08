@@ -274,22 +274,48 @@ public class SQLParserUtil {
     }
     
 	String getComment(Token t) {
-		Token optToken = t.specialToken;
+		String comment = getFullComment(t, false);
+		if (comment.length() == 0) {
+		    return comment;
+        }
+		if (comment.startsWith("--")) { //$NON-NLS-1$
+		    return comment.substring(2);
+		}
+        String hint = comment.substring(2, comment.length() - 2);
+        if (hint.startsWith("+")) { //$NON-NLS-1$
+        	hint = hint.substring(1);
+        }
+        return hint;
+	}
+	
+	/**
+	 * Get the full comment including the nesting characters -- or \* *\/
+	 * Or return the empty string if there is no comment.
+	 * @param includeEnding if true include a space or newline after the comment
+	 */
+	String getFullComment(Token t, boolean includeEnding) {
+	    if (t == null) { 
+            return ""; //$NON-NLS-1$
+        }
+        Token optToken = t.specialToken;
         if (optToken == null) { 
             return ""; //$NON-NLS-1$
         }
         //handle nested comments
         String image = optToken.image;
         while (optToken.specialToken != null) {
-        	optToken = optToken.specialToken;
-        	image = optToken.image + image;
+            optToken = optToken.specialToken;
+            image = optToken.image + image;
         }
-        String hint = image.substring(2, image.length() - 2);
-        if (hint.startsWith("+")) { //$NON-NLS-1$
-        	hint = hint.substring(1);
+        
+        if (includeEnding && image.startsWith("--")) { //$NON-NLS-1$
+            return image + "\n"; //$NON-NLS-1$
         }
-        return hint;
-	}
+        if (includeEnding) {
+            return image + " "; //$NON-NLS-1$
+        }
+        return image;
+    }
 	
 	private static Pattern SOURCE_HINT = Pattern.compile("\\s*sh(\\s+KEEP ALIASES)?\\s*(?::((?:'[^']*')+))?\\s*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern SOURCE_HINT_ARG = Pattern.compile("\\s*([^: ]+)(\\s+KEEP ALIASES)?\\s*:((?:'[^']*')+)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
