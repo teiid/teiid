@@ -85,9 +85,7 @@ CREATE FOREIGN TABLE REQUESTS (
     ProcessingState string(255),
     ThreadState string(255),
     IsSource boolean NOT NULL,
-    PRIMARY KEY (SessionId, ExecutionId),
-    FOREIGN KEY (SessionId) REFERENCES SESSIONS (SessionId),
-    FOREIGN KEY (TransactionId) REFERENCES TRANSACTIONS (TransactionId)
+    FOREIGN KEY (SessionId) REFERENCES SESSIONS (SessionId)
 );
 
 CREATE FOREIGN TABLE TRANSACTIONS (
@@ -95,7 +93,6 @@ CREATE FOREIGN TABLE TRANSACTIONS (
     SessionId string(255),
     StartTimestamp timestamp NOT NULL,
     Scope string(255),
-    PRIMARY KEY (TransactionId),
     FOREIGN KEY (SessionId) REFERENCES SESSIONS (SessionId)
 );
 
@@ -585,4 +582,4 @@ CREATE FOREIGN PROCEDURE terminateSession(OUT terminated boolean NOT NULL RESULT
 
 CREATE FOREIGN PROCEDURE cancelRequest(OUT cancelled boolean NOT NULL RESULT, IN SessionId string NOT NULL, IN executionId long NOT NULL);
 
-CREATE FOREIGN PROCEDURE terminateTransaction(IN TransactionId string NOT NULL);
+CREATE FOREIGN PROCEDURE terminateTransaction(IN sessionid string NOT NULL);

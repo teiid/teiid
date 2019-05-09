@@ -44,13 +44,10 @@ indkey
 8                                                                
 1 2                                                              
 1 2 3                                                            
-2 3                                                              
 2                                                                
-6                                                                
 2                                                                
 1 2 3                                                            
 5                                                                
-1                                                                
 2                                                                
 1 2 3 4                                                          
 2 7                                                              
@@ -63,6 +60,6 @@ indkey
 1                                                                
 2                                                                
 1                                                                
-Row Count : 63
+Row Count : 60
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 indkey         1111                           java.lang.Object    indkey          int2vector                        pg_index      2147483647            2147483647    0         false            true             false       false                 1           false       true          false     true        
