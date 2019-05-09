@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
@@ -223,6 +224,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		SETPROPERTY,
 		LOGMSG,
 		ISLOGGABLE,
+		CANCELREQUEST,
+		TERMINATESESSION,
+		TERMINATETRANSACTION
 	}
 	
 	private enum SystemProcs {
@@ -1461,6 +1465,31 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		if (StringUtil.startsWithIgnoreCase(proc.getProcedureCallableName(), CoreConstants.SYSTEM_ADMIN_MODEL)) {
 			final SystemAdminProcs sysProc = SystemAdminProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_ADMIN_MODEL.length() + 1).toUpperCase());
 			switch (sysProc) {
+			case TERMINATESESSION:
+			{
+			    String session = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
+			    boolean terminated = context.getWorkItem().getDqpCore().getSessionService().terminateSession(session, context.getSession().getSessionId());
+			    rows.add(Arrays.asList(terminated));
+			    return new CollectionTupleSource(rows.iterator());
+			}
+			case TERMINATETRANSACTION:
+			{
+                String transactionId = (String)((Constant)proc.getParameter(1).getExpression()).getValue();
+                try {
+                    context.getWorkItem().getDqpCore().terminateTransaction(transactionId);
+                } catch (AdminException e) {
+                    throw new TeiidProcessingException(e);
+                }
+                return new CollectionTupleSource(rows.iterator());
+            }
+			case CANCELREQUEST:
+			{
+                String session = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
+                long executionId = (Long)((Constant)proc.getParameter(3).getExpression()).getValue();
+                boolean cancelled = context.getWorkItem().getDqpCore().cancelRequest(session, executionId);
+                rows.add(Arrays.asList(cancelled));
+                return new CollectionTupleSource(rows.iterator());
+            }
 			case LOGMSG:
 			case ISLOGGABLE:
 				String level = (String)((Constant)proc.getParameter(2).getExpression()).getValue();

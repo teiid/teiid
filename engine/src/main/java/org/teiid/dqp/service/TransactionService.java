@@ -74,5 +74,5 @@ public interface TransactionService {
 	// management methods
     Collection<TransactionMetadata> getTransactions();
     
-    void terminateTransaction(String transactionId) throws AdminException;
+    void terminateTransaction(String threadId) throws AdminException;
 }

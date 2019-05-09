@@ -1,7 +1,7 @@
 integer      string                                                             integer    
 oid          nspname                                                            nspowner   
 23           PartsSupplier                                                      0          
-565          pg_catalog                                                         0          
+574          pg_catalog                                                         0          
 63           SYS                                                                0          
 392          SYSADMIN                                                           0          
 Row Count : 4

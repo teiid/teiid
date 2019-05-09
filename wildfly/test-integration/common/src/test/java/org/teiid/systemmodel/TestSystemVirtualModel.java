@@ -392,4 +392,20 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
     @Test public void testSessions() throws Exception {
         checkResult("testSessions", "select VDBName, UserName, ApplicationName, IPAddress from sysadmin.sessions"); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testCancelRequest() throws Exception {
+        CallableStatement cs = this.internalConnection.prepareCall("{? = call cancelRequest('abc', 1)}");
+        cs.execute();
+        assertEquals(cs.getBoolean(1), cs.getBoolean("cancelled"));
+    }
+    
+    @Test public void testTerminateTransaction() throws Exception {
+        execute("call terminateTransaction('abc')"); //$NON-NLS-1$
+    }
+    
+    @Test public void testTerminateSession() throws Exception {
+        CallableStatement cs = this.internalConnection.prepareCall("{? = call terminateSession('abc')}");
+        cs.execute();
+        assertEquals(cs.getBoolean(1), cs.getBoolean("terminated"));
+    }
 }

@@ -580,3 +580,9 @@ BEGIN
         EXECUTE sysadmin.logMsg(context=>'org.teiid.PROCESSOR.MATVIEWS', level=>'WARN', msg=>e.exception);
     END
 END
+
+CREATE FOREIGN PROCEDURE terminateSession(OUT terminated boolean NOT NULL RESULT, IN SessionId string NOT NULL);
+
+CREATE FOREIGN PROCEDURE cancelRequest(OUT cancelled boolean NOT NULL RESULT, IN SessionId string NOT NULL, IN executionId long NOT NULL);
+
+CREATE FOREIGN PROCEDURE terminateTransaction(IN TransactionId string NOT NULL);
