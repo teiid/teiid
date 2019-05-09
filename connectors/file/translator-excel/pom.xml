@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.teiid.connectors</groupId>
         <artifactId>file</artifactId>
-        <version>12.2.1-SNAPSHOT</version>
+        <version>12.3.0-SNAPSHOT</version>
     </parent>
     <artifactId>translator-excel</artifactId>
     

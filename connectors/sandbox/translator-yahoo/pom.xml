@@ -3,7 +3,7 @@
     <parent>
         <artifactId>sandbox</artifactId>
         <groupId>org.teiid.connectors</groupId>
-        <version>12.2.1-SNAPSHOT</version>
+        <version>12.3.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-yahoo</artifactId>
