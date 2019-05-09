@@ -9,7 +9,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>wildfly-parent</artifactId>
   <groupId>org.teiid.wildfly</groupId>
-  <version>12.2.0-SNAPSHOT</version>
+  <version>12.2.0</version>
   <packaging>pom</packaging>
   <name>Teiid Wildfly Parent</name>
   <description>This project is aggregator for all the wildfly related modules.</description>
@@ -449,4 +449,8 @@
         <module>connectors</module>
         <module>test-integration</module>
   </modules>
+
+  <scm>
+    <tag>teiid-parent-12.2.0</tag>
+  </scm>
 </project>

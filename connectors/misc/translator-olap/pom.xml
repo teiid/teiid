@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>misc</artifactId>
-      <version>12.2.0-SNAPSHOT</version>
+      <version>12.2.0</version>
     </parent>
     <artifactId>translator-olap</artifactId>
     <name>OLAP Translator</name>
