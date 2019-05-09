@@ -378,4 +378,18 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
             }
         }
     }
+    
+    @Test public void testRequests() throws Exception {
+        checkResult("testRequests", "select VDBName, ExecutionId, Command, TransactionId from sysadmin.requests"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testTransactions() throws Exception {
+        this.internalConnection.setAutoCommit(false);
+        checkResult("testTransactions", "select TransactionID, Scope from sysadmin.transactions"); //$NON-NLS-1$ //$NON-NLS-2$
+        this.internalConnection.setAutoCommit(true);
+    }
+    
+    @Test public void testSessions() throws Exception {
+        checkResult("testSessions", "select VDBName, UserName, ApplicationName, IPAddress from sysadmin.sessions"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }

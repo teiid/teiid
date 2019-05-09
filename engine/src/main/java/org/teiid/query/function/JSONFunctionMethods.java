@@ -242,11 +242,9 @@ public class JSONFunctionMethods {
 		if (val.getType() == Type.JSON) {
 			return new JsonType(val.getReference());
 		}
-		if (!wellformed) {
-			r = val.getCharacterStream();
-		}
 		try {
 			if (!wellformed) {
+			    r = val.getCharacterStream();
 				JSONParser parser = new JSONParser();
 				parser.parse(r, validatingContentHandler);
 			}

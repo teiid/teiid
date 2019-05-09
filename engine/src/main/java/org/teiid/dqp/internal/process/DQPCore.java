@@ -68,6 +68,7 @@ import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.dqp.service.TransactionService;
@@ -133,6 +134,7 @@ public class DQPCore implements DQP {
 	private ExecutorService timeoutExecutor;
 	
 	private LocalProfile localProfile;
+	private SessionService sessionService;
 	
 	private volatile boolean shutdown;
     
@@ -1103,5 +1105,13 @@ public class DQPCore implements DQP {
      */
     public void setLocalProfile(LocalProfile localProfile) {
         this.localProfile = localProfile;
+    }
+
+    public void setSessionService(SessionService sessionService) {
+        this.sessionService = sessionService;
+    }
+    
+    public SessionService getSessionService() {
+        return sessionService;
     }
 }

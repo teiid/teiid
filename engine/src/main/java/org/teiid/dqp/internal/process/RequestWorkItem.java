@@ -1418,5 +1418,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     public Span getTracingSpan() {
         return this.span;
     }
+    
+    public DQPCore getDqpCore() {
+        return dqpCore;
+    }
 
 }

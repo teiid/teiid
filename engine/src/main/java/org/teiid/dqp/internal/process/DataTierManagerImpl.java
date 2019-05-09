@@ -38,6 +38,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.teiid.adminapi.Request;
+import org.teiid.adminapi.Session;
+import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -208,7 +211,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		TRIGGERS,
 		VIEWS,
 		STOREDPROCEDURES,
-		USAGE
+		USAGE,
+		SESSIONS,
+		REQUESTS,
+		TRANSACTIONS
 	}
 	
 	private enum SystemAdminProcs {
@@ -705,6 +711,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(table.getUUID());
 			}
 		});
+        addSessionsTable(tm);
+        addRequestsTable(tm);
+        addTransactionsTable(tm);
         name = SystemAdminTables.STOREDPROCEDURES.name();
         columns = getColumns(tm, name);
         systemAdminTables.put(SystemAdminTables.STOREDPROCEDURES, new RecordExtractionTable<Procedure>(new ProcedureSystemTable(1, 2, columns) {
@@ -1000,6 +1009,124 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		return parent.getIncomingObjects();
         	}
 		});
+    }
+
+    private void addSessionsTable(TransformationMetadata tm) {
+        String name = SystemAdminTables.SESSIONS.name();
+        List<ElementSymbol> columns = getColumns(tm, CoreConstants.SYSTEM_ADMIN_MODEL + "." +name); //$NON-NLS-1$
+        systemAdminTables.put(SystemAdminTables.SESSIONS, new BaseExtractionTable<Session>(columns) {
+            @Override
+            public SimpleIterator<Session> createIterator(VDBMetaData vdb,
+                    TransformationMetadata metadata, CommandContext cc)
+                    throws QueryMetadataException, TeiidComponentException {
+                return new SimpleIteratorWrapper<Session>(cc.getWorkItem()
+                        .getDqpCore().getSessionService()
+                        .getActiveSessions().iterator()) {
+                    @Override
+                    protected boolean isValid(Session result) {
+                        return result.getVDBName().equals(vdb.getName()) 
+                                && result.getVDBVersion().equals(vdb.getVersion());
+                    }
+                };
+            }
+            @Override
+            protected void fillRow(List<Object> row, Session record,
+                    VDBMetaData vdb, TransformationMetadata metadata,
+                    CommandContext cc, SimpleIterator<Session> iter) {
+                row.add(vdb.getName());
+                row.add(record.getSessionId());
+                row.add(record.getUserName());
+                row.add(new Timestamp(record.getCreatedTime()));
+                row.add(record.getApplicationName());
+                row.add(record.getIPAddress());
+            }
+        });
+    }
+    
+    private void addRequestsTable(TransformationMetadata tm) {
+        String name = SystemAdminTables.REQUESTS.name();
+        List<ElementSymbol> columns = getColumns(tm, CoreConstants.SYSTEM_ADMIN_MODEL + "." +name); //$NON-NLS-1$
+        systemAdminTables.put(SystemAdminTables.REQUESTS, new BaseExtractionTable<Request>(columns) {
+            @Override
+            public SimpleIterator<Request> createIterator(VDBMetaData vdb,
+                    TransformationMetadata metadata, CommandContext cc)
+                    throws QueryMetadataException, TeiidComponentException {
+                return new ExpandingSimpleIterator<Session, Request>(
+                    new SimpleIteratorWrapper<Session>(cc
+                            .getWorkItem().getDqpCore()
+                            .getSessionService().getActiveSessions()
+                            .iterator()) {
+                        @Override
+                        protected boolean isValid(Session result) {
+                            return result.getVDBName().equals(vdb.getName())
+                                    && result.getVDBVersion().equals(vdb.getVersion());
+                        }
+                    }) 
+                {
+                    @Override
+                    protected SimpleIterator<Request> getChildIterator(
+                            Session parent) {
+                        return new SimpleIteratorWrapper<Request>(
+                                cc.getWorkItem().getDqpCore()
+                                        .getRequestsForSession(
+                                                parent.getSessionId())
+                                        .iterator());
+                    }
+                };
+            }
+
+            @Override
+            protected void fillRow(List<Object> row, Request record,
+                    VDBMetaData vdb, TransformationMetadata metadata,
+                    CommandContext cc, SimpleIterator<Request> iter) {
+                row.add(vdb.getName());
+                row.add(record.getSessionId());
+                row.add(record.getExecutionId());
+                row.add(new ClobType(new ClobImpl(record.getCommand())));
+                row.add(new Timestamp(record.getStartTime()));
+                row.add(record.getTransactionId());
+                row.add(record.getState().name());
+                row.add(record.getThreadState().name());
+                row.add(record.isSourceRequest());
+            }
+        });
+    }
+    
+    private void addTransactionsTable(TransformationMetadata tm) {
+        String name = SystemAdminTables.TRANSACTIONS.name();
+        List<ElementSymbol> columns = getColumns(tm, CoreConstants.SYSTEM_ADMIN_MODEL + "." +name); //$NON-NLS-1$
+        systemAdminTables.put(SystemAdminTables.TRANSACTIONS, new BaseExtractionTable<Transaction>(columns) {
+            @Override
+            public SimpleIterator<Transaction> createIterator(VDBMetaData vdb,
+                    TransformationMetadata metadata, CommandContext cc)
+                    throws QueryMetadataException, TeiidComponentException {
+                return new SimpleIteratorWrapper<Transaction>(cc.getWorkItem()
+                        .getDqpCore().getTransactions().iterator()) {
+                    @Override
+                    protected boolean isValid(Transaction result) {
+                        if (result.getAssociatedSession() == null) {
+                            return true;
+                        }
+                        Session s = cc.getWorkItem().getDqpCore().getSessionService().getActiveSession(result.getAssociatedSession());
+                        if (s == null) {
+                            return false;
+                        }
+                        return s.getVDBName().equals(vdb.getName()) 
+                                && s.getVDBVersion().equals(vdb.getVersion());
+                    }
+                };
+            }
+            
+            @Override
+            protected void fillRow(List<Object> row, Transaction record,
+                    VDBMetaData vdb, TransformationMetadata metadata,
+                    CommandContext cc, SimpleIterator<Transaction> iter) {
+                row.add(record.getId());
+                row.add(record.getAssociatedSession());
+                row.add(new Timestamp(record.getCreatedTime()));
+                row.add(record.getScope());
+            }
+        });
     }   
     
     private boolean isKeyVisible(KeyRecord record, CommandContext cc) {

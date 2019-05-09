@@ -550,6 +550,7 @@ class TeiidAdd extends AbstractAddStepHandler {
         //TODO: may eventually couple this with DQPCore
         final SessionServiceImpl sessionServiceImpl = new SessionServiceImpl();
         bufferService.setSessionService(sessionServiceImpl);
+        edfs.dqpCore.setSessionService(sessionServiceImpl);
         
         if (isDefined(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context)) {
    			String securityDomain = asString(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context);
