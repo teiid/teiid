@@ -24,6 +24,7 @@
         <module name="org.apache.commons.lang" slot="3.3.2"/>
         <module name="org.antlr" slot="4.5"/>
         <module name="org.apache.olingo.commons"/>
+        <module name="org.apache.commons.codec" />
     </dependencies>
 
 </module>
