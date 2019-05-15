@@ -86,17 +86,12 @@ public class TestLocalConnections {
 		int calls;
 		
 		@Override
-		public Subject getSubjectInContext(String securityDomain) {
-			return currentContext;
-		}
-		
-		@Override
 		public Subject getSubjectInContext(Object context) {
 			return (Subject)context;
 		}
-
+		
 		@Override
-		public Object getSecurityContext() {
+		public Object getSecurityContext(String securityDomain) {
 			calls++;
 			return currentContext;
 		}
@@ -498,7 +493,7 @@ public class TestLocalConnections {
 			rs.next();
 			String id = rs.getString(1);
 			rs.close();
-			assertEquals(4, securityHelper.calls);
+			assertEquals(3, securityHelper.calls);
 			server.getSessionService().pingServer(id);
 			currentContext = new Subject();
 			currentContext.getPrincipals().add(new SimplePrincipal("x"));

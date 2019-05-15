@@ -51,10 +51,11 @@ public class TestLogonImpl {
 	public void setup() {
 		ssi = new SessionServiceImpl();
 		ssi.setSecurityHelper(new DoNothingSecurityHelper() {
+		
 		    @Override
-            public Subject getSubjectInContext(String securityDomain) {
+		    public Object getSecurityContext(String securityDomain) {
 		        if (securityDomain.equals("SC")) {
-		            return new Subject();
+		            return new Object();
 		        }
 		        return null;
 		    }

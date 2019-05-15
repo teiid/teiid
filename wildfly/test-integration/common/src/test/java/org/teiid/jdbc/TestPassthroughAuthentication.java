@@ -87,19 +87,13 @@ public class TestPassthroughAuthentication {
 			ctx = null;
 		}
 		@Override
-		public Object getSecurityContext() {
-			return this.ctx;
+		public Object getSecurityContext(String securityDomain) {
+		    if (securityDomain.equals("teiid-security")) {
+		        return this.ctx;
+		    }
+		    return null;
 		}
 
-		@Override
-		public Subject getSubjectInContext(String securityDomain) {
-			if (securityDomain.equals("teiid-security") && getSecurityContext() != null && getSecurityContext().equals("testSC")) {
-				Subject s = new Subject();
-				return s;
-			}
-			return null;
-		}
-		
 		@Override
 		public Subject getSubjectInContext(Object context) {
 			if (context != null) {

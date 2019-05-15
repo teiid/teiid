@@ -104,7 +104,6 @@ public class LocalServerConnection implements ServerConnection {
 			
 			workContext.setSecurityHelper(csr.getSecurityHelper());
 			workContext.setUseCallingThread(useCallingThread);
-			workContext.setSecurityContext(csr.getSecurityHelper().getSecurityContext());
 			authenticate();
 			passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
 		} else {
@@ -225,17 +224,23 @@ public class LocalServerConnection implements ServerConnection {
 	}
 	
 	public static boolean sameSubject(DQPWorkContext workContext) {
-		Object currentContext = workContext.getSecurityHelper().getSecurityContext();
+		Object currentContext = workContext.getSecurityHelper().getSecurityContext(workContext.getSecurityDomain());
 		
+		Subject currentUser = null;
 		if (currentContext != null) {
-			Subject currentUser = workContext.getSecurityHelper().getSubjectInContext(workContext.getSecurityDomain());
+			currentUser = workContext.getSecurityHelper().getSubjectInContext(currentContext);
 			if (workContext.getSubject() != null && currentUser != null && workContext.getSubject().equals(currentUser)) {
 				return true;
 			}
-			if (currentUser == null && workContext.getSubject() == null) {
-				return true; //unauthenticated
+			if (workContext.getSecurityContext() == null) {
+			    return false;
 			}
+		} else if (workContext.getSecurityContext() != null) {
+		    return false;
 		}
+		if (currentUser == null && workContext.getSubject() == null) {
+            return true; //unauthenticated
+        }
 		
 		return false;
 	}
@@ -246,8 +251,8 @@ public class LocalServerConnection implements ServerConnection {
 			return false;
 		}
 		try {
-			ResultsFuture<?> result = this.getService(ILogon.class).ping();
-			result.get(msToTest, TimeUnit.MILLISECONDS);
+			ResultsFuture<?> ping = this.getService(ILogon.class).ping();
+			ping.get(msToTest, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			return false;
 		}

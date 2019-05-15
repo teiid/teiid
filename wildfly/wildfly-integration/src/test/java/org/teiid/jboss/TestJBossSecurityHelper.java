@@ -53,16 +53,8 @@ public class TestJBossSecurityHelper extends TestCase {
     	HashSet<Principal> principals = new HashSet<Principal>();
     	principals.add(p);
     	
-    	final Subject subject = new Subject(false, principals, new HashSet(), new HashSet());
     	@SuppressWarnings("serial")
         JBossSecurityHelper sh = new JBossSecurityHelper() {
-    	    @Override
-    	    public Subject getSubjectInContext(String securityDomain) {
-    	        if (securityDomain.equals("passthrough")) {
-    	            return subject;
-    	        }
-    	        return null;
-    	    }
     	    
     	    @Override
             protected SecurityDomainContext getSecurityDomainContext(String securityDomain) {
