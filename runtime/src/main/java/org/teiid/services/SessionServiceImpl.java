@@ -185,7 +185,10 @@ public class SessionServiceImpl implements SessionService {
 	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
 	
 	    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
-	        		subject = this.securityHelper.getSubjectInContext(securityDomain);
+	    		    securityContext = this.securityHelper.getSecurityContext(securityDomain);
+	    		    if (securityContext != null) {
+	    		        subject = this.securityHelper.getSubjectInContext(securityContext);
+	    		    }
 	    	        if (subject == null) {
 	    	        	if ((!onlyAllowPassthrough || !(trustAllLocal && DQPWorkContext.getWorkContext().isLocal()))) {
 	    	        		throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
@@ -193,7 +196,6 @@ public class SessionServiceImpl implements SessionService {
 	    	        } else {
 	    	        	userName = getUserName(subject, userName);
 	    	        }
-	    	        securityContext = this.securityHelper.getSecurityContext();
 	        	} else {
 	        		securityContext = this.securityHelper.authenticate(securityDomain, userName, credentials, applicationName);
 	        		subject = this.securityHelper.getSubjectInContext(securityContext);

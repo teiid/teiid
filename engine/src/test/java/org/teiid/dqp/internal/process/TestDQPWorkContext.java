@@ -100,7 +100,7 @@ public class TestDQPWorkContext {
 			Object mycontext = null;
 			
 			@Override
-			public Object getSecurityContext() {
+			public Object getSecurityContext(String securityDomain) {
 				return this.mycontext;
 			}
 			@Override
@@ -117,10 +117,6 @@ public class TestDQPWorkContext {
 			public Subject getSubjectInContext(Object context) {
 				return null;
 			}
-            @Override
-            public Subject getSubjectInContext(String securityDomain) {
-                return null;
-            }
             @Override
             public Object authenticate(String securityDomain, String baseUserName,
             		Credentials credentials, String applicationName) throws LoginException {
@@ -148,13 +144,13 @@ public class TestDQPWorkContext {
 		Runnable r = new Runnable() {
 			@Override
 			public void run() {
-				assertEquals(currentSC, sc.getSecurityContext());
+				assertEquals(currentSC, sc.getSecurityContext(null));
 			}
 		};
 		
 		message.runInContext(r);
 		
-		assertEquals(previousSC, sc.getSecurityContext());
+		assertEquals(previousSC, sc.getSecurityContext(null));
 	}	
 	
 	@Test public void testVersion() {

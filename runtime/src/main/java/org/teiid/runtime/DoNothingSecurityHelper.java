@@ -32,13 +32,8 @@ import org.teiid.security.SecurityHelper;
 public class DoNothingSecurityHelper implements SecurityHelper {
 	
 	@Override
-	public Subject getSubjectInContext(String securityDomain) {
-		return new Subject();
-	}
-
-	@Override
-	public Object getSecurityContext() {
-		return new Object();
+	public Object getSecurityContext(String securityDomain) {
+	    return new Object();
 	}
 
 	@Override

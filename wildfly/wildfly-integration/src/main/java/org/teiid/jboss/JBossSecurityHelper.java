@@ -74,23 +74,18 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	}
 	
 	@Override
-	public SecurityContext getSecurityContext() {
-		return SecurityActions.getSecurityContext();
-	}	
+	public Object getSecurityContext(String securityDomain) {
+	    SecurityContext sc = SecurityActions.getSecurityContext();
+        if (sc != null && sc.getSecurityDomain().equals(securityDomain)) {
+            return sc;
+        }
+        return null;
+	}
 	
 	public SecurityContext createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject) {
 		return SecurityActions.createSecurityContext(p, credentials, subject, securityDomain);
 	}
 
-	@Override
-	public Subject getSubjectInContext(String securityDomain) {
-		SecurityContext sc = SecurityActions.getSecurityContext();
-		if (sc != null && sc.getSecurityDomain().equals(securityDomain)) {
-			return getSubjectInContext(sc);
-		}		
-		return null;
-	}
-	
 	@Override
 	public Subject getSubjectInContext(Object context) {
 		if (!(context instanceof SecurityContext)) {

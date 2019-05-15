@@ -39,15 +39,7 @@ public interface SecurityHelper {
 	 * Get the current security context associated with the thread
 	 * @return
 	 */
-	Object getSecurityContext();
-	
-	/**
-	 * Get the subject associated with the security context.
-	 * The security context must currently be associated with the thread.
-	 * @param securityDomain
-	 * @return
-	 */
-	Subject getSubjectInContext(String securityDomain);
+	Object getSecurityContext(String securityDomain);
 	
 	/**
 	 * Get the subject associated with the security context.
@@ -62,7 +54,7 @@ public interface SecurityHelper {
 	 * @param baseUserName without the security domain suffix
 	 * @param credentials
 	 * @param applicationName
-	 * @return
+	 * @return a non-null context object
 	 * @throws LoginException
 	 */
 	Object authenticate(String securityDomain, String baseUserName, Credentials credentials, String applicationName)

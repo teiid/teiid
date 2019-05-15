@@ -59,20 +59,15 @@ public class TestInternalConnection {
 			threadLocalContext.set((Subject)context);
 			return previous;
 		}
-
+		
 		@Override
-		public Object getSecurityContext() {
+		public Object getSecurityContext(String securityDomain) {
 			return threadLocalContext.get();
 		}
 
 		@Override
 		public void clearSecurityContext() {
 			threadLocalContext.remove();
-		}
-
-		@Override
-		public Subject getSubjectInContext(String securityDomain) {
-			return threadLocalContext.get();
 		}
 
 		@Override

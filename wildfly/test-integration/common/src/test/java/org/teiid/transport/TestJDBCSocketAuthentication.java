@@ -65,7 +65,7 @@ public class TestJDBCSocketAuthentication {
             }
             
             @Override
-            public Subject getSubjectInContext(String securityDomain) {
+            public Object getSecurityContext(String securityDomain) {
                 return null;
             }
             

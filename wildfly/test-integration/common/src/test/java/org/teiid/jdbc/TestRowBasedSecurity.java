@@ -68,10 +68,6 @@ public class TestRowBasedSecurity {
 		Mockito.stub(g.members()).toReturn((Enumeration) v.elements());
 		subject.getPrincipals().add(g);
 		ec.setSecurityHelper(new DoNothingSecurityHelper() {
-			@Override
-			public Subject getSubjectInContext(String securityDomain) {
-				return subject;
-			}
 			
 			@Override
 			public Subject getSubjectInContext(Object context) {
