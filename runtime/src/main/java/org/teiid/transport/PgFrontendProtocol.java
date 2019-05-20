@@ -237,7 +237,7 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         
         //The number of parameter data types specified (can be zero). Note that this is not 
         //an indication of the number of parameters that might appear in the query string, only 
-        //the number that the frontend wants to prespecify types for.
+        //the number that the frontend wants to specify types for.
         int count = data.readShort();
         int[] paramType = new int[count];
         for (int i = 0; i < count; i++) {

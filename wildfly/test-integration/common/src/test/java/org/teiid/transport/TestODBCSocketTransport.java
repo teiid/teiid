@@ -883,6 +883,15 @@ public class TestODBCSocketTransport {
         assertFalse(rs.getBoolean(2));
         assertTrue(!rs.getBoolean(3) && rs.wasNull());
     }
+    
+    @Test public void testEmptySQL() throws Exception {
+        PreparedStatement stmt = conn.prepareStatement("");
+        stmt.executeUpdate();
+        
+        //make sure the unamed portal can close
+        Statement s = conn.createStatement();
+        s.executeQuery("select 1");
+    }
 
     private void checkApplicationName(Statement s, String value) throws SQLException {
         ResultSet rs = s.executeQuery("show application_name");

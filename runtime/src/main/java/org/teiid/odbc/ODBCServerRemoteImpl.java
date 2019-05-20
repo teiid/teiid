@@ -594,13 +594,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				String cursorName = null;
 				boolean scroll = false;
 				if ((m = cursorSelectPattern.matcher(modfiedSQL)).matches()){
-				    //per docs binary is irrelevant as that should be specifed by bind
+				    //per docs binary is irrelevant as that should be specified by bind
                     modfiedSQL = fixSQL(m.group(5));
                     cursorName = normalizeName(m.group(1));
                     scroll = m.group(3) != null && m.group(4) == null;
                 }
-				stmt = this.connection.prepareStatement(modfiedSQL, scroll?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-				Prepared prepared = new Prepared(prepareName, sql, modfiedSQL, paramType, getPgColInfo(stmt.getMetaData()), cursorName);
+                if (!modfiedSQL.trim().isEmpty()) {
+                    stmt = this.connection.prepareStatement(modfiedSQL, scroll?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                }                
+				Prepared prepared = new Prepared(prepareName, sql, modfiedSQL, paramType, stmt==null?null:getPgColInfo(stmt.getMetaData()), cursorName);
 				this.preparedMap.put(prepareName, prepared);
 				this.client.prepareCompleted(prepareName);
 			} catch (SQLException e) {
@@ -653,8 +655,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		PreparedStatementImpl stmt = null; 
 		try {
-			stmt = this.connection.prepareStatement(prepared.modifiedSql);
+		    if (!prepared.modifiedSql.isEmpty()) {
+		        stmt = this.connection.prepareStatement(prepared.modifiedSql);
+		    }
 			for (int i = 0; i < params.length; i++) {
+			    if (stmt == null) {
+	                errorOccurred("cannot bind parameters on an empty statement"); //$NON-NLS-1$
+	                return;
+	            }
 				Object param = params[i];
 				if (param instanceof byte[] && prepared.paramType.length > i) {
 					int oid = prepared.paramType[i];
@@ -735,8 +743,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			return;
 		}	
 		
-		if (query.prepared.sql.trim().isEmpty()) {
+		if (query.stmt == null) {
 			this.client.emptyQueryReceived();
+			this.doneExecuting();
 			return;
 		}
 		
@@ -1087,10 +1096,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 			query.rs = null;
 		}
-		try {
-			query.stmt.close();
-		} catch (SQLException e) {
-			LogManager.logDetail(LogConstants.CTX_ODBC, e, "Did not successfully close portal", query.name); //$NON-NLS-1$
+		if (query.stmt != null) {
+    		try {
+    			query.stmt.close();
+    		} catch (SQLException e) {
+    			LogManager.logDetail(LogConstants.CTX_ODBC, e, "Did not successfully close portal", query.name); //$NON-NLS-1$
+    		}
 		}
 	}
 
