@@ -25,18 +25,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.teiid.metadata.FunctionMethod.Determinism;
-import org.teiid.metadata.FunctionMethod.PushDown;
-
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-public @interface TeiidFunction {
-	String name() default "";
-	String category() default "";
-	boolean nullOnNull() default false;
-	Determinism determinism() default Determinism.DETERMINISTIC;
-    PushDown pushdown() default PushDown.CAN_PUSHDOWN;
-	String alias()  default "";
+public @interface TeiidFunctions {
+    String category();
+    String i18nPrefix() default "";
 }

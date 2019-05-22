@@ -164,6 +164,11 @@ public class SourceSystemFunctions {
 	
 	public static final String JSONTOXML = "jsontoxml"; //$NON-NLS-1$
 	
+	//json
+	public static final String JSONPATHVALUE = "jsonpathvalue"; //$NON-NLS-1$
+	public static final String JSONQUERY = "jsonquery"; //$NON-NLS-1$
+	public static final String JSONTOARRAY = "jsontoarray"; //$NON-NLS-1$
+	
 	public static final String UUID = "uuid"; //$NON-NLS-1$
 	
 	public static final String MD5 = "md5"; //$NON-NLS-1$
