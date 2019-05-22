@@ -88,7 +88,7 @@
         <version.io.dropwizard.metrics.metrics-core>3.2.2</version.io.dropwizard.metrics.metrics-core>
         <version.io.swagger>1.5.21</version.io.swagger>
 
-        <version.javax.validation>1.1.0.Final</version.javax.validation>
+        <version.javax.validation>2.0.1.Final</version.javax.validation>
         <version.jts>1.16.0</version.jts>
         <version.jts2geojson>0.13.0</version.jts2geojson>
         <version.junit>4.12</version.junit>
@@ -1574,7 +1574,7 @@
            <dependency>
                <groupId>io.netty</groupId>
                <artifactId>netty-all</artifactId>
-               <version>4.1.25.Final</version>
+               <version>4.1.29.Final</version>
            </dependency>
            
            <dependency>
@@ -1595,7 +1595,7 @@
            <dependency>
                <groupId>org.hibernate</groupId>
                <artifactId>hibernate-core</artifactId>
-               <version>5.3.7.Final</version>
+               <version>5.3.10.Final</version>
                <exclusions>
                    <exclusion>
                        <groupId>org.jboss.spec.javax.transaction</groupId>
@@ -1649,7 +1649,7 @@
            <dependency>
                <groupId>org.jboss.resteasy</groupId>
                <artifactId>resteasy-jaxrs</artifactId>
-               <version>3.6.2.Final</version>
+               <version>3.6.3.Final</version>
                <exclusions>
                    <exclusion>
                        <groupId>org.jboss.spec.javax.ws.rs</groupId>
