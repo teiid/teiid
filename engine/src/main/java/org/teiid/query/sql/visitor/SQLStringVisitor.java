@@ -2473,6 +2473,10 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(ArrayTable obj) {
         addHintComment(obj);
     	append("ARRAYTABLE("); //$NON-NLS-1$
+    	if (obj.getSingleRow() != null) {
+    	    append(obj.getSingleRow()?ROW:ROWS);
+    	    append(SPACE);
+    	}
         visitNode(obj.getArrayValue());
         append(SPACE);
         append(NonReserved.COLUMNS);

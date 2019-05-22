@@ -32,6 +32,7 @@ public class ArrayTable extends TableFunctionReference {
 	
     private Expression arrayValue;
     private List<ProjectedColumn> columns = new ArrayList<ProjectedColumn>();
+    private Boolean singleRow;
     
     public List<ProjectedColumn> getColumns() {
 		return columns;
@@ -53,11 +54,20 @@ public class ArrayTable extends TableFunctionReference {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-
+	
+	public void setSingleRow(Boolean singleRow) {
+        this.singleRow = singleRow;
+    }
+    
+    public Boolean getSingleRow() {
+        return singleRow;
+    }
+    
 	@Override
 	protected ArrayTable cloneDirect() {
 		ArrayTable clone = new ArrayTable();
 		this.copy(clone);
+		clone.singleRow = singleRow;
 		clone.setArrayValue((Expression)this.arrayValue.clone());
 		for (ProjectedColumn column : columns) {
 			clone.getColumns().add(column.copyTo(new ProjectedColumn()));
@@ -75,7 +85,8 @@ public class ArrayTable extends TableFunctionReference {
 		}
 		ArrayTable other = (ArrayTable)obj;
 		return this.columns.equals(other.columns) 
-			&& EquivalenceUtil.areEqual(arrayValue, other.arrayValue);
+			&& EquivalenceUtil.areEqual(arrayValue, other.arrayValue)
+			&& EquivalenceUtil.areEqual(singleRow, other.singleRow);
 	}
 	
 }

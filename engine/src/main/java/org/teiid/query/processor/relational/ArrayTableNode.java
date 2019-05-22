@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -51,6 +52,11 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 	
 	//initialized state
     private int[] projectionIndexes;
+    
+    //multi-row state
+    private int index;
+    private int length;
+    private Object array;
 	
 	public ArrayTableNode(int nodeID) {
 		super(nodeID);
@@ -65,6 +71,14 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 		}
         Map elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
+	}
+	
+	@Override
+	public void reset() {
+	    super.reset();
+	    array = null;
+	    length = 0;
+	    index = 0; 
 	}
 	
 	@Override
@@ -88,26 +102,58 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		Object array = getEvaluator(Collections.emptyMap()).evaluate(table.getArrayValue(), null);
+	    if (array == null) {
+	        array = getEvaluator(Collections.emptyMap()).evaluate(table.getArrayValue(), null);
+	    } 
 
 		if (array != null) {
-			ArrayList<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
-			for (int output : projectionIndexes) {
-				ProjectedColumn col = table.getColumns().get(output);
-				try {
-					Object val = FunctionMethods.array_get(array, output + 1);
-					tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
-				} catch (TransformationException e) {
-					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30190, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30190, col.getName()));
-				} catch (SQLException e) {
-					throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
-				}
-			}
-			addBatchRow(tuple);
+		    if (!Boolean.FALSE.equals(table.getSingleRow())) {
+    			createRow(array);
+		    } else {
+                try {
+    		        if (length == 0) {
+    	                length = FunctionMethods.array_length(array);
+    	                index = 0;
+    		        }
+    		        for (; index < length; index++) {
+    		            if (this.isBatchFull()) {
+                            return pullBatch();
+                        }
+                        Object rowArray = FunctionMethods.array_get(array, index + 1);
+                        if (rowArray == null) {
+                            continue;
+                        }
+                        if (!(rowArray instanceof java.sql.Array || rowArray.getClass().isArray())) {
+                            throw new TeiidProcessingException(QueryPlugin.Event.TEIID31297, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31297));
+                        }
+                        createRow(rowArray);
+    		        }
+                } catch (SQLException e) {
+                    throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
+                }
+		    }
 		}
+		array = null;
 		terminateBatches();
 		return pullBatch();
 	}
+
+    private void createRow(Object arrayValue)
+            throws FunctionExecutionException, TeiidProcessingException {
+        ArrayList<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
+        for (int output : projectionIndexes) {
+        	ProjectedColumn col = table.getColumns().get(output);
+        	try {
+        		Object val = FunctionMethods.array_get(arrayValue, output + 1);
+        		tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
+        	} catch (TransformationException e) {
+        		 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30190, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30190, col.getName()));
+        	} catch (SQLException e) {
+        		throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
+        	}
+        }
+        addBatchRow(tuple);
+    }
 	
 	@Override
 	public Collection<? extends LanguageObject> getObjects() {

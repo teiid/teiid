@@ -18,6 +18,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings({"unchecked", "nls"})
@@ -70,6 +72,26 @@ public class TestArrayTable {
         };    
 
         process(sql, expected);
+    }
+    
+	@Test public void testMultiRowArrayTable() throws Exception {
+        String sql = "select * from arraytable(rows ((1,'a'),(2,'b'),(3,)) COLUMNS x integer, y string) x"; //$NON-NLS-1$
+        
+        assertEquals("SELECT * FROM ARRAYTABLE(ROWS ((1, 'a'), (2, 'b'), (3,)) COLUMNS x integer, y string) AS x", QueryParser.getQueryParser().parseCommand(sql).toString());
+        
+        List[] expected = new List[] {
+                Arrays.asList(1, "a"),
+                Arrays.asList(2, "b"),
+                Arrays.asList(3, null),
+        };    
+
+        process(sql, expected);
+    }
+    
+	@Test(expected=TeiidProcessingException.class) public void testMultiRowArrayTableFails() throws Exception {
+        String sql = "select * from arraytable(rows (1,'a') COLUMNS x integer, y string) x"; //$NON-NLS-1$
+
+        process(sql, null);
     }
 	
 	public static void process(String sql, List[] expectedResults) throws Exception {    

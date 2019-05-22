@@ -2590,25 +2590,25 @@ example=[source,sql]\n----\nARRAYTABLE (col1 COLUMNS x STRING) AS y\n----\n
 */
 ArrayTable arrayTable(ParseInfo info) :
 {
-	Expression array = null;
-	List<TableFunctionReference.ProjectedColumn> columns;
-	String aliasID = null;
+    Expression array = null;
+    List<TableFunctionReference.ProjectedColumn> columns;
+    String aliasID = null;
+    Boolean single = null;
 }
 {
- 	<ARRAYTABLE> <LPAREN> array = valueExpressionPrimary(info)
- 	<COLUMNS>
- 	columns = createElementsWithTypes(info) 
- 	<RPAREN>
- 	[<AS>] aliasID=id(null) {
- 	    validateQuotedName(aliasID, getToken(0).image);
-	}
- 	{
- 		ArrayTable result = new ArrayTable();
- 		result.setArrayValue(array);
- 		result.setColumns(columns);
- 		result.setName(aliasID);
- 		return result;
- 	}
+    <ARRAYTABLE> <LPAREN> [(<ROW>|<ROWS> {single=false;})] array = valueExpressionPrimary(info)
+    <COLUMNS>
+    columns = createElementsWithTypes(info) 
+    <RPAREN>
+    [<AS>] aliasID=id(Boolean.FALSE)
+    {
+        ArrayTable result = new ArrayTable();
+        result.setArrayValue(array);
+        result.setColumns(columns);
+        result.setName(aliasID);
+        result.setSingleRow(single);
+        return result;
+    }
 }
 
 /*
