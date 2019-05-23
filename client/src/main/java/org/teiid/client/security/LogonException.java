@@ -44,7 +44,7 @@ public class LogonException extends TeiidSecurityException {
      * Construct an instance with the message and error code specified.
      *
      * @param message A message describing the exception
-     * @param code The error code
+     * @param event The error event code
      */
     public LogonException( BundleUtil.Event event, String message ) {
         super(event, message);

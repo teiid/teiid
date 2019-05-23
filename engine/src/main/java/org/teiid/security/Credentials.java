@@ -24,14 +24,22 @@ public class Credentials implements Serializable {
     
 	private static final long serialVersionUID = 7453114713211221240L;
 	
-	private char[] credentials = null;
+	private String credentials = null;
     
     /**
      * Construct a new PasswordCredentials 
      * @param credentials the password.
      */
     public Credentials(char[] credentials) {
+        this.credentials = new String(credentials);
+    }
+    
+    public Credentials(String credentials) {
         this.credentials = credentials;
+    }
+    
+    public String getCredentials() {
+        return credentials;
     }
 
     /**
@@ -39,7 +47,7 @@ public class Credentials implements Serializable {
      * @returns The Credentials in a char[].
      */
     public char[] getCredentialsAsCharArray() {
-        return this.credentials;
+        return this.credentials==null?null:this.credentials.toCharArray();
     }
 
 }

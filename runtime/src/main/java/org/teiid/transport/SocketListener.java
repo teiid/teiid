@@ -74,9 +74,10 @@ public class SocketListener implements ChannelListenerFactory {
      * @param port
      * @param inputBufferSize
      * @param outputBufferSize
-     * @param engine null if SSL is disabled
-     * @param bindaddress
-     * @param server
+     * @param maxWorkers
+     * @param config
+     * @param csr
+     * @param storageManager
      */
     public SocketListener(final InetSocketAddress address, final int inputBufferSize,
             final int outputBufferSize, int maxWorkers,
@@ -151,7 +152,7 @@ public class SocketListener implements ChannelListenerFactory {
     	ChannelFuture future = this.serverChannel.closeFuture();
     	Future<?> shutdown = null;
     	if (this.bootstrap != null) {
-        	shutdown = bootstrap.group().shutdownGracefully(0, 0, TimeUnit.SECONDS);
+        	shutdown = bootstrap.config().group().shutdownGracefully(0, 0, TimeUnit.SECONDS);
         	bootstrap = null;
     	}
     	try {

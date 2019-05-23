@@ -76,8 +76,8 @@ public class AdminFactory {
      * Creates a ServerAdmin with the specified connection properties.
      * @param userName
      * @param password
-     * @param serverURL
-     * @param applicationName
+     * @param host
+     * @param port
      * @param profileName - Name of the domain mode profile
      * @return
      * @throws AdminException
@@ -92,8 +92,8 @@ public class AdminFactory {
      * Creates a ServerAdmin with the specified connection properties.
      * @param userName
      * @param password
-     * @param serverURL
-     * @param applicationName
+     * @param host
+     * @param port
      * @return
      * @throws AdminException
      */
