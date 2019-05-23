@@ -15,6 +15,7 @@
         <artifact name="${org.teiid:teiid-data-quality}"/>
         <artifact name="${org.teiid:teiid-optional-geo}"/>
         <artifact name="${org.teiid:teiid-optional-xml}"/>
+        <artifact name="${org.teiid:teiid-optional-json}"/>
         <resource-root path="deployments" />
     </resources>
 
@@ -44,9 +45,6 @@
         <module name="org.jboss.as.clustering.jgroups"/>
         <module name="org.infinispan"/>
         <module name="org.arrahtec"/>
-        <!-- TODO:  
-        <module name="org.jboss.teiid.rest-service"/>
-         -->
         
         <module name="org.jboss.marshalling"/>
         <module name="org.jboss.marshalling.river"/> 
@@ -62,9 +60,15 @@
         <module name="org.jgroups"/>
         <module name="nu.xom"/>
         <module name="net.sf.saxon"/>
+        
+        <!-- geo -->
         <module name="org.locationtech.jts"/>
         <module name="org.osgeo.proj4j"/>
         <module name="org.wololo.jts2geojson"/>
+        
+        <!-- json -->
+        <module name="com.jayway.jsonpath"/>
+        
         <module name="org.jboss.dmr" /> <!-- Admin -->        
         <module name="org.jboss.as.cli"/> <!-- Admin -->
         <module name="org.jboss.as.controller-client"/> <!-- Admin -->
