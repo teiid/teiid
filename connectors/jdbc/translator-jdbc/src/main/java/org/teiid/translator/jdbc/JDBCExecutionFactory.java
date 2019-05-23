@@ -1130,7 +1130,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                 //TODO: this only accounts for strings and not strings embedded in arrays
                 param = this.removePushdownCharacters.matcher((String)param).replaceAll(""); //$NON-NLS-1$
             }
-            if (useUnicodePrefix()) {
+            if (useNBindingType()) {
                 //sources that require the prefix, also require binding as an N type
                 if (type == Types.VARCHAR) {
                     if (isNonAscii(param.toString())) {
@@ -1691,6 +1691,13 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public boolean useUnicodePrefix() {
 		return false;
 	}
+	
+	/**
+     * @return true if an N type (NVARCHAR, NCLOB) should be used when a non-ascii value is encountered 
+     */
+	public boolean useNBindingType() {
+        return useUnicodePrefix();
+    }
 	
 	/**
 	 * 

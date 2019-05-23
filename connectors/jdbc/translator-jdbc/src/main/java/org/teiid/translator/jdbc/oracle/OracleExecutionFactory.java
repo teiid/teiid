@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -146,6 +147,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	private boolean oracleSuppliedDriver = true;
 	
 	private OracleFormatFunctionModifier parseModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
+	
+	private boolean useNBindingType = true;
+	private boolean isExtendedAscii = true;
 	
 	public OracleExecutionFactory() {
 		//older oracle instances seem to have issues with large numbers of bindings
@@ -355,6 +359,24 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
             aa.setAllowsOrderBy(true);
             addPushDownFunction(ORACLE, LISTAGG, STRING, STRING, STRING).setAggregateAttributes(aa); 
             addPushDownFunction(ORACLE, LISTAGG, STRING, STRING).setAggregateAttributes(aa);
+        }
+        if (connection != null && isOracleSuppliedDriver()) {
+            try {
+                if (connection.getMetaData().getDriverMajorVersion() <= 11) {
+                    useNBindingType = false;
+                }
+                try (Statement s = connection.createStatement();) {
+                    ResultSet rs = s.executeQuery("select value from nls_database_parameters where parameter='NLS_CHARACTERSET"); //$NON-NLS-1$
+                    if (rs.next()) {
+                        String encoding = rs.getString(1);
+                        if ("US7ASCII".equalsIgnoreCase(encoding)) { //$NON-NLS-1$
+                            isExtendedAscii = false;
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+            
+            }
         }
     }
     
@@ -1301,6 +1323,16 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     protected boolean isNonAsciiFunction(Function f) {
         return f.getName().equalsIgnoreCase(TO_NCHAR)
                      || (f.getType() == TypeFacility.RUNTIME_TYPES.CHAR && f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT));
+    }
+    
+    @Override
+    public boolean isExtendedAscii() {
+        return isExtendedAscii;
+    }
+    
+    @Override
+    public boolean useNBindingType() {
+        return useNBindingType;
     }
     
     @Override
