@@ -19,7 +19,8 @@
 package org.teiid.json;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.JsonType;
+import org.teiid.core.util.ReaderInputStream;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.TeiidFunctions;
@@ -52,7 +54,7 @@ public class JsonPathFunctionMethods {
     public static String jsonPathValue(Clob clob, String jsonPath, boolean nullLeaf)
             throws IOException, SQLException {
         JsonPath path = JsonPath.compile(jsonPath);
-        Object result = jsonPathRead(clob.getAsciiStream(), path, nullLeaf);
+        Object result = jsonPathRead(clob.getCharacterStream(), path, nullLeaf);
         
         if (path.isDefinite()) {
             //single value
@@ -90,7 +92,7 @@ public class JsonPathFunctionMethods {
     public static JsonType jsonQuery(Clob clob, String jsonPath, boolean nullLeaf)
             throws IOException, SQLException {
         JsonPath path = JsonPath.compile(jsonPath);
-        Object result = jsonPathRead(clob.getAsciiStream(), path, nullLeaf);
+        Object result = jsonPathRead(clob.getCharacterStream(), path, nullLeaf);
         if (result == null) {
             return null;
         }
@@ -119,7 +121,7 @@ public class JsonPathFunctionMethods {
         }    
         
         JsonPath path = JsonPath.compile(jsonPath);
-        Object result = jsonPathRead(clob.getAsciiStream(), path, nullLeaf);
+        Object result = jsonPathRead(clob.getCharacterStream(), path, nullLeaf);
         if (result == null) {
             return null;
         }
@@ -174,16 +176,16 @@ public class JsonPathFunctionMethods {
         return colValue;
     }
     
-    static Object jsonPathRead(InputStream jsonInputStream, JsonPath jsonPath, boolean nullLeaf) throws IOException {
+    static Object jsonPathRead(Reader jsonReader, JsonPath jsonPath, boolean nullLeaf) throws IOException {
         Configuration conf = Configuration.defaultConfiguration();
         if (nullLeaf) {
             conf = conf.addOptions(Option.DEFAULT_PATH_LEAF_TO_NULL);
         }
         
         try {
-            return jsonPath.read(jsonInputStream, conf);
+            return jsonPath.read(new ReaderInputStream(jsonReader, Charset.forName("UTF-8")), conf); //$NON-NLS-1$
         } finally {
-            jsonInputStream.close();
+            jsonReader.close();
         }
     }
     

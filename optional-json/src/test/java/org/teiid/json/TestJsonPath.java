@@ -51,6 +51,11 @@ public class TestJsonPath {
             throw new RuntimeException(e);
         }
     }
+    
+    @Test public void testJsonPathValueNonascii() throws Exception {
+        String result = JsonPathFunctionMethods.jsonPathValue(new ClobImpl(EXAMPLE), "$.owner", false);
+        assertEquals("Günter Grass", result);
+    }
 
     @Test public void testJsonPathValueDefiniteArray() throws Exception {
         String result = JsonPathFunctionMethods.jsonPathValue(new ClobImpl(EXAMPLE), "$.store.book", false);

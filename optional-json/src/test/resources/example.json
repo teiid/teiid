@@ -33,5 +33,6 @@
          "price" : 19.95
       }
    },
-   "expensive" : 10
+   "expensive" : 10,
+   "owner" : "Günter Grass"
 }
