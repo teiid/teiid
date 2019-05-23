@@ -204,18 +204,6 @@
                 <version>${version.org.apache.cxf}</version>
             </dependency>
             
-            <dependency>
-               <groupId>org.ow2.asm</groupId>
-               <artifactId>asm</artifactId>
-               <version>6.2.1</version>
-           </dependency>
-           
-           <dependency>
-               <groupId>org.jboss.resteasy</groupId>
-               <artifactId>resteasy-multipart-provider</artifactId>
-               <version>3.6.2.Final</version>
-           </dependency>
-            
             <!-- ====== -->            
             <!-- Import the core parent to get all the managed dependencies from core -->
             <dependency>
