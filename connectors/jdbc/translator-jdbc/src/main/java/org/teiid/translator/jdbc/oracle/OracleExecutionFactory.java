@@ -366,7 +366,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
                     useNBindingType = false;
                 }
                 try (Statement s = connection.createStatement();) {
-                    ResultSet rs = s.executeQuery("select value from nls_database_parameters where parameter='NLS_CHARACTERSET"); //$NON-NLS-1$
+                    ResultSet rs = s.executeQuery("select value from nls_database_parameters where parameter='NLS_CHARACTERSET'"); //$NON-NLS-1$
                     if (rs.next()) {
                         String encoding = rs.getString(1);
                         if ("US7ASCII".equalsIgnoreCase(encoding)) { //$NON-NLS-1$
