@@ -43,11 +43,12 @@
  */
 package nux.xom.pool;
 
-import java.io.IOException;
-
-import nu.xom.*;
-import nux.xom.binary.NodeBuilder;
-import nux.xom.io.StreamingSerializer;
+import nu.xom.Element;
+import nu.xom.Node;
+import nu.xom.NodeFactory;
+import nu.xom.Nodes;
+import nu.xom.ParentNode;
+import nu.xom.Text;
 
 /**
  * Various utilities avoiding redundant code in several classes.
@@ -94,137 +95,7 @@ public class XOMUtil {
 		};
 	}
 
-	/**
-	 * Returns a node factory that redirects its input onto the output of a
-	 * streaming serializer. For example can be used to convert standard textual
-	 * XML to and from bnux binary XML. Works in a fully streaming fashion, that
-	 * is, without building a complete temporary XOM main memory tree.
-	 * <p>
-	 * The document returned on <code>finishMakingDocument</code> will be empty.
-	 *
-	 * @param serializer
-	 *            the streaming serializer to write to
-	 * @return a redirecting node factory
-	 */
-	public static NodeFactory getRedirectingNodeFactory(
-			final StreamingSerializer serializer) {
 
-		if (serializer == null) throw new IllegalArgumentException(
-				"Streaming serializer must not be null");
-
-		/*
-		 * Buffers a start tag until attributes and namespaces have been attached
-		 * by the Builder, and only then calls serializer.writeStartTag(Elem).
-		 */
-		return new NodeFactory() {
-
-			private Element buffer = null;
-			private final Nodes NONE = new Nodes();
-			private final NodeBuilder nodeBuilder = new NodeBuilder();
-
-			public Nodes makeAttribute(String name, String namespace,
-					String value, Attribute.Type type) {
-
-				buffer.addAttribute(
-					nodeBuilder.createAttribute(name, namespace, value, type));
-//				buffer.addAttribute(
-//					new Attribute(name, namespace, value, type));
-				return NONE;
-			}
-
-			public Nodes makeComment(String data) {
-				flush();
-				try {
-					serializer.write(new Comment(data));
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-				return NONE;
-			}
-
-			public Nodes makeDocType(String rootElementName, String publicID, String systemID) {
-				flush();
-				try {
-					serializer.write(new DocType(rootElementName, publicID, systemID));
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-				return NONE;
-			}
-
-			public Nodes makeProcessingInstruction(String target, String data) {
-				flush();
-				try {
-					serializer.write(new ProcessingInstruction(target, data));
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-				return NONE;
-			}
-
-			public Nodes makeText(String text) {
-				flush();
-				try {
-					serializer.write(new Text(text));
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-				return NONE;
-			}
-
-			public Element startMakingElement(String name, String namespace) {
-				flush();
-//				buffer = new Element(name, namespace);
-				buffer = nodeBuilder.createElement(name, namespace);
-				return buffer;
-			}
-
-			public Nodes finishMakingElement(Element element) {
-				flush();
-				try {
-					serializer.writeEndTag();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-
-				if (element.getParent() instanceof Document) {
-					return new Nodes(element);
-				}
-				return NONE;
-			}
-
-			public Document startMakingDocument() {
-				buffer = null;
-				try {
-					serializer.writeXMLDeclaration();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-				return new Document(new Element("dummy")); // unused dummy
-			}
-
-			public void finishMakingDocument(Document document) {
-				buffer = null;
-				try {
-					serializer.writeEndDocument();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
-
-			private void flush() {
-				if (buffer != null) {
-					try {
-						serializer.writeStartTag(buffer);
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-					buffer = null;
-				}
-			}
-
-		};
-	}
 
 //	/**
 //	 * Streams (pushes) the given document through the given node factory,
