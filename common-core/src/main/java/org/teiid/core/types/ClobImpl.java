@@ -68,7 +68,7 @@ public class ClobImpl extends BaseLob implements Clob {
 		}
 	}
 
-	private final static class ClobStreamProvider implements
+	final static class ClobStreamProvider implements
 			LobSearchUtil.StreamProvider {
 		private final Clob searchstr;
 
@@ -77,13 +77,25 @@ public class ClobImpl extends BaseLob implements Clob {
 		}
 
 		public InputStream getBinaryStream() throws SQLException {
-			ReaderInputStream ris = new ReaderInputStream(searchstr.getCharacterStream(), Charset.forName("UTF-16")); //$NON-NLS-1$
-			try {
-				ris.skip(2);
-				return ris;
-			} catch (IOException e) {
-				throw new SQLException(e);
-			}
+		    final Reader reader = searchstr.getCharacterStream();
+		
+			return new InputStream() {
+			    int currentChar = -1;
+                @Override
+                public int read() throws IOException {
+                    if (currentChar == -1) {
+                        currentChar = reader.read();
+                        if (currentChar == -1) {
+                            return -1;
+                        }
+                        int result = currentChar & 0xff;
+                        return result;
+                    }
+                    int result = currentChar & 0xff00;
+                    currentChar = -1;
+                    return result;
+                }
+            };
 		}
 	}
 
@@ -112,31 +124,10 @@ public class ClobImpl extends BaseLob implements Clob {
     	this(new StringInputStreamFactory(str), str.length());
     }
 
-	/**
-     * Gets the <code>CLOB</code> value designated by this <code>Clob</code>
-     * object as a stream of Ascii bytes.
-     * @return an ascii stream containing the <code>CLOB</code> data
-     * @exception SQLException if there is an error accessing the
-     * <code>CLOB</code> value
-     */
     public InputStream getAsciiStream() throws SQLException {
     	return new ReaderInputStream(getCharacterStream(), Charset.forName("US-ASCII")); //$NON-NLS-1$
     }
 
-    /**
-     * Returns a copy of the specified substring
-     * in the <code>CLOB</code> value
-     * designated by this <code>Clob</code> object.
-     * The substring begins at position
-     * <code>pos</code> and has up to <code>length</code> consecutive
-     * characters.
-     * @param pos the first character of the substring to be extracted.
-     *            The first character is at position 1.
-     * @param length the number of consecutive characters to be copied
-     * @return a <code>String</code> that is the specified substring in
-     *         the <code>CLOB</code> value designated by this <code>Clob</code> object
-     * @exception SQLException if there is an error accessing the <code>CLOB</code>
-     */
     public String getSubString(long pos, int length) throws SQLException {
         if (pos < 1) {
             Object[] params = new Object[] {new Long(pos)};

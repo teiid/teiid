@@ -70,7 +70,7 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
      */
     public byte[] getBytes(long pos, int length) throws SQLException {
         if (pos < 1) {
-            Object[] params = new Object[] {new Long(pos)};
+            Object[] params = new Object[] {pos};
             throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.2", params)); //$NON-NLS-1$
         }
         else if (length == 0 || pos > length()) {
@@ -79,7 +79,7 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
         pos = pos - 1;
         
         if (length < 0) {
-            Object[] params = new Object[] {new Integer( length)};
+            Object[] params = new Object[] {length};
             throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.3", params)); //$NON-NLS-1$
         }
         else if (pos + length > length()) {

@@ -25,15 +25,8 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.teiid.core.util.ArgCheck;
-import org.teiid.core.util.StringUtil;
 
 public class BundleUtil {
-    /**
-     * The product properties used to override default localized text.
-     * @since 5.0.2
-     */
-    static protected ResourceBundle productProps;
-
     /**
      * The name of the resource bundle.
      */
@@ -113,8 +106,7 @@ public class BundleUtil {
             //char[] messageWithNoDoubleQuotes = CharOperation.replace(text.toCharArray(), DOUBLE_QUOTES, SINGLE_QUOTE);
             //text = new String(messageWithNoDoubleQuotes);
 
-            String value = getProductValue(key);
-            return ((value == null) ? this.bundle.getString(key) : value);
+            return this.bundle.getString(key);
         } catch (final Exception err) {
             String msg;
 
@@ -135,27 +127,6 @@ public class BundleUtil {
     }
 
     /**
-     * Obtains the value that is overriding the default value.
-     * @param theKey the key whose product value is being requested
-     * @return the value or <code>null</code> if not overridden by the product
-     */
-    private String getProductValue(String theKey) {
-        String result = null;
-
-        if ((productProps != null) && !StringUtil.isEmpty(theKey)) {
-            String key = this.pluginId + '.' + theKey;
-
-            try {
-                result = productProps.getString(key);
-            } catch (MissingResourceException theException) {
-                // not found in product properties
-            }
-        }
-
-        return result;
-    }
-
-    /**
      * Determines if the given key exists in the resource file.
      *
      * @param key
@@ -165,7 +136,7 @@ public class BundleUtil {
      */
     public boolean keyExists(final String key) {
         try {
-            return ((getProductValue(key) != null) || (this.bundle.getString(key) != null));
+            return (this.bundle.getString(key) != null);
         } catch (final Exception err) {
             return false;
         }
@@ -239,17 +210,11 @@ public class BundleUtil {
     public String getStringOrKey(final String key) {
         ArgCheck.isNotNull(key);
 
-        String value = getProductValue(key);
-
-        if (value == null) {
-            try {
-                return this.bundle.getString(key);
-            } catch (final MissingResourceException err) {
-                return key;
-            }
+        try {
+            return this.bundle.getString(key);
+        } catch (final MissingResourceException err) {
+            return key;
         }
-
-        return value;
     }
 
 }

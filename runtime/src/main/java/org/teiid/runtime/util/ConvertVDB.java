@@ -69,7 +69,7 @@ public class ConvertVDB {
         if (f.getName().toLowerCase().endsWith(".xml")) {
 			if (args.length > 1 && args[1] != null) {
 				System.out.println("Writing to file " + args[1]);
-				ObjectConverterUtil.write(convert(f).toCharArray(), new File(args[1]).getAbsolutePath() );
+				ObjectConverterUtil.write(convert(f).getBytes("UTF-8"), new File(args[1]).getAbsolutePath() );
 			} else {
 				System.out.println(convert(f));
 			}

@@ -18,21 +18,11 @@
 
 package org.teiid.core.util;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -130,7 +120,7 @@ public final class PropertiesUtils {
     public static void putAll(Properties addToThis,
                               Properties withThese) {
         if ( withThese != null && addToThis != null ) {
-            Enumeration enumeration = withThese.propertyNames();
+            Enumeration<?> enumeration = withThese.propertyNames();
             while ( enumeration.hasMoreElements() ) {
                 String propName = (String) enumeration.nextElement();
                 Object propValue = withThese.get(propName);
@@ -221,34 +211,6 @@ public final class PropertiesUtils {
         return Boolean.valueOf(stringVal);
     }
 
-    /**
-     * Read the header part of a properties file into a String. 
-     * @param fileName
-     * @return
-     * @throws IOException
-     * @since 4.3
-     */
-    public static String loadHeader(String fileName) throws IOException {
-        FileReader fr = null;
-        BufferedReader br = null;
-        try {
-            fr = new FileReader(fileName);
-            br = new BufferedReader(fr);
-            String header = br.readLine();
-            if (header != null && header.indexOf('#') == 0) {
-                header = header.substring(1);
-            }
-            return header;
-        } finally {
-            if (br != null) {
-                br.close();
-            }
-            if (fr != null) {
-                fr.close();
-            }
-        }
-    }
-    
     public static Properties load(String fileName) throws IOException {
         InputStream is = null;
         try {
@@ -263,179 +225,6 @@ public final class PropertiesUtils {
         }
     }
     
-    public static Properties loadFromURL(URL url) throws MalformedURLException, IOException {
-        Properties result = new Properties();
-        InputStream is = null;
-        try {
-	        is = url.openStream();
-        	result.load(is);
-        } finally {
-        	if (is != null) {
-        		is.close();
-        	}
-        }
-        return result;
-    }
-
-    public static Properties loadAsResource(Class clazz, String resourceName) throws IOException { 
-        InputStream is = null;
-        Properties configProps = new Properties();
-        try {
-            is = clazz.getResourceAsStream(resourceName);
-            ArgCheck.isNotNull(is);
-            if (is != null) {
-                   configProps.load(is);
-            }
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (Exception ce) {
-                    
-                }
-            }
-        }
-        return configProps;
-    }
-    
-    /**
-     * Write the specified properties to the specified file,
-     * with the specified header.  
-     * Results may not be sorted.
-     * @param fileName
-     * @param props
-     * @param header
-     * @throws IOException
-     * @since 4.3
-     */
-    public static void print(String fileName, Properties props, String header) throws IOException {
-        FileOutputStream stream = null;
-        try {
-            stream = new FileOutputStream(fileName);
-            props.store(stream, header);
-            stream.flush();
-        } finally {
-            try {
-                if (stream != null) {
-                    stream.close();
-                }
-            } catch (Exception e) {
-            }
-        }
-    }
-
-    
-    
-    /**
-     * Write the specified properties to the specified file,
-     * with the specified header.  
-     * Results are sorted by property name.
-     */    
-    public static void print( String fileName, Properties props ) throws IOException {
-
-        FileOutputStream stream = null;
-        PrintStream writer = null;
-
-        try {
-
-    		stream = new FileOutputStream(fileName);
-    	  	writer = new PrintStream(stream);
-    
-            List names = new ArrayList();
-            Enumeration enumeration = props.propertyNames();
-            while ( enumeration.hasMoreElements() ) {
-                String name = (String) enumeration.nextElement();
-                names.add(name);
-            }
-            Collections.sort(names);
-    
-            StringBuffer sb;
-    
-            for (Iterator nIt=names.iterator(); nIt.hasNext(); ) {
-              String name = (String) nIt.next();
-    
-              String value = props.getProperty(name);
-    
-              sb = new StringBuffer();
-    
-              sb.append(name);
-              sb.append("="); //$NON-NLS-1$
-              sb.append(value);
-    
-              writer.println(sb.toString());
-            }
-            writer.flush();
-        } finally {
-            try {
-                if (writer != null) {
-                    writer.close();
-                }
-            } catch (Exception e){
-                                
-            }
-            try {
-                if (stream != null) {
-                    stream.close();
-                }
-            } catch (Exception e){
-                                
-            }            
-        }
-
-
-    }
-
-    private static final String specialSaveChars = "=: \t\r\n\f#!"; //$NON-NLS-1$
-
-    /*
-     * Converts unicodes to encoded &#92;uxxxx
-     * and writes out any of the characters in specialSaveChars
-     * with a preceding slash
-     */
-    public static String saveConvert(String theString, boolean escapeSpace) {
-        if ( theString == null ) {
-            return ""; //$NON-NLS-1$
-        }
-        int len = theString.length();
-        StringBuffer outBuffer = new StringBuffer(len*2);
-
-        for(int x=0; x<len; x++) {
-            char aChar = theString.charAt(x);
-            switch(aChar) {
-        case ' ':
-            if (x == 0 || escapeSpace)
-            outBuffer.append('\\');
-
-            outBuffer.append(' ');
-            break;
-                case '\\':outBuffer.append('\\'); outBuffer.append('\\');
-                          break;
-                case '\t':outBuffer.append('\\'); outBuffer.append('t');
-                          break;
-                case '\n':outBuffer.append('\\'); outBuffer.append('n');
-                          break;
-                case '\r':outBuffer.append('\\'); outBuffer.append('r');
-                          break;
-                case '\f':outBuffer.append('\\'); outBuffer.append('f');
-                          break;
-                default:
-                    if ((aChar < 0x0020) || (aChar > 0x007e)) {
-                        outBuffer.append('\\');
-                        outBuffer.append('u');
-                        outBuffer.append(toHex((aChar >> 12) & 0xF));
-                        outBuffer.append(toHex((aChar >>  8) & 0xF));
-                        outBuffer.append(toHex((aChar >>  4) & 0xF));
-                        outBuffer.append(toHex( aChar        & 0xF));
-                    } else {
-                        if (specialSaveChars.indexOf(aChar) != -1)
-                            outBuffer.append('\\');
-                        outBuffer.append(aChar);
-                    }
-            }
-        }
-        return outBuffer.toString();
-    }
-
     /**
      * Convert a nibble to a hex character
      * @param   nibble  the nibble to convert.
@@ -517,7 +306,7 @@ public final class PropertiesUtils {
      */
     public static Properties resolveNestedProperties(Properties original) {
         
-        for(Enumeration e = original.propertyNames(); e.hasMoreElements();) {
+        for(Enumeration<?> e = original.propertyNames(); e.hasMoreElements();) {
             String key = (String)e.nextElement();
             String value = original.getProperty(key);
 

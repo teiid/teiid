@@ -18,6 +18,8 @@
 
 package org.teiid.core.util;
 
+import java.nio.charset.Charset;
+
 /**
  * <p>Encodes and decodes to and from Base64 notation.</p>
  * <p>Homepage: <a href="http://iharder.net/base64">http://iharder.net/base64</a>.</p>
@@ -459,7 +461,7 @@ public class Base64
     }   // end decode
     
     public static String encodeUrlSafe(byte[] data) {
-        byte[] encode = encodeBytes(data).getBytes();
+        byte[] encode = encodeBytes(data).getBytes(Charset.forName("UFT-8")); //$NON-NLS-1$
         for (int i = 0; i < encode.length; i++) {
             if (encode[i] == '+') {
                 encode[i] = '-';
@@ -467,7 +469,7 @@ public class Base64
                 encode[i] = '_';
             }
         }
-        return new String(encode);
+        return new String(encode, Charset.forName("UFT-8")); //$NON-NLS-1$
     }
 
     public static byte[] decodeUrlSafe(CharSequence data) {

@@ -203,32 +203,15 @@ public class ObjectConverterUtil {
         return isContent;
     }
 
-    public static InputStream convertToInputStream(final String data) {
-        return convertToInputStream(data.getBytes());
-    }
-    
-    public static InputStream convertToInputStream(final char[] data) {
-        return convertToInputStream(new String(data));
-    }
-
     public static void write(final InputStream is, final String fileName) throws IOException {
         File f = new File(fileName);
         write(is, f);
     }
     
-    public static void write(final Reader reader, final String fileName) throws IOException {
-        File f = new File(fileName);
-        write(reader, f);
-    }    
-    
-    public static void write(final Reader reader, final File f) throws IOException {
-    	f.getParentFile().mkdirs();
-    	OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(f), "UTF-8");        
-        write(fw, reader, -1, true);   
-    }
-
     public static void write(final InputStream is, final File f) throws IOException {
-    	f.getParentFile().mkdirs();
+        if (!f.getParentFile().exists()) {
+            Assertion.assertTrue(f.getParentFile().mkdirs());
+        }
         FileOutputStream fio = new FileOutputStream(f);
         BufferedOutputStream bos = new BufferedOutputStream(fio);
     	write(bos, is, -1);
@@ -240,12 +223,6 @@ public class ObjectConverterUtil {
         is.close();
     }
     
-    public static void write(char[] data, final String fileName) throws Exception {
-        InputStream is = ObjectConverterUtil.convertToInputStream(data);
-        ObjectConverterUtil.write(is, fileName);
-        is.close();
-    }
-
     /**
      * Returns the given bytes as a char array using a given encoding (null means platform default).
      */
@@ -277,7 +254,7 @@ public class ObjectConverterUtil {
      * @throws IOException if a problem occurred reading the file.
      */
     public static String convertFileToString(final File file) throws IOException {
-        return new String(convertFileToCharArray(file,"UTF-8")); 
+        return new String(convertFileToCharArray(file,"UTF-8")); //$NON-NLS-1$
     }
 
     

@@ -114,12 +114,12 @@ public final class TestFileUtils extends TestCase {
         ObjectConverterUtil.write(new FileInputStream(FILE_NAME), TEMP_FILE_NAME);
         
         //positive case
-        FileUtils.remove(TEMP_FILE_NAME);
+        FileUtils.remove(new File(TEMP_FILE_NAME));
         assertFalse("Expected File to not exist", new File(TEMP_FILE_NAME).exists());  //$NON-NLS-1$
 
         
         //call again - this should not throw an exception
-        FileUtils.remove(TEMP_FILE_NAME);
+        FileUtils.remove(new File(TEMP_FILE_NAME));
     }
     
 	/**

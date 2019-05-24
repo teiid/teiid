@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 
 import org.teiid.core.CorePlugin;
+import org.teiid.core.util.Assertion;
 
 
 public class LobSearchUtil {
@@ -68,8 +69,8 @@ public class LobSearchUtil {
 		        for (int i = 0; i < patternLength; i++) {
 		        	lastMod *= MOD;
 		        }			        
-	        	targetStream.skip(start);
-	        	laggingTargetStream.skip(start);
+		        Assertion.assertTrue(targetStream.skip(start) == start);
+		        Assertion.assertTrue(laggingTargetStream.skip(start) == start);
 		        
 		        long position = start + 1;
 		        
@@ -112,7 +113,7 @@ public class LobSearchUtil {
     	InputStream targetStream = target.getBinaryStream();
     	InputStream patternStream = pattern.getBinaryStream();
     	try {
-	    	targetStream.skip(position -1);    	
+	    	Assertion.assertTrue(targetStream.skip(position -1) == position -1);    	
 	    	int value = 0;
 	    	while ((value = patternStream.read()) != -1) {
 	    		if (value != targetStream.read()) {

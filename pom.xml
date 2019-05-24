@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.basepom</groupId>
         <artifactId>basepom-oss</artifactId>
-        <version>25</version>
+        <version>28</version>
     </parent>
     
     <modelVersion>4.0.0</modelVersion>
@@ -25,7 +25,7 @@
         <basepom.git-id.skip>false</basepom.git-id.skip>
         <basepom.check.skip-checkstyle>true</basepom.check.skip-checkstyle>
         <basepom.check.skip-license>true</basepom.check.skip-license>
-        <basepom.check.skip-findbugs>true</basepom.check.skip-findbugs>
+        <basepom.check.skip-spotbugs>true</basepom.check.skip-spotbugs>
         <!-- some modules, especially on a build server will exceed the 30 second default -->
         <basepom.test.timeout>600</basepom.test.timeout>
         
@@ -427,28 +427,6 @@
         </executions>
       </plugin>
         
-		<plugin>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-checkstyle-plugin</artifactId>
-			<executions>
-				<execution>
-					<id>verify-style</id>
-					<phase>process-classes</phase>
-					<goals>
-						<goal>check</goal>
-					</goals>
-				</execution>
-			</executions>
-			<configuration>
-				<logViolationsToConsole>true</logViolationsToConsole>
-				<failOnViolation>false</failOnViolation>
-				<checkstyleRules>
-					<module name="Checker">
-						<module name="FileTabCharacter" />
-					</module>
-				</checkstyleRules>
-			</configuration>
-		</plugin>
 		<plugin>
 			<artifactId>maven-surefire-plugin</artifactId>
 			<configuration>

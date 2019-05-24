@@ -45,9 +45,7 @@ public final class FileUtils {
                 if (file.isDirectory()) {
                     removeDirectoryAndChildren(file);
                 } else {
-                    if(!file.delete()) {
-                        file.deleteOnExit();
-                    }   
+                    remove(file);   
                 }
             }
         }        
@@ -55,12 +53,10 @@ public final class FileUtils {
 
     public static void remove(File file) {
         if (file.exists()) {
-            file.delete();
+            if(!file.delete()) {
+                file.deleteOnExit();
+            }
         }  
     }   
 
-    public static void remove(String filePath) {
-        remove(new File(filePath));  
-    }
-   
 }

@@ -149,4 +149,11 @@ public class TestClobValue {
         assertEquals(0, ct.hashCode());
     }
     
+    @Test public void testClobPosition() throws Exception {
+        String testString = "this is \u10000 test clob"; //$NON-NLS-1$
+        ClobImpl clobImpl = new ClobImpl(testString);
+        
+        assertEquals(testString.indexOf("test"), clobImpl.position("test", 2) - 1);
+    }
+    
 }
