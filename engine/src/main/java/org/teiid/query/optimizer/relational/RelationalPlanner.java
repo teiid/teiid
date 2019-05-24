@@ -1663,7 +1663,7 @@ public class RelationalPlanner {
             	if (jt != JoinType.JOIN_FULL_OUTER && parent.getChildCount() > 0) {
 	            	ArrayTable at = (ArrayTable)tt;
 		        	//rewrite if free of subqueries
-		        	if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(at).isEmpty()) {
+		        	if ((at.getSingleRow() == null || at.getSingleRow()) && ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(at).isEmpty()) {
 		            	List<ElementSymbol> symbols = at.getProjectedSymbols();
 		        		FunctionLibrary funcLib = this.metadata.getFunctionLibrary();
 		                FunctionDescriptor descriptor = funcLib.findFunction(FunctionLibrary.ARRAY_GET,
