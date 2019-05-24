@@ -68,9 +68,9 @@
     <!--  <module name="ModifierOrder"/> -->
 
     <!-- UnusedModifier in PMD is also only warning -->
-    <module name="RedundantModifier">
+    <!-- <module name="RedundantModifier">
       <property name="severity" value="warning"/>
-    </module>
+    </module> -->
 
     <!-- http://checkstyle.sourceforge.net/config_misc.html -->
     <module name="UpperEll"/>
